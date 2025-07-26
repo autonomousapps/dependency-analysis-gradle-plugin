@@ -21,7 +21,7 @@ import java.nio.file.Paths
 import javax.inject.Inject
 
 @CacheableTask
-abstract class CodeSourceExploderTask @Inject constructor(
+public abstract class CodeSourceExploderTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
   private val layout: ProjectLayout
 ) : DefaultTask() {
@@ -33,27 +33,27 @@ abstract class CodeSourceExploderTask @Inject constructor(
   /** The Groovy source of the current project. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val groovySourceFiles: ConfigurableFileCollection
+  public abstract val groovySourceFiles: ConfigurableFileCollection
 
   /** The Java source of the current project. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val javaSourceFiles: ConfigurableFileCollection
+  public abstract val javaSourceFiles: ConfigurableFileCollection
 
   /** The Kotlin source of the current project. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val kotlinSourceFiles: ConfigurableFileCollection
+  public abstract val kotlinSourceFiles: ConfigurableFileCollection
 
   /** The Scala source of the current project. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val scalaSourceFiles: ConfigurableFileCollection
+  public abstract val scalaSourceFiles: ConfigurableFileCollection
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(CodeSourceExploderWorkAction::class.java) {
       projectDir.set(layout.projectDirectory)
       groovySourceFiles.from(this@CodeSourceExploderTask.groovySourceFiles)
@@ -64,16 +64,16 @@ abstract class CodeSourceExploderTask @Inject constructor(
     }
   }
 
-  interface CodeSourceExploderParameters : WorkParameters {
-    val projectDir: DirectoryProperty
-    val groovySourceFiles: ConfigurableFileCollection
-    val javaSourceFiles: ConfigurableFileCollection
-    val kotlinSourceFiles: ConfigurableFileCollection
-    val scalaSourceFiles: ConfigurableFileCollection
-    val output: RegularFileProperty
+  public interface CodeSourceExploderParameters : WorkParameters {
+    public val projectDir: DirectoryProperty
+    public val groovySourceFiles: ConfigurableFileCollection
+    public val javaSourceFiles: ConfigurableFileCollection
+    public val kotlinSourceFiles: ConfigurableFileCollection
+    public val scalaSourceFiles: ConfigurableFileCollection
+    public val output: RegularFileProperty
   }
 
-  abstract class CodeSourceExploderWorkAction : WorkAction<CodeSourceExploderParameters> {
+  public abstract class CodeSourceExploderWorkAction : WorkAction<CodeSourceExploderParameters> {
 
     override fun execute() {
       val reportFile = parameters.output.getAndDelete()

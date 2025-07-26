@@ -13,7 +13,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
-abstract class BuildHealthTask : DefaultTask() {
+public abstract class BuildHealthTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -22,23 +22,23 @@ abstract class BuildHealthTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val shouldFail: RegularFileProperty
+  public abstract val shouldFail: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val buildHealth: RegularFileProperty
+  public abstract val buildHealth: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val consoleReport: RegularFileProperty
+  public abstract val consoleReport: RegularFileProperty
 
   @get:Input
-  abstract val printBuildHealth: Property<Boolean>
+  public abstract val printBuildHealth: Property<Boolean>
 
   @get:Input
-  abstract val postscript: Property<String>
+  public abstract val postscript: Property<String>
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val shouldFail = shouldFail.get().asFile.readText().toBoolean()
     val consoleReportFile = consoleReport.get().asFile
     val consoleReportPath = consoleReportFile.toPath()

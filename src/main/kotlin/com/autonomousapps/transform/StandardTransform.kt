@@ -85,7 +85,12 @@ internal class StandardTransform(
      * Android test fixtures usages.
      */
     androidTestFixturesUsages = reduceUsages(androidTestFixturesUsages)
-    computeAdvice(advice, androidTestFixturesUsages, androidTestFixturesDeclarations, androidTestFixturesUsages.size == 1)
+    computeAdvice(
+      advice,
+      androidTestFixturesUsages,
+      androidTestFixturesDeclarations,
+      androidTestFixturesUsages.size == 1
+    )
 
     /*
      * Android test usages.
@@ -325,6 +330,7 @@ internal class StandardTransform(
       coordinates is FlatCoordinates && decl.version != null -> {
         ModuleCoordinates(coordinates.identifier, decl.version, decl.gradleVariantIdentification)
       }
+
       else -> coordinates
     }.copy(decl.identifier, decl.gradleVariantIdentification)
   }

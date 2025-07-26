@@ -24,7 +24,7 @@ import java.util.TreeSet
 import javax.inject.Inject
 
 @CacheableTask
-abstract class SynthesizeProjectViewTask @Inject constructor(
+public abstract class SynthesizeProjectViewTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
@@ -33,76 +33,76 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   }
 
   @get:Input
-  abstract val projectPath: Property<String>
+  public abstract val projectPath: Property<String>
 
   /** May be null. */
   @get:Optional
   @get:Input
-  abstract val buildType: Property<String>
+  public abstract val buildType: Property<String>
 
   /** May be null. */
   @get:Optional
   @get:Input
-  abstract val flavor: Property<String>
+  public abstract val flavor: Property<String>
 
   @get:Input
-  abstract val variant: Property<String>
+  public abstract val variant: Property<String>
 
   @get:Input
-  abstract val sourceKind: Property<SourceKind>
+  public abstract val sourceKind: Property<SourceKind>
 
   /** [`DependencyGraphView`][DependencyGraphView] */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val graph: RegularFileProperty
+  public abstract val graph: RegularFileProperty
 
   /** [`Set<AnnotationProcessorDependency>`][com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency] */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val annotationProcessors: RegularFileProperty
+  public abstract val annotationProcessors: RegularFileProperty
 
   /** [`Set<ExplodingByteCode>`][ExplodingBytecode] */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val explodedBytecode: RegularFileProperty
+  public abstract val explodedBytecode: RegularFileProperty
 
   /** [`Set<ExplodingSourceCode>`][ExplodingSourceCode] */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val explodedSourceCode: RegularFileProperty
+  public abstract val explodedSourceCode: RegularFileProperty
 
   /** [`UsagesExclusions`][com.autonomousapps.internal.UsagesExclusions] */
   @get:Optional
   @get:Input
-  abstract val usagesExclusions: Property<String>
+  public abstract val usagesExclusions: Property<String>
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val excludedIdentifiers: RegularFileProperty
+  public abstract val excludedIdentifiers: RegularFileProperty
 
   /** [`Set<ExplodingAbi>`][ExplodingAbi] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val explodingAbi: RegularFileProperty
+  public abstract val explodingAbi: RegularFileProperty
 
   /** [`Set<AndroidResSource>`][AndroidResSource] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val androidResSource: RegularFileProperty
+  public abstract val androidResSource: RegularFileProperty
 
   /** [`Set<AndroidResSource>`][AndroidResSource] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val androidResSourceRuntime: RegularFileProperty
+  public abstract val androidResSourceRuntime: RegularFileProperty
 
   /** [`Set<AndroidAssetSource>`][AndroidAssetSource] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val androidAssetsSource: RegularFileProperty
+  public abstract val androidAssetsSource: RegularFileProperty
 
   /**
    * A string representing the fully-qualified class name (FQCN) of the test instrumentation runner if (1) this is an
@@ -110,12 +110,12 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
    */
   @get:Optional
   @get:Input
-  abstract val testInstrumentationRunner: Property<String>
+  public abstract val testInstrumentationRunner: Property<String>
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(SynthesizeProjectViewWorkAction::class.java) {
       projectPath.set(this@SynthesizeProjectViewTask.projectPath)
       buildType.set(this@SynthesizeProjectViewTask.buildType)
@@ -136,33 +136,33 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
     }
   }
 
-  interface SynthesizeProjectViewParameters : WorkParameters {
-    val projectPath: Property<String>
+  public interface SynthesizeProjectViewParameters : WorkParameters {
+    public val projectPath: Property<String>
 
     /** May be null. */
-    val buildType: Property<String>
+    public val buildType: Property<String>
 
     /** May be null. */
-    val flavor: Property<String>
-    val sourceKind: Property<SourceKind>
-    val graph: RegularFileProperty
-    val annotationProcessors: RegularFileProperty
-    val explodedBytecode: RegularFileProperty
-    val explodedSourceCode: RegularFileProperty
-    val excludedIdentifiers: RegularFileProperty
-    val usagesExclusions: Property<String>
+    public val flavor: Property<String>
+    public val sourceKind: Property<SourceKind>
+    public val graph: RegularFileProperty
+    public val annotationProcessors: RegularFileProperty
+    public val explodedBytecode: RegularFileProperty
+    public val explodedSourceCode: RegularFileProperty
+    public val excludedIdentifiers: RegularFileProperty
+    public val usagesExclusions: Property<String>
 
     // Optional
-    val explodingAbi: RegularFileProperty
-    val androidResSource: RegularFileProperty
-    val androidResSourceRuntime: RegularFileProperty
-    val androidAssetsSource: RegularFileProperty
-    val testInstrumentationRunner: Property<String>
+    public val explodingAbi: RegularFileProperty
+    public val androidResSource: RegularFileProperty
+    public val androidResSourceRuntime: RegularFileProperty
+    public val androidAssetsSource: RegularFileProperty
+    public val testInstrumentationRunner: Property<String>
 
-    val output: RegularFileProperty
+    public val output: RegularFileProperty
   }
 
-  abstract class SynthesizeProjectViewWorkAction : WorkAction<SynthesizeProjectViewParameters> {
+  public abstract class SynthesizeProjectViewWorkAction : WorkAction<SynthesizeProjectViewParameters> {
 
     private val builders = sortedMapOf<String, CodeSourceBuilder>()
 

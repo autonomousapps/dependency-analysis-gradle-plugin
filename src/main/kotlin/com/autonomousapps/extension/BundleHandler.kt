@@ -31,7 +31,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-abstract class BundleHandler @Inject constructor(
+public abstract class BundleHandler @Inject constructor(
   private val name: String,
   objects: ObjectFactory,
 ) : Named {
@@ -44,17 +44,17 @@ abstract class BundleHandler @Inject constructor(
   /**
    * (Optional): Specify the primary entry point that the user is "supposed" to declare.
    */
-  val primary: Property<String> = objects.property(String::class.java).convention("")
+  public val primary: Property<String> = objects.property(String::class.java).convention("")
 
   /**
    * Include all dependencies that match the regex as a single logical dependency.
    */
-  val includes: SetProperty<Regex> = objects.setProperty<Regex>().convention(emptySet())
+  public val includes: SetProperty<Regex> = objects.setProperty<Regex>().convention(emptySet())
 
   /**
    * (Optional): Specify the primary entry point that the user is "supposed" to declare.
    */
-  fun primary(identifier: String) {
+  public fun primary(identifier: String) {
     primary.set(identifier)
     primary.disallowChanges()
 
@@ -64,42 +64,42 @@ abstract class BundleHandler @Inject constructor(
   /**
    * (Optional): Specify the primary entry point that the user is "supposed" to declare.
    */
-  fun primary(module: Provider<MinimalExternalModuleDependency>) {
+  public fun primary(module: Provider<MinimalExternalModuleDependency>) {
     primary(module.identifier())
   }
 
   /**
    * (Optional): Specify the primary entry point that the user is "supposed" to declare.
    */
-  fun primary(module: ProviderConvertible<MinimalExternalModuleDependency>) {
+  public fun primary(module: ProviderConvertible<MinimalExternalModuleDependency>) {
     primary(module.asProvider())
   }
 
   /**
    * Include all in group as a single logical dependency.
    */
-  fun includeGroup(group: String) {
+  public fun includeGroup(group: String) {
     include("^$group:.*")
   }
 
   /**
    * Include all in group as a single logical dependency.
    */
-  fun includeGroup(module: Provider<MinimalExternalModuleDependency>) {
+  public fun includeGroup(module: Provider<MinimalExternalModuleDependency>) {
     includeGroup(module.group())
   }
 
   /**
    * Include all in group as a single logical dependency.
    */
-  fun includeGroup(module: ProviderConvertible<MinimalExternalModuleDependency>) {
+  public fun includeGroup(module: ProviderConvertible<MinimalExternalModuleDependency>) {
     includeGroup(module.asProvider())
   }
 
   /**
    * Include all supplied dependencies as a single logical dependency.
    */
-  fun includeDependency(identifier: String) {
+  public fun includeDependency(identifier: String) {
     include("^$identifier\$")
 
     // Hacky way to handle implicit KMP bundles. This is why `TestDependenciesSpec.bundles work for test dependencies`
@@ -115,28 +115,28 @@ abstract class BundleHandler @Inject constructor(
   /**
    * Include all supplied dependencies as a single logical dependency.
    */
-  fun includeDependency(module: Provider<MinimalExternalModuleDependency>) {
+  public fun includeDependency(module: Provider<MinimalExternalModuleDependency>) {
     includeDependency(module.identifier())
   }
 
   /**
    * Include all supplied dependencies as a single logical dependency.
    */
-  fun includeDependency(module: ProviderConvertible<MinimalExternalModuleDependency>) {
+  public fun includeDependency(module: ProviderConvertible<MinimalExternalModuleDependency>) {
     includeDependency(module.asProvider())
   }
 
   /**
    * Include all dependencies that match the regex as a single logical dependency.
    */
-  fun include(@Language("RegExp") regex: String) {
+  public fun include(@Language("RegExp") regex: String) {
     include(regex.toRegex())
   }
 
   /**
    * Include all dependencies that match the regex as a single logical dependency.
    */
-  fun include(regex: Regex) {
+  public fun include(regex: Regex) {
     includes.add(regex)
   }
 

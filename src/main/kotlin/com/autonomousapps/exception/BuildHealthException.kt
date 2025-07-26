@@ -4,4 +4,4 @@ package com.autonomousapps.exception
 
 import org.gradle.api.tasks.VerificationException
 
-class BuildHealthException(msg: String) : VerificationException(msg)
+public class BuildHealthException(msg: String) : VerificationException(msg)

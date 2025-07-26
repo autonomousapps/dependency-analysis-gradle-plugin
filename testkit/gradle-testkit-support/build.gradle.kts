@@ -16,10 +16,6 @@ dagp {
   }
 }
 
-kotlin {
-  explicitApi()
-}
-
 dependencies {
   api(platform(libs.kotlin.bom))
   api(gradleTestKit())

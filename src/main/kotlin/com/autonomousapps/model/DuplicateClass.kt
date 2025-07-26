@@ -11,7 +11,7 @@ import com.squareup.moshi.JsonClass
  * [sourceKind].
  */
 @JsonClass(generateAdapter = false)
-data class DuplicateClass(
+public data class DuplicateClass(
   /** The variant (e.g., "main" or "test") associated with this class. */
   // val variant: Variant,
   val sourceKind: SourceKind,

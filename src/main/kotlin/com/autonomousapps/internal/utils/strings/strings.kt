@@ -5,7 +5,7 @@ package com.autonomousapps.internal.utils.strings
  *
  * Much of this implementation was borrowed from `StringsJVM`'s [String.replace].
  */
-fun String.replaceExceptLast(oldValue: String, newValue: String, ignoreCase: Boolean = false): String {
+internal fun String.replaceExceptLast(oldValue: String, newValue: String, ignoreCase: Boolean = false): String {
   val lastIndex = lastIndexOf(oldValue, ignoreCase = ignoreCase)
 
   if (lastIndex == -1) return this

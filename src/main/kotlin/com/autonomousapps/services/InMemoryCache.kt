@@ -18,10 +18,10 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 
-abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
+public abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
 
-  interface Params : BuildServiceParameters {
-    val cacheSize: Property<Long>
+  public interface Params : BuildServiceParameters {
+    public val cacheSize: Property<Long>
   }
 
   private val cacheSize = parameters.cacheSize.get()
@@ -52,7 +52,7 @@ abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
     procs.asMap().putIfAbsent(procName, proc)
   }
 
-  companion object {
+  internal companion object {
     private const val SHARED_SERVICES_IN_MEMORY_CACHE = "inMemoryCache"
     private const val DEFAULT_CACHE_VALUE = -1L
 
@@ -86,7 +86,7 @@ abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
       }
     }
 
-    internal fun register(project: Project): Provider<InMemoryCache> = project
+    fun register(project: Project): Provider<InMemoryCache> = project
       .serviceHoldingBuild()
       .sharedServices
       .registerIfAbsent(SHARED_SERVICES_IN_MEMORY_CACHE, InMemoryCache::class.java) {

@@ -9,6 +9,7 @@ import com.autonomousapps.model.Coordinates
 import org.gradle.api.*
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.Input
 import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.setProperty
@@ -34,7 +35,7 @@ import javax.inject.Inject
  *
  *     // require related source sets to explicitly declare dependencies. Ignore that they might inherit a classpath.
  *     explicitSourceSets(/* set of source sets */)
-
+ *
  *     // Set to true to instruct the plugin to not suggest replacing -ktx dependencies with non-ktx dependencies.
  *     ignoreKtx(<true|false>) // default: false
  *
@@ -53,8 +54,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-@Suppress("HasPlatformType")
-abstract class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
+public abstract class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
 
   internal companion object {
     /** Sentinel value indicating that, if explicit source sets are opted into, it's all of them. */
@@ -71,8 +71,9 @@ abstract class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
     }
   }
 
-  val map = objects.mapProperty(String::class.java, String::class.java).convention(mutableMapOf())
-  val bundles = objects.domainObjectContainer(BundleHandler::class.java)
+  public val map: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java).convention(mutableMapOf())
+
+  internal val bundles = objects.domainObjectContainer(BundleHandler::class.java)
 
   init {
     // With Kotlin plugin 1.4, the stdlib is now applied by default. It makes no sense to warn users
@@ -109,7 +110,7 @@ abstract class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
    * ```
    */
   @Suppress("unused") // public API
-  fun explicitSourceSets(vararg sourceSets: String) {
+  public fun explicitSourceSets(vararg sourceSets: String) {
     val set = if (sourceSets.isEmpty()) {
       setOf(EXPLICIT_SOURCE_SETS_ALL)
     } else {
@@ -125,12 +126,12 @@ abstract class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
   }
 
   @Suppress("unused") // public API
-  fun ignoreKtx(ignore: Boolean) {
+  public fun ignoreKtx(ignore: Boolean) {
     ignoreKtx.set(ignore)
     ignoreKtx.disallowChanges()
   }
 
-  fun bundle(name: String, action: Action<BundleHandler>) {
+  public fun bundle(name: String, action: Action<BundleHandler>) {
     try {
       bundles.create(name) {
         action.execute(this)
@@ -165,9 +166,9 @@ abstract class DependenciesHandler @Inject constructor(objects: ObjectFactory) {
 
   internal fun serializableBundles(): SerializableBundles = SerializableBundles.of(bundles)
 
-  class SerializableBundles(
-    @get:Input val rules: Map<String, Set<Regex>>,
-    @get:Input val primaries: Map<String, String>,
+  public class SerializableBundles(
+    @get:Input public val rules: Map<String, Set<Regex>>,
+    @get:Input public val primaries: Map<String, String>,
   ) : Serializable {
 
     /** Returns the collection of bundle rules that [coordinates] is a member of. (May be 0 or more.) */

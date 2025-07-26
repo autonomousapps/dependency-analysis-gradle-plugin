@@ -49,7 +49,7 @@ import javax.tools.JavaFileObject
  * 6. Parse bytecode for presence of annotation types
  */
 @CacheableTask
-abstract class FindDeclaredProcsTask : DefaultTask() {
+public abstract class FindDeclaredProcsTask : DefaultTask() {
 
   init {
     description = "Produces a report of all supported annotation types and their annotation processors"
@@ -58,29 +58,29 @@ abstract class FindDeclaredProcsTask : DefaultTask() {
   private var kaptArtifacts: ArtifactCollection? = null
   private var annotationProcessorArtifacts: ArtifactCollection? = null
 
-  fun setKaptArtifacts(artifacts: ArtifactCollection) {
+  public fun setKaptArtifacts(artifacts: ArtifactCollection) {
     kaptArtifacts = artifacts
   }
 
-  fun setAnnotationProcessorArtifacts(artifacts: ArtifactCollection) {
+  public fun setAnnotationProcessorArtifacts(artifacts: ArtifactCollection) {
     annotationProcessorArtifacts = artifacts
   }
 
   @Optional
   @Classpath
-  fun getKaptArtifactFiles(): FileCollection? = kaptArtifacts?.artifactFiles
+  public fun getKaptArtifactFiles(): FileCollection? = kaptArtifacts?.artifactFiles
 
   @Optional
   @Classpath
-  fun getAnnotationProcessorArtifactFiles(): FileCollection? = annotationProcessorArtifacts?.artifactFiles
+  public fun getAnnotationProcessorArtifactFiles(): FileCollection? = annotationProcessorArtifacts?.artifactFiles
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
   @get:Internal
-  abstract val inMemoryCacheProvider: Property<InMemoryCache>
+  public abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
     val kaptClassLoader = newClassLoader("for-kapt", getKaptArtifactFiles())

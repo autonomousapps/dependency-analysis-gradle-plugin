@@ -6,9 +6,9 @@ package com.autonomousapps
 
 import org.gradle.api.GradleException
 import org.gradle.api.Project
-import java.util.Locale
+import java.util.*
 
-object Flags {
+public object Flags {
 
   // Deprecated
   internal const val AUTO_APPLY = "dependency.analysis.autoapply"

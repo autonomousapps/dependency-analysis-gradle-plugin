@@ -37,7 +37,7 @@ import java.io.File
 import javax.inject.Inject
 
 @CacheableTask
-abstract class SynthesizeDependenciesTask @Inject constructor(
+public abstract class SynthesizeDependenciesTask @Inject constructor(
   private val workerExecutor: WorkerExecutor
 ) : DefaultTask() {
 
@@ -46,43 +46,43 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   }
 
   @get:Internal
-  abstract val inMemoryCache: Property<InMemoryCache>
+  public abstract val inMemoryCache: Property<InMemoryCache>
 
   /** Needed to disambiguate other projects that might have otherwise identical inputs. */
   @get:Input
-  abstract val projectPath: Property<String>
+  public abstract val projectPath: Property<String>
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val compileDependencies: RegularFileProperty
+  public abstract val compileDependencies: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val physicalArtifacts: RegularFileProperty
+  public abstract val physicalArtifacts: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val explodedJars: RegularFileProperty
+  public abstract val explodedJars: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val inlineMembers: RegularFileProperty
+  public abstract val inlineMembers: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val typealiases: RegularFileProperty
+  public abstract val typealiases: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val serviceLoaders: RegularFileProperty
+  public abstract val serviceLoaders: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val annotationProcessors: RegularFileProperty
+  public abstract val annotationProcessors: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val nativeLibs: RegularFileProperty
+  public abstract val nativeLibs: RegularFileProperty
 
   /*
    * Android-specific and therefore optional.
@@ -91,22 +91,22 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val manifestComponents: RegularFileProperty
+  public abstract val manifestComponents: RegularFileProperty
 
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val androidRes: RegularFileProperty
+  public abstract val androidRes: RegularFileProperty
 
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val androidAssets: RegularFileProperty
+  public abstract val androidAssets: RegularFileProperty
 
   @get:OutputDirectory
-  abstract val outputDir: DirectoryProperty
+  public abstract val outputDir: DirectoryProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(SynthesizeDependenciesWorkAction::class.java) {
       inMemoryCache.set(this@SynthesizeDependenciesTask.inMemoryCache)
       compileDependencies.set(this@SynthesizeDependenciesTask.compileDependencies)
@@ -124,26 +124,26 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
     }
   }
 
-  interface SynthesizeDependenciesParameters : WorkParameters {
-    val inMemoryCache: Property<InMemoryCache>
-    val compileDependencies: RegularFileProperty
-    val physicalArtifacts: RegularFileProperty
-    val explodedJars: RegularFileProperty
-    val inlineMembers: RegularFileProperty
-    val typealiases: RegularFileProperty
-    val serviceLoaders: RegularFileProperty
-    val annotationProcessors: RegularFileProperty
-    val nativeLibs: RegularFileProperty
+  public interface SynthesizeDependenciesParameters : WorkParameters {
+    public val inMemoryCache: Property<InMemoryCache>
+    public val compileDependencies: RegularFileProperty
+    public val physicalArtifacts: RegularFileProperty
+    public val explodedJars: RegularFileProperty
+    public val inlineMembers: RegularFileProperty
+    public val typealiases: RegularFileProperty
+    public val serviceLoaders: RegularFileProperty
+    public val annotationProcessors: RegularFileProperty
+    public val nativeLibs: RegularFileProperty
 
     // Android-specific and therefore optional
-    val manifestComponents: RegularFileProperty
-    val androidRes: RegularFileProperty
-    val androidAssets: RegularFileProperty
+    public val manifestComponents: RegularFileProperty
+    public val androidRes: RegularFileProperty
+    public val androidAssets: RegularFileProperty
 
-    val outputDir: DirectoryProperty
+    public val outputDir: DirectoryProperty
   }
 
-  abstract class SynthesizeDependenciesWorkAction : WorkAction<SynthesizeDependenciesParameters> {
+  public abstract class SynthesizeDependenciesWorkAction : WorkAction<SynthesizeDependenciesParameters> {
 
     private val builders = sortedMapOf<Coordinates, DependencyBuilder>()
 

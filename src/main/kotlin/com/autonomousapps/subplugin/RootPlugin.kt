@@ -20,7 +20,6 @@ import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.register
 
-// TODO(tsr): inline
 internal const val DEPENDENCY_ANALYSIS_PLUGIN = DependencyAnalysisPlugin.ID
 
 /** This "plugin" is applied to the root project only. */

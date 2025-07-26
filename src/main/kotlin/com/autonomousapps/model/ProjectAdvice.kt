@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonClass
 
 /** Collection of all advice for a single project, across all variants. */
 @JsonClass(generateAdapter = false)
-data class ProjectAdvice(
+public data class ProjectAdvice(
   val projectPath: String,
   val dependencyAdvice: Set<Advice> = emptySet(),
   val pluginAdvice: Set<PluginAdvice> = emptySet(),
@@ -18,7 +18,7 @@ data class ProjectAdvice(
 ) : Comparable<ProjectAdvice> {
 
   /** Returns true if this has no advice, nor any warnings. */
-  fun isEmpty(): Boolean = dependencyAdvice.isEmpty()
+  public fun isEmpty(): Boolean = dependencyAdvice.isEmpty()
     && pluginAdvice.isEmpty()
     && ModuleAdvice.isEmpty(moduleAdvice)
     && warning.isEmpty()
@@ -27,10 +27,10 @@ data class ProjectAdvice(
    * Returns true if this has any [dependency advice][dependencyAdvice], any [plugin advice][pluginAdvice], any
    * [module advice][moduleAdvice], or any [warnings][warning].
    */
-  fun isNotEmpty(): Boolean = !isEmpty()
+  public fun isNotEmpty(): Boolean = !isEmpty()
 
   /** Returns true if this [isEmpty] or contains only warnings. */
-  fun isEmptyOrWarningOnly(): Boolean = isEmpty() || warning.isNotEmpty()
+  public fun isEmptyOrWarningOnly(): Boolean = isEmpty() || warning.isNotEmpty()
 
   override fun compareTo(other: ProjectAdvice): Int {
     return compareBy(ProjectAdvice::projectPath)

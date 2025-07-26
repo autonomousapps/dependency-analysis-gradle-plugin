@@ -22,7 +22,7 @@ import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 @CacheableTask
-abstract class ExplodeJarTask @Inject constructor(
+public abstract class ExplodeJarTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
@@ -31,29 +31,28 @@ abstract class ExplodeJarTask @Inject constructor(
   }
 
   @get:Internal
-  abstract val inMemoryCache: Property<InMemoryCache>
+  public abstract val inMemoryCache: Property<InMemoryCache>
 
   /** Not used by the task action, but necessary for correct input-output tracking, for reasons I do not recall. */
   @get:Classpath
-  abstract val compileClasspath: ConfigurableFileCollection
+  public abstract val compileClasspath: ConfigurableFileCollection
 
   /** [`Set<PhysicalArtifact>`][com.autonomousapps.model.PhysicalArtifact]. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFile
-  abstract val physicalArtifacts: RegularFileProperty
+  public abstract val physicalArtifacts: RegularFileProperty
 
   /** [`Set<AndroidLinterDependency>?`][com.autonomousapps.model.intermediates.AndroidLinterDependency] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val androidLinters: RegularFileProperty
+  public abstract val androidLinters: RegularFileProperty
 
   /** [`Set<ExplodedJar>`][com.autonomousapps.model.intermediates.ExplodedJar]. */
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction
-  fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ExplodeJarWorkAction::class.java) {
       inMemoryCache.set(this@ExplodeJarTask.inMemoryCache)
       physicalArtifacts.set(this@ExplodeJarTask.physicalArtifacts)
@@ -63,17 +62,17 @@ abstract class ExplodeJarTask @Inject constructor(
     }
   }
 
-  interface ExplodeJarParameters : WorkParameters {
-    val inMemoryCache: Property<InMemoryCache>
-    val physicalArtifacts: RegularFileProperty
+  public interface ExplodeJarParameters : WorkParameters {
+    public val inMemoryCache: Property<InMemoryCache>
+    public val physicalArtifacts: RegularFileProperty
 
     /** This may be empty. */
-    val androidLinters: RegularFileProperty
+    public val androidLinters: RegularFileProperty
 
-    val output: RegularFileProperty
+    public val output: RegularFileProperty
   }
 
-  abstract class ExplodeJarWorkAction : WorkAction<ExplodeJarParameters> {
+  public abstract class ExplodeJarWorkAction : WorkAction<ExplodeJarParameters> {
 
     override fun execute() {
       val outputFile = parameters.output.getAndDelete()

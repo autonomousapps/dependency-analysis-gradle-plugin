@@ -3,9 +3,13 @@ package com.autonomousapps.convention.internal.kotlin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 internal fun Project.configureKotlin(versionCatalog: VersionCatalog) {
+  extensions.getByType(KotlinJvmProjectExtension::class.java)
+    .explicitApi()
+
   val javaTarget = versionCatalog.findVersion("javaTarget").orElseThrow().requiredVersion
 
   tasks.withType(KotlinCompile::class.java).configureEach { t ->

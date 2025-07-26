@@ -171,7 +171,7 @@ internal val MEMBER_SORT_ORDER = compareBy<MemberBinarySignature>(
 )
 
 // TODO move
-data class AccessFlags(val access: Int) {
+internal data class AccessFlags(val access: Int) {
   val isPublic: Boolean get() = isPublic(access)
   val isProtected: Boolean get() = isProtected(access)
   val isPrivate: Boolean get() = isPrivate(access)

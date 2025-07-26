@@ -33,22 +33,22 @@ import javax.naming.OperationNotSupportedException
  * }
  * ```
  */
-abstract class DependencyAnalysisSubExtension(
+public abstract class DependencyAnalysisSubExtension(
   project: Project,
 ) : AbstractExtension(project.objects, project.gradle) {
 
   private val path = project.path
 
-  fun abi(action: Action<AbiHandler>) {
+  public fun abi(action: Action<AbiHandler>) {
     action.execute(abiHandler)
   }
 
-  fun issues(action: Action<ProjectIssueHandler>) {
+  public fun issues(action: Action<ProjectIssueHandler>) {
     issueHandler.project(path, action)
   }
 
   @Suppress("UNUSED_PARAMETER")
-  fun structure(action: Action<DependenciesHandler>) {
+  public fun structure(action: Action<DependenciesHandler>) {
     throw OperationNotSupportedException("Dependency bundles must be declared in the root project only")
   }
 

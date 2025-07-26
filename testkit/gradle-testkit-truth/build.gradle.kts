@@ -16,10 +16,6 @@ dagp {
   }
 }
 
-kotlin {
-  explicitApi()
-}
-
 dependencies {
   api(project(":gradle-testkit-support")) {
     because("Uses BuildArtifact")

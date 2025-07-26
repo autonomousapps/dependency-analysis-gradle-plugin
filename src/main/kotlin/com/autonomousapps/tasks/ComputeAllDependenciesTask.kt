@@ -18,7 +18,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
 @CacheableTask
-abstract class ComputeAllDependenciesTask : DefaultTask() {
+public abstract class ComputeAllDependenciesTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -27,13 +27,13 @@ abstract class ComputeAllDependenciesTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val resolvedDependenciesReports: ConfigurableFileCollection
+  public abstract val resolvedDependenciesReports: ConfigurableFileCollection
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
   @TaskAction
-  fun action() {
+  public fun action() {
     val outputFile = output.getAndDelete()
 
     val libs: Set<ModuleCoordinates> = resolvedDependenciesReports.dependencyCoordinates()

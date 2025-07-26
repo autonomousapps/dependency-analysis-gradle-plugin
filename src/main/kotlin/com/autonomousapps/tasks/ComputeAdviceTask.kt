@@ -35,7 +35,7 @@ import javax.inject.Inject
  * advice.
  */
 @CacheableTask
-abstract class ComputeAdviceTask @Inject constructor(
+public abstract class ComputeAdviceTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
@@ -44,72 +44,72 @@ abstract class ComputeAdviceTask @Inject constructor(
   }
 
   @get:Input
-  abstract val projectPath: Property<String>
+  public abstract val projectPath: Property<String>
 
   @get:Input
-  abstract val buildPath: Property<String>
+  public abstract val buildPath: Property<String>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val dependencyUsageReports: ListProperty<RegularFile>
+  public abstract val dependencyUsageReports: ListProperty<RegularFile>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val dependencyGraphViews: ListProperty<RegularFile>
+  public abstract val dependencyGraphViews: ListProperty<RegularFile>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val androidScoreReports: ListProperty<RegularFile>
+  public abstract val androidScoreReports: ListProperty<RegularFile>
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val declarations: RegularFileProperty
+  public abstract val declarations: RegularFileProperty
 
   @get:Nested
-  abstract val bundles: Property<DependenciesHandler.SerializableBundles>
+  public abstract val bundles: Property<DependenciesHandler.SerializableBundles>
 
   @get:Input
-  abstract val supportedSourceSets: SetProperty<String>
+  public abstract val supportedSourceSets: SetProperty<String>
 
   @get:Input
-  abstract val ignoreKtx: Property<Boolean>
+  public abstract val ignoreKtx: Property<Boolean>
 
   @get:Input
-  abstract val explicitSourceSets: SetProperty<String>
+  public abstract val explicitSourceSets: SetProperty<String>
 
   /** Android (true) or JVM (false). */
   @get:Input
-  abstract val android: Property<Boolean>
+  public abstract val android: Property<Boolean>
 
   @get:Input
-  abstract val kapt: Property<Boolean>
+  public abstract val kapt: Property<Boolean>
 
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val redundantJvmPluginReport: RegularFileProperty
+  public abstract val redundantJvmPluginReport: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val duplicateClassesReports: ListProperty<RegularFile>
+  public abstract val duplicateClassesReports: ListProperty<RegularFile>
 
   /*
    * Outputs.
    */
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
   @get:OutputFile
-  abstract val dependencyUsages: RegularFileProperty
+  public abstract val dependencyUsages: RegularFileProperty
 
   @get:OutputFile
-  abstract val annotationProcessorUsages: RegularFileProperty
+  public abstract val annotationProcessorUsages: RegularFileProperty
 
   @get:OutputFile
-  abstract val bundledTraces: RegularFileProperty
+  public abstract val bundledTraces: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ComputeAdviceAction::class.java) {
       projectPath.set(this@ComputeAdviceTask.projectPath)
       buildPath.set(this@ComputeAdviceTask.buildPath)
@@ -133,29 +133,29 @@ abstract class ComputeAdviceTask @Inject constructor(
     }
   }
 
-  interface ComputeAdviceParameters : WorkParameters {
-    val projectPath: Property<String>
-    val buildPath: Property<String>
-    val dependencyUsageReports: ListProperty<RegularFile>
-    val dependencyGraphViews: ListProperty<RegularFile>
-    val androidScoreReports: ListProperty<RegularFile>
-    val declarations: RegularFileProperty
-    val bundles: Property<DependenciesHandler.SerializableBundles>
-    val supportedSourceSets: SetProperty<String>
-    val ignoreKtx: Property<Boolean>
-    val explicitSourceSets: SetProperty<String>
-    val android: Property<Boolean>
-    val kapt: Property<Boolean>
-    val redundantPluginReport: RegularFileProperty
-    val duplicateClassesReports: ListProperty<RegularFile>
+  public interface ComputeAdviceParameters : WorkParameters {
+    public val projectPath: Property<String>
+    public val buildPath: Property<String>
+    public val dependencyUsageReports: ListProperty<RegularFile>
+    public val dependencyGraphViews: ListProperty<RegularFile>
+    public val androidScoreReports: ListProperty<RegularFile>
+    public val declarations: RegularFileProperty
+    public val bundles: Property<DependenciesHandler.SerializableBundles>
+    public val supportedSourceSets: SetProperty<String>
+    public val ignoreKtx: Property<Boolean>
+    public val explicitSourceSets: SetProperty<String>
+    public val android: Property<Boolean>
+    public val kapt: Property<Boolean>
+    public val redundantPluginReport: RegularFileProperty
+    public val duplicateClassesReports: ListProperty<RegularFile>
 
-    val output: RegularFileProperty
-    val dependencyUsages: RegularFileProperty
-    val annotationProcessorUsages: RegularFileProperty
-    val bundledTraces: RegularFileProperty
+    public val output: RegularFileProperty
+    public val dependencyUsages: RegularFileProperty
+    public val annotationProcessorUsages: RegularFileProperty
+    public val bundledTraces: RegularFileProperty
   }
 
-  abstract class ComputeAdviceAction : WorkAction<ComputeAdviceParameters> {
+  public abstract class ComputeAdviceAction : WorkAction<ComputeAdviceParameters> {
 
     override fun execute() {
       val output = parameters.output.getAndDelete()

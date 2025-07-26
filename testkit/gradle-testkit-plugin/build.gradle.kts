@@ -33,10 +33,6 @@ gradlePlugin {
   vcsUrl.set("https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin")
 }
 
-kotlin {
-  explicitApi()
-}
-
 dependencies {
   api(platform(libs.kotlin.bom))
   api(gradleTestKit())

@@ -28,14 +28,14 @@ import org.gradle.api.tasks.*
  * physical files on disk, such as jars.
  */
 @CacheableTask
-abstract class ArtifactsReportTask : DefaultTask() {
+public abstract class ArtifactsReportTask : DefaultTask() {
 
   init {
     description = "Produces a report that lists all direct and transitive dependencies, along with their artifacts"
   }
 
   @get:Internal
-  abstract val artifacts: Property<ArtifactCollection>
+  public abstract val artifacts: Property<ArtifactCollection>
 
   /**
    * This is the "official" input for wiring task dependencies correctly, but is otherwise
@@ -46,12 +46,12 @@ abstract class ArtifactsReportTask : DefaultTask() {
    */
   @PathSensitive(PathSensitivity.ABSOLUTE)
   @InputFiles // TODO(tsr): can I avoid using `get()`?
-  fun getClasspathArtifactFiles(): FileCollection = artifacts.get().artifactFiles
+  public fun getClasspathArtifactFiles(): FileCollection = artifacts.get().artifactFiles
 
   /**
    * This artifact collection is the result of resolving the compile or runtime classpath.
    */
-  fun setConfiguration(
+  public fun setConfiguration(
     configuration: NamedDomainObjectProvider<Configuration>,
     action: (Configuration) -> ArtifactCollection,
   ) {
@@ -61,22 +61,22 @@ abstract class ArtifactsReportTask : DefaultTask() {
 
   /** Needed to make sure task gives the same result if the build configuration in a composite changed between runs. */
   @get:Input
-  abstract val buildPath: Property<String>
+  public abstract val buildPath: Property<String>
 
   @get:Input
-  abstract val excludedIdentifiers: SetProperty<String>
+  public abstract val excludedIdentifiers: SetProperty<String>
 
   /**
    * [PhysicalArtifact]s used to compile or run main source.
    */
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
   @get:OutputFile
-  abstract val excludedIdentifiersOutput: RegularFileProperty
+  public abstract val excludedIdentifiersOutput: RegularFileProperty
 
   @TaskAction
-  fun action() {
+  public fun action() {
     val output = output.getAndDelete()
     val excludedIdentifiersOutput = excludedIdentifiersOutput.getAndDelete()
 

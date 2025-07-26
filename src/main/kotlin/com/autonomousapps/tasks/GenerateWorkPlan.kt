@@ -18,23 +18,23 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 // TODO(tsr): fix or delete
-abstract class GenerateWorkPlan : DefaultTask() {
+public abstract class GenerateWorkPlan : DefaultTask() {
 
   init {
     description = "Generates work plan for fixing dependency issues with minimal conflict"
   }
 
   @get:Input
-  abstract val buildPath: Property<String>
+  public abstract val buildPath: Property<String>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val combinedProjectGraphs: ConfigurableFileCollection
+  public abstract val combinedProjectGraphs: ConfigurableFileCollection
 
   @get:OutputDirectory
-  abstract val outputDirectory: DirectoryProperty
+  public abstract val outputDirectory: DirectoryProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val combinedGraphOut = outputDirectory.file("combined-graph.json").getAndDelete()
     val combinedGraphDotOut = outputDirectory.file("combined-graph.gz").getAndDelete()
     val workPlanJsonOut = outputDirectory.file("work-plan.json").getAndDelete()

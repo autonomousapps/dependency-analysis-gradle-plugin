@@ -31,7 +31,7 @@ import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
-abstract class ReasonTask @Inject constructor(
+public abstract class ReasonTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
@@ -41,13 +41,13 @@ abstract class ReasonTask @Inject constructor(
   }
 
   @get:Input
-  abstract val rootProjectName: Property<String>
+  public abstract val rootProjectName: Property<String>
 
   @get:Input
-  abstract val projectPath: Property<String>
+  public abstract val projectPath: Property<String>
 
   @get:Input
-  abstract val buildPath: Property<String>
+  public abstract val buildPath: Property<String>
 
   /**
    * The dependency identifier or GAV coordinates being queried. By default, reports on the main [capability].
@@ -60,7 +60,7 @@ abstract class ReasonTask @Inject constructor(
     option = "id",
     description = "The dependency you'd like to reason about (com.foo:bar:1.0 or :other:module)"
   )
-  var id: String? = null
+  public var id: String? = null
 
   /**
    * The capability to be queried. If not specified, defaults to main capability.
@@ -73,7 +73,7 @@ abstract class ReasonTask @Inject constructor(
     option = "capability",
     description = "The capability you're interested in. Defaults to main capability. A typical option is 'test-fixtures'"
   )
-  var capability: String? = null
+  public var capability: String? = null
 
   /**
    * The category of module-structure advice to query for. Only available option at this time is 'android'.
@@ -86,38 +86,38 @@ abstract class ReasonTask @Inject constructor(
     option = "module",
     description = "The module-structure-related advice you'd like more insight into ('android')"
   )
-  var module: String? = null
+  public var module: String? = null
 
   @get:Input
-  abstract val dependencyMap: MapProperty<String, String>
+  public abstract val dependencyMap: MapProperty<String, String>
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val dependencyUsageReport: RegularFileProperty
+  public abstract val dependencyUsageReport: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val annotationProcessorUsageReport: RegularFileProperty
+  public abstract val annotationProcessorUsageReport: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val unfilteredAdviceReport: RegularFileProperty
+  public abstract val unfilteredAdviceReport: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val finalAdviceReport: RegularFileProperty
+  public abstract val finalAdviceReport: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val bundleTracesReport: RegularFileProperty
+  public abstract val bundleTracesReport: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val dependencyGraphViews: ListProperty<RegularFile>
+  public abstract val dependencyGraphViews: ListProperty<RegularFile>
 
   // TODO InputDirectory of all dependencies for finding capabilities
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val options = options()
 
     // Explain dependency advice
@@ -192,22 +192,22 @@ abstract class ReasonTask @Inject constructor(
     """.trimIndent()
   }
 
-  interface ExplainDependencyAdviceParams : WorkParameters {
-    val id: Property<String>
-    val capability: Property<String>
-    val rootProjectName: Property<String>
-    val projectPath: Property<String>
-    val buildPath: Property<String>
-    val dependencyMap: MapProperty<String, String>
-    val dependencyUsageReport: RegularFileProperty
-    val annotationProcessorUsageReport: RegularFileProperty
-    val unfilteredAdviceReport: RegularFileProperty
-    val finalAdviceReport: RegularFileProperty
-    val bundleTracesReport: RegularFileProperty
-    val dependencyGraphViews: ListProperty<RegularFile>
+  public interface ExplainDependencyAdviceParams : WorkParameters {
+    public val id: Property<String>
+    public val capability: Property<String>
+    public val rootProjectName: Property<String>
+    public val projectPath: Property<String>
+    public val buildPath: Property<String>
+    public val dependencyMap: MapProperty<String, String>
+    public val dependencyUsageReport: RegularFileProperty
+    public val annotationProcessorUsageReport: RegularFileProperty
+    public val unfilteredAdviceReport: RegularFileProperty
+    public val finalAdviceReport: RegularFileProperty
+    public val bundleTracesReport: RegularFileProperty
+    public val dependencyGraphViews: ListProperty<RegularFile>
   }
 
-  abstract class ExplainDependencyAdviceAction : WorkAction<ExplainDependencyAdviceParams> {
+  public abstract class ExplainDependencyAdviceAction : WorkAction<ExplainDependencyAdviceParams> {
 
     private val logger = getLogger<ReasonTask>()
 
@@ -409,14 +409,14 @@ abstract class ReasonTask @Inject constructor(
     }
   }
 
-  interface ExplainModuleAdviceParams : WorkParameters {
-    val module: Property<String>
-    val projectPath: Property<String>
-    val unfilteredAdviceReport: RegularFileProperty
-    val finalAdviceReport: RegularFileProperty
+  public interface ExplainModuleAdviceParams : WorkParameters {
+    public val module: Property<String>
+    public val projectPath: Property<String>
+    public val unfilteredAdviceReport: RegularFileProperty
+    public val finalAdviceReport: RegularFileProperty
   }
 
-  abstract class ExplainModuleAdviceAction : WorkAction<ExplainModuleAdviceParams> {
+  public abstract class ExplainModuleAdviceAction : WorkAction<ExplainModuleAdviceParams> {
 
     private val logger = getLogger<ReasonTask>()
 

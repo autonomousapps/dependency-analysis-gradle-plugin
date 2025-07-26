@@ -19,7 +19,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 @CacheableTask
-abstract class ManifestComponentsExtractionTask : DefaultTask() {
+public abstract class ManifestComponentsExtractionTask : DefaultTask() {
 
   init {
     description = "Produces a report of packages, from other components, that are included via Android manifests"
@@ -27,21 +27,21 @@ abstract class ManifestComponentsExtractionTask : DefaultTask() {
 
   private lateinit var manifestArtifacts: ArtifactCollection
 
-  fun setArtifacts(manifestArtifacts: ArtifactCollection) {
+  public fun setArtifacts(manifestArtifacts: ArtifactCollection) {
     this.manifestArtifacts = manifestArtifacts
   }
 
   @PathSensitive(PathSensitivity.NAME_ONLY)
   @InputFiles
-  fun getManifestFiles(): FileCollection = manifestArtifacts.artifactFiles
+  public fun getManifestFiles(): FileCollection = manifestArtifacts.artifactFiles
 
   @get:Input
-  abstract val namespace: Property<String>
+  public abstract val namespace: Property<String>
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
     val parser = ManifestParser(namespace.get())

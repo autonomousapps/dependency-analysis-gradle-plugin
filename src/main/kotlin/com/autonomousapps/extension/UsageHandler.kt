@@ -24,16 +24,16 @@ import javax.inject.Inject
  * @see [UsageAnalysisHandler]
  * @see [UsageExclusionsHandler]
  */
-abstract class UsageHandler @Inject constructor(objects: ObjectFactory) {
+public abstract class UsageHandler @Inject constructor(objects: ObjectFactory) {
 
   internal val analysisHandler: UsageAnalysisHandler = objects.newInstance()
   internal val exclusionsHandler: UsageExclusionsHandler = objects.newInstance()
 
-  fun analysis(action: Action<UsageAnalysisHandler>) {
+  public fun analysis(action: Action<UsageAnalysisHandler>) {
     action.execute(analysisHandler)
   }
 
-  fun exclusions(action: Action<UsageExclusionsHandler>) {
+  public fun exclusions(action: Action<UsageExclusionsHandler>) {
     action.execute(exclusionsHandler)
   }
 }

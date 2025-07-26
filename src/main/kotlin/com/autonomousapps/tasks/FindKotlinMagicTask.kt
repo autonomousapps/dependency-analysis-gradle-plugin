@@ -30,7 +30,7 @@ import java.util.zip.ZipFile
 import javax.inject.Inject
 
 @CacheableTask
-abstract class FindKotlinMagicTask @Inject constructor(
+public abstract class FindKotlinMagicTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
@@ -39,24 +39,24 @@ abstract class FindKotlinMagicTask @Inject constructor(
   }
 
   @get:Internal
-  abstract val inMemoryCacheProvider: Property<InMemoryCache>
+  public abstract val inMemoryCacheProvider: Property<InMemoryCache>
 
   /** Not used by the task action, but necessary for correct input-output tracking, for reasons I do not recall. */
   @get:Classpath
-  abstract val compileClasspath: ConfigurableFileCollection
+  public abstract val compileClasspath: ConfigurableFileCollection
 
   /** [PhysicalArtifact]s used to compile this project. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFile
-  abstract val artifacts: RegularFileProperty
+  public abstract val artifacts: RegularFileProperty
 
   /** Inline members in this project's dependencies. */
   @get:OutputFile
-  abstract val outputInlineMembers: RegularFileProperty
+  public abstract val outputInlineMembers: RegularFileProperty
 
   /** typealiases in this project's dependencies. */
   @get:OutputFile
-  abstract val outputTypealiases: RegularFileProperty
+  public abstract val outputTypealiases: RegularFileProperty
 
   /**
    * Errors analyzing class files.
@@ -65,10 +65,10 @@ abstract class FindKotlinMagicTask @Inject constructor(
    * @see <a href="https://youtrack.jetbrains.com/issue/KT-60870">KT-60870</a>
    */
   @get:OutputFile
-  abstract val outputErrors: RegularFileProperty
+  public abstract val outputErrors: RegularFileProperty
 
   @TaskAction
-  fun action() {
+  public fun action() {
     workerExecutor.noIsolation().submit(FindKotlinMagicWorkAction::class.java) {
       artifacts.set(this@FindKotlinMagicTask.artifacts)
       inlineUsageReport.set(this@FindKotlinMagicTask.outputInlineMembers)
@@ -78,15 +78,15 @@ abstract class FindKotlinMagicTask @Inject constructor(
     }
   }
 
-  interface FindKotlinMagicParameters : WorkParameters {
-    val artifacts: RegularFileProperty
-    val inlineUsageReport: RegularFileProperty
-    val typealiasReport: RegularFileProperty
-    val errorsReport: RegularFileProperty
-    val inMemoryCacheProvider: Property<InMemoryCache>
+  public interface FindKotlinMagicParameters : WorkParameters {
+    public val artifacts: RegularFileProperty
+    public val inlineUsageReport: RegularFileProperty
+    public val typealiasReport: RegularFileProperty
+    public val errorsReport: RegularFileProperty
+    public val inMemoryCacheProvider: Property<InMemoryCache>
   }
 
-  abstract class FindKotlinMagicWorkAction : WorkAction<FindKotlinMagicParameters> {
+  public abstract class FindKotlinMagicWorkAction : WorkAction<FindKotlinMagicParameters> {
 
     private val logger = getLogger<FindKotlinMagicTask>()
 
@@ -310,7 +310,7 @@ internal class KotlinMagicFinder(
       // See https://youtrack.jetbrains.com/issue/KT-60870
       val metadata = try {
         KotlinClassMetadata.readLenient(header.build())
-      } catch (e: IllegalArgumentException) {
+      } catch (_: IllegalArgumentException) {
         logger.debug("Can't read class file '$classFile'")
         errorsReport.appendText("Can't read class file '$classFile'\n")
         didWriteErrors = true

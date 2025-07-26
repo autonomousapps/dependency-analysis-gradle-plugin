@@ -160,9 +160,9 @@ private fun ComponentIdentifier.resolvedVersion(): String? = when (this) {
  * This has to be public because it's used as part of a task input, but should otherwise be considered an internal
  * implementation detail.
  */
-class ModuleInfo(
-  val identifier: String,
-  val version: String? = null,
+public class ModuleInfo(
+  public val identifier: String,
+  public val version: String? = null,
 ) : Serializable, Comparable<ModuleInfo> {
 
   override fun compareTo(other: ModuleInfo): Int {

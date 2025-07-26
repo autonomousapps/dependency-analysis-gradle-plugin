@@ -20,25 +20,25 @@ import org.gradle.api.tasks.TaskAction
  * and kotlin source. Suggests removing kotlin-jvm if there is no Kotlin source.
  */
 @CacheableTask
-abstract class DetectRedundantJvmPluginTask : DefaultTask() {
+public abstract class DetectRedundantJvmPluginTask : DefaultTask() {
 
   init {
     description = "Produces a report about redundant jvm plugins that have been applied"
   }
 
   @get:Input
-  abstract val hasJava: Property<Boolean>
+  public abstract val hasJava: Property<Boolean>
 
   @get:Input
-  abstract val hasKotlin: Property<Boolean>
+  public abstract val hasKotlin: Property<Boolean>
 
   @get:Input
-  abstract val redundantPluginsBehavior: Property<Behavior>
+  public abstract val redundantPluginsBehavior: Property<Behavior>
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     // Outputs
     val outputFile = output.getAndDelete()
 

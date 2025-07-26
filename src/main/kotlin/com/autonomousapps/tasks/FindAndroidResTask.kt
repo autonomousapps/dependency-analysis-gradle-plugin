@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * classpath. These are not necessarily used.
  */
 @CacheableTask
-abstract class FindAndroidResTask : DefaultTask() {
+public abstract class FindAndroidResTask : DefaultTask() {
 
   init {
     description = "Produces a report of all R import candidates from set of dependencies"
@@ -30,18 +30,18 @@ abstract class FindAndroidResTask : DefaultTask() {
 
   private lateinit var androidSymbols: ArtifactCollection
 
-  fun setAndroidSymbols(resources: ArtifactCollection) {
+  public fun setAndroidSymbols(resources: ArtifactCollection) {
     this.androidSymbols = resources
   }
 
   /** Artifact type "android-symbol-with-package-name". All Android libraries seem to have this. */
   @PathSensitive(PathSensitivity.NAME_ONLY)
   @InputFiles
-  fun getAndroidSymbols(): FileCollection = androidSymbols.artifactFiles
+  public fun getAndroidSymbols(): FileCollection = androidSymbols.artifactFiles
 
   private lateinit var androidPublicRes: ArtifactCollection
 
-  fun setAndroidPublicRes(androidPublicRes: ArtifactCollection) {
+  public fun setAndroidPublicRes(androidPublicRes: ArtifactCollection) {
     this.androidPublicRes = androidPublicRes
   }
 
@@ -51,13 +51,13 @@ abstract class FindAndroidResTask : DefaultTask() {
    */
   @PathSensitive(PathSensitivity.NAME_ONLY)
   @InputFiles
-  fun getAndroidPublicRes(): FileCollection = androidPublicRes.artifactFiles
+  public fun getAndroidPublicRes(): FileCollection = androidPublicRes.artifactFiles
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
   @TaskAction
-  fun action() {
+  public fun action() {
     val outputFile = output.getAndDelete()
 
     val publicRes = androidResFrom(androidPublicRes, true)
@@ -83,7 +83,7 @@ abstract class FindAndroidResTask : DefaultTask() {
         } else {
           null
         }
-      } catch (e: GradleException) {
+      } catch (_: GradleException) {
         null
       }
     }
@@ -119,10 +119,10 @@ abstract class FindAndroidResTask : DefaultTask() {
     return import to resLines
   }
 
-  companion object {
-    private const val NOT_AN_IMPORT = "__magic__"
+  private companion object {
+    const val NOT_AN_IMPORT = "__magic__"
 
-    private operator fun Set<AndroidResDependency>.plus(other: Set<AndroidResDependency>): Set<AndroidResDependency> {
+    operator fun Set<AndroidResDependency>.plus(other: Set<AndroidResDependency>): Set<AndroidResDependency> {
       val sink = mutableMapOf<Coordinates, AndroidResDependency>()
       map { sink[it.coordinates] = it }
       other.map {

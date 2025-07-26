@@ -6,13 +6,13 @@ import com.squareup.moshi.JsonClass
 import java.io.Serializable
 
 @JsonClass(generateAdapter = false)
-data class GradleVariantIdentification(
+public data class GradleVariantIdentification(
   val capabilities: Set<String>,
   val attributes: Map<String, String>,
 ) : Serializable, Comparable<GradleVariantIdentification> {
 
-  companion object {
-    val EMPTY = GradleVariantIdentification(emptySet(), emptyMap())
+  public companion object {
+    public val EMPTY: GradleVariantIdentification = GradleVariantIdentification(emptySet(), emptyMap())
 
     internal const val ENFORCED_PLATFORM = "-enforced-platform"
     internal const val PLATFORM = "-platform"
@@ -30,7 +30,7 @@ data class GradleVariantIdentification(
    * Check that all the requested capabilities are declared in the 'target'. Otherwise, the target can't be a target
    * of the given declarations. The requested capabilities ALWAYS have to exist in a target to be selected.
    */
-  fun variantMatches(target: Coordinates): Boolean = when (target) {
+  internal fun variantMatches(target: Coordinates): Boolean = when (target) {
     is FlatCoordinates -> true
     is ProjectCoordinates -> if (capabilities.isEmpty()) {
       target.gradleVariantIdentification.capabilities.any {

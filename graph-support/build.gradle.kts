@@ -6,10 +6,6 @@ plugins {
 
 version = "0.6"
 
-kotlin {
-  explicitApi()
-}
-
 dagp {
   version(version)
   pom {

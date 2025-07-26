@@ -26,7 +26,7 @@ import java.util.zip.ZipFile
  * either a "Lint-Registry" listed in the jar's manifest, or an issue registry in the file [LINT_ISSUE_REGISTRY_PATH].
  */
 @CacheableTask
-abstract class FindAndroidLinters : DefaultTask() {
+public abstract class FindAndroidLinters : DefaultTask() {
 
   init {
     description = "Produces a report of dependencies that supply Android linters"
@@ -34,17 +34,17 @@ abstract class FindAndroidLinters : DefaultTask() {
 
   private lateinit var lintJars: ArtifactCollection
 
-  fun setLintJars(lintJars: ArtifactCollection) {
+  public fun setLintJars(lintJars: ArtifactCollection) {
     this.lintJars = lintJars
   }
 
   @Classpath
-  fun getLintArtifactFiles(): FileCollection = lintJars.artifactFiles
+  public fun getLintArtifactFiles(): FileCollection = lintJars.artifactFiles
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
     val linters: Set<AndroidLinterDependency> = lintJars.asSequence()
@@ -56,7 +56,7 @@ abstract class FindAndroidLinters : DefaultTask() {
             coordinates = it.toCoordinates(),
             lintRegistry = findLintRegistry(it.file)
           )
-        } catch (e: GradleException) {
+        } catch (_: GradleException) {
           null
         }
       }
