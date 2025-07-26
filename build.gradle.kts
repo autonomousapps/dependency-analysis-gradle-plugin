@@ -108,7 +108,6 @@ dependencies {
   implementation(libs.guava)
   implementation(libs.kotlin.stdlib.jdk8)
   implementation(libs.kotlin.editor.relocated)
-  // implementation(libs.kryo5)
   implementation(libs.moshi.kotlin)
   implementation(libs.moshix.sealed.reflect)
   implementation(libs.okio)

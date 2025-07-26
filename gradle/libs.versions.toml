@@ -21,8 +21,6 @@ junit = "5.10.2"
 kotlin = "2.0.21"
 kotlinMetadata = "2.1.21"
 kotlinDokka = "2.0.0"
-# TODO(tsr): gzip. Delete
-kryo = "5.6.2"
 # Cannot be called kotlin-editor as it causes `libs.versions.kotlin.get()` to fail
 kotlineditor-core = "0.18"
 kotlineditor-relocated = "0.18.0"
@@ -78,9 +76,6 @@ relocated-asm = { module = "com.autonomousapps:asm-relocated", version.ref = "as
 shadowGradlePlugin = { module = "com.gradleup.shadow:com.gradleup.shadow.gradle.plugin", version.ref = "shadow" }
 spock = { module = "org.spockframework:spock-core", version.ref = "spock" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
-# TODO(tsr): gzip. Delete
-kryo = { module = "com.esotericsoftware:kryo", version.ref = "kryo" }
-kryo5 = { module = "com.esotericsoftware.kryo:kryo5", version.ref = "kryo" }
 
 [plugins]
 dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dagp" }
