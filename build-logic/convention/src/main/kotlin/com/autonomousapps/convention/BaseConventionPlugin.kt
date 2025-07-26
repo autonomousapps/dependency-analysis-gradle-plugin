@@ -110,7 +110,7 @@ internal class BaseConventionPlugin(private val project: Project) {
       }
     }
 
-    tasks.withType(DokkaTask::class.java) { t ->
+    tasks.withType(DokkaTask::class.java).configureEach { t ->
       t.inputs.property("is-functional-test", isFunctionalTest)
 
       // Don't sign when running functional tests
