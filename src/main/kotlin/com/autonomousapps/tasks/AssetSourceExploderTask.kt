@@ -17,6 +17,7 @@ import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
+@CacheableTask
 public abstract class AssetSourceExploderTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
   private val layout: ProjectLayout,

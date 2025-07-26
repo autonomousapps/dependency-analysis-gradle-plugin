@@ -6,7 +6,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
-@UntrackedTask(because = "Prints text to console")
+@UntrackedTask(because = "Always prints output")
 public abstract class ProjectGraphTask : DefaultTask() {
 
   init {
@@ -24,6 +24,7 @@ public abstract class ProjectGraphTask : DefaultTask() {
   @get:Internal
   public abstract val rootDir: DirectoryProperty
 
+  @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputDirectory
   public abstract val graphsDir: DirectoryProperty
 

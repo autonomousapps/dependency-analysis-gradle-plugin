@@ -31,6 +31,8 @@ import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
+// TODO(tsr): probably need a "ComputeReasonTask" and a "PrintReasonTask"
+@UntrackedTask(because = "Always prints output")
 public abstract class ReasonTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {

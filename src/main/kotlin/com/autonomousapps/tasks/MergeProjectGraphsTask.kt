@@ -11,6 +11,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 
+@CacheableTask
 public abstract class MergeProjectGraphsTask : DefaultTask() {
 
   init {

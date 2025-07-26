@@ -13,6 +13,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 
+@CacheableTask
 public abstract class FindAndroidAssetProviders : DefaultTask() {
 
   init {
