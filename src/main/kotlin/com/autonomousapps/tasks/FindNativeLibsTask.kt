@@ -15,7 +15,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 
 @CacheableTask
-abstract class FindNativeLibsTask : DefaultTask() {
+public abstract class FindNativeLibsTask : DefaultTask() {
 
   init {
     description = "Produces a report of all dependencies that supply native libs"
@@ -23,36 +23,36 @@ abstract class FindNativeLibsTask : DefaultTask() {
 
   private lateinit var androidJni: ArtifactCollection
 
-  fun setAndroidJni(androidJni: ArtifactCollection) {
+  public fun setAndroidJni(androidJni: ArtifactCollection) {
     this.androidJni = androidJni
   }
 
   @Optional // Only available on Android
   @PathSensitive(PathSensitivity.RELATIVE)
   @InputFiles
-  fun getAndroidJniFiles(): FileCollection? {
+  public fun getAndroidJniFiles(): FileCollection? {
     if (!::androidJni.isInitialized) return null
     return androidJni.artifactFiles
   }
 
   private lateinit var dylibs: ArtifactCollection
 
-  fun setMacNativeLibs(dylibs: ArtifactCollection) {
+  public fun setMacNativeLibs(dylibs: ArtifactCollection) {
     this.dylibs = dylibs
   }
 
   @Optional // Only available on JVM
   @PathSensitive(PathSensitivity.RELATIVE)
   @InputFiles
-  fun getMacNativeLibs(): FileCollection? {
+  public fun getMacNativeLibs(): FileCollection? {
     if (!::dylibs.isInitialized) return null
     return dylibs.artifactFiles
   }
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
     val nativeLibDependencies = findAndroidNativeDependencies()

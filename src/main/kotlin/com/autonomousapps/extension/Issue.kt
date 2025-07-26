@@ -33,7 +33,7 @@ import javax.inject.Inject
  * ```
  */
 @Suppress("MemberVisibilityCanBePrivate")
-open class Issue @Inject constructor(
+public open class Issue @Inject constructor(
   objects: ObjectFactory
 ) {
 
@@ -48,7 +48,7 @@ open class Issue @Inject constructor(
   private val excludes = objects.setProperty<Exclusion>().convention(emptySet())
 
   /** Must be one of 'warn', 'fail', or 'ignore'. */
-  fun severity(value: String) {
+  public fun severity(value: String) {
     when (value) {
       "warn" -> severity.set(Warn())
       "fail" -> severity.set(Fail())
@@ -67,7 +67,7 @@ open class Issue @Inject constructor(
    * ```
    * tells the plugin to exclude those dependencies in the final advice.
    */
-  fun exclude(vararg ignore: Provider<MinimalExternalModuleDependency>) {
+  public fun exclude(vararg ignore: Provider<MinimalExternalModuleDependency>) {
     exclude(*ignore.map { it.get().module.toString() }.toTypedArray())
   }
 
@@ -78,7 +78,7 @@ open class Issue @Inject constructor(
    * ```
    * tells the plugin to exclude those dependencies in the final advice.
    */
-  fun exclude(vararg ignore: ProviderConvertible<MinimalExternalModuleDependency>) {
+  public fun exclude(vararg ignore: ProviderConvertible<MinimalExternalModuleDependency>) {
     exclude(*ignore.map { it.asProvider() }.toTypedArray())
   }
 
@@ -89,7 +89,7 @@ open class Issue @Inject constructor(
    * ```
    * tells the plugin to exclude those dependencies in the final advice.
    */
-  fun exclude(vararg ignore: ProjectDependency) {
+  public fun exclude(vararg ignore: ProjectDependency) {
     exclude(*ignore.map { it.path }.toTypedArray())
   }
 
@@ -100,7 +100,7 @@ open class Issue @Inject constructor(
    * ```
    * tells the plugin to exclude those dependencies in the final advice.
    */
-  fun exclude(vararg ignore: String) {
+  public fun exclude(vararg ignore: String) {
     excludes.addAll(ignore.map { Exclusion.ExactMatch(it) }.toSet())
   }
 
@@ -111,7 +111,7 @@ open class Issue @Inject constructor(
    * ```
    * tells the plugin to exclude any subproject named ":internal" in the final advice.
    */
-  fun excludeRegex(@Language("RegExp") vararg patterns: String) {
+  public fun excludeRegex(@Language("RegExp") vararg patterns: String) {
     excludes.addAll(patterns.map { pattern -> Exclusion.PatternMatch(Regex(pattern)) })
   }
 

@@ -2,15 +2,15 @@ package com.autonomousapps.extension
 
 import java.io.Serializable
 
-sealed interface Exclusion: Serializable {
-  fun matches(name: String): Boolean
+public sealed interface Exclusion: Serializable {
+  public fun matches(name: String): Boolean
 
-  data class ExactMatch(val name: String): Exclusion {
-    override fun matches(name: String) = this.name == name
+  public data class ExactMatch(val name: String): Exclusion {
+    override fun matches(name: String): Boolean = this.name == name
   }
 
-  data class PatternMatch(val pattern: Regex): Exclusion {
-    override fun matches(name: String) = name.matches(pattern)
+  public data class PatternMatch(val pattern: Regex): Exclusion {
+    override fun matches(name: String): Boolean = name.matches(pattern)
   }
 }
 

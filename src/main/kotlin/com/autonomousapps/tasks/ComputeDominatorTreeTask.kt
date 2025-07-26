@@ -25,7 +25,7 @@ import org.gradle.api.tasks.*
 import java.io.File
 
 @CacheableTask
-abstract class ComputeDominatorTreeTask : DefaultTask() {
+public abstract class ComputeDominatorTreeTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -33,29 +33,29 @@ abstract class ComputeDominatorTreeTask : DefaultTask() {
   }
 
   @get:Input
-  abstract val buildPath: Property<String>
+  public abstract val buildPath: Property<String>
 
   @get:Input
-  abstract val projectPath: Property<String>
+  public abstract val projectPath: Property<String>
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val physicalArtifacts: RegularFileProperty
+  public abstract val physicalArtifacts: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val graphView: RegularFileProperty
+  public abstract val graphView: RegularFileProperty
 
   @get:OutputFile
-  abstract val outputTxt: RegularFileProperty
+  public abstract val outputTxt: RegularFileProperty
 
   @get:OutputFile
-  abstract val outputDot: RegularFileProperty
+  public abstract val outputDot: RegularFileProperty
 
   @get:OutputFile
-  abstract val outputJson: RegularFileProperty
+  public abstract val outputJson: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     compute(
       buildPath = buildPath,
       projectPath = projectPath,

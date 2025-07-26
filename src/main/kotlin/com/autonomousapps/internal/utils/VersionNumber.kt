@@ -8,7 +8,7 @@ import java.util.Objects
  * From `org.gradle.util.VersionNumber` (deprecated in 7, removed in 8).
  */
 @Suppress("unused", "VARIABLE_WITH_REDUNDANT_INITIALIZER") // converted from Java
-class VersionNumber private constructor(
+internal class VersionNumber private constructor(
   val major: Int,
   val minor: Int,
   val micro: Int,

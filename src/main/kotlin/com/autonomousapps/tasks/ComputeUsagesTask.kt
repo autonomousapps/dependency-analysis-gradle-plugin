@@ -30,7 +30,7 @@ import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 @CacheableTask
-abstract class ComputeUsagesTask @Inject constructor(
+public abstract class ComputeUsagesTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
@@ -40,34 +40,34 @@ abstract class ComputeUsagesTask @Inject constructor(
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val graph: RegularFileProperty
+  public abstract val graph: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val declarations: RegularFileProperty
+  public abstract val declarations: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputDirectory
-  abstract val dependencies: DirectoryProperty
+  public abstract val dependencies: DirectoryProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val syntheticProject: RegularFileProperty
+  public abstract val syntheticProject: RegularFileProperty
 
   @get:Input
-  abstract val kapt: Property<Boolean>
+  public abstract val kapt: Property<Boolean>
 
   @get:Input
-  abstract val checkSuperClasses: Property<Boolean>
+  public abstract val checkSuperClasses: Property<Boolean>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val duplicateClassesReports: ListProperty<RegularFile>
+  public abstract val duplicateClassesReports: ListProperty<RegularFile>
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ComputeUsagesAction::class.java) {
       graph.set(this@ComputeUsagesTask.graph)
       declarations.set(this@ComputeUsagesTask.declarations)
@@ -80,18 +80,18 @@ abstract class ComputeUsagesTask @Inject constructor(
     }
   }
 
-  interface ComputeUsagesParameters : WorkParameters {
-    val graph: RegularFileProperty
-    val declarations: RegularFileProperty
-    val dependencies: DirectoryProperty
-    val syntheticProject: RegularFileProperty
-    val kapt: Property<Boolean>
-    val checkSuperClasses: Property<Boolean>
-    val duplicateClassesReports: ListProperty<RegularFile>
-    val output: RegularFileProperty
+  public interface ComputeUsagesParameters : WorkParameters {
+    public val graph: RegularFileProperty
+    public val declarations: RegularFileProperty
+    public val dependencies: DirectoryProperty
+    public val syntheticProject: RegularFileProperty
+    public val kapt: Property<Boolean>
+    public val checkSuperClasses: Property<Boolean>
+    public val duplicateClassesReports: ListProperty<RegularFile>
+    public val output: RegularFileProperty
   }
 
-  abstract class ComputeUsagesAction : WorkAction<ComputeUsagesParameters> {
+  public abstract class ComputeUsagesAction : WorkAction<ComputeUsagesParameters> {
 
     private val graph = parameters.graph.fromJson<DependencyGraphView>()
     private val declarations = parameters.declarations.fromJsonSet<Declaration>()

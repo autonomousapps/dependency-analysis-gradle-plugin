@@ -20,7 +20,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
 
-abstract class RewriteTask : DefaultTask() {
+public abstract class RewriteTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -29,17 +29,17 @@ abstract class RewriteTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFile
-  abstract val buildScript: RegularFileProperty
+  public abstract val buildScript: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val projectAdvice: RegularFileProperty
+  public abstract val projectAdvice: RegularFileProperty
 
   @get:Input
-  abstract val dependencyMap: MapProperty<String, String>
+  public abstract val dependencyMap: MapProperty<String, String>
 
   @get:Input
-  abstract val useTypesafeProjectAccessors: Property<Boolean>
+  public abstract val useTypesafeProjectAccessors: Property<Boolean>
 
   @get:Optional
   @get:Input
@@ -47,9 +47,9 @@ abstract class RewriteTask : DefaultTask() {
     option = "upgrade",
     description = "Use --upgrade if you only want to add or upgrade (implementation -> api) dependencies"
   )
-  abstract val upgrade: Property<Boolean>
+  public abstract val upgrade: Property<Boolean>
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val buildScript = buildScript.get().asFile
 
     val isUpgrade = upgrade.getOrElse(false)

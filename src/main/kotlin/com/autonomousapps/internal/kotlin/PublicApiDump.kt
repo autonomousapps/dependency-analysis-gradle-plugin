@@ -22,7 +22,7 @@ import java.util.jar.JarFile
 import kotlin.metadata.jvm.JvmFieldSignature
 import kotlin.metadata.jvm.JvmMethodSignature
 
-fun main(args: Array<String>) {
+internal fun main(args: Array<String>) {
   val src = args[0]
   println(src)
   println("------------------\n")

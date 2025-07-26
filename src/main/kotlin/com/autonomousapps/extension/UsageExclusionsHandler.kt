@@ -18,12 +18,12 @@ import javax.inject.Inject
  * }
  * ```
  */
-abstract class UsageExclusionsHandler @Inject constructor(objects: ObjectFactory) {
+public abstract class UsageExclusionsHandler @Inject constructor(objects: ObjectFactory) {
 
   internal val classExclusions = objects.setProperty<String>().convention(emptySet())
 
   @Suppress("unused") // public API
-  fun excludeClasses(@Language("RegExp") vararg classRegexes: String) {
+  public fun excludeClasses(@Language("RegExp") vararg classRegexes: String) {
     classExclusions.addAll(*classRegexes)
   }
 }

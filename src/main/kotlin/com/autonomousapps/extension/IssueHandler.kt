@@ -20,21 +20,21 @@ import javax.inject.Inject
  * }
  * ```
  */
-abstract class IssueHandler @Inject constructor(
+public abstract class IssueHandler @Inject constructor(
   globalDslService: Provider<out GlobalDslService>,
 ) {
 
   private val globalDslService = globalDslService.get()
 
-  fun all(action: Action<ProjectIssueHandler>) {
+  public fun all(action: Action<ProjectIssueHandler>) {
     globalDslService.all(action)
   }
 
-  fun project(project: ProjectDependency, action: Action<ProjectIssueHandler>) {
+  public fun project(project: ProjectDependency, action: Action<ProjectIssueHandler>) {
     project(project.path, action)
   }
 
-  fun project(projectPath: String, action: Action<ProjectIssueHandler>) {
+  public fun project(projectPath: String, action: Action<ProjectIssueHandler>) {
     globalDslService.project(projectPath, action)
   }
 

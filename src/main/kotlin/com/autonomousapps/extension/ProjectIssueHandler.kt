@@ -70,7 +70,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-abstract class ProjectIssueHandler @Inject constructor(
+public abstract class ProjectIssueHandler @Inject constructor(
   private val projectPath: String,
   objects: ObjectFactory,
 ) : Named {
@@ -95,54 +95,54 @@ abstract class ProjectIssueHandler @Inject constructor(
 
   internal val ignoreSourceSets = objects.setProperty<String>()
 
-  fun ignoreSourceSet(vararg ignore: String) {
+  public fun ignoreSourceSet(vararg ignore: String) {
     ignoreSourceSets.addAll(ignore.toSet())
   }
 
   /** Specify custom behavior for [sourceSetName]. */
-  fun sourceSet(sourceSetName: String, action: Action<ProjectIssueHandler>) {
+  public fun sourceSet(sourceSetName: String, action: Action<ProjectIssueHandler>) {
     sourceSets.maybeCreate(sourceSetName).let { handler ->
       action.execute(handler.project)
     }
   }
 
-  fun onAny(action: Action<Issue>) {
+  public fun onAny(action: Action<Issue>) {
     action.execute(anyIssue)
   }
 
-  fun onUnusedDependencies(action: Action<Issue>) {
+  public fun onUnusedDependencies(action: Action<Issue>) {
     action.execute(unusedDependenciesIssue)
   }
 
-  fun onUsedTransitiveDependencies(action: Action<Issue>) {
+  public fun onUsedTransitiveDependencies(action: Action<Issue>) {
     action.execute(usedTransitiveDependenciesIssue)
   }
 
-  fun onIncorrectConfiguration(action: Action<Issue>) {
+  public fun onIncorrectConfiguration(action: Action<Issue>) {
     action.execute(incorrectConfigurationIssue)
   }
 
-  fun onCompileOnly(action: Action<Issue>) {
+  public fun onCompileOnly(action: Action<Issue>) {
     action.execute(compileOnlyIssue)
   }
 
-  fun onRuntimeOnly(action: Action<Issue>) {
+  public fun onRuntimeOnly(action: Action<Issue>) {
     action.execute(runtimeOnlyIssue)
   }
 
-  fun onUnusedAnnotationProcessors(action: Action<Issue>) {
+  public fun onUnusedAnnotationProcessors(action: Action<Issue>) {
     action.execute(unusedAnnotationProcessorsIssue)
   }
 
-  fun onRedundantPlugins(action: Action<Issue>) {
+  public fun onRedundantPlugins(action: Action<Issue>) {
     action.execute(redundantPluginsIssue)
   }
 
-  fun onModuleStructure(action: Action<Issue>) {
+  public fun onModuleStructure(action: Action<Issue>) {
     action.execute(moduleStructureIssue)
   }
 
-  fun onDuplicateClassWarnings(action: Action<Issue>) {
+  public fun onDuplicateClassWarnings(action: Action<Issue>) {
     action.execute(duplicateClassWarningsIssue)
   }
 }

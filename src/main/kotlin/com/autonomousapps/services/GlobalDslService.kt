@@ -23,7 +23,7 @@ import javax.inject.Inject
  * [DependencyAnalysisSubExtension][com.autonomousapps.DependencyAnalysisSubExtension] to safely (in isolated projects-
  * terms) configure the entire build, globally, without any subproject touching mutable properties of any other project.
  */
-abstract class GlobalDslService @Inject constructor(
+public abstract class GlobalDslService @Inject constructor(
   objects: ObjectFactory,
 ) : BuildService<BuildServiceParameters.None> {
 

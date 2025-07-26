@@ -234,7 +234,7 @@ internal inline fun <T> Iterable<T>.mutPartitionOf(
   return Pentuple(first, second, third, fourth, fifth)
 }
 
-data class Quadruple<out A, out B, out C, out D>(
+internal data class Quadruple<out A, out B, out C, out D>(
   val first: A,
   val second: B,
   val third: C,
@@ -243,7 +243,7 @@ data class Quadruple<out A, out B, out C, out D>(
   override fun toString(): String = "($first, $second, $third, $fourth)"
 }
 
-data class Pentuple<out A, out B, out C, out D, out F>(
+internal data class Pentuple<out A, out B, out C, out D, out F>(
   val first: A,
   val second: B,
   val third: C,

@@ -18,17 +18,17 @@ import java.io.File
  * @see <a href="https://github.com/android/gradle-recipes/blob/agp-8.2/getScopedArtifacts/build-logic/plugins/src/main/kotlin/CustomPlugin.kt#L55">Scoped Artifacts</a>
  * @see [com.autonomousapps.internal.analyzer.AndroidSources]
  */
-abstract class AndroidClassesTask : DefaultTask() {
+public abstract class AndroidClassesTask : DefaultTask() {
 
   /** Will be empty for this task. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val jars: ListProperty<RegularFile>
+  public abstract val jars: ListProperty<RegularFile>
 
   /** May be empty. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val dirs: ListProperty<Directory>
+  public abstract val dirs: ListProperty<Directory>
 
   /** Must be called during the execution phase. */
   protected fun androidClassFiles(): List<File> {

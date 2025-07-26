@@ -8,9 +8,9 @@ import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 import java.nio.charset.StandardCharsets
 
 @JsonClass(generateAdapter = false, generator = "sealed:type")
-sealed class Coordinates(
-  open val identifier: String,
-  open val gradleVariantIdentification: GradleVariantIdentification,
+public sealed class Coordinates(
+  public open val identifier: String,
+  public open val gradleVariantIdentification: GradleVariantIdentification,
 ) : Comparable<Coordinates> {
 
   /**
@@ -57,9 +57,9 @@ sealed class Coordinates(
   }
 
   /** Group-artifact-version (GAV) string representation, as used in Gradle dependency declarations. */
-  abstract fun gav(): String
+  public abstract fun gav(): String
 
-  fun toFileName() = capabilitiesWithoutDefault().let { capabilities ->
+  internal fun toFileName() = capabilitiesWithoutDefault().let { capabilities ->
     when {
       capabilities.isEmpty() -> "${gav().replace(":", "__")}.json"
       // In case we have capabilities, we use a unique hash for the capability combination in the file name
@@ -76,7 +76,7 @@ sealed class Coordinates(
       !it.endsWith(identifier) // If empty, needs to contain the 'default' capability
     }.sorted()
 
-  fun hasDefaultCapability(): Boolean {
+  internal fun hasDefaultCapability(): Boolean {
     return gradleVariantIdentification.capabilities.singleOrNull { it == identifier } != null
   }
 
@@ -91,7 +91,7 @@ sealed class Coordinates(
    *
    * @return A copy of this Coordinates without the 'default capability'
    */
-  fun withoutDefaultCapability(): Coordinates {
+  internal fun withoutDefaultCapability(): Coordinates {
     return gradleVariantIdentification.capabilities.let { capabilities ->
       when {
         capabilities.size == 1 && isDefaultCapability(capabilities.single(), identifier) -> {
@@ -118,7 +118,7 @@ sealed class Coordinates(
       else -> capability == identifier
     }
 
-  companion object {
+  internal companion object {
     /** Convert a raw string into [Coordinates]. */
     fun of(raw: String): Coordinates {
       return if (raw.startsWith(':')) {
@@ -138,12 +138,12 @@ sealed class Coordinates(
       }
     }
 
-    internal fun Coordinates.copy(gradleVariantIdentification: GradleVariantIdentification): Coordinates = copy(
+    fun Coordinates.copy(gradleVariantIdentification: GradleVariantIdentification): Coordinates = copy(
       identifier = identifier,
       gradleVariantIdentification = gradleVariantIdentification,
     )
 
-    internal fun Coordinates.copy(
+    fun Coordinates.copy(
       identifier: String,
       gradleVariantIdentification: GradleVariantIdentification,
     ): Coordinates = when (this) {
@@ -160,7 +160,7 @@ sealed class Coordinates(
 
 @TypeLabel("project")
 @JsonClass(generateAdapter = false)
-data class ProjectCoordinates(
+public data class ProjectCoordinates(
   override val identifier: String,
   override val gradleVariantIdentification: GradleVariantIdentification,
   val buildPath: String? = null, // Name of the build in a composite for which the project coordinates are valid
@@ -184,7 +184,7 @@ data class ProjectCoordinates(
 
 @TypeLabel("module")
 @JsonClass(generateAdapter = false)
-data class ModuleCoordinates(
+public data class ModuleCoordinates(
   override val identifier: String,
   val resolvedVersion: String,
   override val gradleVariantIdentification: GradleVariantIdentification,
@@ -214,7 +214,7 @@ data class ModuleCoordinates(
 /** For dependencies that have no version information. They might be a flat file on disk, or e.g. "Gradle API". */
 @TypeLabel("flat")
 @JsonClass(generateAdapter = false)
-data class FlatCoordinates(
+public data class FlatCoordinates(
   override val identifier: String,
 ) : Coordinates(identifier, GradleVariantIdentification.EMPTY) {
   override fun gav(): String = identifier
@@ -222,7 +222,7 @@ data class FlatCoordinates(
 
 @TypeLabel("included_build")
 @JsonClass(generateAdapter = false)
-data class IncludedBuildCoordinates(
+public data class IncludedBuildCoordinates(
   override val identifier: String,
   val resolvedProject: ProjectCoordinates,
   override val gradleVariantIdentification: GradleVariantIdentification,
@@ -232,7 +232,7 @@ data class IncludedBuildCoordinates(
 
   internal fun isForBuild(buildPath: String): Boolean = resolvedProject.buildPath == buildPath
 
-  companion object {
+  internal companion object {
     fun of(requested: ModuleCoordinates, resolvedProject: ProjectCoordinates) = IncludedBuildCoordinates(
       identifier = requested.identifier,
       resolvedProject = resolvedProject,

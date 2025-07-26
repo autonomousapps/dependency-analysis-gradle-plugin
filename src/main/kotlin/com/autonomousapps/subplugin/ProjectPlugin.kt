@@ -214,7 +214,7 @@ internal class ProjectPlugin(private val project: Project) {
 
   private fun checkAgpOnClasspath() {
     try {
-      @Suppress("UNUSED_VARIABLE")
+      @Suppress("UnusedVariable", "unused")
       val a = AndroidComponentsExtension::class.java
     } catch (_: Throwable) {
       dslService.get().notifyAgpMissing()
@@ -223,7 +223,7 @@ internal class ProjectPlugin(private val project: Project) {
 
   private fun checkKgpOnClasspath() {
     try {
-      @Suppress("UNUSED_VARIABLE")
+      @Suppress("UnusedVariable", "unused")
       val k = KotlinProjectExtension::class.java
     } catch (_: Throwable) {
       dslService.get().notifyKgpMissing()

@@ -10,7 +10,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 
 /** Decompresses a gzipped [input] and writes the result to [output]. */
-class GunzipTaskOutput(
+public class GunzipTaskOutput(
   private val fs: FileSystem,
   private val input: String,
   private val output: String,
@@ -32,9 +32,9 @@ class GunzipTaskOutput(
     output.writeText(decompressed)
   }
 
-  companion object {
+  public companion object {
     @JvmStatic
-    fun main(vararg args: String) {
+    public fun main(vararg args: String) {
       require(args.size == 2) { "Expected two arguments. Was ${args.joinToString()}" }
 
       GunzipTaskOutput(fs = FileSystems.getDefault(), input = args[0], output = args[1]).run()

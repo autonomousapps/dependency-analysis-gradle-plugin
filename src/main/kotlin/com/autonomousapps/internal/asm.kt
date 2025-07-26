@@ -702,7 +702,7 @@ internal class KotlinMetadataVisitor(
   }
 }
 
-fun stringValueOfArrayElement(value: Any?): String {
+private fun stringValueOfArrayElement(value: Any?): String {
   return if (value is String && value.contains("\n")) {
     "..."
   } else {

@@ -14,7 +14,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.newInstance
 import javax.inject.Inject
 
-abstract class AbstractExtension @Inject constructor(
+public abstract class AbstractExtension @Inject constructor(
   private val objects: ObjectFactory,
   gradle: Gradle,
 ) {
@@ -54,12 +54,12 @@ abstract class AbstractExtension @Inject constructor(
    * Never null, but may _contain_ a null value. Use with [RegularFileProperty.getOrNull].
    */
   @Suppress("MemberVisibilityCanBePrivate") // explicit API
-  fun adviceOutput(): RegularFileProperty = adviceOutput
+  public fun adviceOutput(): RegularFileProperty = adviceOutput
 
   /**
    * Whether to force the project being treated as an app project even if only the `java` plugin is applied.
    */
-  fun app() {
+  public fun app() {
     forceAppProject = true
   }
 
@@ -68,7 +68,7 @@ abstract class AbstractExtension @Inject constructor(
    * by this project.
    */
   @Suppress("unused") // explicit API
-  fun registerPostProcessingTask(task: TaskProvider<out AbstractPostProcessingTask>) {
+  public fun registerPostProcessingTask(task: TaskProvider<out AbstractPostProcessingTask>) {
     postProcessingTask = task
     task.configure {
       input.set(adviceOutput())

@@ -14,7 +14,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 @CacheableTask
-abstract class GenerateProjectGraphTask : DefaultTask() {
+public abstract class GenerateProjectGraphTask : DefaultTask() {
 
   init {
     description = "Generates several graph views of this project's local dependency graph"
@@ -28,18 +28,18 @@ abstract class GenerateProjectGraphTask : DefaultTask() {
   }
 
   @get:Input
-  abstract val buildPath: Property<String>
+  public abstract val buildPath: Property<String>
 
   @get:Input
-  abstract val compileClasspath: Property<ResolvedComponentResult>
+  public abstract val compileClasspath: Property<ResolvedComponentResult>
 
   @get:Input
-  abstract val runtimeClasspath: Property<ResolvedComponentResult>
+  public abstract val runtimeClasspath: Property<ResolvedComponentResult>
 
   @get:OutputDirectory
-  abstract val output: DirectoryProperty
+  public abstract val output: DirectoryProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val compileOutput = output.file(PROJECT_COMPILE_CLASSPATH_GV).getAndDelete()
     val runtimeOutput = output.file(PROJECT_RUNTIME_CLASSPATH_GV).getAndDelete()
     val combinedOutput = output.file(PROJECT_COMBINED_CLASSPATH_GV).getAndDelete()

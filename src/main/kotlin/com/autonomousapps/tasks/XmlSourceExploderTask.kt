@@ -41,41 +41,41 @@ import javax.inject.Inject
  * ```
  */
 @CacheableTask
-abstract class XmlSourceExploderTask @Inject constructor(
+public abstract class XmlSourceExploderTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
   private val layout: ProjectLayout,
 ) : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val androidLocalRes: ConfigurableFileCollection
+  public abstract val androidLocalRes: ConfigurableFileCollection
 
   /** Android layout XML files. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val layoutFiles: ConfigurableFileCollection
+  public abstract val layoutFiles: ConfigurableFileCollection
 
   /** AndroidManifest.xml files. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val manifestFiles: ConfigurableFileCollection
+  public abstract val manifestFiles: ConfigurableFileCollection
 
   /** Merged AndroidManifest.xml files. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val mergedManifestFiles: ConfigurableFileCollection
+  public abstract val mergedManifestFiles: ConfigurableFileCollection
 
   @get:Input
-  abstract val namespace: Property<String>
+  public abstract val namespace: Property<String>
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
   /** Elements not necessary at compile-time. */
   @get:OutputFile
-  abstract val outputRuntime: RegularFileProperty
+  public abstract val outputRuntime: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(XmlSourceExploderWorkAction::class.java) {
       projectDir.set(layout.projectDirectory)
       androidRes.setFrom(androidLocalRes)
@@ -88,18 +88,18 @@ abstract class XmlSourceExploderTask @Inject constructor(
     }
   }
 
-  interface XmlSourceExploderParameters : WorkParameters {
-    val projectDir: DirectoryProperty
-    val androidRes: ConfigurableFileCollection
-    val layouts: ConfigurableFileCollection
-    val manifests: ConfigurableFileCollection
-    val mergedManifests: ConfigurableFileCollection
-    val namespace: Property<String>
-    val output: RegularFileProperty
-    val outputRuntime: RegularFileProperty
+  public interface XmlSourceExploderParameters : WorkParameters {
+    public val projectDir: DirectoryProperty
+    public val androidRes: ConfigurableFileCollection
+    public val layouts: ConfigurableFileCollection
+    public val manifests: ConfigurableFileCollection
+    public val mergedManifests: ConfigurableFileCollection
+    public val namespace: Property<String>
+    public val output: RegularFileProperty
+    public val outputRuntime: RegularFileProperty
   }
 
-  abstract class XmlSourceExploderWorkAction : WorkAction<XmlSourceExploderParameters> {
+  public abstract class XmlSourceExploderWorkAction : WorkAction<XmlSourceExploderParameters> {
 
     private val builders = mutableMapOf<String, AndroidResBuilder>()
     private val runtimeBuilders = mutableMapOf<String, AndroidResBuilder>()

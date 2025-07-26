@@ -14,7 +14,7 @@ import org.gradle.api.initialization.Settings
  * }
  * ```
  */
-abstract class BuildHealthPlugin : Plugin<Settings> {
+public abstract class BuildHealthPlugin : Plugin<Settings> {
 
   internal companion object {
     const val ID = "com.autonomousapps.build-health"

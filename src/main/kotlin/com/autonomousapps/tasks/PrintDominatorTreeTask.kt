@@ -13,7 +13,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.UntrackedTask
 
 @UntrackedTask(because = "Always prints to console")
-abstract class PrintDominatorTreeTask : DefaultTask() {
+public abstract class PrintDominatorTreeTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -22,9 +22,9 @@ abstract class PrintDominatorTreeTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val consoleText: RegularFileProperty
+  public abstract val consoleText: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     logger.quiet(consoleText.readText())
   }
 }

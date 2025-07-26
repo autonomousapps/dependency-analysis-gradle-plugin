@@ -13,7 +13,7 @@ import org.gradle.api.tasks.*
 import java.util.SortedSet
 
 @CacheableTask
-abstract class ComputeDuplicateDependenciesTask : DefaultTask() {
+public abstract class ComputeDuplicateDependenciesTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -22,12 +22,12 @@ abstract class ComputeDuplicateDependenciesTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val resolvedDependenciesReports: ConfigurableFileCollection
+  public abstract val resolvedDependenciesReports: ConfigurableFileCollection
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val output = output.getAndDelete()
 
     val map = sortedMapOf<String, SortedSet<String>>()

@@ -22,7 +22,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-abstract class ReportingHandler @Inject constructor(private val objects: ObjectFactory) {
+public abstract class ReportingHandler @Inject constructor(private val objects: ObjectFactory) {
 
   internal val onlyOnFailure: Property<Boolean> = objects.property<Boolean>().convention(false)
   internal val postscript: Property<String> = objects.property<String>().convention("")
@@ -34,7 +34,7 @@ abstract class ReportingHandler @Inject constructor(private val objects: ObjectF
   /**
    * Whether to always include the postscript, or only when the report includes failure-level issues.
    */
-  fun onlyOnFailure(onlyOnFailure: Boolean) {
+  public fun onlyOnFailure(onlyOnFailure: Boolean) {
     this.onlyOnFailure.set(onlyOnFailure)
     this.onlyOnFailure.disallowChanges()
   }
@@ -42,7 +42,7 @@ abstract class ReportingHandler @Inject constructor(private val objects: ObjectF
   /**
    * A postscript to include in issue reports. Only included when there are issues to report, otherwise ignored.
    */
-  fun postscript(postscript: String) {
+  public fun postscript(postscript: String) {
     this.postscript.set(postscript)
     this.postscript.disallowChanges()
   }
@@ -52,7 +52,7 @@ abstract class ReportingHandler @Inject constructor(private val objects: ObjectF
    *
    * @see [com.autonomousapps.Flags.PRINT_BUILD_HEALTH]
    */
-  fun printBuildHealth(printBuildHealth: Boolean) {
+  public fun printBuildHealth(printBuildHealth: Boolean) {
     this.printBuildHealth.set(printBuildHealth)
     this.printBuildHealth.disallowChanges()
   }
@@ -64,10 +64,9 @@ abstract class ReportingHandler @Inject constructor(private val objects: ObjectF
     return config
   }
 
-  interface Config {
-
-    @get:Input val onlyOnFailure: Property<Boolean>
-    @get:Input val postscript: Property<String>
+  public interface Config {
+    @get:Input public val onlyOnFailure: Property<Boolean>
+    @get:Input public val postscript: Property<String>
   }
 }
 

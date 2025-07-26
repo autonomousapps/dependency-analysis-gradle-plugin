@@ -14,24 +14,24 @@ import java.io.Serializable
  *  serialized form. (I've tried twice and don't like it.)
  */
 @JsonClass(generateAdapter = false, generator = "sealed:type")
-sealed class SourceKind : Comparable<SourceKind>, Serializable {
+public sealed class SourceKind : Comparable<SourceKind>, Serializable {
   /** Variant name for Android, or source set name for JVM. */
-  abstract val name: String
+  public abstract val name: String
 
   /** MAIN, TEST, ANDROID_TEST, CUSTOM_JVM */
-  abstract val kind: String
+  public abstract val kind: String
 
-  abstract val compileClasspathName: String
-  abstract val runtimeClasspathName: String
+  public abstract val compileClasspathName: String
+  public abstract val runtimeClasspathName: String
 
-  abstract fun base(): SourceKind
+  internal abstract fun base(): SourceKind
 
   /**
    * Returns true if [runtimeClasspathName] has a match in [classpaths]. Match need not be exact, e.g. in the case where
    * some classpaths extend others. At time of writing, this is only relevant for Android projects. JVM projects require
    * an exact match.
    */
-  abstract fun runtimeMatches(classpaths: Collection<String>): Boolean
+  internal abstract fun runtimeMatches(classpaths: Collection<String>): Boolean
 
   internal companion object {
     const val MAIN_NAME = "main"
@@ -49,7 +49,7 @@ sealed class SourceKind : Comparable<SourceKind>, Serializable {
 
 @TypeLabel("android")
 @JsonClass(generateAdapter = false)
-data class AndroidSourceKind(
+public data class AndroidSourceKind(
   override val name: String,
   override val kind: String,
   override val compileClasspathName: String,
@@ -184,7 +184,7 @@ data class AndroidSourceKind(
 
 @TypeLabel("jvm")
 @JsonClass(generateAdapter = false)
-data class JvmSourceKind(
+public data class JvmSourceKind(
   override val name: String,
   override val kind: String,
   override val compileClasspathName: String,

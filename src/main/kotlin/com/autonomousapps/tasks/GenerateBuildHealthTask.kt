@@ -25,7 +25,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
 @CacheableTask
-abstract class GenerateBuildHealthTask : DefaultTask() {
+public abstract class GenerateBuildHealthTask : DefaultTask() {
 
   init {
     description = "Generates json report for build health"
@@ -33,35 +33,35 @@ abstract class GenerateBuildHealthTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val projectHealthReports: ConfigurableFileCollection
+  public abstract val projectHealthReports: ConfigurableFileCollection
 
   // TODO(tsr): this shouldn't be a Property for Complicated Reasons
   @get:Nested
-  abstract val reportingConfig: Property<ReportingHandler.Config>
+  public abstract val reportingConfig: Property<ReportingHandler.Config>
 
   /** The number of projects (modules) in this build, including the root project. */
   @get:Input
-  abstract val projectCount: Property<Int>
+  public abstract val projectCount: Property<Int>
 
   @get:Input
-  abstract val dslKind: Property<DslKind>
+  public abstract val dslKind: Property<DslKind>
 
   @get:Input
-  abstract val dependencyMap: MapProperty<String, String>
+  public abstract val dependencyMap: MapProperty<String, String>
 
   @get:Input
-  abstract val useTypesafeProjectAccessors: Property<Boolean>
+  public abstract val useTypesafeProjectAccessors: Property<Boolean>
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
   @get:OutputFile
-  abstract val consoleOutput: RegularFileProperty
+  public abstract val consoleOutput: RegularFileProperty
 
   @get:OutputFile
-  abstract val outputFail: RegularFileProperty
+  public abstract val outputFail: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val output = output.getAndDelete()
     val consoleOutput = consoleOutput.getAndDelete()
     val outputFail = outputFail.getAndDelete()

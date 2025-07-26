@@ -30,17 +30,17 @@ import javax.inject.Inject
  * }
  * ```
  */
-abstract class AbiHandler @Inject constructor(objects: ObjectFactory) {
+public abstract class AbiHandler @Inject constructor(objects: ObjectFactory) {
 
   internal val exclusionsHandler: ExclusionsHandler = objects.newInstance()
 
-  fun exclusions(action: Action<ExclusionsHandler>) {
+  public fun exclusions(action: Action<ExclusionsHandler>) {
     action.execute(exclusionsHandler)
   }
 }
 
 /** @see [AbiHandler]. */
-abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
+public abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
 
   internal val classExclusions = objects.setProperty<String>().convention(emptySet())
   internal val annotationExclusions = objects.setProperty<String>().convention(emptySet())
@@ -51,7 +51,7 @@ abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
    * Exclude the given [sourceSets] from ABI analysis, which means that regardless of the level of exposure of any given
    * symbol, all dependencies for these source sets are considered to be "implementation" details.
    */
-  fun excludeSourceSets(vararg sourceSets: String) {
+  public fun excludeSourceSets(vararg sourceSets: String) {
     excludedSourceSets.addAll(*sourceSets)
   }
 
@@ -59,7 +59,7 @@ abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
    * Exclude "internal" packages from ABI analysis, which means that any class in a package that contains ".internal."
    * will not be considered as part of the module's ABI.
    */
-  fun ignoreInternalPackages() {
+  public fun ignoreInternalPackages() {
     ignoreSubPackage("internal")
   }
 
@@ -67,7 +67,7 @@ abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
    * Exclude given sub-packages from ABI analysis, which means that any class in a package that contains
    * ".[packageFragment]." will not be considered as part of the module's ABI.
    */
-  fun ignoreSubPackage(packageFragment: String) {
+  public fun ignoreSubPackage(packageFragment: String) {
     excludeClasses("(.*\\.)?$packageFragment(\\..*)?")
   }
 
@@ -77,7 +77,7 @@ abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
    * `javax.annotation.Generated` (or its JDK9+ successor) does _not_ work with this due to it
    * using `SOURCE` retention. It's recommended to use your own `Generated` annotation.
    */
-  fun ignoreGeneratedCode() {
+  public fun ignoreGeneratedCode() {
     excludeAnnotations(".*\\.Generated")
   }
 
@@ -85,7 +85,7 @@ abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
    * Exclude given classes from ABI analysis, which means that any class that matches the given [classRegexes] regex
    * will not be considered as part of the module's ABI.
    */
-  fun excludeClasses(@Language("RegExp") vararg classRegexes: String) {
+  public fun excludeClasses(@Language("RegExp") vararg classRegexes: String) {
     classExclusions.addAll(*classRegexes)
   }
 
@@ -93,7 +93,7 @@ abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
    * Exclude any class from ABI analysis that is annotated with annotations that match [annotationRegexes], which means
    * those classes will not be considered as part of the module's ABI.
    */
-  fun excludeAnnotations(@Language("RegExp") vararg annotationRegexes: String) {
+  public fun excludeAnnotations(@Language("RegExp") vararg annotationRegexes: String) {
     annotationExclusions.addAll(*annotationRegexes)
   }
 

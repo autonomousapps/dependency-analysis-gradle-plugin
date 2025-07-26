@@ -13,7 +13,7 @@ import com.squareup.moshi.JsonClass
  * See also [Usage][com.autonomousapps.model.internal.intermediates.Usage].
  */
 @JsonClass(generateAdapter = false)
-data class Advice(
+public data class Advice(
   /** The coordinates of the dependency that ought to be modified in some way. */
   val coordinates: Coordinates,
   /** The current configuration on which the dependency has been declared. Will be null for transitive dependencies. */
@@ -30,16 +30,16 @@ data class Advice(
     .thenComparing(compareBy<Advice, String?>(nullsFirst()) { it.fromConfiguration })
     .compare(this, other)
 
-  companion object {
+  public companion object {
     @JvmStatic
-    fun ofAdd(coordinates: Coordinates, toConfiguration: String) = Advice(
+    public fun ofAdd(coordinates: Coordinates, toConfiguration: String): Advice = Advice(
       coordinates = coordinates,
       fromConfiguration = null,
       toConfiguration = toConfiguration
     )
 
     @JvmStatic
-    fun ofRemove(coordinates: Coordinates, fromConfiguration: String) = Advice(
+    public fun ofRemove(coordinates: Coordinates, fromConfiguration: String): Advice = Advice(
       coordinates = coordinates,
       fromConfiguration = fromConfiguration, toConfiguration = null
     )
@@ -49,7 +49,7 @@ data class Advice(
       ofRemove(coordinates, declaration.configurationName)
 
     @JvmStatic
-    fun ofChange(coordinates: Coordinates, fromConfiguration: String, toConfiguration: String): Advice {
+    public fun ofChange(coordinates: Coordinates, fromConfiguration: String, toConfiguration: String): Advice {
       require(fromConfiguration != toConfiguration) {
         "Change advice for ${coordinates.identifier} cannot be from and to the same configuration ($fromConfiguration in this case)"
       }
@@ -70,51 +70,51 @@ data class Advice(
    * So, an advice is "compileOnly-advice" only if it is a compileOnly candidate and is declared on a different
    * configuration.
    */
-  fun isCompileOnly() = toConfiguration?.endsWith("compileOnly", ignoreCase = true) == true
+  public fun isCompileOnly(): Boolean = toConfiguration?.endsWith("compileOnly", ignoreCase = true) == true
 
-  fun isRemoveCompileOnly() = isRemove() && fromConfiguration?.endsWith("compileOnly", ignoreCase = true) == true
+  public fun isRemoveCompileOnly(): Boolean = isRemove() && fromConfiguration?.endsWith("compileOnly", ignoreCase = true) == true
 
-  fun isRuntimeOnly() = toConfiguration?.endsWith("runtimeOnly", ignoreCase = true) == true
+  public fun isRuntimeOnly(): Boolean = toConfiguration?.endsWith("runtimeOnly", ignoreCase = true) == true
 
   /**
    * An advice is "add-advice" if it is undeclared and used, AND is not `compileOnly`.
    */
-  fun isAdd() = isAnyAdd() && !isCompileOnly()
+  public fun isAdd(): Boolean = isAnyAdd() && !isCompileOnly()
 
-  fun isAnyAdd() = fromConfiguration == null && toConfiguration != null
+  public fun isAnyAdd(): Boolean = fromConfiguration == null && toConfiguration != null
 
   /**
    * An advice is "remove-advice" if it is declared and not used, AND is not `compileOnly`,
    * AND is not `processor`.
    */
-  fun isRemove() = isAnyRemove() && !isCompileOnly() && !isProcessor()
+  public fun isRemove(): Boolean = isAnyRemove() && !isCompileOnly() && !isProcessor()
 
-  fun isAnyRemove() = toConfiguration == null
+  public fun isAnyRemove(): Boolean = toConfiguration == null
 
   /**
    * An advice is "change-advice" if it is declared and used (but is on the wrong configuration),
    * AND is not `compileOnly`, AND is not `runtimeOnly`.
    */
-  fun isChange() = isAnyChange() && !isCompileOnly() && !isRuntimeOnly()
+  public fun isChange(): Boolean = isAnyChange() && !isCompileOnly() && !isRuntimeOnly()
 
   /**
    * An advice is "change-advice" if it is declared and used (but is on the wrong configuration).
    */
-  fun isAnyChange() = fromConfiguration != null && toConfiguration != null
+  public fun isAnyChange(): Boolean = fromConfiguration != null && toConfiguration != null
 
   /**
    * An advice is "processors-advice" if it is declared on a k/apt or annotationProcessor
    * configuration, and this dependency should be removed.
    */
-  fun isProcessor() = toConfiguration == null && fromConfiguration?.let {
+  public fun isProcessor(): Boolean = toConfiguration == null && fromConfiguration?.let {
     it.endsWith("kapt", ignoreCase = true) || it.endsWith("annotationProcessor", ignoreCase = true)
   }.isTrue()
 
   /** If this is advice to remove or downgrade a dependency. */
-  fun isDowngrade(): Boolean = (isRemove() || isCompileOnly() || isRuntimeOnly())
+  public fun isDowngrade(): Boolean = (isRemove() || isCompileOnly() || isRuntimeOnly())
 
   /** If this is advice to add a dependency, or change an existing dependency to make it api-like. */
-  fun isUpgrade(): Boolean = isAnyAdd() || (isAnyChange() && isToApiLike())
+  public fun isUpgrade(): Boolean = isAnyAdd() || (isAnyChange() && isToApiLike())
 
-  fun isToApiLike(): Boolean = toConfiguration?.endsWith("api", ignoreCase = true) == true
+  public fun isToApiLike(): Boolean = toConfiguration?.endsWith("api", ignoreCase = true) == true
 }

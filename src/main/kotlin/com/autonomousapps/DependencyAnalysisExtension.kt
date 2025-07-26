@@ -38,44 +38,44 @@ import javax.inject.Inject
  * ```
  */
 @Suppress("MemberVisibilityCanBePrivate")
-abstract class DependencyAnalysisExtension @Inject constructor(
+public abstract class DependencyAnalysisExtension @Inject constructor(
   objects: ObjectFactory,
   gradle: Gradle
 ) : AbstractExtension(objects, gradle) {
 
   /** Declare that the plugin should use typesafe project accessors. False by default. */
-  fun useTypesafeProjectAccessors(enable: Boolean) {
+  public fun useTypesafeProjectAccessors(enable: Boolean) {
     useTypesafeProjectAccessors.set(enable)
   }
 
   /** Customize how the ABI is calculated. See [AbiHandler] for more information. */
-  fun abi(action: Action<AbiHandler>) {
+  public fun abi(action: Action<AbiHandler>) {
     action.execute(abiHandler)
   }
 
   /** Customize how "issues" are treated. See [IssueHandler] for more information. */
-  fun issues(action: Action<IssueHandler>) {
+  public fun issues(action: Action<IssueHandler>) {
     action.execute(issueHandler)
   }
 
   /** Customize issue reports. See [ReportingHandler] for more information. */
-  fun reporting(action: Action<ReportingHandler>) {
+  public fun reporting(action: Action<ReportingHandler>) {
     action.execute(reportingHandler)
   }
 
   /** Customize how dependencies are treated. See [DependenciesHandler] for more information. */
-  fun structure(action: Action<DependenciesHandler>) {
+  public fun structure(action: Action<DependenciesHandler>) {
     action.execute(dependenciesHandler)
   }
 
   /** Customize how used classes are calculated. See [UsageHandler] for more information. */
-  fun usage(action: Action<UsageHandler>) {
+  public fun usage(action: Action<UsageHandler>) {
     action.execute(usageHandler)
   }
 
   /** Customize how used classes are calculated. See [UsageHandler] for more information. */
   @Deprecated(message = "Use 'usage' instead", replaceWith = ReplaceWith("usage"))
-  fun usages(action: Action<UsageHandler>) {
+  public fun usages(action: Action<UsageHandler>) {
     action.execute(usageHandler)
   }
 
