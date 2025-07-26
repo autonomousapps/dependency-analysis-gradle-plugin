@@ -17,6 +17,7 @@ groovy = "3.0.25"
 guava = "33.4.8-jre"
 javaTarget = "11"
 jdkVersion = "17"
+jspecify = "1.0.0"
 junit = "5.13.4"
 kotlin = "2.0.21"
 kotlinMetadata = "2.1.21"
@@ -49,6 +50,7 @@ grammar = { module = "com.autonomousapps:gradle-script-grammar", version.ref = "
 groovy = { module = "org.codehaus.groovy:groovy", version.ref = "groovy" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 javax-inject = "javax.inject:javax.inject:1"
+jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 junit-api = { module = "org.junit.jupiter:junit-jupiter-api" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine" }
