@@ -9,7 +9,7 @@ package com.autonomousapps {
     field public static final String NAME = "dependencyAnalysis";
   }
 
-  public abstract class AbstractPostProcessingTask extends org.gradle.api.DefaultTask {
+  @org.gradle.work.DisableCachingByDefault public abstract class AbstractPostProcessingTask extends org.gradle.api.DefaultTask {
     ctor public AbstractPostProcessingTask();
     method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getInput();
     method public final com.autonomousapps.model.ProjectAdvice projectAdvice();
@@ -102,11 +102,9 @@ package com.autonomousapps.extension {
     ctor @javax.inject.Inject public DependenciesHandler(org.gradle.api.model.ObjectFactory objects);
     method public final void bundle(String name, org.gradle.api.Action<com.autonomousapps.extension.BundleHandler> action);
     method public final void explicitSourceSets(java.lang.String... sourceSets);
-    method public final org.gradle.api.NamedDomainObjectContainer<com.autonomousapps.extension.BundleHandler!>! getBundles();
-    method public final org.gradle.api.provider.MapProperty<java.lang.String!,java.lang.String!>! getMap();
+    method public final org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> getMap();
     method public final void ignoreKtx(boolean ignore);
-    property public final org.gradle.api.NamedDomainObjectContainer<com.autonomousapps.extension.BundleHandler!>! bundles;
-    property public final org.gradle.api.provider.MapProperty<java.lang.String!,java.lang.String!>! map;
+    property public final org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> map;
     field public static final String EXPLICIT_SOURCE_SETS_ALL = "__ALL";
   }
 
@@ -356,32 +354,13 @@ package com.autonomousapps.model {
     property public final int shouldBeJvmCount;
   }
 
-  public static final class BuildHealth.AndroidScoreMetrics.Builder {
-    ctor public BuildHealth.AndroidScoreMetrics.Builder();
-    method public com.autonomousapps.model.BuildHealth.AndroidScoreMetrics build();
-    method public int getCouldBeJvmCount();
-    method public int getShouldBeJvmCount();
-    method public void setCouldBeJvmCount(int);
-    method public void setShouldBeJvmCount(int);
-    property public final int couldBeJvmCount;
-    property public final int shouldBeJvmCount;
-  }
-
   @com.squareup.moshi.JsonClass(generateAdapter=false, generator="sealed:type") public abstract sealed class Coordinates implements java.lang.Comparable<com.autonomousapps.model.Coordinates> {
     method public int compareTo(com.autonomousapps.model.Coordinates other);
     method public abstract String gav();
     method public com.autonomousapps.model.GradleVariantIdentification getGradleVariantIdentification();
     method public String getIdentifier();
-    method public final boolean hasDefaultCapability();
-    method public final String toFileName();
-    method public final com.autonomousapps.model.Coordinates withoutDefaultCapability();
     property public com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification;
     property public String identifier;
-    field public static final com.autonomousapps.model.Coordinates.Companion Companion;
-  }
-
-  public static final class Coordinates.Companion {
-    method public com.autonomousapps.model.Coordinates of(String raw);
   }
 
   @com.squareup.moshi.JsonClass(generateAdapter=false) public final class DuplicateClass implements java.lang.Comparable<com.autonomousapps.model.DuplicateClass> {
@@ -420,7 +399,6 @@ package com.autonomousapps.model {
     method public com.autonomousapps.model.GradleVariantIdentification copy(java.util.Set<java.lang.String> capabilities, java.util.Map<java.lang.String,java.lang.String> attributes);
     method public java.util.Map<java.lang.String,java.lang.String> getAttributes();
     method public java.util.Set<java.lang.String> getCapabilities();
-    method public boolean variantMatches(com.autonomousapps.model.Coordinates target);
     property public final java.util.Map<java.lang.String,java.lang.String> attributes;
     property public final java.util.Set<java.lang.String> capabilities;
     field public static final com.autonomousapps.model.GradleVariantIdentification.Companion Companion;
@@ -442,11 +420,6 @@ package com.autonomousapps.model {
     property public com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification;
     property public String identifier;
     property public final com.autonomousapps.model.ProjectCoordinates resolvedProject;
-    field public static final com.autonomousapps.model.IncludedBuildCoordinates.Companion Companion;
-  }
-
-  public static final class IncludedBuildCoordinates.Companion {
-    method public com.autonomousapps.model.IncludedBuildCoordinates of(com.autonomousapps.model.ModuleCoordinates requested, com.autonomousapps.model.ProjectCoordinates resolvedProject);
   }
 
   @com.squareup.moshi.JsonClass(generateAdapter=false, generator="sealed:type") public abstract sealed class ModuleAdvice implements java.lang.Comparable<com.autonomousapps.model.ModuleAdvice> {
@@ -548,7 +521,6 @@ package com.autonomousapps.model.source {
 
   @com.squareup.moshi.JsonClass(generateAdapter=false) @dev.zacsweers.moshix.sealed.annotations.TypeLabel(label="android") public final class AndroidSourceKind extends com.autonomousapps.model.source.SourceKind implements java.io.Serializable {
     ctor public AndroidSourceKind(String name, String kind, String compileClasspathName, String runtimeClasspathName);
-    method public com.autonomousapps.model.source.AndroidSourceKind base();
     method public int compareTo(com.autonomousapps.model.source.SourceKind other);
     method public String component1();
     method public String component2();
@@ -559,7 +531,6 @@ package com.autonomousapps.model.source {
     method public String getKind();
     method public String getName();
     method public String getRuntimeClasspathName();
-    method public boolean runtimeMatches(java.util.Collection<java.lang.String> classpaths);
     property public String compileClasspathName;
     property public String kind;
     property public String name;
@@ -568,7 +539,6 @@ package com.autonomousapps.model.source {
 
   @com.squareup.moshi.JsonClass(generateAdapter=false) @dev.zacsweers.moshix.sealed.annotations.TypeLabel(label="jvm") public final class JvmSourceKind extends com.autonomousapps.model.source.SourceKind implements java.io.Serializable {
     ctor public JvmSourceKind(String name, String kind, String compileClasspathName, String runtimeClasspathName);
-    method public com.autonomousapps.model.source.JvmSourceKind base();
     method public int compareTo(com.autonomousapps.model.source.SourceKind other);
     method public String component1();
     method public String component2();
@@ -579,7 +549,6 @@ package com.autonomousapps.model.source {
     method public String getKind();
     method public String getName();
     method public String getRuntimeClasspathName();
-    method public boolean runtimeMatches(java.util.Collection<java.lang.String> classpaths);
     property public String compileClasspathName;
     property public String kind;
     property public String name;
@@ -587,12 +556,10 @@ package com.autonomousapps.model.source {
   }
 
   @com.squareup.moshi.JsonClass(generateAdapter=false, generator="sealed:type") public abstract sealed class SourceKind implements java.lang.Comparable<com.autonomousapps.model.source.SourceKind> java.io.Serializable {
-    method public abstract com.autonomousapps.model.source.SourceKind base();
     method public abstract String getCompileClasspathName();
     method public abstract String getKind();
     method public abstract String getName();
     method public abstract String getRuntimeClasspathName();
-    method public abstract boolean runtimeMatches(java.util.Collection<java.lang.String> classpaths);
     property public abstract String compileClasspathName;
     property public abstract String kind;
     property public abstract String name;
@@ -618,10 +585,6 @@ package com.autonomousapps.services {
 
   public abstract class InMemoryCache implements org.gradle.api.services.BuildService<com.autonomousapps.services.InMemoryCache.Params> {
     ctor public InMemoryCache();
-    field public static final com.autonomousapps.services.InMemoryCache.Companion Companion;
-  }
-
-  public static final class InMemoryCache.Companion {
   }
 
   public static interface InMemoryCache.Params extends org.gradle.api.services.BuildServiceParameters {
