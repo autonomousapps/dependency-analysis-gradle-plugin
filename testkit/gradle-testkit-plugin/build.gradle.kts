@@ -42,7 +42,9 @@ dependencies {
   functionalTestImplementation(project(":gradle-testkit-truth"))
   functionalTestImplementation(libs.junit.params)
   functionalTestImplementation(libs.truth)
+
   functionalTestRuntimeOnly(libs.junit.engine)
+  functionalTestRuntimeOnly(libs.junit.launcher)
 }
 
 val publishToMavenCentral = tasks.named("publishToMavenCentral") {

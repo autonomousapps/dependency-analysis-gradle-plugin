@@ -143,7 +143,9 @@ dependencies {
   testImplementation(libs.junit.api)
   testImplementation(libs.junit.params)
   testImplementation(libs.truth)
+
   testRuntimeOnly(libs.junit.engine)
+  testRuntimeOnly(libs.junit.launcher)
 
   smokeTestImplementation(libs.commons.io) {
     because("For FileUtils.deleteDirectory()")
