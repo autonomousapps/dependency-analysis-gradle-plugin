@@ -5,7 +5,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.JarExploder
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
@@ -37,18 +37,18 @@ public abstract class ExplodeJarTask @Inject constructor(
   @get:Classpath
   public abstract val compileClasspath: ConfigurableFileCollection
 
-  /** [`Set<PhysicalArtifact>`][com.autonomousapps.model.PhysicalArtifact]. */
+  /** [`Set<PhysicalArtifact>`][com.autonomousapps.model.internal.PhysicalArtifact]. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFile
   public abstract val physicalArtifacts: RegularFileProperty
 
-  /** [`Set<AndroidLinterDependency>?`][com.autonomousapps.model.intermediates.AndroidLinterDependency] */
+  /** [`Set<AndroidLinterDependency>?`][com.autonomousapps.model.internal.intermediates.AndroidLinterDependency] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   public abstract val androidLinters: RegularFileProperty
 
-  /** [`Set<ExplodedJar>`][com.autonomousapps.model.intermediates.ExplodedJar]. */
+  /** [`Set<ExplodedJar>`][com.autonomousapps.model.internal.intermediates.producer.ExplodedJar]. */
   @get:OutputFile
   public abstract val output: RegularFileProperty
 
@@ -77,16 +77,13 @@ public abstract class ExplodeJarTask @Inject constructor(
     override fun execute() {
       val outputFile = parameters.output.getAndDelete()
 
-      // Actual work
       val explodedJars = JarExploder(
         artifacts = parameters.physicalArtifacts.fromJsonList(),
         androidLinters = parameters.androidLinters.fromNullableJsonSet<AndroidLinterDependency>(),
         inMemoryCache = parameters.inMemoryCache.get()
       ).explodedJars()
 
-      // Write output to disk
-      // outputFile.bufferWriteJsonSet(explodedJars) // TODO(tsr): gzip
-      outputFile.gzipCompress(explodedJars)
+      outputFile.bufferWriteJsonSet(explodedJars, compress = true)
     }
   }
 }
