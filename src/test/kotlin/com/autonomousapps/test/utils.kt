@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.test
 
-import com.autonomousapps.model.declaration.internal.Bucket
+import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.model.source.SourceKind

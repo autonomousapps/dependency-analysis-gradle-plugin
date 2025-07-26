@@ -9,9 +9,9 @@ import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.CoordinatesString.Companion.toStringCoordinates
 import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.internal.Bucket
-import com.autonomousapps.model.declaration.internal.Configurations
-import com.autonomousapps.model.declaration.internal.Declaration
+import com.autonomousapps.model.internal.declaration.Bucket
+import com.autonomousapps.model.internal.declaration.Configurations
+import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.*
 import com.autonomousapps.model.source.SourceKind

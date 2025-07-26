@@ -1,9 +1,9 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-package com.autonomousapps.model.declaration.internal
+package com.autonomousapps.model.internal.declaration
 
-import com.autonomousapps.model.declaration.internal.Configurations.Matcher.BY_PREFIX
-import com.autonomousapps.model.declaration.internal.Configurations.Matcher.BY_SUFFIX
+import com.autonomousapps.model.internal.declaration.Configurations.Matcher.BY_PREFIX
+import com.autonomousapps.model.internal.declaration.Configurations.Matcher.BY_SUFFIX
 import com.autonomousapps.model.source.AndroidSourceKind
 import com.autonomousapps.model.source.JvmSourceKind
 import com.autonomousapps.model.source.SourceKind

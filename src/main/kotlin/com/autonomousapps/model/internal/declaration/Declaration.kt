@@ -1,6 +1,6 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-package com.autonomousapps.model.declaration.internal
+package com.autonomousapps.model.internal.declaration
 
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.model.GradleVariantIdentification

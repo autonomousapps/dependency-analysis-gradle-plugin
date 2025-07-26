@@ -7,7 +7,7 @@ import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.model.*
 import com.autonomousapps.model.Coordinates.Companion.copy
-import com.autonomousapps.model.declaration.internal.Bucket
+import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.Usage
 

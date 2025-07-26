@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.declaration.internal
 
+import com.autonomousapps.model.internal.declaration.Configurations
 import com.autonomousapps.model.source.AndroidSourceKind
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.params.ParameterizedTest

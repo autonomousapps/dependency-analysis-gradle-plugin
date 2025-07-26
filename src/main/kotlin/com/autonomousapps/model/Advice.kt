@@ -3,7 +3,7 @@
 package com.autonomousapps.model
 
 import com.autonomousapps.internal.utils.isTrue
-import com.autonomousapps.model.declaration.internal.Declaration
+import com.autonomousapps.model.internal.declaration.Declaration
 import com.squareup.moshi.JsonClass
 
 /**
