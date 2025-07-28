@@ -4,10 +4,10 @@
 
 package com.autonomousapps.services
 
+import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.Flags.cacheSize
 import com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
-import com.autonomousapps.subplugin.DEPENDENCY_ANALYSIS_PLUGIN
 import com.autonomousapps.tasks.KotlinCapabilities
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -26,7 +26,7 @@ public abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
 
   private val cacheSize = parameters.cacheSize.get()
 
-  private inline fun <reified K, reified V> newCache(maxSize: Long = cacheSize): Cache<K, V> {
+  private inline fun <reified K : Any, reified V> newCache(maxSize: Long = cacheSize): Cache<K, V> {
     val builder = Caffeine.newBuilder()
     if (maxSize >= 0) builder.maximumSize(maxSize)
     return builder.build()
@@ -72,8 +72,8 @@ public abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
         return thisBuild
       }
 
-      val thisPluginInstance = thisBuild.rootProject.plugins.findPlugin(DEPENDENCY_ANALYSIS_PLUGIN)
-      val rootPluginInstance = rootBuild.rootProject.plugins.findPlugin(DEPENDENCY_ANALYSIS_PLUGIN)
+      val thisPluginInstance = thisBuild.rootProject.plugins.findPlugin(DependencyAnalysisPlugin.ID)
+      val rootPluginInstance = rootBuild.rootProject.plugins.findPlugin(DependencyAnalysisPlugin.ID)
 
       if (thisPluginInstance == null || rootPluginInstance == null) {
         return thisBuild

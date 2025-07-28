@@ -4,7 +4,6 @@ package com.autonomousapps.subplugin
 
 import com.autonomousapps.BuildHealthPlugin
 import com.autonomousapps.DependencyAnalysisExtension
-import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.Flags.AUTO_APPLY
 import com.autonomousapps.Flags.printBuildHealth
 import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
@@ -19,8 +18,6 @@ import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.register
-
-internal const val DEPENDENCY_ANALYSIS_PLUGIN = DependencyAnalysisPlugin.ID
 
 /** This "plugin" is applied to the root project only. */
 internal class RootPlugin(private val project: Project) {
