@@ -1,30 +1,48 @@
+= Dependency Analysis Gradle Plugin
+
 image::https://img.shields.io/maven-metadata/v.svg?label=release&metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fcom%2Fautonomousapps%2Fdependency-analysis%2Fcom.autonomousapps.dependency-analysis.gradle.plugin%2Fmaven-metadata.xml[Latest version,link="https://mvnrepository.com/artifact/com.autonomousapps.dependency-analysis/com.autonomousapps.dependency-analysis.gradle.plugin"]
 image::https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fcom%2Fautonomousapps%2Fdependency-analysis-gradle-plugin%2Fmaven-metadata.xml[Latest snapshot,link="https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/com/autonomousapps/dependency-analysis-gradle-plugin/"]
 image::https://github.com/autonomousapps/dependency-analysis-gradle-plugin/actions/workflows/test.yml/badge.svg[Build status,link="https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/actions/workflows/test.yml"]
 
-== Detect unused and misused dependencies
-The Dependency Analysis Gradle Plugin (DAGP, née Dependency Analysis Android Gradle Plugin) detects the following:
+== Features [[features]]
 
-1. Unused dependencies.
-2. Used transitive dependencies (which you may want to declare directly).
-3. Dependencies declared on the wrong configuration (`api` vs `implementation` vs `compileOnly`, etc.).
+The Dependency Analysis Gradle Plugin has the following features:
 
-As a side effect, the plugin can also tell you your project's ABI, and produces graphviz files representing various
-views of your dependency graph, among other things. These side effects are currently mostly undocumented internal
-behaviors, but they may be interesting for some advanced users.
+It reports on dependency-related issues such as:
 
-== Build health
+1. … unused dependencies.
+2. … used transitive dependencies, which it is advisable you declare directly.
+3. … dependencies declared on the wrong configuration (`api` vs `implementation` vs `compileOnly`, etc.).
+4. … unused annotation processors.
 
-In addition to the dependency-related advice (see above), DAGP provides other advice to help maintain your "build health." This includes the detection of:
+For these types of issues, the plugin has auto-remediation capabilities.
 
-1. Unnecessary plugins (currently only `kapt`).
-2. Subprojects ("modules") that unnecessarily use the Android plugin, and could instead be "normal" JVM libraries.
+It can also report on plugin-related issues such as when:
+
+1. … the `org.jetbrains.kotlin.jvm` plugin is applied but isn't used.
+2. … the `com.android.library` plugin is applied but the module could be JVM.
+
+Additionally, the plugin:
+
+1. … will warn when a classpath has duplicate class files.
+2. … can trigger downloading of external dependencies, which can help with containerized builds.
+3. … print the dominator tree for a project, which can help with discovering "fat" dependencies that are bloating the
+   size of your deployables.
+4. … generate a project graph to help visualize the shape of your project.
 
 == Compatibilities
 
-Please see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Compatibilities-&-Limitations[wiki] for information on the versions of Gradle, the Android Gradle Plugin, etc., that this plugin is compatible with.
+The plugin can be used to analyze JVM or Android projects, including multi-project builds including both JVM and
+Android. It supports Groovy, Java, Kotlin, and Scala on the JVM. For Android, it supports analysis of
+`com.android.application`, `com.android.library`, and `com.android.test` modules. It has special handling for
+"application" modules, which are those that apply the `application`, `org.gretty`, or `org.springframework.boot`
+plugins.
+
+Please see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Compatibilities-&-Limitations[wiki]
+for comprehensive information.
 
 == Add to your project and use
+
 For detailed instructions, see
 https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Adding-to-your-project[the wiki].
 
@@ -35,6 +53,22 @@ The simplest approach is to add the following:
 ----
 plugins {
   id("com.autonomousapps.build-health") version "<<latest_version>>"
+}
+----
+
+and then in the root build script:
+
+.build.gradle.kts
+[source,kotlin]
+----
+dependencyAnalysis {
+  issues {
+    all {
+      onAny {
+        severity("fail")
+      }
+    }
+  }
 }
 ----
 
@@ -60,12 +94,16 @@ Execution failed for task ':buildHealth'.
 > There were dependency violations. See report at file:///path/to/project/build/reports/dependency-analysis/build-health-report.txt
 ----
 
-If you wish to have this (potentially very long) report printed to console, add this to your `gradle.properties` file:
+If you wish to have this (potentially very long) report printed to console, add this to the `dependencyAnalysis` DSL:
 
-.gradle.properties
-[source]
+.build.gradle.kts
+[source,kotlin]
 ----
-dependency.analysis.print.build.health=true
+dependencyAnalysis {
+  reporting {
+    printBuildHealth(true)
+  }
+}
 ----
 
 == Repositories
@@ -114,7 +152,7 @@ IMPORTANT: If your project uses Kotlin or Android (or both), then those plugins 
 script classloader (or a parent). See
 https://github.com/autonomousapps/dependency-analysis-gradle-plugin/wiki/Adding-to-your-project[the wiki] for more information
 
-=== Project Health
+== Project Health
 
 The analysis can be run against individual modules with the `projectHealth` task. For example:
 
@@ -122,7 +160,7 @@ The analysis can be run against individual modules with the `projectHealth` task
 ./gradlew app:projectHealth
 ----
 
-=== Fix dependency issues automatically
+== Fix dependency issues automatically
 
 It is common for the plugin to report many issues with your project's dependency declarations. Since fixing manually can
 be tedious, the plugin also provides a task to auto-remediate all issues.
@@ -135,7 +173,7 @@ The `fixDependencies` task is registered on each project where the plugin is app
 task in each subproject. See also
 https://dev.to/autonomousapps/one-click-dependencies-fix-191p[_One click dependencies fix_].
 
-==== Fix only some dependency issues automatically
+=== Fix only some dependency issues automatically
 
 In some circumstances, it may be considered infeasible to resolve all issues in one pass. Maybe you have a very large
 project, or you publish libraries and you know that changing your dependency declarations will also change your
@@ -152,7 +190,7 @@ only add or "upgrade" declarations (e.g., from `implementation` to `api`).
 In an incremental rollout scenario, one could imagine using the `--upgrade` flag, then updating all consumers, then
 finally removing the flag and removing all unused dependencies.
 
-==== Caveats
+=== Caveats
 
 If the analysis has any bugs, then fixing the dependency declarations make break your build (but this is also the case
 with manual fixes). If you encounter this, please
@@ -163,7 +201,7 @@ presence of complex Groovy build scripts. The Kotlin DSL grammar has full suppor
 makes the rewriting functionality work much better for Gradle Kotlin DSL scripts. There are no plans to do the same for
 Gradle Groovy DSL.
 
-=== Reason
+== Reason
 
 You may be curious why the plugin is emitting (or not emitting) advice regarding some dependency. You can ask it why:
 
@@ -186,11 +224,15 @@ Source: main
 ----
 <1> The version string is optional.
 
-=== Basic configuration
+== Basic configuration
 
-For detailed information on how to configure the plugin, see https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Customizing-plugin-behavior[the wiki].
+For detailed information on how to configure the plugin, see
+https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Customizing-plugin-behavior[the wiki].
 
-To configure the plugin, use the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/blob/main/src/main/kotlin/com/autonomousapps/DependencyAnalysisExtension.kt[`dependencyAnalysis`] extension.
+To configure the plugin, use the
+https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/blob/main/src/main/kotlin/com/autonomousapps/DependencyAnalysisExtension.kt[`dependencyAnalysis`] extension.
+
+Below is a summary of the top-level DSL options:
 
 .build.gradle.kts
 [source,kotlin]
@@ -206,11 +248,7 @@ dependencyAnalysis {
   issues { ... }
 
   // Configure issue reports.
-  reporting {
-    // false by default. Setting to true results in 
-    // the advice report being emitted to console.
-    printBuildHealth(true)
-  }
+  reporting { ... }
 
   // Configure dependency structure rules (bundles, mapping, etc).
   structure { ... }
@@ -220,17 +258,59 @@ dependencyAnalysis {
 }
 ----
 
+== Ancillary tasks
+
+As mentioned <<features,above>>, the plugin has a variety of features not strictly related to maintaining a correct
+dependency graph.
+
+=== Trigger downloading of external dependencies
+
+This task will resolve all the external dependencies for a given source set's compile and runtime classpaths.
+"Resolving" a dependency will also result in downloading that dependency. A common case where this is useful is when
+you want to create an image for a containerized build.
+
+----
+./gradlew :<module>:resolveExternalDependenciesMain
+----
+
+where "Main" refers to the name of the source set or Android variant (capitalized).
+
+=== Print the denominator tree
+
+This will print the https://en.wikipedia.org/wiki/Dominator_(graph_theory)[dominator tree] for the given project. This
+is useful when looking for "fat" dependencies that contribute significantly to final binary size (such as with a fatjar
+or when building an image), and in cases where it's desirable to shrink that binary.
+
+----
+./gradlew :<module>:printDominatorTreeCompileMain
+----
+
+where "Main" refers to the name of the source set or Android variant (capitalized).
+
+=== Generate a project graph
+
+This will generate various views of the project graph in your multi-project build, for both compile and runtime
+classpaths. In addition to the graphviz output, there is also a topological sort, which might be useful for debugging
+issues with evaluation order.
+
+----
+./gradlew :<module>:projectGraphMain
+----
+
+where "Main" refers to the name of the source set or Android variant (capitalized).
+
 == Programmatic usage and API guarantees
 
-From version 3.0.0 (unreleased), the plugin includes an api definition in `api/api.txt`. Any backwards-incompatible
-change from then on will result in a major version release. Note that some code is public only due to tooling
-limitations; most of this code is in an `internal` package, but `com.autonomousapps.tasks` is also considered
-"internal." Usage of any API in these internal packages is at your own risk.
+From version 3.0.0, the plugin includes an api definition in `api/api.txt`. Any backwards-incompatible change from then
+on will result in a major version release. Note that some code is public only due to tooling limitations; most of this
+code is in an `internal` package, but `com.autonomousapps.tasks` is also considered "internal." Usage of any API in
+these internal packages is at your own risk.
 
 For typical users who only apply the plugin and run the primary tasks (`buildHealth`, `projectHealth`, `reason`, etc.),
 major releases should be treated as non-events. For these users, the "API" is just those primary tasks.
 
 == Publications
+
 The following is a list of articles / blog posts that have been published discussing this plugin:
 
 1. https://dev.to/autonomousapps/the-proper-care-and-feeding-of-your-gradle-build-d8g[The proper care and feeding of your Gradle build]
