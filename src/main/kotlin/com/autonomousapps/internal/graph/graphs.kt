@@ -45,7 +45,7 @@ internal fun Graph<Coordinates>.stripVariants(buildPath: String): Graph<Coordina
   return builder.build()
 }
 
-internal fun <T> newGraphBuilder(): ImmutableGraph.Builder<T> {
+internal fun <T : Any> newGraphBuilder(): ImmutableGraph.Builder<T> {
   return GraphBuilder.directed()
     .allowsSelfLoops(false)
     .incidentEdgeOrder(ElementOrder.stable<T>())
