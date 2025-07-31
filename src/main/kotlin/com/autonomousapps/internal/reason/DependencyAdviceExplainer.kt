@@ -204,7 +204,7 @@ internal class DependencyAdviceExplainer(
 
       val reasons = usage.reasons.filter { it !is Reason.Unused && it !is Reason.Undeclared && it !is Reason.Excluded }
       val excluded = usage.reasons.filterIsInstance<Reason.Excluded>()
-      val isCompileOnly = reasons.any { it is Reason.CompileTimeAnnotations }
+      val isCompileOnly = reasons.any { it is Reason.Annotations }
 
       reasons.forEach { reason ->
         append("""* """)

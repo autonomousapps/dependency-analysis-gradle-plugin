@@ -188,8 +188,8 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
             superClass = bytecode.superClass
             interfaces.addAll(bytecode.interfaces)
             nonAnnotationClasses.addAll(bytecode.nonAnnotationClasses)
+            nonAnnotationClassesWithinVisibleAnnotation.putAll(bytecode.nonAnnotationClassesWithinVisibleAnnotation)
             annotationClasses.addAll(bytecode.annotationClasses)
-            invisibleAnnotationClasses.addAll(bytecode.invisibleAnnotationClasses)
             //   // TODO(tsr): flatten into a single set? Do we need the map?
             //   // Merge the two maps
             //   bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
@@ -266,8 +266,8 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
     private fun CodeSource.excludeUsages(usagesExclusions: UsagesExclusions): CodeSource {
       return copy(
         usedNonAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedNonAnnotationClasses),
+        usedNonAnnotationClassesWithinVisibleAnnotation = usagesExclusions.excludeClassesFromMap(usedNonAnnotationClassesWithinVisibleAnnotation),
         usedAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedAnnotationClasses),
-        usedInvisibleAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedInvisibleAnnotationClasses),
         imports = usagesExclusions.excludeClassesFromSet(imports),
       )
     }
@@ -287,8 +287,8 @@ private class CodeSourceBuilder(val className: String) {
   var superClass: String? = null
   val interfaces = sortedSetOf<String>()
   val nonAnnotationClasses = sortedSetOf<String>()
+  val nonAnnotationClassesWithinVisibleAnnotation = mutableMapOf<String, String>()
   val annotationClasses = sortedSetOf<String>()
-  val invisibleAnnotationClasses = sortedSetOf<String>()
   val exposedClasses = sortedSetOf<String>()
   val imports = sortedSetOf<String>()
   // val binaryClassAccesses = mutableMapOf<String, MutableSet<MemberAccess>>()
@@ -298,8 +298,8 @@ private class CodeSourceBuilder(val className: String) {
     other.superClass?.let { superClass = it }
     interfaces.addAll(other.interfaces)
     nonAnnotationClasses.addAll(other.nonAnnotationClasses)
+    nonAnnotationClassesWithinVisibleAnnotation.putAll(other.nonAnnotationClassesWithinVisibleAnnotation)
     annotationClasses.addAll(other.annotationClasses)
-    invisibleAnnotationClasses.addAll(other.invisibleAnnotationClasses)
     exposedClasses.addAll(other.exposedClasses)
     imports.addAll(other.imports)
     kind = other.kind
@@ -315,8 +315,8 @@ private class CodeSourceBuilder(val className: String) {
       kind = kind,
       className = className,
       usedNonAnnotationClasses = nonAnnotationClasses.efficient(),
+      usedNonAnnotationClassesWithinVisibleAnnotation = nonAnnotationClassesWithinVisibleAnnotation.efficient(),
       usedAnnotationClasses = annotationClasses.efficient(),
-      usedInvisibleAnnotationClasses = invisibleAnnotationClasses.efficient(),
       exposedClasses = exposedClasses.efficient(),
       imports = imports.efficient(),
       // binaryClassAccesses = binaryClassAccesses,

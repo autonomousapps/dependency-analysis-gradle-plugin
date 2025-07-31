@@ -51,8 +51,8 @@ internal class ClassFilesParser(
           interfaces = explodedClass.interfaces,
           sourceFile = explodedClass.source,
           nonAnnotationClasses = explodedClass.nonAnnotationClasses,
+          nonAnnotationClassesWithinVisibleAnnotation = explodedClass.nonAnnotationClassesWithinVisibleAnnotation,
           annotationClasses = explodedClass.annotationClasses,
-          invisibleAnnotationClasses = explodedClass.invisibleAnnotationClasses,
           binaryClassAccesses = explodedClass.binaryClasses,
         )
       }
@@ -85,17 +85,17 @@ private class BytecodeReader(
       }
     }
 
-    val usedVisibleAnnotationClasses = classAnalyzer.classes.asSequence()
-      .filter { it.kind == ClassRef.Kind.ANNOTATION_VISIBLE }
-      .map { it.classRef }
-      .toSet()
     // TODO(tsr): use this somehow? I think these should be considered compileOnly candidates
     //  Look at `CompileOnlySpec#annotations can be compileOnly`. It detects usage of Producer because it is imported,
     //  but doesn't see it in the bytecode. I think this can be improved. Finding it in the bytecode is preferable to
-    //  the import heuristic. We'll need to differentiate in/visible annotations though.
-    val usedInvisibleAnnotationClasses = classAnalyzer.classes.asSequence()
-      .filter { it.kind == ClassRef.Kind.ANNOTATION_HIDDEN }
+    //  the import heuristic.
+    val usedAnnotationClasses = classAnalyzer.classes.asSequence()
+      .filter { (it.kind == ClassRef.Kind.ANNOTATION) && (it.enclosingAnnotation == null) }
       .map { it.classRef }
+      .toSet()
+    val usedNonAnnotationClassesWithinVisibleAnnotation = classAnalyzer.classes.asSequence()
+      .filter { (it.kind == ClassRef.Kind.ANNOTATION) && (it.enclosingAnnotation != null) }
+      .map { it.classRef to it.enclosingAnnotation!! }
       .toSet()
     val usedNonAnnotationClasses = classAnalyzer.classes.asSequence()
       .filter { it.kind == ClassRef.Kind.NOT_ANNOTATION }
@@ -108,8 +108,8 @@ private class BytecodeReader(
       superClass = classAnalyzer.superClass?.let { canonicalize(it) },
       interfaces = classAnalyzer.interfaces.asSequence().fixup(classAnalyzer),
       nonAnnotationClasses = constantPool.asSequence().plus(usedNonAnnotationClasses).fixup(classAnalyzer),
-      annotationClasses = usedVisibleAnnotationClasses.asSequence().fixup(classAnalyzer),
-      invisibleAnnotationClasses = usedInvisibleAnnotationClasses.asSequence().fixup(classAnalyzer),
+      nonAnnotationClassesWithinVisibleAnnotation = usedNonAnnotationClassesWithinVisibleAnnotation.asSequence().fixup(classAnalyzer),
+      annotationClasses = usedAnnotationClasses.asSequence().fixup(classAnalyzer),
       binaryClasses = classAnalyzer.getBinaryClasses().fixup(classAnalyzer),
     )
   }
@@ -124,6 +124,19 @@ private class BytecodeReader(
       // More human-readable
       .map { canonicalize(it) }
       .toSortedSet()
+      .efficient()
+  }
+
+  @JvmName("fixupPair")
+  private fun Sequence<Pair<String, String>>.fixup(classAnalyzer: ClassAnalyzer): Map<String, String> {
+    return this
+      // Filter out `java` packages, but not `javax`
+      .filterNot { it.first.startsWith("java/") }
+      // Filter out a "used class" that is exactly the class under analysis
+      .filterNot { it.first == classAnalyzer.className }
+      // More human-readable
+      .map { canonicalize(it.first) to canonicalize(it.second) }
+      .toMap()
       .efficient()
   }
 
@@ -144,7 +157,7 @@ private class ExplodedClass(
   val superClass: String?,
   val interfaces: Set<String>,
   val nonAnnotationClasses: Set<String>,
+  val nonAnnotationClassesWithinVisibleAnnotation: Map<String, String>,
   val annotationClasses: Set<String>,
-  val invisibleAnnotationClasses: Set<String>,
   val binaryClasses: Map<String, Set<MemberAccess>>,
 )

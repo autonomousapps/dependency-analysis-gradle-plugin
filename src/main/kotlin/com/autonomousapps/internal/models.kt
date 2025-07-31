@@ -183,6 +183,10 @@ internal data class UsagesExclusions(
     return fqcn.filterNotToSet { excludesClass(it) }
   }
 
+  fun excludeClassesFromMap(fqcn: Map<String, String>): Map<String, String> {
+    return fqcn.filterNot { excludesClass(it.key) }
+  }
+
   // The user-facing regex expects FQCNs to be delimited with dots, not slashes
   private fun String.dotty() = replace('/', '.').removeSurrounding("L", ";")
 

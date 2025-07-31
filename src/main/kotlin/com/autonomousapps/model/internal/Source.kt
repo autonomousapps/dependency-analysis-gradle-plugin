@@ -35,11 +35,11 @@ internal data class CodeSource(
   /** Every class discovered in the bytecode of [className], and not as an annotation. */
   val usedNonAnnotationClasses: Set<String>,
 
-  /** Every class discovered in the bytecode of [className], and as a visible annotation. */
-  val usedAnnotationClasses: Set<String>,
+  /** Every class discovered in the bytecode of [className], not as an annotation but used inside a visible annotation. */
+  val usedNonAnnotationClassesWithinVisibleAnnotation: Map<String, String>,
 
-  /** Every class discovered in the bytecode of [className], and as an invisible annotation. */
-  val usedInvisibleAnnotationClasses: Set<String>,
+  /** Every class discovered in the bytecode of [className], and as an annotation. */
+  val usedAnnotationClasses: Set<String>,
 
   /** Every class discovered in the bytecode of [className], and which is exposed as part of the ABI. */
   val exposedClasses: Set<String>,
@@ -59,8 +59,8 @@ internal data class CodeSource(
         .thenComparing(compareBy<CodeSource, String?>(nullsFirst()) { it.superClass })
         .thenBy(LexicographicIterableComparator()) { it.interfaces }
         .thenBy(LexicographicIterableComparator()) { it.usedNonAnnotationClasses }
+        .thenBy(LexicographicIterableComparator()) { it.usedNonAnnotationClassesWithinVisibleAnnotation.map { it.key } }
         .thenBy(LexicographicIterableComparator()) { it.usedAnnotationClasses }
-        .thenBy(LexicographicIterableComparator()) { it.usedInvisibleAnnotationClasses }
         .thenBy(LexicographicIterableComparator()) { it.exposedClasses }
         .thenBy(LexicographicIterableComparator()) { it.imports }
         .compare(this, other)

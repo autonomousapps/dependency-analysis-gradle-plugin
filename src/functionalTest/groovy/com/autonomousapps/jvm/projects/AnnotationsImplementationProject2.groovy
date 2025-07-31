@@ -8,7 +8,7 @@ import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.kit.gradle.Dependency.implementation
+import static com.autonomousapps.kit.gradle.Dependency.compileOnly
 
 final class AnnotationsImplementationProject2 extends AbstractProject {
 
@@ -25,7 +25,7 @@ final class AnnotationsImplementationProject2 extends AbstractProject {
         s.withBuildScript { bs ->
           bs.plugins = javaLibrary
           bs.dependencies(
-            implementation('org.cthing:cthing-annotations:1.0.0'),
+            compileOnly('org.cthing:cthing-annotations:1.0.0'),
           )
 
           // "cthing" uses Java 17+

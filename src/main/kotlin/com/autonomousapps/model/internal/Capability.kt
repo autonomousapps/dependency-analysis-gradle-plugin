@@ -293,14 +293,13 @@ internal data class ConstantCapability(
 @JsonClass(generateAdapter = false)
 internal data class InferredCapability(
   /**
-   * True if this dependency contains only annotations that are only needed at compile-time (`CLASS` and `SOURCE` level
-   * retention policies). False otherwise.
+   * True if this dependency contains only annotations. False otherwise.
    */
-  val isCompileOnlyAnnotations: Boolean,
+  val isAnnotations: Boolean,
 ) : Capability() {
 
   override fun merge(other: Capability): Capability {
-    return InferredCapability(isCompileOnlyAnnotations && (other as InferredCapability).isCompileOnlyAnnotations)
+    return InferredCapability(isAnnotations && (other as InferredCapability).isAnnotations)
   }
 }
 
