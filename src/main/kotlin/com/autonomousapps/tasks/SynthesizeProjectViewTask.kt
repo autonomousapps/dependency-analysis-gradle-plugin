@@ -12,15 +12,17 @@ import com.autonomousapps.model.internal.intermediates.AnnotationProcessorDepend
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingAbi
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingSourceCode
+import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
 import com.autonomousapps.model.source.SourceKind
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.Optional
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import java.util.TreeSet
+import java.util.*
 import javax.inject.Inject
 
 @CacheableTask
@@ -190,6 +192,7 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
             nonAnnotationClasses.addAll(bytecode.nonAnnotationClasses)
             nonAnnotationClassesWithinVisibleAnnotation.putAll(bytecode.nonAnnotationClassesWithinVisibleAnnotation)
             annotationClasses.addAll(bytecode.annotationClasses)
+            inferredConstants.addAll(bytecode.inferredConstants)
             //   // TODO(tsr): flatten into a single set? Do we need the map?
             //   // Merge the two maps
             //   bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
@@ -266,7 +269,9 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
     private fun CodeSource.excludeUsages(usagesExclusions: UsagesExclusions): CodeSource {
       return copy(
         usedNonAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedNonAnnotationClasses),
-        usedNonAnnotationClassesWithinVisibleAnnotation = usagesExclusions.excludeClassesFromMap(usedNonAnnotationClassesWithinVisibleAnnotation),
+        usedNonAnnotationClassesWithinVisibleAnnotation = usagesExclusions.excludeClassesFromMap(
+          usedNonAnnotationClassesWithinVisibleAnnotation
+        ),
         usedAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedAnnotationClasses),
         imports = usagesExclusions.excludeClassesFromSet(imports),
       )
@@ -291,6 +296,7 @@ private class CodeSourceBuilder(val className: String) {
   val annotationClasses = sortedSetOf<String>()
   val exposedClasses = sortedSetOf<String>()
   val imports = sortedSetOf<String>()
+  val inferredConstants = sortedSetOf<LdcConstant>()
   // val binaryClassAccesses = mutableMapOf<String, MutableSet<MemberAccess>>()
 
   fun concat(other: CodeSourceBuilder): CodeSourceBuilder {
@@ -319,6 +325,7 @@ private class CodeSourceBuilder(val className: String) {
       usedAnnotationClasses = annotationClasses.efficient(),
       exposedClasses = exposedClasses.efficient(),
       imports = imports.efficient(),
+      inferredConstants = inferredConstants.efficient(),
       // binaryClassAccesses = binaryClassAccesses,
     )
   }

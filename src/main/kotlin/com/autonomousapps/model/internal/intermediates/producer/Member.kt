@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates.producer
 
-import com.autonomousapps.internal.kotlin.AccessFlags
+import com.autonomousapps.model.internal.AccessFlags
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel

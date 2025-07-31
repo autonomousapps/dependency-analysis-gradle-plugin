@@ -6,6 +6,7 @@ import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.internal.AndroidResSource
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
+import com.autonomousapps.model.internal.intermediates.producer.Constant
 import com.autonomousapps.model.internal.intermediates.producer.Member
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
@@ -142,11 +143,21 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String = "compileOnly"
   }
 
-  @TypeLabel("constant")
+  @TypeLabel("constant_import")
   @JsonClass(generateAdapter = false)
-  data class Constant(override val reason: String) : Reason(reason) {
+  data class ConstantImport(override val reason: String) : Reason(reason) {
     constructor(importedConstants: Set<String>) : this(
       buildReason(importedConstants, "Imports", Kind.Constant)
+    )
+
+    override val configurationName: String = "implementation"
+  }
+
+  @TypeLabel("constant_bytecode")
+  @JsonClass(generateAdapter = false)
+  data class ConstantBytecode(override val reason: String) : Reason(reason) {
+    constructor(inferredConstants: Set<Constant>) : this(
+      buildReason(inferredConstants.map { it.name }, "Uses", Kind.Constant)
     )
 
     override val configurationName: String = "implementation"

@@ -31,6 +31,13 @@ internal data class ExplodingBytecode(
   /** Every class discovered in the bytecode of [className], and as an annotation. */
   val annotationClasses: Set<String>,
 
+  /**
+   * Things inferred to be constants based on `visitLdcInsn()`.
+   *
+   * TODO(tsr): fold into binaryClassAccesses once that property is actually used.
+   */
+  val inferredConstants: Set<LdcConstant>,
+
   /** Every [MemberAccess] to another class from [this class][className]. */
   val binaryClassAccesses: Map<String, Set<MemberAccess>>,
 ) : Comparable<ExplodingBytecode> {
@@ -44,6 +51,7 @@ internal data class ExplodingBytecode(
       .thenBy(LexicographicIterableComparator()) { it.nonAnnotationClasses }
       .thenBy(LexicographicIterableComparator()) { it.nonAnnotationClassesWithinVisibleAnnotation.map { it.key } }
       .thenBy(LexicographicIterableComparator()) { it.annotationClasses }
+      .thenBy(LexicographicIterableComparator()) { it.inferredConstants }
       .thenBy(MapSetComparator()) { it.binaryClassAccesses }
       .compare(this, other)
   }

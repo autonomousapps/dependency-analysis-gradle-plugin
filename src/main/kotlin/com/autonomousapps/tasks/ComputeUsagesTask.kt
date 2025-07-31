@@ -8,9 +8,9 @@ import com.autonomousapps.internal.graph.supers.SuperNode
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DuplicateClass
+import com.autonomousapps.model.internal.*
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.Declaration
-import com.autonomousapps.model.internal.*
 import com.autonomousapps.model.internal.intermediates.DependencyTraceReport
 import com.autonomousapps.model.internal.intermediates.DependencyTraceReport.Kind
 import com.autonomousapps.model.internal.intermediates.Reason
@@ -215,7 +215,13 @@ private class GraphVisitor(
           }
         }
 
-        is ConstantCapability -> usesConstant = usesConstant(dependencyCoordinates, capability, context)
+        is ConstantCapability -> {
+          // usesConstantByBytecode() is a better test, so we use that first, falling back to usesConstantByImport()
+          // only if necessary.
+          usesConstant = usesConstantByBytecode(dependencyCoordinates, capability, context)
+          usesConstant = usesConstant || usesConstantByImport(dependencyCoordinates, capability, context)
+        }
+
         is InferredCapability -> {
           if (capability.isAnnotations) {
             reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.Annotations()
@@ -598,7 +604,54 @@ private class GraphVisitor(
     }
   }
 
-  private fun usesConstant(
+  private fun usesConstantByBytecode(
+    coordinates: Coordinates,
+    capability: ConstantCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    // This test is slightly wrong:
+    // 1. Inferred constants are missing the name of the constant, meaning we can only match by value and descriptor,
+    //    leading to false positives.
+    // 2. Not only that, but there is certainly a 1-to-many relationship between value/descriptor on the consumer side
+    //    and constants on the producer side.
+    val inferredUsages = context.project.inferredConstants
+    val usedConstants = capability.constants.asSequence()
+      .flatMap { it.value }
+      .filter { candidate ->
+        val descriptor = candidate.descriptor
+        val value = candidate.value
+
+        inferredUsages.any { usage ->
+          descriptor == usage.descriptor && value == usage.value
+        }
+      }
+      .toSortedSet()
+
+    val candidateImports = capability.constants.asSequence()
+      .map { (fqcn, _) -> fqcn.replace('$', '.') }
+      .toSet()
+
+    // This test is slightly wrong in a couple of ways:
+    // 1. Something might be imported but not used.
+    // 2. The thing being imported might be an annotation, and those are generally compileOnly
+    // 3. The way this test is used in Reason would result in misleading output about _how_ the dep is being used
+    val usedImports = context.project.imports.asSequence()
+      .filter { import -> candidateImports.contains(import) }
+      .toSet()
+
+    // Because both of the above tests are "slightly wrong," we combine them and hope their deficiencies cancel each
+    // other out. The import test should ensure we don't have a false positive and declare an unused dependency as used.
+    // The ldc test will restrict the import heuristic, allowing us to report more meaningful (inferred) usage
+    // information.
+    return if (usedImports.isNotEmpty() && usedConstants.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ConstantBytecode(usedConstants)
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun usesConstantByImport(
     coordinates: Coordinates,
     capability: ConstantCapability,
     context: GraphViewVisitor.Context,
@@ -627,12 +680,14 @@ private class GraphVisitor(
 
     val ktFiles = capability.ktFiles
     val candidateImports = capability.constants.asSequence()
-      .flatMap { (fqcn, names) ->
-        val ktPrefix = ktFiles.find {
-          it.fqcn == fqcn
-        }?.name?.let { name ->
-          fqcn.removeSuffix(name)
-        }
+      .flatMap { (fqcn, fields) ->
+        val names = fields.mapToOrderedSet { it.name }
+
+        val ktPrefix = ktFiles
+          .find { ktFile -> ktFile.fqcn == fqcn }
+          ?.name
+          ?.let { name -> fqcn.removeSuffix(name) }
+
         val ktImports = names.mapNotNull { name -> ktPrefix?.let { "$it$name" } }
 
         ktImports +
@@ -642,15 +697,15 @@ private class GraphVisitor(
           optionalCompanionImport(names, fqcn)
       }
       // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/687
-      .map { it.replace('$', '.') }
+      .map { import -> import.replace('$', '.') }
       .toSet()
 
-    val imports = context.project.imports.asSequence().filter { import ->
-      candidateImports.contains(import)
-    }.toSortedSet()
+    val imports = context.project.imports.asSequence()
+      .filter { import -> candidateImports.contains(import) }
+      .toSortedSet()
 
     return if (imports.isNotEmpty()) {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Constant(imports)
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ConstantImport(imports)
       true
     } else {
       false

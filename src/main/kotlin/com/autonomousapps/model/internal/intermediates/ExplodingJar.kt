@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates
 
-import com.autonomousapps.internal.Access
 import com.autonomousapps.internal.AnalyzedClass
 import com.autonomousapps.internal.ClassNames
-import com.autonomousapps.internal.utils.mapToOrderedSet
+import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.reallyAll
 import com.autonomousapps.model.internal.KtFile
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
+import com.autonomousapps.model.internal.intermediates.producer.Constant
 
 /**
  * Contains information about what features or capabilities a given "jar" provides. "Jar" is in
@@ -41,22 +41,29 @@ internal class ExplodingJar(
    * The set of classes provided by this jar, including information about their superclass, interfaces, and public
    * members. May be empty.
    */
-  val binaryClasses: Set<BinaryClass> = analyzedClasses.mapToOrderedSet { it.binaryClass }
+  val binaryClasses: Set<BinaryClass> = analyzedClasses.asSequence()
+    .map { it.binaryClass }
+    .toSortedSet()
+    .efficient()
 
   /**
    * The set of security providers (classes that extend `java.security.Provider`) provided by this
    * jar. May be empty.
    */
-  val securityProviders: Set<String> = analyzedClasses.filter {
-    ClassNames.isSecurityProvider(it.superClassName)
-  }.mapToOrderedSet { it.className }
+  val securityProviders: Set<String> = analyzedClasses.asSequence()
+    .filter { ClassNames.isSecurityProvider(it.superClassName) }
+    .map { it.className }
+    .toSortedSet()
+    .efficient()
 
   /**
    * Map of class names to the public constants they declare. May be empty.
    */
-  val constants: Map<String, Set<String>> = analyzedClasses.asSequence()
-    .filterNot { it.constantFields.isEmpty() }
-    .associate { it.className to it.constantFields.toSortedSet() }
+  val constants: Map<String, Set<Constant>> = analyzedClasses.asSequence()
+    .filterNot { it.constants.isEmpty() }
+    // normalize class names to only contain '.' characters (in case of inner classes)
+    .associate { it.className.replace('$', '.') to it.constants }
+    .efficient()
 
   /**
    * A jar is a lint jar if it's _only_ for linting.
@@ -118,8 +125,9 @@ internal class ExplodingJar(
       .filter { analyzedClass.outerClassName == it.className }
       .reallyAll { isAnnotation(it) }
 
+  // should be named "isEffectivelyPublic"
   private fun isPublic(analyzedClass: AnalyzedClass): Boolean =
-    analyzedClass.access == Access.PUBLIC || analyzedClass.access == Access.PROTECTED
+    analyzedClass.access.isPublic || analyzedClass.access.isProtected
 
   private fun isEnum(analyzedClass: AnalyzedClass): Boolean = ClassNames.isEnum(analyzedClass.superClassName)
 }

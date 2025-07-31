@@ -34,7 +34,7 @@ class DependencyAdviceExplainerTest {
         Reason.Abi(setOf("One", "Two", "Three", "Four", "Five")),
         Reason.AnnotationProcessor.classes(setOf("Proc1"), isKapt = false),
         Reason.AnnotationProcessor.imports(setOf("Proc1"), isKapt = false),
-        Reason.Constant(setOf("Const1", "Const2")),
+        Reason.ConstantImport(setOf("Const1", "Const2")),
         Reason.Impl(setOf("One", "Two", "Three", "Four", "Five", "Six")),
         Reason.Imported(setOf("One", "Two", "Three", "Four", "Five", "Six")),
         Reason.Inline(setOf("One", "Two", "Three", "Four", "Five", "Six")),
@@ -104,7 +104,7 @@ class DependencyAdviceExplainerTest {
       val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0", gvi)
       val reasons = setOf(
         Reason.Annotations(),
-        Reason.Constant(setOf("Const1", "Const2")),
+        Reason.ConstantImport(setOf("Const1", "Const2")),
         Reason.Impl(setOf("One", "Two", "Three", "Four", "Five", "Six")),
         Reason.Imported(setOf("One", "Two", "Three", "Four", "Five", "Six")),
       )

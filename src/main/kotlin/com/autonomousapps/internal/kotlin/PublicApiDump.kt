@@ -4,7 +4,6 @@
  *
  * Copied from https://github.com/JetBrains/kotlin/tree/master/libraries/tools/binary-compatibility-validator
  */
-
 package com.autonomousapps.internal.kotlin
 
 import com.autonomousapps.internal.AbiExclusions
@@ -15,6 +14,7 @@ import com.autonomousapps.internal.utils.annotationTypes
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.internal.utils.filterNotToSet
 import com.autonomousapps.internal.utils.genericTypes
+import com.autonomousapps.model.internal.AccessFlags
 import java.io.File
 import java.io.InputStream
 import java.io.PrintStream

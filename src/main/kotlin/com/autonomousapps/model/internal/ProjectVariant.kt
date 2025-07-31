@@ -7,6 +7,7 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.internal.CodeSource.Kind
+import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
 import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
 import org.gradle.api.file.Directory
@@ -71,6 +72,12 @@ internal data class ProjectVariant(
   val exposedClasses: Set<String> by unsafeLazy {
     codeSource.flatMapToSet {
       it.exposedClasses
+    }
+  }
+
+  val inferredConstants: Set<LdcConstant> by unsafeLazy {
+    codeSource.flatMapToSet {
+      it.inferredConstants
     }
   }
 
