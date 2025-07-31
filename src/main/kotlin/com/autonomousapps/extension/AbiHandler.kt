@@ -19,6 +19,7 @@ import javax.inject.Inject
  *   abi {
  *     exclusions {
  *       excludeSourceSets(/* source sets to exclude from ABI analysis */)
+ *       excludeVariants(/* variants to exclude from ABI analysis */)
  *
  *       ignoreSubPackage("internal")
  *       ignoreInternalPackages()
@@ -46,6 +47,7 @@ public abstract class ExclusionsHandler @Inject constructor(objects: ObjectFacto
   internal val annotationExclusions = objects.setProperty<String>().convention(emptySet())
   internal val pathExclusions = objects.setProperty<String>().convention(emptySet())
   internal val excludedSourceSets = objects.setProperty<String>().convention(emptySet())
+  internal val excludedVariants = objects.setProperty<String>().convention(emptySet())
 
   /**
    * Exclude the given [sourceSets] from ABI analysis, which means that regardless of the level of exposure of any given
@@ -53,6 +55,14 @@ public abstract class ExclusionsHandler @Inject constructor(objects: ObjectFacto
    */
   public fun excludeSourceSets(vararg sourceSets: String) {
     excludedSourceSets.addAll(*sourceSets)
+  }
+
+  /**
+   * Exclude the given [variants] from ABI analysis. This is useful for Android projects that have only debug sources
+   * and analyzing the release configuration is not useful.
+   */
+  fun excludeVariants(vararg variants: String) {
+    excludedVariants.addAll(*variants)
   }
 
   /**
