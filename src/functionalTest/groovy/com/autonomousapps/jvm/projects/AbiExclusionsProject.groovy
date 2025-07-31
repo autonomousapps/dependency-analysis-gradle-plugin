@@ -17,7 +17,7 @@ import static com.autonomousapps.kit.gradle.dependencies.Dependencies.openTeleme
 final class AbiExclusionsProject extends AbstractProject {
 
   private final okhttp = okHttp('api')
-  private final openTelemetry = openTelemetry('implementation')
+  private final openTelemetry = openTelemetry('compileOnly')
 
   final GradleProject gradleProject
 

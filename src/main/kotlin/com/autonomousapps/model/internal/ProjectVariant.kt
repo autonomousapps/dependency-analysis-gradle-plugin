@@ -41,25 +41,16 @@ internal data class ProjectVariant(
     }
   }
 
+  val usedNonAnnotationClassesWithinVisibleAnnotationBySrc: Map<String, String> by unsafeLazy {
+    codeSource.flatMapToSet {
+      it.usedNonAnnotationClassesWithinVisibleAnnotation.entries
+    }.associate { it.toPair() }
+  }
+
   val usedAnnotationClassesBySrc: Set<String> by unsafeLazy {
     codeSource.flatMapToSet {
       it.usedAnnotationClasses
     }
-  }
-
-  /** Invisible annotations are required at compile time but not at runtime. */
-  val usedInvisibleAnnotationClassesBySrc: Set<String> by unsafeLazy {
-    codeSource.flatMapToSet {
-      it.usedInvisibleAnnotationClasses
-    }
-  }
-
-  /**
-   * For typealiases, we check for presence in the bytecode in any context, annotation or otherwise. We do not check
-   * usages in Android res.
-   */
-  val usedClassesBySrc: Set<String> by unsafeLazy {
-    usedNonAnnotationClassesBySrc + usedAnnotationClassesBySrc
   }
 
   val usedClassesByRes: Set<String> by unsafeLazy {
@@ -70,9 +61,7 @@ internal data class ProjectVariant(
 
   /** All class references from any context. */
   val usedClasses: Set<String> by unsafeLazy {
-    codeSource.flatMapToSet {
-      usedClassesBySrc + usedClassesByRes
-    }
+    usedClassesByRes + usedNonAnnotationClassesBySrc + usedNonAnnotationClassesWithinVisibleAnnotationBySrc.map { it.key }
   }
 
   val usedNonAnnotationClasses: Set<String> by unsafeLazy {

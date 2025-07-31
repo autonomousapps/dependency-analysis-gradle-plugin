@@ -9,7 +9,6 @@ import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.reallyAll
 import com.autonomousapps.model.internal.KtFile
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
-import java.lang.annotation.RetentionPolicy
 
 /**
  * Contains information about what features or capabilities a given "jar" provides. "Jar" is in
@@ -18,16 +17,15 @@ import java.lang.annotation.RetentionPolicy
  * present.
  *
  * The algorithm for [isCompileOnlyCandidate] is that the jar must _only_ contain:
- * 1. Annotation classes with `CLASS` or `SOURCE` retention policies (or no policy => `CLASS` is
- *    default).
+ * 1. Annotation classes.
  * 2. The above, plus types that only exist to provide a sort of "namespace". For example,
  *    `org.jetbrains.annotations.ApiStatus` has no members. It only has inner classes which are
- *    themselves annotations that comply with 1.
- * 3. All of the above, plus types that are only used by the annotations in the jar that comply with
- *    1. For example, the `@org.intellij.lang.annotations.PrintFormat` annotation uses a class (in
+ *    themselves annotations.
+ * 3. All of the above, plus types that are only used by the annotations in the jar.
+ *    For example, the `@org.intellij.lang.annotations.PrintFormat` annotation uses a class (in
  *    this case defined in the same file), `org.intellij.lang.annotations.PrintFormatPattern`. The
  *    assumption here is that such classes (`PrintFormatPattern`) are only required during
- *    compilation, for their associated compile-only annotations.
+ *    compilation, for their associated annotations.
  *
  * The algorithm for [isLintJar] is that the jar must meet these conditions:
  * 1. It must contain no classes (`analyzedClasses` is empty) AND
@@ -75,18 +73,18 @@ internal class ExplodingJar(
   val isCompileOnlyCandidate: Boolean =
     if (analyzedClasses.isEmpty()) {
       false
-    } else if (analyzedClasses.none { isCompileOnlyAnnotation(it) }) {
+    } else if (analyzedClasses.none { isAnnotation(it) }) {
       false
     } else {
       var value = true
       for (analyzedClass in analyzedClasses) {
-        if (isNotCompileOnlyAnnotation(analyzedClass)) {
+        if (isNotAnnotation(analyzedClass)) {
           // it is ok if it's not an annotation class, if it is a "namespace class".
           if (!isNamespaceClass(analyzedClass, analyzedClasses)) {
             // it's ok if it is not a namespace class, if it's private (non-public)
             if (isPublic(analyzedClass)) {
-              // it's ok if it's public, if it's an enum which is an inner element of a CompileOnlyAnnotation
-              if (!(isEnum(analyzedClass) && isOuterClassCompileOnlyAnnotation(analyzedClass, analyzedClasses))) {
+              // it's ok if it's public, if it's an enum which is an inner element of an Annotation
+              if (!(isEnum(analyzedClass) && isOuterClassAnnotation(analyzedClass, analyzedClasses))) {
                 value = false
                 break
               }
@@ -101,26 +99,24 @@ internal class ExplodingJar(
    * compileOnly candidate helper functions
    */
 
-  private fun RetentionPolicy?.isCompileOnly() = this == RetentionPolicy.CLASS || this == RetentionPolicy.SOURCE
+  private fun isAnnotation(analyzedClass: AnalyzedClass): Boolean =
+    analyzedClass.retentionPolicy != null
 
-  private fun isCompileOnlyAnnotation(analyzedClass: AnalyzedClass): Boolean =
-    analyzedClass.retentionPolicy.isCompileOnly()
-
-  private fun isNotCompileOnlyAnnotation(analyzedClass: AnalyzedClass): Boolean =
-    !isCompileOnlyAnnotation(analyzedClass)
+  private fun isNotAnnotation(analyzedClass: AnalyzedClass): Boolean =
+    !isAnnotation(analyzedClass)
 
   private fun isNamespaceClass(analyzedClass: AnalyzedClass, analyzedClasses: Set<AnalyzedClass>): Boolean =
     analyzedClass.hasNoMembers && analyzedClasses
       .filter { analyzedClass.innerClasses.contains(it.className) }
-      .reallyAll { isCompileOnlyAnnotation(it) }
+      .reallyAll { isAnnotation(it) }
 
-  private fun isOuterClassCompileOnlyAnnotation(
+  private fun isOuterClassAnnotation(
     analyzedClass: AnalyzedClass,
     analyzedClasses: Set<AnalyzedClass>
   ): Boolean =
     analyzedClasses
       .filter { analyzedClass.outerClassName == it.className }
-      .reallyAll { isCompileOnlyAnnotation(it) }
+      .reallyAll { isAnnotation(it) }
 
   private fun isPublic(analyzedClass: AnalyzedClass): Boolean =
     analyzedClass.access == Access.PUBLIC || analyzedClass.access == Access.PROTECTED
