@@ -4,29 +4,16 @@
  *
  * Copied from https://github.com/JetBrains/kotlin/tree/master/libraries/tools/binary-compatibility-validator
  */
-
 package com.autonomousapps.internal.kotlin
 
 import com.autonomousapps.internal.ClassNames.canonicalize
-import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.asm.tree.*
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
+import com.autonomousapps.model.internal.AccessFlags
 import kotlin.metadata.jvm.JvmFieldSignature
 import kotlin.metadata.jvm.JvmMemberSignature
 import kotlin.metadata.jvm.JvmMethodSignature
 import kotlin.metadata.jvm.KotlinClassMetadata
-
-internal val ACCESS_NAMES = mapOf(
-  Opcodes.ACC_PUBLIC to "public",
-  Opcodes.ACC_PROTECTED to "protected",
-  Opcodes.ACC_PRIVATE to "private",
-  Opcodes.ACC_STATIC to "static",
-  Opcodes.ACC_FINAL to "final",
-  Opcodes.ACC_ABSTRACT to "abstract",
-  Opcodes.ACC_SYNTHETIC to "synthetic",
-  Opcodes.ACC_INTERFACE to "interface",
-  Opcodes.ACC_ANNOTATION to "annotation"
-)
 
 internal data class ClassBinarySignature(
   val name: String,
@@ -170,28 +157,8 @@ internal val MEMBER_SORT_ORDER = compareBy<MemberBinarySignature>(
   { it.desc }
 )
 
-// TODO move
-internal data class AccessFlags(val access: Int) {
-  val isPublic: Boolean get() = isPublic(access)
-  val isProtected: Boolean get() = isProtected(access)
-  val isPrivate: Boolean get() = isPrivate(access)
-  val isStatic: Boolean get() = isStatic(access)
-  val isFinal: Boolean get() = isFinal(access)
-  val isSynthetic: Boolean get() = isSynthetic(access)
-
-  fun getModifiers(): List<String> = ACCESS_NAMES.entries.mapNotNull { if (access and it.key != 0) it.value else null }
-  fun getModifierString(): String = getModifiers().joinToString(" ")
-}
-
-internal fun isPublic(access: Int) = access and Opcodes.ACC_PUBLIC != 0 || access and Opcodes.ACC_PROTECTED != 0
-internal fun isProtected(access: Int) = access and Opcodes.ACC_PROTECTED != 0
-internal fun isPrivate(access: Int) = access and Opcodes.ACC_PRIVATE != 0
-internal fun isStatic(access: Int) = access and Opcodes.ACC_STATIC != 0
-internal fun isFinal(access: Int) = access and Opcodes.ACC_FINAL != 0
-internal fun isSynthetic(access: Int) = access and Opcodes.ACC_SYNTHETIC != 0
-
 internal fun ClassNode.isEffectivelyPublic(classVisibility: ClassVisibility?) =
-  isPublic(access)
+  AccessFlags.isPublic(access)
     && !isLocal()
     && !isWhenMappings()
     && (classVisibility?.isPublic(isPublishedApi()) ?: true)
@@ -199,7 +166,7 @@ internal fun ClassNode.isEffectivelyPublic(classVisibility: ClassVisibility?) =
 internal val ClassNode.innerClassNode: InnerClassNode? get() = innerClasses.singleOrNull { it.name == name }
 internal fun ClassNode.isLocal() = innerClassNode?.run { innerName == null && outerName == null } ?: false
 internal fun ClassNode.isInner() = innerClassNode != null
-internal fun ClassNode.isWhenMappings() = isSynthetic(access) && name.endsWith("\$WhenMappings")
+internal fun ClassNode.isWhenMappings() = AccessFlags.isSynthetic(access) && name.endsWith("\$WhenMappings")
 
 internal val ClassNode.effectiveAccess: Int get() = innerClassNode?.access ?: access
 internal val ClassNode.outerClassName: String? get() = innerClassNode?.outerName

@@ -6,6 +6,7 @@ import com.autonomousapps.internal.parse.AndroidResParser
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.model.internal.AndroidResSource.AttrRef.Companion.type
+import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -47,6 +48,13 @@ internal data class CodeSource(
   /** Every import in this source file. */
   val imports: Set<String>,
 
+  /**
+   * Things inferred to be constants based on `visitLdcInsn()`.
+   *
+   * TODO(tsr): fold into binaryClassAccesses once that property is actually used.
+   */
+  val inferredConstants: Set<LdcConstant>,
+
   // /** Every [MemberAccess] to another class from [this class][className]. */
   // val binaryClassAccesses: Map<String, Set<MemberAccess>>,
 ) : Source(relativePath) {
@@ -63,6 +71,7 @@ internal data class CodeSource(
         .thenBy(LexicographicIterableComparator()) { it.usedAnnotationClasses }
         .thenBy(LexicographicIterableComparator()) { it.exposedClasses }
         .thenBy(LexicographicIterableComparator()) { it.imports }
+        .thenBy(LexicographicIterableComparator()) { it.inferredConstants }
         .compare(this, other)
     } else {
       1

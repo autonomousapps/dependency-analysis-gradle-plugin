@@ -39,22 +39,9 @@ internal class ClassFilesParser(
   override fun parseBytecode(): Set<ExplodingBytecode> {
     return classes.asSequenceOfClassFiles()
       .map { classFile ->
-        val classFilePath = classFile.path
-        val explodedClass = classFile.inputStream().use {
-          BytecodeReader(it.readBytes(), logger, classFilePath).parse()
+        classFile.inputStream().use {
+          BytecodeReader(it.readBytes(), logger, classFile.path, relativize(classFile)).parse()
         }
-
-        ExplodingBytecode(
-          relativePath = relativize(classFile),
-          className = explodedClass.className,
-          superClass = explodedClass.superClass,
-          interfaces = explodedClass.interfaces,
-          sourceFile = explodedClass.source,
-          nonAnnotationClasses = explodedClass.nonAnnotationClasses,
-          nonAnnotationClassesWithinVisibleAnnotation = explodedClass.nonAnnotationClassesWithinVisibleAnnotation,
-          annotationClasses = explodedClass.annotationClasses,
-          binaryClassAccesses = explodedClass.binaryClasses,
-        )
       }
       .toSortedSet()
   }
@@ -64,6 +51,7 @@ private class BytecodeReader(
   private val bytes: ByteArray,
   private val logger: Logger,
   private val classFilePath: String,
+  private val relativePath: String,
 ) {
   /**
    * This (currently, maybe forever) fails to detect constant usage in Kotlin-generated class files.
@@ -74,7 +62,7 @@ private class BytecodeReader(
    * 1. The "source" of the class file (the source file name, like "Main.kt").
    * 2. The classes used by that class file.
    */
-  fun parse(): ExplodedClass {
+  fun parse(): ExplodingBytecode {
     val constantPool = ConstantPoolParser.getConstantPoolClassReferences(bytes, classFilePath)
       // Constant pool has a lot of weird bullshit in it
       .filter { JAVA_FQCN_REGEX_SLASHY.matches(it) }
@@ -102,15 +90,18 @@ private class BytecodeReader(
       .map { it.classRef }
       .toSet()
 
-    return ExplodedClass(
-      source = classAnalyzer.source,
+    return ExplodingBytecode(
+      relativePath = relativePath,
       className = canonicalize(classAnalyzer.className),
       superClass = classAnalyzer.superClass?.let { canonicalize(it) },
       interfaces = classAnalyzer.interfaces.asSequence().fixup(classAnalyzer),
+      sourceFile = classAnalyzer.source,
       nonAnnotationClasses = constantPool.asSequence().plus(usedNonAnnotationClasses).fixup(classAnalyzer),
-      nonAnnotationClassesWithinVisibleAnnotation = usedNonAnnotationClassesWithinVisibleAnnotation.asSequence().fixup(classAnalyzer),
+      nonAnnotationClassesWithinVisibleAnnotation = usedNonAnnotationClassesWithinVisibleAnnotation.asSequence()
+        .fixup(classAnalyzer),
       annotationClasses = usedAnnotationClasses.asSequence().fixup(classAnalyzer),
-      binaryClasses = classAnalyzer.getBinaryClasses().fixup(classAnalyzer),
+      inferredConstants = classAnalyzer.getInferredConstants(),
+      binaryClassAccesses = classAnalyzer.getBinaryClasses().fixup(classAnalyzer),
     )
   }
 
@@ -150,14 +141,3 @@ private class BytecodeReader(
       .filterKeys { it != classAnalyzer.className }
   }
 }
-
-private class ExplodedClass(
-  val source: String?,
-  val className: String,
-  val superClass: String?,
-  val interfaces: Set<String>,
-  val nonAnnotationClasses: Set<String>,
-  val nonAnnotationClassesWithinVisibleAnnotation: Map<String, String>,
-  val annotationClasses: Set<String>,
-  val binaryClasses: Map<String, Set<MemberAccess>>,
-)
