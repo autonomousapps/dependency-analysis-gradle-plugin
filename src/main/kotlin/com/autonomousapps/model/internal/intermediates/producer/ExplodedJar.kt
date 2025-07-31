@@ -21,10 +21,9 @@ internal data class ExplodedJar(
   val jarFile: File,
 
   /**
-   * True if this dependency contains only annotation that are only needed at compile-time (`CLASS`
-   * and `SOURCE` level retention policies). False otherwise.
+   * True if this dependency contains only annotations. False otherwise.
    */
-  val isCompileOnlyAnnotations: Boolean = false,
+  val isAnnotations: Boolean = false,
   /**
    * The set of classes that are service providers (they extend [java.security.Provider]). May be
    * empty.
@@ -60,7 +59,7 @@ internal data class ExplodedJar(
   ) : this(
     coordinates = artifact.coordinates,
     jarFile = artifact.file,
-    isCompileOnlyAnnotations = exploding.isCompileOnlyCandidate,
+    isAnnotations = exploding.isCompileOnlyCandidate,
     securityProviders = exploding.securityProviders,
     androidLintRegistry = exploding.androidLintRegistry,
     isLintJar = exploding.isLintJar,
@@ -83,7 +82,7 @@ internal data class ExplodedJar(
 
   override fun toCapabilities(): List<Capability> {
     val capabilities = mutableListOf<Capability>()
-    capabilities += InferredCapability(isCompileOnlyAnnotations)
+    capabilities += InferredCapability(isAnnotations)
     binaryClasses.ifNotEmpty { capabilities += BinaryClassCapability.newInstance(it) }
     constantFields.ifNotEmpty { capabilities += ConstantCapability.newInstance(it, ktFiles) }
     securityProviders.ifNotEmpty { capabilities += SecurityProviderCapability.newInstance(it) }

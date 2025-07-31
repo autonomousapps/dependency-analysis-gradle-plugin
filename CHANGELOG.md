@@ -1,6 +1,14 @@
 Dependency Analysis Plugin Changelog
 
 # Version 3.0.0 (unreleased)
+* [Breaking]: annotations and their parameter classes are always considered `compileOnly`.
+
+  Annotations for which the class file is not present are treated like being non-existent by the JVM.
+  If someone wants to consume an annotation via reflection, they are in charge to provide the class file
+  at runtime, so from the annotating project's view, annotations are always `compileOnly`.
+  The same is true for classes and enums used as annotation arguments.
+  The only exception is a class literal as argument that is coming from a different artifact than the
+  annotation like a JUnit 4 runner implementation, those are considered `implementation`.
 * [Feat]: report excluded dependencies as unused.
 * [Feat]: add coordinates identifier in the error message for invalid change.
 * [Feat]: moving `internal.artifacts` package to new module, `com.autonomousapps:variant-artifacts`.
