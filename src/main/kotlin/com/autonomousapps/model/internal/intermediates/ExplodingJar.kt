@@ -58,7 +58,8 @@ internal class ExplodingJar(
    */
   val constants: Map<String, Set<String>> = analyzedClasses.asSequence()
     .filterNot { it.constantFields.isEmpty() }
-    .associate { it.className to it.constantFields.toSortedSet() }
+    // normalize class names to only contain '.' characters (in case of inner classes)
+    .associate { it.className.replace('$', '.') to it.constantFields.toSortedSet() }
 
   /**
    * A jar is a lint jar if it's _only_ for linting.
