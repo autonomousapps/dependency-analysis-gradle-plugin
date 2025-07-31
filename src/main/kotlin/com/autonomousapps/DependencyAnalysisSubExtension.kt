@@ -21,7 +21,6 @@ import javax.naming.OperationNotSupportedException
  *
  *   // Configure the severity of issues, and exclusion rules, for this project.
  *   issues {
- *     ignoreKtx(<true|false>)
  *     onAny { ... }
  *     onUnusedDependencies { ... }
  *     onUsedTransitiveDependencies { ... }
