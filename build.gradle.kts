@@ -327,7 +327,7 @@ tasks.withType<GroovyCompile>().configureEach {
 // TODO(tsr): gzip. also register this task in ProjectPlugin
 // To run:
 // ```
-// ./gradlew :readFile --input path/to/gzipped-file
+// ./gradlew :gunzip --file path/to/gzipped-file
 // ```
 tasks.register<com.autonomousapps.convention.tasks.GunzipTask>("gunzip") {
   runtimeClasspath.setFrom(sourceSets.main.map { it.runtimeClasspath })
