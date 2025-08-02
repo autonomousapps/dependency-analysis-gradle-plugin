@@ -155,8 +155,7 @@ private class GraphVisitor(
     var isUnusedCandidate = false
     var isLintJar = false
     var isCompileOnlyCandidate = false
-    var isRequiredAnnotationCandidate = false
-    var isCompileOnlyAnnotationCandidate = false
+    var isAnnotationCandidate = false
     var isRuntimeAndroid = false
     var usesTestInstrumentationRunner = false
     var usesResBySource = false
@@ -207,12 +206,10 @@ private class GraphVisitor(
             isImplCandidate = true
           } else if (isImported(dependencyCoordinates, capability, context)) {
             isImplByImportCandidate = true
-          } else if (usesAnnotation(dependencyCoordinates, capability, context)) {
-            isRequiredAnnotationCandidate = true
           } else if (isForMissingSuperclass(dependencyCoordinates, capability, context)) {
             isImplCandidate = true
-          } else if (usesInvisibleAnnotation(dependencyCoordinates, capability, context)) {
-            isCompileOnlyAnnotationCandidate = true
+          } else if (usesAnnotation(dependencyCoordinates, capability, context)) {
+            isAnnotationCandidate = true
           } else {
             isUnusedCandidate = true
           }
@@ -220,10 +217,10 @@ private class GraphVisitor(
 
         is ConstantCapability -> usesConstant = usesConstant(dependencyCoordinates, capability, context)
         is InferredCapability -> {
-          if (capability.isCompileOnlyAnnotations) {
-            reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.CompileTimeAnnotations()
+          if (capability.isAnnotations) {
+            reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.Annotations()
           }
-          isCompileOnlyCandidate = capability.isCompileOnlyAnnotations
+          isCompileOnlyCandidate = capability.isAnnotations
         }
 
         is InlineMemberCapability -> usesInlineMember = usesInlineMember(dependencyCoordinates, capability, context)
@@ -291,11 +288,7 @@ private class GraphVisitor(
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
     } else if (isImplByImportCandidate) {
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
-    } else if (isRequiredAnnotationCandidate) {
-      // We detected an annotation, but it's a RUNTIME annotation, so we can't suggest it be moved to compileOnly.
-      // Don't suggest removing it!
-      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
-    } else if (isCompileOnlyAnnotationCandidate) {
+    } else if (isAnnotationCandidate) {
       isUnusedCandidate = false
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
     } else if (noRealCapabilities(dependency)) {
@@ -329,7 +322,7 @@ private class GraphVisitor(
   /**
    * If this [dependency] has no capabilities, or just a single capability that meets these requirements:
    * 1. The only capability is a [NativeLibCapability]
-   * 2. The only capability is an [InferredCapability] where [InferredCapability.isCompileOnlyAnnotations] is false
+   * 2. The only capability is an [InferredCapability] where [InferredCapability.isAnnotations] is false
    *    (that is, it's not a compile-only candidate).
    */
   private fun noRealCapabilities(dependency: Dependency): Boolean {
@@ -339,7 +332,7 @@ private class GraphVisitor(
     //  are failing...
     val single = dependency.capabilities.values.singleOrNull { it is InferredCapability || it is NativeLibCapability }
 
-    return (single as? InferredCapability)?.isCompileOnlyAnnotations == false
+    return (single as? InferredCapability)?.isAnnotations == false
       || single is NativeLibCapability
   }
 
@@ -383,9 +376,12 @@ private class GraphVisitor(
     capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
-    val implClasses = context.project.implementationClasses.asSequence().filter { implClass ->
+    val implClasses = (context.project.implementationClasses.asSequence().filter { implClass ->
       capability.classes.contains(implClass)
-    }.toSortedSet()
+    } + context.project.usedNonAnnotationClassesWithinVisibleAnnotationBySrc.asSequence()
+      .filter { (nonAnnotationClass, enclosingAnnotation) ->
+        capability.classes.contains(nonAnnotationClass) && !capability.classes.contains(enclosingAnnotation)
+      }.map { it.key }).toSortedSet()
 
     return if (implClasses.isNotEmpty()) {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Impl(implClasses)
@@ -450,23 +446,6 @@ private class GraphVisitor(
 
     return if (annoClasses.isNotEmpty()) {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Annotation(annoClasses)
-      true
-    } else {
-      false
-    }
-  }
-
-  private fun usesInvisibleAnnotation(
-    coordinates: Coordinates,
-    capability: BinaryClassCapability,
-    context: GraphViewVisitor.Context,
-  ): Boolean {
-    val annoClasses = context.project.usedInvisibleAnnotationClassesBySrc.asSequence().filter { annoClass ->
-      capability.classes.contains(annoClass)
-    }.toSortedSet()
-
-    return if (annoClasses.isNotEmpty()) {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.InvisibleAnnotation(annoClasses)
       true
     } else {
       false
@@ -573,7 +552,7 @@ private class GraphVisitor(
     typealiasCapability: TypealiasCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
-    val usedClasses = context.project.usedClassesBySrc.asSequence().filter { usedClass ->
+    val usedClasses = context.project.usedClasses.asSequence().filter { usedClass ->
       typealiasCapability.typealiases.any { ta ->
         ta.typealiases.map { "${ta.packageName}.${it.name}" }.contains(usedClass)
       }
@@ -845,7 +824,7 @@ private class AnnotationProcessorDetector(
 
   private fun ProjectVariant.usedByClass(): Boolean {
     val theUsedClasses = mutableSetOf<String>()
-    for (clazz in (usedNonAnnotationClasses + usedAnnotationClassesBySrc)) {
+    for (clazz in usedNonAnnotationClasses) {
       if (supportedTypes.contains(clazz) || stars.any { it.matches(clazz) }) {
         theUsedClasses.add(clazz)
       }

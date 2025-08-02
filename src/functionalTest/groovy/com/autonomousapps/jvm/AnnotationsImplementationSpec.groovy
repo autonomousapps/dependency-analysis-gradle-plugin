@@ -5,15 +5,17 @@ import com.autonomousapps.jvm.projects.AnnotationsCompileOnlyProject
 import com.autonomousapps.jvm.projects.AnnotationsImplementationProject
 import com.autonomousapps.jvm.projects.AnnotationsImplementationProject2
 import com.autonomousapps.utils.Colors
+import spock.lang.Issue
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
 final class AnnotationsImplementationSpec extends AbstractJvmSpec {
 
-  def "classes used in runtime-retained annotations are implementation (#gradleVersion)"() {
+  @Issue("https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1210")
+  def "classes used in foreign runtime-retained annotations are implementation (#gradleVersion, visibleAnnotations: #visibleAnnotations)"() {
     given:
-    def project = new AnnotationsImplementationProject()
+    def project = new AnnotationsImplementationProject(visibleAnnotations)
     gradleProject = project.gradleProject
 
     when:
@@ -23,11 +25,14 @@ final class AnnotationsImplementationSpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
-    gradleVersion << gradleVersions()
+    [gradleVersion, visibleAnnotations] << [
+      gradleVersions(),
+      [true, false]
+    ].combinations()
   }
 
-  // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1290
-  def "runtime-retained annotations are implementation (#gradleVersion)"() {
+  @Issue("https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1210")
+  def "runtime-retained annotations are compileOnly (#gradleVersion)"() {
     given:
     def project = new AnnotationsImplementationProject2()
     gradleProject = project.gradleProject
@@ -53,21 +58,19 @@ final class AnnotationsImplementationSpec extends AbstractJvmSpec {
         :consumer
         \\--- org.cthing:cthing-annotations:1.0.0
         
-        Shortest path from :consumer to org.cthing:cthing-annotations:1.0.0 for runtimeClasspath:
-        :consumer
-        \\--- org.cthing:cthing-annotations:1.0.0
+        There is no path from :consumer to org.cthing:cthing-annotations:1.0.0 for runtimeClasspath
         
-        Shortest path from :consumer to org.cthing:cthing-annotations:1.0.0 for testCompileClasspath:
-        :consumer
-        \\--- org.cthing:cthing-annotations:1.0.0
         
-        Shortest path from :consumer to org.cthing:cthing-annotations:1.0.0 for testRuntimeClasspath:
-        :consumer
-        \\--- org.cthing:cthing-annotations:1.0.0
+        There is no path from :consumer to org.cthing:cthing-annotations:1.0.0 for testCompileClasspath
+        
+        
+        There is no path from :consumer to org.cthing:cthing-annotations:1.0.0 for testRuntimeClasspath
+        
         
         Source: main
         ------------
-        * Uses (in an annotation) 1 class: org.cthing.annotations.PackageNonnullByDefault (implies implementation, sometimes).
+        * Uses (as or in an annotation) 1 class: org.cthing.annotations.PackageNonnullByDefault (implies compileOnly).
+        * Provides annotations (implies compileOnly).
         
         Source: test
         ------------
@@ -140,7 +143,7 @@ final class AnnotationsImplementationSpec extends AbstractJvmSpec {
         
         Source: main
         ------------
-        * Uses (as an annotation) 1 class: com.google.errorprone.annotations.CanIgnoreReturnValue (implies compileOnly).
+        * Uses (as or in an annotation) 1 class: com.google.errorprone.annotations.CanIgnoreReturnValue (implies compileOnly).
         
         Source: test
         ------------

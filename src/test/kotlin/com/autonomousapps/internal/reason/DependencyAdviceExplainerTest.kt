@@ -103,7 +103,7 @@ class DependencyAdviceExplainerTest {
       // Given
       val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0", gvi)
       val reasons = setOf(
-        Reason.CompileTimeAnnotations(),
+        Reason.Annotations(),
         Reason.Constant(setOf("Const1", "Const2")),
         Reason.Impl(setOf("One", "Two", "Three", "Four", "Five", "Six")),
         Reason.Imported(setOf("One", "Two", "Three", "Four", "Five", "Six")),
@@ -141,7 +141,7 @@ class DependencyAdviceExplainerTest {
 
       Source: debug, main
       -------------------
-      * Provides compile-time annotations (implies compileOnly).
+      * Provides annotations (implies compileOnly).
       * Imports 2 constants: Const1, Const2 (implies compileOnly).
       * Uses 6 classes, 5 of which are shown: One, Two, Three, Four, Five (implies compileOnly).
       * Imports 6 classes, 5 of which are shown: One, Two, Three, Four, Five (implies compileOnly).

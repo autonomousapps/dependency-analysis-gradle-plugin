@@ -134,10 +134,10 @@ internal sealed class Reason(open val reason: String) {
     }
   }
 
-  @TypeLabel("compile_time_anno")
+  @TypeLabel("anno")
   @JsonClass(generateAdapter = false)
-  data class CompileTimeAnnotations(override val reason: String) : Reason(reason) {
-    constructor() : this("Provides compile-time annotations")
+  data class Annotations(override val reason: String) : Reason(reason) {
+    constructor() : this("Provides annotations")
 
     override val configurationName: String = "compileOnly"
   }
@@ -177,24 +177,12 @@ internal sealed class Reason(open val reason: String) {
    * ```
    * @Annotation(SomeClass::class)
    * ```
-   * For runtime retention especially, we probably need to keep this class as an "implementation" dependency.
    */
   @TypeLabel("annotation")
   @JsonClass(generateAdapter = false)
   data class Annotation(override val reason: String) : Reason(reason) {
     constructor(inAnnotationClasses: Set<String>) : this(
-      buildReason(inAnnotationClasses, "Uses (in an annotation)", Kind.Class)
-    )
-
-    // TODO: ugh.
-    override val configurationName: String = "implementation, sometimes"
-  }
-
-  @TypeLabel("invisibleAnnotation")
-  @JsonClass(generateAdapter = false)
-  data class InvisibleAnnotation(override val reason: String) : Reason(reason) {
-    constructor(inAnnotationClasses: Set<String>) : this(
-      buildReason(inAnnotationClasses, "Uses (as an annotation)", Kind.Class)
+      buildReason(inAnnotationClasses, "Uses (as or in an annotation)", Kind.Class)
     )
 
     override val configurationName: String = "compileOnly"
