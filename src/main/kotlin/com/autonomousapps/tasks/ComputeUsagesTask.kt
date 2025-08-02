@@ -8,9 +8,9 @@ import com.autonomousapps.internal.graph.supers.SuperNode
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DuplicateClass
+import com.autonomousapps.model.internal.*
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.Declaration
-import com.autonomousapps.model.internal.*
 import com.autonomousapps.model.internal.intermediates.DependencyTraceReport
 import com.autonomousapps.model.internal.intermediates.DependencyTraceReport.Kind
 import com.autonomousapps.model.internal.intermediates.Reason
@@ -649,21 +649,21 @@ private class GraphVisitor(
     val ktFiles = capability.ktFiles
     val candidateImports = capability.constants.asSequence()
       .flatMap { (fqcn, names) ->
-        val ktPrefix = ktFiles.find {
-          it.fqcn == fqcn
-        }?.name?.let { name ->
-          fqcn.removeSuffix(name)
-        }
+        val ktPrefix = ktFiles
+          .find { ktFile -> ktFile.fqcn == fqcn }
+          ?.name
+          ?.let { name -> fqcn.removeSuffix(name) }
+
         val ktImports = names.mapNotNull { name -> ktPrefix?.let { "$it$name" } }
 
         ktImports +
-          listOf("$fqcn.*") +
+          listOf(fqcn, "$fqcn.*") +
           optionalStarImport(fqcn) +
           names.map { name -> "$fqcn.$name" } +
           optionalCompanionImport(names, fqcn)
       }
       // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/687
-      .map { it.replace('$', '.') }
+      .map { import -> import.replace('$', '.') }
       .toSet()
 
     val imports = context.project.imports.asSequence().filter { import ->

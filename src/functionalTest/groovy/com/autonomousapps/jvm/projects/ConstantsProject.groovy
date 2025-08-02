@@ -82,6 +82,75 @@ final class ConstantsProject {
     ]
   }
 
+  final static class JavaNested extends AbstractProject {
+
+    final GradleProject gradleProject
+    private final libProject = project('implementation', ':producer')
+
+    JavaNested() {
+      this.gradleProject = build()
+    }
+
+    private GradleProject build() {
+      return newGradleProjectBuilder()
+        .withSubproject('consumer') { s ->
+          s.sources = SOURCES_CONSUMER
+          s.withBuildScript { bs ->
+            bs.plugins = kotlin
+            bs.dependencies(libProject)
+          }
+        }
+        .withSubproject('producer') { s ->
+          s.sources = SOURCES_PRODUCER
+          s.withBuildScript { bs ->
+            bs.plugins = javaLibrary
+          }
+        }
+        .write()
+    }
+
+    private static final List<Source> SOURCES_CONSUMER = [
+      Source.kotlin(
+        '''\
+          package com.example
+          
+          import com.example.library.Library.Inner
+      
+          public class Main {
+            fun useConstant() {
+              println(Inner.CONSTANT)
+            }
+          }'''.stripIndent()
+      )
+        .withPath('com.example', 'Main')
+        .build()
+    ]
+
+    private static final List<Source> SOURCES_PRODUCER = [
+      Source.java(
+        '''\
+          package com.example.library;
+          
+          public class Library {
+            public static class Inner {
+              public static final String CONSTANT = "magic"; 
+            }
+          }'''.stripIndent()
+      )
+        .withPath('com.example.library', 'Library')
+        .build()
+    ]
+
+    Set<ProjectAdvice> actualBuildHealth() {
+      return actualProjectAdvice(gradleProject)
+    }
+
+    final Set<ProjectAdvice> expectedBuildHealth = [
+      emptyProjectAdviceFor(':consumer'),
+      emptyProjectAdviceFor(':producer'),
+    ]
+  }
+
   final static class TopLevel extends AbstractProject {
 
     final GradleProject gradleProject
