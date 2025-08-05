@@ -34,6 +34,7 @@ the case of the Dependency Analysis Gradle Plugin, we collect "advice" from ever
 the comprehensive "buildHealth" report.
 
 In this usage example, we have three elements:
+
 . The producer project
 . The consumer project, which aggregates metadata from all producers
 . A concrete implementation of `ArtifactDescription`, which defines the contract between producer and consumer.
@@ -133,8 +134,6 @@ dependencies {
   "projectPath"(project(":producer"))
 }
 ----
-
-===
 
 And finally, the `ArtifactDescription` which defines the contract between producer and consumer.
 
