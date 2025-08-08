@@ -4,14 +4,13 @@ package com.autonomousapps.internal.reason
 
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.internal.Bucket
-import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.internal.declaration.Bucket
+import com.autonomousapps.model.internal.AndroidResSource
+import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.BundleTrace
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.model.internal.intermediates.Usage
-import com.autonomousapps.model.internal.AndroidResSource
-import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.source.AndroidSourceKind
 import com.autonomousapps.test.graphOf
 import com.autonomousapps.test.usage
 import com.autonomousapps.utils.Colors.decolorize
@@ -35,15 +34,15 @@ class DependencyAdviceExplainerTest {
         Reason.Abi(setOf("One", "Two", "Three", "Four", "Five")),
         Reason.AnnotationProcessor.classes(setOf("Proc1"), isKapt = false),
         Reason.AnnotationProcessor.imports(setOf("Proc1"), isKapt = false),
-        Reason.Constant(setOf("Const1", "Const2")),
+        Reason.ConstantImport(setOf("Const1", "Const2")),
         Reason.Impl(setOf("One", "Two", "Three", "Four", "Five", "Six")),
         Reason.Imported(setOf("One", "Two", "Three", "Four", "Five", "Six")),
         Reason.Inline(setOf("One", "Two", "Three", "Four", "Five", "Six")),
         Reason.LintJar.of("LintRegistry"),
         Reason.NativeLib(setOf("foo", "bar")),
         Reason.ResBySrc(setOf("drawable", "string")),
-        Reason.ResByRes.styleParentRefs(setOf(AndroidResSource.StyleParentRef("AppCompat"))),
-        Reason.ResByRes.attrRefs(setOf(AndroidResSource.AttrRef("drawable", "logo"))),
+        Reason.ResByRes.resRefs(setOf(AndroidResSource.StyleParentRef("AppCompat"), AndroidResSource.AttrRef("drawable", "logo"))),
+        Reason.ResByResRuntime.resRefs(setOf(AndroidResSource.AttrRef("style", "leak_canary_LeakCanary_Base"))),
         Reason.Asset(listOf("raw1", "raw2")),
         Reason.RuntimeAndroid.services(setOf("Service1", "Service2")),
         Reason.RuntimeAndroid.providers(setOf("Provider1", "Provider2")),
@@ -51,7 +50,7 @@ class DependencyAdviceExplainerTest {
         Reason.ServiceLoader(setOf("ServiceLoader1", "ServiceLoader2")),
       )
       val usages = setOf(
-        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
+        usage(bucket = Bucket.IMPL, sourceKind = AndroidSourceKind.main("debug"), reasons = reasons),
       )
       val deepThought = Fixture.computer(
         target = target,
@@ -89,8 +88,8 @@ class DependencyAdviceExplainerTest {
       * Provides 1 lint registry: LintRegistry (implies implementation).
       * Provides 2 native binaries: foo, bar (implies runtimeOnly).
       * Imports 2 resources: drawable, string (implies implementation).
-      * Uses 1 resource: StyleParentRef(styleParent=AppCompat) (implies implementation).
-      * Uses 1 resource: AttrRef(type=drawable, id=logo) (implies implementation).
+      * Uses 2 resources: StyleParentRef(styleParent=AppCompat), AttrRef(type=drawable, id=logo) (implies implementation).
+      * Uses 1 resource: AttrRef(type=style, id=leak_canary_LeakCanary_Base) (implies runtimeOnly).
       * Provides 2 assets: raw1, raw2 (implies runtimeOnly).
       * Provides 2 Android Services: Service1, Service2 (implies runtimeOnly).
       * Provides 2 Android Providers: Provider1, Provider2 (implies runtimeOnly).
@@ -104,13 +103,17 @@ class DependencyAdviceExplainerTest {
       // Given
       val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0", gvi)
       val reasons = setOf(
-        Reason.CompileTimeAnnotations(),
-        Reason.Constant(setOf("Const1", "Const2")),
+        Reason.Annotations(),
+        Reason.ConstantImport(setOf("Const1", "Const2")),
         Reason.Impl(setOf("One", "Two", "Three", "Four", "Five", "Six")),
         Reason.Imported(setOf("One", "Two", "Three", "Four", "Five", "Six")),
       )
       val usages = setOf(
-        usage(bucket = Bucket.COMPILE_ONLY, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
+        usage(
+          bucket = Bucket.COMPILE_ONLY,
+          sourceKind = AndroidSourceKind.main("debug"),
+          reasons = reasons
+        ),
       )
       val deepThought = Fixture.computer(
         target = target,
@@ -138,7 +141,7 @@ class DependencyAdviceExplainerTest {
 
       Source: debug, main
       -------------------
-      * Provides compile-time annotations (implies compileOnly).
+      * Provides annotations (implies compileOnly).
       * Imports 2 constants: Const1, Const2 (implies compileOnly).
       * Uses 6 classes, 5 of which are shown: One, Two, Three, Four, Five (implies compileOnly).
       * Imports 6 classes, 5 of which are shown: One, Two, Three, Four, Five (implies compileOnly).
@@ -152,8 +155,16 @@ class DependencyAdviceExplainerTest {
       val debugReasons = setOf(Reason.Abi(setOf("One", "Two", "Three", "Four", "Five")))
       val releaseReasons = setOf(Reason.Undeclared)
       val usages = setOf(
-        usage(bucket = Bucket.API, variant = "debug", kind = SourceSetKind.MAIN, reasons = debugReasons),
-        usage(bucket = Bucket.NONE, variant = "release", kind = SourceSetKind.MAIN, reasons = releaseReasons),
+        usage(
+          bucket = Bucket.API,
+          sourceKind = AndroidSourceKind.main("debug"),
+          reasons = debugReasons
+        ),
+        usage(
+          bucket = Bucket.NONE,
+          sourceKind = AndroidSourceKind.main("release"),
+          reasons = releaseReasons
+        ),
       )
       val deepThought = Fixture.computer(
         target = target,
@@ -191,7 +202,7 @@ class DependencyAdviceExplainerTest {
       val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0", gvi)
       val reasons = setOf(Reason.Unused)
       val usages = setOf(
-        usage(bucket = Bucket.NONE, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
+        usage(bucket = Bucket.NONE, sourceKind = AndroidSourceKind.main("debug"), reasons = reasons),
       )
       val deepThought = Fixture.computer(
         target = target,
@@ -231,7 +242,7 @@ class DependencyAdviceExplainerTest {
       val target = ModuleCoordinates("androidx.lifecycle:lifecycle-common", "2.0.0", gvi)
       val reasons = setOf(Reason.Impl(setOf("impl1")))
       val usages = setOf(
-        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
+        usage(bucket = Bucket.IMPL, sourceKind = AndroidSourceKind.main("debug"), reasons = reasons),
       )
       val traces = BundleTrace.DeclaredParent(
         parent = Coordinates.of("androidx.core:core:1.1.0"),
@@ -276,7 +287,7 @@ class DependencyAdviceExplainerTest {
       val target = ModuleCoordinates("androidx.core:core", "1.1.0", gvi)
       val reasons = setOf(Reason.Impl(setOf("impl1")))
       val usages = setOf(
-        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
+        usage(bucket = Bucket.IMPL, sourceKind = AndroidSourceKind.main("debug"), reasons = reasons),
       )
       val traces = BundleTrace.UsedChild(
         parent = Coordinates.of("androidx.core:core:1.1.0"),
@@ -318,7 +329,7 @@ class DependencyAdviceExplainerTest {
       val target = ModuleCoordinates("androidx.core:core", "1.1.0", gvi)
       val reasons = setOf(Reason.Impl(setOf("impl1")))
       val usages = setOf(
-        usage(bucket = Bucket.IMPL, variant = "debug", kind = SourceSetKind.MAIN, reasons = reasons),
+        usage(bucket = Bucket.IMPL, sourceKind = AndroidSourceKind.main("debug"), reasons = reasons),
       )
       val traces = BundleTrace.PrimaryMap(
         primary = Coordinates.of("androidx.core:core:1.1.0"),
@@ -375,7 +386,7 @@ class DependencyAdviceExplainerTest {
       ("androidx.collection:collection:1.0.0" to "androidx.annotation:annotation:1.1.0").asCoordinates(),
     )
     private val graphView = DependencyGraphView(
-      variant = Variant.MAIN,
+      sourceKind = AndroidSourceKind.MAIN,
       configurationName = "debugCompileClasspath",
       graph = graph
     )
@@ -393,7 +404,6 @@ class DependencyAdviceExplainerTest {
       bundleTraces: Set<BundleTrace> = emptySet(),
       wasFiltered: Boolean = false
     ) = DependencyAdviceExplainer(
-      rootProjectName = "root",
       project = root,
       requested = target,
       requestedCapability = "",

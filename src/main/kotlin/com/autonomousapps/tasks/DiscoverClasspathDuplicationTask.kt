@@ -17,7 +17,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 @CacheableTask
-abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
+public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -30,24 +30,24 @@ abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
 
   private lateinit var classpath: ArtifactCollection
 
-  fun setClasspath(artifacts: ArtifactCollection) {
+  public fun setClasspath(artifacts: ArtifactCollection) {
     this.classpath = artifacts
   }
 
   @Classpath
-  fun getClasspath(): FileCollection = classpath.artifactFiles
+  public fun getClasspath(): FileCollection = classpath.artifactFiles
 
   @get:Input
-  abstract val classpathName: Property<String>
+  public abstract val classpathName: Property<String>
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val syntheticProject: RegularFileProperty
+  public abstract val syntheticProject: RegularFileProperty
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val output = output.getAndDelete()
 
     val project = syntheticProject.fromJson<ProjectVariant>()
@@ -86,7 +86,7 @@ abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
         .filterValues { coordinates -> coordinates.mapToSet { it.gav() }.size > 1 }
         .mapTo(TreeSet()) { (classReference, dependency) ->
           DuplicateClass(
-            variant = project.variant,
+            sourceKind = project.sourceKind,
             classpathName = classpathName,
             // java/lang/String.class -> java/lang/String
             className = classReference.removeSuffix(".class"),

@@ -82,6 +82,90 @@ final class ConstantsProject {
     ]
   }
 
+  final static class JavaNested extends AbstractProject {
+
+    final GradleProject gradleProject
+    private final libProject = project('implementation', ':producer')
+
+    JavaNested() {
+      this.gradleProject = build()
+    }
+
+    private GradleProject build() {
+      return newGradleProjectBuilder()
+        .withSubproject('consumer') { s ->
+          s.sources = SOURCES_CONSUMER
+          s.withBuildScript { bs ->
+            bs.plugins = kotlin
+            bs.dependencies(libProject)
+          }
+        }
+        .withSubproject('producer') { s ->
+          s.sources = SOURCES_PRODUCER
+          s.withBuildScript { bs ->
+            bs.plugins = javaLibrary
+          }
+        }
+        .write()
+    }
+
+    private static final List<Source> SOURCES_CONSUMER = [
+      Source.kotlin(
+        '''\
+          package com.example
+          
+          import com.example.library.Library.Inner
+      
+          public class Main {
+            fun useConstant() {
+              println(Inner.CONSTANT)
+              println(Inner.INT_CONST)
+              println(Inner.FLOAT_CONST)
+              println(Inner.LONG_CONST)
+              println(Inner.DOUBLE_CONST)
+            }
+          }'''.stripIndent()
+      )
+        .withPath('com.example', 'Main')
+        .build()
+    ]
+
+    private static final List<Source> SOURCES_PRODUCER = [
+      Source.java(
+        '''\
+          package com.example.library;
+          
+          public class Library {
+            public static class Inner {
+              public static final String CONSTANT = "magic"; 
+              public static final int INT_CONST = 9;
+              public static final float FLOAT_CONST = 4.2f;
+              public static final long LONG_CONST = 11;
+              public static final double DOUBLE_CONST = 3.14d;
+              // A constant reference to a reference type (including arrays) other than strings triggers different 
+              // heuristics. Null values do too (even for strings).
+              //public static final String NULL_CONST = null;
+              //public static final Object NULL_CONST = null;
+              //public static final int[] DOUBLE_ARR_CONST = new int[0];
+              //public static final String[] STRING_ARR_CONST = new String[0];
+              //public static final Class<?> CLASS_CONST = String.class;
+            }
+          }'''.stripIndent()
+      )
+        .withPath('com.example.library', 'Library')
+        .build()
+    ]
+
+    Set<ProjectAdvice> actualBuildHealth() {
+      return actualProjectAdvice(gradleProject)
+    }
+
+    final Set<ProjectAdvice> expectedBuildHealth = [
+      emptyProjectAdviceFor(':consumer'),
+      emptyProjectAdviceFor(':producer'),
+    ]
+  }
+
   final static class TopLevel extends AbstractProject {
 
     final GradleProject gradleProject

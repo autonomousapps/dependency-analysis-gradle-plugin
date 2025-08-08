@@ -6,6 +6,7 @@ import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.internal.AndroidResSource
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
+import com.autonomousapps.model.internal.intermediates.producer.Constant
 import com.autonomousapps.model.internal.intermediates.producer.Member
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
@@ -134,19 +135,29 @@ internal sealed class Reason(open val reason: String) {
     }
   }
 
-  @TypeLabel("compile_time_anno")
+  @TypeLabel("anno")
   @JsonClass(generateAdapter = false)
-  data class CompileTimeAnnotations(override val reason: String) : Reason(reason) {
-    constructor() : this("Provides compile-time annotations")
+  data class Annotations(override val reason: String) : Reason(reason) {
+    constructor() : this("Provides annotations")
 
     override val configurationName: String = "compileOnly"
   }
 
-  @TypeLabel("constant")
+  @TypeLabel("constant_import")
   @JsonClass(generateAdapter = false)
-  data class Constant(override val reason: String) : Reason(reason) {
+  data class ConstantImport(override val reason: String) : Reason(reason) {
     constructor(importedConstants: Set<String>) : this(
       buildReason(importedConstants, "Imports", Kind.Constant)
+    )
+
+    override val configurationName: String = "implementation"
+  }
+
+  @TypeLabel("constant_bytecode")
+  @JsonClass(generateAdapter = false)
+  data class ConstantBytecode(override val reason: String) : Reason(reason) {
+    constructor(inferredConstants: Set<Constant>) : this(
+      buildReason(inferredConstants.map { it.name }, "Uses", Kind.Constant)
     )
 
     override val configurationName: String = "implementation"
@@ -177,24 +188,12 @@ internal sealed class Reason(open val reason: String) {
    * ```
    * @Annotation(SomeClass::class)
    * ```
-   * For runtime retention especially, we probably need to keep this class as an "implementation" dependency.
    */
   @TypeLabel("annotation")
   @JsonClass(generateAdapter = false)
   data class Annotation(override val reason: String) : Reason(reason) {
     constructor(inAnnotationClasses: Set<String>) : this(
-      buildReason(inAnnotationClasses, "Uses (in an annotation)", Kind.Class)
-    )
-
-    // TODO: ugh.
-    override val configurationName: String = "implementation, sometimes"
-  }
-
-  @TypeLabel("invisibleAnnotation")
-  @JsonClass(generateAdapter = false)
-  data class InvisibleAnnotation(override val reason: String) : Reason(reason) {
-    constructor(inAnnotationClasses: Set<String>) : this(
-      buildReason(inAnnotationClasses, "Uses (as an annotation)", Kind.Class)
+      buildReason(inAnnotationClasses, "Uses (as or in an annotation)", Kind.Class)
     )
 
     override val configurationName: String = "compileOnly"
@@ -268,11 +267,19 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String = "implementation"
 
     internal companion object {
-      fun styleParentRefs(resources: Set<AndroidResSource.StyleParentRef>) = ResByRes(
+      fun resRefs(resources: Set<AndroidResSource.ResRef>) = ResByRes(
         buildReason(resources.map { it.toString() }, "Uses", Kind.AndroidRes)
       )
+    }
+  }
 
-      fun attrRefs(resources: Set<AndroidResSource.AttrRef>) = ResByRes(
+  @TypeLabel("res_by_res_runtime")
+  @JsonClass(generateAdapter = false)
+  data class ResByResRuntime(override val reason: String) : Reason(reason) {
+    override val configurationName: String = "runtimeOnly"
+
+    internal companion object {
+      fun resRefs(resources: Set<AndroidResSource.ResRef>) = ResByResRuntime(
         buildReason(resources.map { it.toString() }, "Uses", Kind.AndroidRes)
       )
     }
@@ -353,6 +360,13 @@ internal sealed class Reason(open val reason: String) {
   @JsonClass(generateAdapter = false)
   object Unused : Reason("unused") {
     override fun toString(): String = "UNUSED"
+    override val configurationName: String = "n/a"
+  }
+
+  @TypeLabel("excluded")
+  @JsonClass(generateAdapter = false)
+  object Excluded : Reason("excluded") {
+    override fun toString(): String = "EXCLUDED"
     override val configurationName: String = "n/a"
   }
 }

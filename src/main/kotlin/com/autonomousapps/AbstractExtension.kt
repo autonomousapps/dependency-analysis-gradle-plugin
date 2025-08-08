@@ -14,7 +14,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.newInstance
 import javax.inject.Inject
 
-abstract class AbstractExtension @Inject constructor(
+public abstract class AbstractExtension @Inject constructor(
   private val objects: ObjectFactory,
   gradle: Gradle,
 ) {
@@ -28,9 +28,9 @@ abstract class AbstractExtension @Inject constructor(
   // One instance of this per project
   internal val issueHandler: IssueHandler = objects.newInstance(dslService)
 
-  internal val useTypesafeProjectAccessors: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
-
   // Only one instance of each of these is allowed globally, so we delegate to the build service
+
+  internal val useTypesafeProjectAccessors: Property<Boolean> = dslService.get().useTypesafeProjectAccessors
   internal val abiHandler: AbiHandler = dslService.get().abiHandler
   internal val dependenciesHandler: DependenciesHandler = dslService.get().dependenciesHandler
   internal val reportingHandler: ReportingHandler = dslService.get().reportingHandler
@@ -54,12 +54,12 @@ abstract class AbstractExtension @Inject constructor(
    * Never null, but may _contain_ a null value. Use with [RegularFileProperty.getOrNull].
    */
   @Suppress("MemberVisibilityCanBePrivate") // explicit API
-  fun adviceOutput(): RegularFileProperty = adviceOutput
+  public fun adviceOutput(): RegularFileProperty = adviceOutput
 
   /**
    * Whether to force the project being treated as an app project even if only the `java` plugin is applied.
    */
-  fun app() {
+  public fun app() {
     forceAppProject = true
   }
 
@@ -68,7 +68,7 @@ abstract class AbstractExtension @Inject constructor(
    * by this project.
    */
   @Suppress("unused") // explicit API
-  fun registerPostProcessingTask(task: TaskProvider<out AbstractPostProcessingTask>) {
+  public fun registerPostProcessingTask(task: TaskProvider<out AbstractPostProcessingTask>) {
     postProcessingTask = task
     task.configure {
       input.set(adviceOutput())

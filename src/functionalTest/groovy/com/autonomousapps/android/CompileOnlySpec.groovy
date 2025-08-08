@@ -3,6 +3,7 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.CompileOnlyProject
+import com.autonomousapps.android.projects.CompileOnlyTransitiveProject
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
@@ -13,6 +14,23 @@ final class CompileOnlySpec extends AbstractAndroidSpec {
 
   def "compileOnly deps are never suggested to be changed (#gradleVersion AGP #agpVersion)"() {
     def project = new CompileOnlyProject(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
+  def "does not advise moving dependency from compileClasspath to runtimeClasspath (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new CompileOnlyTransitiveProject(agpVersion)
     gradleProject = project.gradleProject
 
     when:

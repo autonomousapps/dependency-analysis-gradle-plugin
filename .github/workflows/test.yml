@@ -51,59 +51,43 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 17
+          java-version: 21
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          add-job-summary-as-pr-comment: 'on-failure'
+
+      - name: Execute buildHealth for build-logic
+        run: './gradlew -p build-logic/ buildHealth'
+
+      - name: Execute check (build-logic)
+        run: './gradlew -p build-logic/ check'
 
       - name: Execute buildHealth for main project
-        id: gradle-buildhealth
         run: './gradlew buildHealth'
 
       - name: Execute buildHealth for testkit project
-        id: gradle-testkit-buildhealth
         run: './gradlew -p testkit/ buildHealth'
 
       - name: Execute check (non-functional tests)
-        id: gradle-test
         run: './gradlew check -s -x :functionalTest'
 
       - name: Execute check (testkit)
-        id: gradle-testkit-check
-        run: './gradlew -p testkit/ check -s'
+        run: './gradlew -p testkit/ check'
 
       - name: Execute JVM functional tests
-        id: gradle-jvm-check
         run: './gradlew :functionalTest -DfuncTest.package=jvm -DfuncTest.quick'
 
       - name: Execute Android functional tests
-        id: gradle-android-check
         run: './gradlew :functionalTest -DfuncTest.package=android -DfuncTest.quick'
 
-      - name: 'Maybe add Build Scan URLs as PR comment'
-        uses: actions/github-script@v7
-        if: github.event_name == 'pull_request' && failure()
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `❌ ${{ github.workflow }} workflow failed:
-
-                * Root buildHealth         : ${{ steps.gradle-buildhealth.outputs.build-scan-url }}
-                * TestKit buildHealth      : ${{ steps.gradle-testkit-buildhealth.outputs.build-scan-url }}
-                * Non-functional tests     : ${{ steps.gradle-test.outputs.build-scan-url }}
-                * TestKit check            : ${{ steps.gradle-testkit-check.outputs.build-scan-url }}
-                * JVM functional tests     : ${{ steps.gradle-jvm-check.outputs.build-scan-url }}
-                * Android functional tests : ${{ steps.gradle-android-check.outputs.build-scan-url }}
-                `
-            })
+      - name: Check API
+        run: './gradlew :checkApi'
 
       - name: Publish snapshot
         if: github.repository == 'autonomousapps/dependency-analysis-gradle-plugin' && github.ref == 'refs/heads/main'
         run: './gradlew :publishToMavenCentral'
         env:
-          sonatypeUsername: ${{ secrets.sonatypeUsername }}
-          sonatypePassword: ${{ secrets.sonatypePassword }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}

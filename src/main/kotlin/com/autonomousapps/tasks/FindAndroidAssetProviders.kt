@@ -13,7 +13,8 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 
-abstract class FindAndroidAssetProviders : DefaultTask() {
+@CacheableTask
+public abstract class FindAndroidAssetProviders : DefaultTask() {
 
   init {
     description = "Produces a report of dependencies that supply Android assets"
@@ -21,18 +22,18 @@ abstract class FindAndroidAssetProviders : DefaultTask() {
 
   private lateinit var assetDirs: ArtifactCollection
 
-  fun setAssets(assets: ArtifactCollection) {
+  public fun setAssets(assets: ArtifactCollection) {
     this.assetDirs = assets
   }
 
   @PathSensitive(PathSensitivity.RELATIVE)
   @InputFiles
-  fun getAssetArtifactFiles(): FileCollection = assetDirs.artifactFiles
+  public fun getAssetArtifactFiles(): FileCollection = assetDirs.artifactFiles
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
     val assetProviders: Set<AndroidAssetDependency> = assetDirs.asSequence()

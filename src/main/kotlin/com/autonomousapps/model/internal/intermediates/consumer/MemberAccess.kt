@@ -7,7 +7,7 @@ import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
 /**
  * Represents, from the consumer's bytecode, the access of a member from a producer. E.g., if "our" code calls
- * `"some string".substring(1)`, that a member access on the substring method of the String class.
+ * `"some string".substring(1)`, that's a member access on the substring method of the String class.
  *
  * nb: Borrowing heavily from `asmUtils.kt` and similar but substantially different from
  * [Member][com.autonomousapps.model.internal.intermediates.producer.Member] on the producer side.

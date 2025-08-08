@@ -1,5 +1,7 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
+@file:Suppress("UnstableApiUsage") // AGP stuff
+
 package com.autonomousapps.internal.analyzer
 
 import com.android.build.api.artifact.Artifacts
@@ -7,7 +9,8 @@ import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.Sources
-import com.autonomousapps.model.declaration.Variant
+import com.android.build.api.variant.Variant
+import com.autonomousapps.model.source.AndroidSourceKind
 import com.autonomousapps.tasks.AndroidClassesTask
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
@@ -19,7 +22,7 @@ import java.io.File
  * layouts.
  */
 internal interface AndroidSources {
-  val variant: Variant
+  val sourceKind: AndroidSourceKind
 
   /** E.g., `debugCompileClasspath` or `debugUnitTestCompileClasspath` */
   val compileClasspathConfigurationName: String
@@ -31,7 +34,13 @@ internal interface AndroidSources {
   fun getKotlinSources(): Provider<Iterable<File>>
   fun getAndroidAssets(): Provider<Iterable<File>>
   fun getAndroidRes(): Provider<Iterable<File>>
+
+  /** Manifests stored in source, or perhaps generated. cf [getMergedManifest]. */
   fun getManifestFiles(): Provider<Iterable<File>>
+
+  /** Only ever a single file, but returning a list makes it easy to return an _empty_ list. cf [getManifestFiles]. */
+  fun getMergedManifest(): Provider<Iterable<File>>
+
   fun getLayoutFiles(): Provider<Iterable<File>>
   fun wireWithClassFiles(task: TaskProvider<out AndroidClassesTask>)
 }
@@ -42,10 +51,10 @@ internal open class DefaultAndroidSources(
   /**
    * "Primary" as opposed to UnitTest or AndroidTest sub-variants.
    *
-   * @see [com.android.build.api.variant.Variant.unitTest]
+   * @see [Variant.unitTest]
    * @see [com.android.build.api.variant.HasAndroidTest.androidTest]
    */
-  private val primaryAgpVariant: com.android.build.api.variant.Variant,
+  private val primaryAgpVariant: Variant,
 
   /**
    * The artifacts accessor for the specific sub-variant that this `AndroidSources` instance defines. May be the
@@ -53,7 +62,7 @@ internal open class DefaultAndroidSources(
    */
   private val agpArtifacts: Artifacts,
   private val sources: Sources,
-  override val variant: Variant,
+  override val sourceKind: AndroidSourceKind,
   override val compileClasspathConfigurationName: String,
   override val runtimeClasspathConfigurationName: String,
 ) : AndroidSources {
@@ -123,10 +132,12 @@ internal open class DefaultAndroidSources(
   }
 
   override fun getManifestFiles(): Provider<Iterable<File>> {
-    // For this one, we want to use the main variant's artifacts
-    return primaryAgpVariant.artifacts.get(SingleArtifact.MERGED_MANIFEST).map {
-      listOf(it.asFile)
-    }
+    return sources.manifests.all.map { manifests -> manifests.map { manifest -> manifest.asFile } }
+  }
+
+  // For this one, we want to use the main variant's artifacts
+  override fun getMergedManifest(): Provider<Iterable<File>> {
+    return primaryAgpVariant.artifacts.get(SingleArtifact.MERGED_MANIFEST).map { listOf(it.asFile) }
   }
 
   final override fun wireWithClassFiles(task: TaskProvider<out AndroidClassesTask>) {
@@ -150,10 +161,10 @@ internal open class DefaultAndroidSources(
  */
 internal class TestAndroidSources(
   private val project: Project,
-  primaryAgpVariant: com.android.build.api.variant.Variant,
+  primaryAgpVariant: Variant,
   agpArtifacts: Artifacts,
   sources: Sources,
-  variant: Variant,
+  sourceKind: AndroidSourceKind,
   compileClasspathConfigurationName: String,
   runtimeClasspathConfigurationName: String,
 ) : DefaultAndroidSources(
@@ -161,12 +172,14 @@ internal class TestAndroidSources(
   primaryAgpVariant,
   agpArtifacts,
   sources,
-  variant,
+  sourceKind,
   compileClasspathConfigurationName,
   runtimeClasspathConfigurationName,
 ) {
   override fun getAndroidRes(): Provider<Iterable<File>> = project.provider { emptyList() }
   override fun getLayoutFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
+  override fun getManifestFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
+  override fun getMergedManifest(): Provider<Iterable<File>> = project.provider { emptyList() }
 }
 
 /**
@@ -185,10 +198,10 @@ internal class TestAndroidSources(
  */
 internal class ComAndroidTestAndroidSources(
   private val project: Project,
-  primaryAgpVariant: com.android.build.api.variant.Variant,
+  primaryAgpVariant: Variant,
   agpArtifacts: Artifacts,
   sources: Sources,
-  variant: Variant,
+  sourceKind: AndroidSourceKind,
   compileClasspathConfigurationName: String,
   runtimeClasspathConfigurationName: String,
 ) : DefaultAndroidSources(
@@ -196,9 +209,10 @@ internal class ComAndroidTestAndroidSources(
   primaryAgpVariant,
   agpArtifacts,
   sources,
-  variant,
+  sourceKind,
   compileClasspathConfigurationName,
   runtimeClasspathConfigurationName,
 ) {
   override fun getManifestFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
+  override fun getMergedManifest(): Provider<Iterable<File>> = project.provider { emptyList() }
 }

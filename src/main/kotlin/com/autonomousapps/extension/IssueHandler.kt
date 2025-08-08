@@ -4,6 +4,7 @@ package com.autonomousapps.extension
 
 import com.autonomousapps.services.GlobalDslService
 import org.gradle.api.Action
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
@@ -19,17 +20,21 @@ import javax.inject.Inject
  * }
  * ```
  */
-abstract class IssueHandler @Inject constructor(
+public abstract class IssueHandler @Inject constructor(
   globalDslService: Provider<out GlobalDslService>,
 ) {
 
   private val globalDslService = globalDslService.get()
 
-  fun all(action: Action<ProjectIssueHandler>) {
+  public fun all(action: Action<ProjectIssueHandler>) {
     globalDslService.all(action)
   }
 
-  fun project(projectPath: String, action: Action<ProjectIssueHandler>) {
+  public fun project(project: ProjectDependency, action: Action<ProjectIssueHandler>) {
+    project(project.path, action)
+  }
+
+  public fun project(projectPath: String, action: Action<ProjectIssueHandler>) {
     globalDslService.project(projectPath, action)
   }
 

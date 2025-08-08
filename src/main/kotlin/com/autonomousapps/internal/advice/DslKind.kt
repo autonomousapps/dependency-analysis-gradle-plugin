@@ -4,11 +4,12 @@ package com.autonomousapps.internal.advice
 
 import java.io.File
 
-enum class DslKind {
+// Public because used as a task input, but effectively internal.
+public enum class DslKind {
   GROOVY,
   KOTLIN;
 
-  companion object {
+  internal companion object {
     fun from(file: File): DslKind {
       return when (file.name.substringAfter('.')) {
         "gradle" -> GROOVY

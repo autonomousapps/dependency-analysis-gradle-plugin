@@ -29,7 +29,7 @@ import java.util.zip.ZipFile
  * bytecode. We will special-case all such dependencies discovered on the classpath.
  */
 @CacheableTask
-abstract class FindServiceLoadersTask : DefaultTask() {
+public abstract class FindServiceLoadersTask : DefaultTask() {
 
   init {
     description = "Produces a report of all dependencies that include Java ServiceLoaders"
@@ -37,17 +37,17 @@ abstract class FindServiceLoadersTask : DefaultTask() {
 
   private lateinit var compileClasspath: ArtifactCollection
 
-  fun setCompileClasspath(artifacts: ArtifactCollection) {
+  public fun setCompileClasspath(artifacts: ArtifactCollection) {
     this.compileClasspath = artifacts
   }
 
   @Classpath
-  fun getCompileClasspath(): FileCollection = compileClasspath.artifactFiles
+  public fun getCompileClasspath(): FileCollection = compileClasspath.artifactFiles
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
     val serviceLoaders = compileClasspath

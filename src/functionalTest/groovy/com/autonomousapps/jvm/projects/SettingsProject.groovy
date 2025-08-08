@@ -81,7 +81,7 @@ abstract class SettingsProject extends AbstractProject {
         import java.util.Optional
         
         object App {
-           def main(args: Array[String]): Unit = {
+           def main(args: String*): Unit = {
              val library = Optional.of(new Library())
            }
         }
@@ -100,6 +100,10 @@ abstract class SettingsProject extends AbstractProject {
         class Library {
           def getBag(): Bag[String] = {
             new HashBag[String]
+          }
+          
+          def getList(): List[String] = {
+            List("a", "b", "c")
           }
         }
       """.stripIndent()

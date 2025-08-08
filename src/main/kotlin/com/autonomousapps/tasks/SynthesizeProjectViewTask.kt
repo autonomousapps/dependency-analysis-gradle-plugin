@@ -4,34 +4,29 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.UsagesExclusions
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.GradleVariantIdentification
+import com.autonomousapps.model.IncludedBuildCoordinates
+import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.internal.*
-import com.autonomousapps.model.internal.AndroidAssetSource
-import com.autonomousapps.model.internal.AndroidResSource
-import com.autonomousapps.model.internal.CodeSource
-import com.autonomousapps.model.internal.DependencyGraphView
-import com.autonomousapps.model.internal.ProjectVariant
-import com.autonomousapps.model.internal.Source
 import com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingAbi
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingSourceCode
-import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
-import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
+import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
+import com.autonomousapps.model.source.SourceKind
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.Optional
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import java.util.TreeSet
+import java.util.*
 import javax.inject.Inject
 
 @CacheableTask
-abstract class SynthesizeProjectViewTask @Inject constructor(
+public abstract class SynthesizeProjectViewTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
@@ -40,66 +35,76 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
   }
 
   @get:Input
-  abstract val projectPath: Property<String>
+  public abstract val projectPath: Property<String>
 
   /** May be null. */
   @get:Optional
   @get:Input
-  abstract val buildType: Property<String>
+  public abstract val buildType: Property<String>
 
   /** May be null. */
   @get:Optional
   @get:Input
-  abstract val flavor: Property<String>
+  public abstract val flavor: Property<String>
 
   @get:Input
-  abstract val variant: Property<String>
+  public abstract val variant: Property<String>
 
   @get:Input
-  abstract val kind: Property<SourceSetKind>
+  public abstract val sourceKind: Property<SourceKind>
 
   /** [`DependencyGraphView`][DependencyGraphView] */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val graph: RegularFileProperty
+  public abstract val graph: RegularFileProperty
 
   /** [`Set<AnnotationProcessorDependency>`][com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency] */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val annotationProcessors: RegularFileProperty
+  public abstract val annotationProcessors: RegularFileProperty
 
   /** [`Set<ExplodingByteCode>`][ExplodingBytecode] */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val explodedBytecode: RegularFileProperty
+  public abstract val explodedBytecode: RegularFileProperty
 
   /** [`Set<ExplodingSourceCode>`][ExplodingSourceCode] */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val explodedSourceCode: RegularFileProperty
+  public abstract val explodedSourceCode: RegularFileProperty
 
   /** [`UsagesExclusions`][com.autonomousapps.internal.UsagesExclusions] */
   @get:Optional
   @get:Input
-  abstract val usagesExclusions: Property<String>
+  public abstract val usagesExclusions: Property<String>
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  public abstract val excludedIdentifiers: RegularFileProperty
 
   /** [`Set<ExplodingAbi>`][ExplodingAbi] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val explodingAbi: RegularFileProperty
+  public abstract val explodingAbi: RegularFileProperty
 
   /** [`Set<AndroidResSource>`][AndroidResSource] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val androidResSource: RegularFileProperty
+  public abstract val androidResSource: RegularFileProperty
+
+  /** [`Set<AndroidResSource>`][AndroidResSource] */
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  public abstract val androidResSourceRuntime: RegularFileProperty
 
   /** [`Set<AndroidAssetSource>`][AndroidAssetSource] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val androidAssetsSource: RegularFileProperty
+  public abstract val androidAssetsSource: RegularFileProperty
 
   /**
    * A string representing the fully-qualified class name (FQCN) of the test instrumentation runner if (1) this is an
@@ -107,57 +112,59 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
    */
   @get:Optional
   @get:Input
-  abstract val testInstrumentationRunner: Property<String>
+  public abstract val testInstrumentationRunner: Property<String>
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(SynthesizeProjectViewWorkAction::class.java) {
       projectPath.set(this@SynthesizeProjectViewTask.projectPath)
       buildType.set(this@SynthesizeProjectViewTask.buildType)
       flavor.set(this@SynthesizeProjectViewTask.flavor)
-      variant.set(this@SynthesizeProjectViewTask.variant)
-      kind.set(this@SynthesizeProjectViewTask.kind)
+      sourceKind.set(this@SynthesizeProjectViewTask.sourceKind)
       graph.set(this@SynthesizeProjectViewTask.graph)
       annotationProcessors.set(this@SynthesizeProjectViewTask.annotationProcessors)
       explodedBytecode.set(this@SynthesizeProjectViewTask.explodedBytecode)
       explodedSourceCode.set(this@SynthesizeProjectViewTask.explodedSourceCode)
       explodingAbi.set(this@SynthesizeProjectViewTask.explodingAbi)
+      excludedIdentifiers.set(this@SynthesizeProjectViewTask.excludedIdentifiers)
       usagesExclusions.set(this@SynthesizeProjectViewTask.usagesExclusions)
       androidResSource.set(this@SynthesizeProjectViewTask.androidResSource)
+      androidResSourceRuntime.set(this@SynthesizeProjectViewTask.androidResSourceRuntime)
       androidAssetsSource.set(this@SynthesizeProjectViewTask.androidAssetsSource)
       testInstrumentationRunner.set(this@SynthesizeProjectViewTask.testInstrumentationRunner)
       output.set(this@SynthesizeProjectViewTask.output)
     }
   }
 
-  interface SynthesizeProjectViewParameters : WorkParameters {
-    val projectPath: Property<String>
+  public interface SynthesizeProjectViewParameters : WorkParameters {
+    public val projectPath: Property<String>
 
     /** May be null. */
-    val buildType: Property<String>
+    public val buildType: Property<String>
 
     /** May be null. */
-    val flavor: Property<String>
-    val variant: Property<String>
-    val kind: Property<SourceSetKind>
-    val graph: RegularFileProperty
-    val annotationProcessors: RegularFileProperty
-    val explodedBytecode: RegularFileProperty
-    val explodedSourceCode: RegularFileProperty
-    val usagesExclusions: Property<String>
+    public val flavor: Property<String>
+    public val sourceKind: Property<SourceKind>
+    public val graph: RegularFileProperty
+    public val annotationProcessors: RegularFileProperty
+    public val explodedBytecode: RegularFileProperty
+    public val explodedSourceCode: RegularFileProperty
+    public val excludedIdentifiers: RegularFileProperty
+    public val usagesExclusions: Property<String>
 
     // Optional
-    val explodingAbi: RegularFileProperty
-    val androidResSource: RegularFileProperty
-    val androidAssetsSource: RegularFileProperty
-    val testInstrumentationRunner: Property<String>
+    public val explodingAbi: RegularFileProperty
+    public val androidResSource: RegularFileProperty
+    public val androidResSourceRuntime: RegularFileProperty
+    public val androidAssetsSource: RegularFileProperty
+    public val testInstrumentationRunner: Property<String>
 
-    val output: RegularFileProperty
+    public val output: RegularFileProperty
   }
 
-  abstract class SynthesizeProjectViewWorkAction : WorkAction<SynthesizeProjectViewParameters> {
+  public abstract class SynthesizeProjectViewWorkAction : WorkAction<SynthesizeProjectViewParameters> {
 
     private val builders = sortedMapOf<String, CodeSourceBuilder>()
 
@@ -170,8 +177,10 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
       val explodingAbi = parameters.explodingAbi.fromNullableJsonSet<ExplodingAbi>()
       val explodedSourceCode = parameters.explodedSourceCode.fromJsonSet<ExplodingSourceCode>()
       val androidResSource = parameters.androidResSource.fromNullableJsonSet<AndroidResSource>()
+      val androidResSourceRuntime = parameters.androidResSourceRuntime.fromNullableJsonSet<AndroidResSource>()
       val androidAssetsSource = parameters.androidAssetsSource.fromNullableJsonSet<AndroidAssetSource>()
       val testInstrumentationRunner = parameters.testInstrumentationRunner.orNull
+      val excludedIdentifiers = parameters.excludedIdentifiers.fromJsonSet<ExcludedIdentifier>()
 
       explodedBytecode.forEach { bytecode ->
         builders.merge(
@@ -181,15 +190,16 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
             superClass = bytecode.superClass
             interfaces.addAll(bytecode.interfaces)
             nonAnnotationClasses.addAll(bytecode.nonAnnotationClasses)
+            nonAnnotationClassesWithinVisibleAnnotation.putAll(bytecode.nonAnnotationClassesWithinVisibleAnnotation)
             annotationClasses.addAll(bytecode.annotationClasses)
-            invisibleAnnotationClasses.addAll(bytecode.invisibleAnnotationClasses)
-          //   // TODO(tsr): flatten into a single set? Do we need the map?
-          //   // Merge the two maps
-          //   bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
-          //     binaryClassAccesses.merge(className, memberAccesses.toMutableSet()) { acc, inc ->
-          //       acc.apply { addAll(inc) }
-          //     }
-          //   }
+            inferredConstants.addAll(bytecode.inferredConstants)
+            //   // TODO(tsr): flatten into a single set? Do we need the map?
+            //   // Merge the two maps
+            //   bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
+            //     binaryClassAccesses.merge(className, memberAccesses.toMutableSet()) { acc, inc ->
+            //       acc.apply { addAll(inc) }
+            //     }
+            //   }
           },
           CodeSourceBuilder::concat
         )
@@ -233,19 +243,24 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
         .mapToSet { it.coordinates }
       val usagesExclusions = parameters.usagesExclusions.orNull?.fromJson<UsagesExclusions>() ?: UsagesExclusions.NONE
 
+      val sources = TreeSet<Source>().also { sources ->
+        codeSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
+        androidResSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
+        sources.addAll(androidAssetsSource)
+      }
+      val runtimeSources = androidResSourceRuntime.mapToOrderedSet { it.excludeUsages(usagesExclusions) }
+
       val projectVariant = ProjectVariant(
         coordinates = projectCoordinates,
         buildType = parameters.buildType.orNull?.intern(),
         flavor = parameters.flavor.orNull?.intern(),
-        variant = Variant(parameters.variant.get().intern(), parameters.kind.get()),
-        sources = TreeSet<Source>().also { sources ->
-          codeSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
-          androidResSource.mapTo(sources) { it.excludeUsages(usagesExclusions) }
-          sources.addAll(androidAssetsSource)
-        }.efficient(),
+        sourceKind = parameters.sourceKind.get(),
+        sources = sources.efficient(),
+        runtimeSources = runtimeSources.efficient(),
         classpath = classpath.efficient(),
         annotationProcessors = annotationProcessors.efficient(),
         testInstrumentationRunner = testInstrumentationRunner?.intern(),
+        excludedIdentifiers = excludedIdentifiers,
       )
 
       output.bufferWriteJson(projectVariant)
@@ -254,8 +269,10 @@ abstract class SynthesizeProjectViewTask @Inject constructor(
     private fun CodeSource.excludeUsages(usagesExclusions: UsagesExclusions): CodeSource {
       return copy(
         usedNonAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedNonAnnotationClasses),
+        usedNonAnnotationClassesWithinVisibleAnnotation = usagesExclusions.excludeClassesFromMap(
+          usedNonAnnotationClassesWithinVisibleAnnotation
+        ),
         usedAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedAnnotationClasses),
-        usedInvisibleAnnotationClasses = usagesExclusions.excludeClassesFromSet(usedInvisibleAnnotationClasses),
         imports = usagesExclusions.excludeClassesFromSet(imports),
       )
     }
@@ -275,10 +292,11 @@ private class CodeSourceBuilder(val className: String) {
   var superClass: String? = null
   val interfaces = sortedSetOf<String>()
   val nonAnnotationClasses = sortedSetOf<String>()
+  val nonAnnotationClassesWithinVisibleAnnotation = mutableMapOf<String, String>()
   val annotationClasses = sortedSetOf<String>()
-  val invisibleAnnotationClasses = sortedSetOf<String>()
   val exposedClasses = sortedSetOf<String>()
   val imports = sortedSetOf<String>()
+  val inferredConstants = sortedSetOf<LdcConstant>()
   // val binaryClassAccesses = mutableMapOf<String, MutableSet<MemberAccess>>()
 
   fun concat(other: CodeSourceBuilder): CodeSourceBuilder {
@@ -286,8 +304,8 @@ private class CodeSourceBuilder(val className: String) {
     other.superClass?.let { superClass = it }
     interfaces.addAll(other.interfaces)
     nonAnnotationClasses.addAll(other.nonAnnotationClasses)
+    nonAnnotationClassesWithinVisibleAnnotation.putAll(other.nonAnnotationClassesWithinVisibleAnnotation)
     annotationClasses.addAll(other.annotationClasses)
-    invisibleAnnotationClasses.addAll(other.invisibleAnnotationClasses)
     exposedClasses.addAll(other.exposedClasses)
     imports.addAll(other.imports)
     kind = other.kind
@@ -303,10 +321,11 @@ private class CodeSourceBuilder(val className: String) {
       kind = kind,
       className = className,
       usedNonAnnotationClasses = nonAnnotationClasses.efficient(),
+      usedNonAnnotationClassesWithinVisibleAnnotation = nonAnnotationClassesWithinVisibleAnnotation.efficient(),
       usedAnnotationClasses = annotationClasses.efficient(),
-      usedInvisibleAnnotationClasses = invisibleAnnotationClasses.efficient(),
       exposedClasses = exposedClasses.efficient(),
       imports = imports.efficient(),
+      inferredConstants = inferredConstants.efficient(),
       // binaryClassAccesses = binaryClassAccesses,
     )
   }

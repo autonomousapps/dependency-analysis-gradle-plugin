@@ -17,7 +17,8 @@ import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
-abstract class AndroidScoreTask @Inject constructor(
+@CacheableTask
+public abstract class AndroidScoreTask @Inject constructor(
   private val workerExecutor: WorkerExecutor
 ) : DefaultTask() {
 
@@ -27,16 +28,16 @@ abstract class AndroidScoreTask @Inject constructor(
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val syntheticProject: RegularFileProperty
+  public abstract val syntheticProject: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputDirectory
-  abstract val dependencies: DirectoryProperty
+  public abstract val dependencies: DirectoryProperty
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(Action::class.java) {
       syntheticProject.set(this@AndroidScoreTask.syntheticProject)
       dependencies.set(this@AndroidScoreTask.dependencies)
@@ -44,13 +45,13 @@ abstract class AndroidScoreTask @Inject constructor(
     }
   }
 
-  interface Parameters : WorkParameters {
-    val syntheticProject: RegularFileProperty
-    val dependencies: DirectoryProperty
-    val output: RegularFileProperty
+  public interface Parameters : WorkParameters {
+    public val syntheticProject: RegularFileProperty
+    public val dependencies: DirectoryProperty
+    public val output: RegularFileProperty
   }
 
-  abstract class Action : WorkAction<Parameters> {
+  public abstract class Action : WorkAction<Parameters> {
 
     private val project = parameters.syntheticProject.fromJson<ProjectVariant>()
     private val dependencies = project.dependencies(parameters.dependencies.get())
@@ -75,7 +76,7 @@ abstract class AndroidScoreTask @Inject constructor(
       val hasBuildTypeSourceSplits = project.codeSource.any { !it.relativePath.startsWith("src/main") }
 
       val score = AndroidScoreVariant(
-        variant = project.variant,
+        sourceKind = project.sourceKind,
         hasAndroidAssets = hasAndroidAssets,
         hasAndroidRes = hasAndroidRes,
         hasBuildConfig = hasBuildConfig,

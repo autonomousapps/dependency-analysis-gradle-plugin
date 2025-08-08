@@ -24,17 +24,18 @@ internal class OutputPaths(
 
   val compileArtifactsPath = file("${intermediatesDir}/artifacts.json")
   val runtimeArtifactsPath = file("${intermediatesDir}/artifacts-runtime.json")
+  val excludedIdentifiersPath = file("${intermediatesDir}/excluded-identifiers.json")
+  val excludedIdentifiersRuntimePath = file("${intermediatesDir}/excluded-identifiers-runtime.json")
   val externalDependenciesPath = file("${intermediatesDir}/external-dependencies.txt")
   val duplicateCompileClasspathPath = file("${intermediatesDir}/duplicate-classes-compile.json")
   val duplicateCompileRuntimePath = file("${intermediatesDir}/duplicate-classes-runtime.json")
-  // TODO(tsr): gzip
-  // val explodedJarsPath = file("${intermediatesDir}/exploded-jars.json")
   val explodedJarsPath = file("${intermediatesDir}/exploded-jars.json.gz")
   val inlineUsagePath = file("${intermediatesDir}/inline-usage.json")
   val typealiasUsagePath = file("${intermediatesDir}/typealias-usage.json")
   val inlineUsageErrorsPath = file("${intermediatesDir}/inline-usage-errors.txt")
   val androidResPath = file("${intermediatesDir}/android-res.json")
   val androidResToResUsagePath = file("${intermediatesDir}/android-res-by-res-usage.json")
+  val androidResToResUsageRuntimePath = file("${intermediatesDir}/android-res-by-res-usage-runtime.json")
   val androidAssetSourcePath = file("${intermediatesDir}/exploded-assets.json")
   val manifestPackagesPath = file("${intermediatesDir}/manifest-packages.json")
   val serviceLoaderDependenciesPath = file("${intermediatesDir}/service-loaders.json")
@@ -127,10 +128,10 @@ internal class RedundantSubPluginOutputPaths(private val project: Project) {
 }
 
 // TODO used by tests
-fun getAdvicePathV2() = "$ROOT_DIR/final-advice.json"
-fun getAggregateAdvicePathV2() = "$ROOT_DIR/final-advice.json"
-fun getFinalAdvicePathV2() = "$ROOT_DIR/build-health-report.json"
-fun getDuplicateDependenciesReport() = "$ROOT_DIR/duplicate-dependencies-report.json"
-fun getAllLibsVersionsTomlPath() = "$ROOT_DIR/allLibs.versions.toml"
-fun getResolvedDependenciesReport() = "$ROOT_DIR/resolved-dependencies-report.txt"
-fun getResolvedVersionsTomlPath() = "$ROOT_DIR/resolvedAllLibs.versions.toml"
+public fun getAdvicePathV2(): String = "$ROOT_DIR/final-advice.json"
+public fun getAggregateAdvicePathV2(): String = "$ROOT_DIR/final-advice.json"
+public fun getFinalAdvicePathV2(): String = "$ROOT_DIR/build-health-report.json"
+public fun getDuplicateDependenciesReport(): String = "$ROOT_DIR/duplicate-dependencies-report.json"
+public fun getAllLibsVersionsTomlPath(): String = "$ROOT_DIR/allLibs.versions.toml"
+public fun getResolvedDependenciesReport(): String = "$ROOT_DIR/resolved-dependencies-report.txt"
+public fun getResolvedVersionsTomlPath(): String = "$ROOT_DIR/resolvedAllLibs.versions.toml"

@@ -2,15 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.test
 
-import com.autonomousapps.model.declaration.internal.Bucket
-import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.model.internal.intermediates.Usage
+import com.autonomousapps.model.source.SourceKind
 import com.google.common.graph.ElementOrder
 import com.google.common.graph.GraphBuilder
 import com.google.common.graph.ImmutableGraph
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStream
 import java.net.URI
 import java.net.URL
 import java.nio.file.*
@@ -23,7 +24,16 @@ fun Any.pathFromResource(resourcePath: String): Path = Paths.get(uriFromResource
 
 fun Any.uriFromResource(resourcePath: String): URI = urlFromResource(resourcePath).toURI()
 
-fun Any.urlFromResource(resourcePath: String): URL = javaClass.classLoader.getResource(resourcePath) ?: error("No resource at '$resourcePath'")
+fun Any.urlFromResource(resourcePath: String): URL =
+  javaClass.classLoader.getResource(resourcePath) ?: error("No resource at '$resourcePath'")
+
+fun Any.textFromResource(resourcePath: String): String {
+  return streamFromResource(resourcePath).bufferedReader().use(BufferedReader::readText)
+}
+
+fun Any.streamFromResource(resourcePath: String): InputStream {
+  return javaClass.classLoader.getResourceAsStream(resourcePath) ?: error("No resource at '$resourcePath'")
+}
 
 fun walkFileTree(path: Path, predicate: (Path) -> Boolean = { true }): Set<File> {
   val files = mutableSetOf<File>()
@@ -49,17 +59,16 @@ fun Path.emptyZipFile(): Path = resolve("${System.currentTimeMillis()}.zip").app
 
 internal fun usage(
   bucket: Bucket,
-  variant: String = "debug",
+  sourceKind: SourceKind,
   buildType: String? = null,
   flavor: String? = null,
-  kind: SourceSetKind = SourceSetKind.MAIN,
   reasons: Set<Reason> = emptySet()
 ) = Usage(
   buildType = buildType,
   flavor = flavor,
-  variant = Variant(variant, kind),
+  sourceKind = sourceKind,
   bucket = bucket,
-  reasons = reasons
+  reasons = reasons,
 )
 
 @Suppress("UnstableApiUsage") // Guava

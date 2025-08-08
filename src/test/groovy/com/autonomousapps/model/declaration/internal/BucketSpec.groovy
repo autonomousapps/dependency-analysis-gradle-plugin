@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.declaration.internal
 
+import com.autonomousapps.model.internal.declaration.Bucket
 import spock.lang.Specification
 
 class BucketSpec extends Specification {

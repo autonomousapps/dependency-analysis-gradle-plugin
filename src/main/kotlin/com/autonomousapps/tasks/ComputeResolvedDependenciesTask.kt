@@ -15,7 +15,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 
 @CacheableTask
-abstract class ComputeResolvedDependenciesTask : DefaultTask() {
+public abstract class ComputeResolvedDependenciesTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -24,15 +24,15 @@ abstract class ComputeResolvedDependenciesTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val externalDependencies: ListProperty<RegularFile>
+  public abstract val externalDependencies: ListProperty<RegularFile>
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
   @get:OutputFile
-  abstract val outputToml: RegularFileProperty
+  public abstract val outputToml: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val output = output.getAndDelete()
     val outputToml = outputToml.getAndDelete()
 

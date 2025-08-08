@@ -8,9 +8,9 @@ import com.autonomousapps.internal.graph.supers.SuperNode
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DuplicateClass
-import com.autonomousapps.model.declaration.internal.Bucket
-import com.autonomousapps.model.declaration.internal.Declaration
 import com.autonomousapps.model.internal.*
+import com.autonomousapps.model.internal.declaration.Bucket
+import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.DependencyTraceReport
 import com.autonomousapps.model.internal.intermediates.DependencyTraceReport.Kind
 import com.autonomousapps.model.internal.intermediates.Reason
@@ -30,7 +30,7 @@ import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 @CacheableTask
-abstract class ComputeUsagesTask @Inject constructor(
+public abstract class ComputeUsagesTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
@@ -40,34 +40,34 @@ abstract class ComputeUsagesTask @Inject constructor(
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val graph: RegularFileProperty
+  public abstract val graph: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val declarations: RegularFileProperty
+  public abstract val declarations: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputDirectory
-  abstract val dependencies: DirectoryProperty
+  public abstract val dependencies: DirectoryProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val syntheticProject: RegularFileProperty
+  public abstract val syntheticProject: RegularFileProperty
 
   @get:Input
-  abstract val kapt: Property<Boolean>
+  public abstract val kapt: Property<Boolean>
 
   @get:Input
-  abstract val checkSuperClasses: Property<Boolean>
+  public abstract val checkSuperClasses: Property<Boolean>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val duplicateClassesReports: ListProperty<RegularFile>
+  public abstract val duplicateClassesReports: ListProperty<RegularFile>
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ComputeUsagesAction::class.java) {
       graph.set(this@ComputeUsagesTask.graph)
       declarations.set(this@ComputeUsagesTask.declarations)
@@ -80,18 +80,18 @@ abstract class ComputeUsagesTask @Inject constructor(
     }
   }
 
-  interface ComputeUsagesParameters : WorkParameters {
-    val graph: RegularFileProperty
-    val declarations: RegularFileProperty
-    val dependencies: DirectoryProperty
-    val syntheticProject: RegularFileProperty
-    val kapt: Property<Boolean>
-    val checkSuperClasses: Property<Boolean>
-    val duplicateClassesReports: ListProperty<RegularFile>
-    val output: RegularFileProperty
+  public interface ComputeUsagesParameters : WorkParameters {
+    public val graph: RegularFileProperty
+    public val declarations: RegularFileProperty
+    public val dependencies: DirectoryProperty
+    public val syntheticProject: RegularFileProperty
+    public val kapt: Property<Boolean>
+    public val checkSuperClasses: Property<Boolean>
+    public val duplicateClassesReports: ListProperty<RegularFile>
+    public val output: RegularFileProperty
   }
 
-  abstract class ComputeUsagesAction : WorkAction<ComputeUsagesParameters> {
+  public abstract class ComputeUsagesAction : WorkAction<ComputeUsagesParameters> {
 
     private val graph = parameters.graph.fromJson<DependencyGraphView>()
     private val declarations = parameters.declarations.fromJsonSet<Declaration>()
@@ -112,11 +112,14 @@ abstract class ComputeUsagesTask @Inject constructor(
         declarations = declarations,
         duplicateClasses = duplicateClasses,
       )
-      val visitor = GraphVisitor(project = project, kapt = parameters.kapt.get(), checkSuperClasses = parameters.checkSuperClasses.get())
+      val visitor = GraphVisitor(
+        project = project,
+        kapt = parameters.kapt.get(),
+        checkSuperClasses = parameters.checkSuperClasses.get(),
+      )
       reader.accept(visitor)
 
-      val report = visitor.report
-      output.bufferWriteJson(report)
+      output.bufferWriteJson(visitor.report)
     }
   }
 }
@@ -132,8 +135,14 @@ private class GraphVisitor(
   private val reportBuilder = DependencyTraceReport.Builder(
     buildType = project.buildType,
     flavor = project.flavor,
-    variant = project.variant
+    sourceKind = project.sourceKind,
   )
+
+  override fun visit(excludedIdentifier: ExcludedIdentifier) {
+    val coordinates = Coordinates.of(excludedIdentifier.identifier)
+    reportBuilder[coordinates, Kind.DEPENDENCY] = Bucket.NONE
+    reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Excluded
+  }
 
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
     val dependencyCoordinates = dependency.coordinates
@@ -146,12 +155,12 @@ private class GraphVisitor(
     var isUnusedCandidate = false
     var isLintJar = false
     var isCompileOnlyCandidate = false
-    var isRequiredAnnotationCandidate = false
-    var isCompileOnlyAnnotationCandidate = false
+    var isAnnotationCandidate = false
     var isRuntimeAndroid = false
     var usesTestInstrumentationRunner = false
     var usesResBySource = false
-    var usesResByRes = false
+    var usesResByResCompileTime = false
+    var usesResByResRuntime = false
     var usesAssets = false
     var usesConstant = false
     var usesInlineMember = false
@@ -160,8 +169,7 @@ private class GraphVisitor(
     var hasNativeLib = false
 
     dependency.capabilities.values.forEach { capability ->
-      @Suppress("UNUSED_VARIABLE") // exhaustive when
-      val ignored: Any = when (capability) {
+      when (capability) {
         is AndroidLinterCapability -> {
           isLintJar = capability.isLintJar
           reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.LintJar.of(capability.lintRegistry)
@@ -171,7 +179,10 @@ private class GraphVisitor(
         is AndroidAssetCapability -> usesAssets = usesAssets(dependencyCoordinates, capability, context)
         is AndroidResCapability -> {
           usesResBySource = usesResBySource(dependencyCoordinates, capability, context)
-          usesResByRes = usesResByRes(dependencyCoordinates, capability, context)
+
+          val result = usesResByRes(dependencyCoordinates, capability, context)
+          usesResByResCompileTime = result.usesForCompileTime
+          usesResByResRuntime = result.usesForRuntime
         }
 
         is AnnotationProcessorCapability -> {
@@ -195,23 +206,27 @@ private class GraphVisitor(
             isImplCandidate = true
           } else if (isImported(dependencyCoordinates, capability, context)) {
             isImplByImportCandidate = true
-          } else if (usesAnnotation(dependencyCoordinates, capability, context)) {
-            isRequiredAnnotationCandidate = true
           } else if (isForMissingSuperclass(dependencyCoordinates, capability, context)) {
             isImplCandidate = true
-          } else if (usesInvisibleAnnotation(dependencyCoordinates, capability, context)) {
-            isCompileOnlyAnnotationCandidate = true
+          } else if (usesAnnotation(dependencyCoordinates, capability, context)) {
+            isAnnotationCandidate = true
           } else {
             isUnusedCandidate = true
           }
         }
 
-        is ConstantCapability -> usesConstant = usesConstant(dependencyCoordinates, capability, context)
+        is ConstantCapability -> {
+          // usesConstantByBytecode() is a better test, so we use that first, falling back to usesConstantByImport()
+          // only if necessary.
+          usesConstant = usesConstantByBytecode(dependencyCoordinates, capability, context)
+          usesConstant = usesConstant || usesConstantByImport(dependencyCoordinates, capability, context)
+        }
+
         is InferredCapability -> {
-          if (capability.isCompileOnlyAnnotations) {
-            reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.CompileTimeAnnotations()
+          if (capability.isAnnotations) {
+            reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.Annotations()
           }
-          isCompileOnlyCandidate = capability.isCompileOnlyAnnotations
+          isCompileOnlyCandidate = capability.isAnnotations
         }
 
         is InlineMemberCapability -> usesInlineMember = usesInlineMember(dependencyCoordinates, capability, context)
@@ -279,11 +294,7 @@ private class GraphVisitor(
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
     } else if (isImplByImportCandidate) {
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
-    } else if (isRequiredAnnotationCandidate) {
-      // We detected an annotation, but it's a RUNTIME annotation, so we can't suggest it be moved to compileOnly.
-      // Don't suggest removing it!
-      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
-    } else if (isCompileOnlyAnnotationCandidate) {
+    } else if (isAnnotationCandidate) {
       isUnusedCandidate = false
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
     } else if (noRealCapabilities(dependency)) {
@@ -295,7 +306,8 @@ private class GraphVisitor(
       // about them, so we dump them into `implementation` or `runtimeOnly`.
       when {
         usesResBySource -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
-        usesResByRes -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+        usesResByResCompileTime -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
+        usesResByResRuntime -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
         usesConstant -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
         usesInlineMember -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
         isLintJar -> reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
@@ -316,7 +328,7 @@ private class GraphVisitor(
   /**
    * If this [dependency] has no capabilities, or just a single capability that meets these requirements:
    * 1. The only capability is a [NativeLibCapability]
-   * 2. The only capability is an [InferredCapability] where [InferredCapability.isCompileOnlyAnnotations] is false
+   * 2. The only capability is an [InferredCapability] where [InferredCapability.isAnnotations] is false
    *    (that is, it's not a compile-only candidate).
    */
   private fun noRealCapabilities(dependency: Dependency): Boolean {
@@ -326,7 +338,7 @@ private class GraphVisitor(
     //  are failing...
     val single = dependency.capabilities.values.singleOrNull { it is InferredCapability || it is NativeLibCapability }
 
-    return (single as? InferredCapability)?.isCompileOnlyAnnotations == false
+    return (single as? InferredCapability)?.isAnnotations == false
       || single is NativeLibCapability
   }
 
@@ -370,9 +382,12 @@ private class GraphVisitor(
     capability: BinaryClassCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
-    val implClasses = context.project.implementationClasses.asSequence().filter { implClass ->
+    val implClasses = (context.project.implementationClasses.asSequence().filter { implClass ->
       capability.classes.contains(implClass)
-    }.toSortedSet()
+    } + context.project.usedNonAnnotationClassesWithinVisibleAnnotationBySrc.asSequence()
+      .filter { (nonAnnotationClass, enclosingAnnotation) ->
+        capability.classes.contains(nonAnnotationClass) && !capability.classes.contains(enclosingAnnotation)
+      }.map { it.key }).toSortedSet()
 
     return if (implClasses.isNotEmpty()) {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Impl(implClasses)
@@ -437,23 +452,6 @@ private class GraphVisitor(
 
     return if (annoClasses.isNotEmpty()) {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Annotation(annoClasses)
-      true
-    } else {
-      false
-    }
-  }
-
-  private fun usesInvisibleAnnotation(
-    coordinates: Coordinates,
-    capability: BinaryClassCapability,
-    context: GraphViewVisitor.Context,
-  ): Boolean {
-    val annoClasses = context.project.usedInvisibleAnnotationClassesBySrc.asSequence().filter { annoClass ->
-      capability.classes.contains(annoClass)
-    }.toSortedSet()
-
-    return if (annoClasses.isNotEmpty()) {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.InvisibleAnnotation(annoClasses)
       true
     } else {
       false
@@ -560,7 +558,7 @@ private class GraphVisitor(
     typealiasCapability: TypealiasCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
-    val usedClasses = context.project.usedClassesBySrc.asSequence().filter { usedClass ->
+    val usedClasses = context.project.usedClasses.asSequence().filter { usedClass ->
       typealiasCapability.typealiases.any { ta ->
         ta.typealiases.map { "${ta.packageName}.${it.name}" }.contains(usedClass)
       }
@@ -606,7 +604,54 @@ private class GraphVisitor(
     }
   }
 
-  private fun usesConstant(
+  private fun usesConstantByBytecode(
+    coordinates: Coordinates,
+    capability: ConstantCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    // This test is slightly wrong:
+    // 1. Inferred constants are missing the name of the constant, meaning we can only match by value and descriptor,
+    //    leading to false positives.
+    // 2. Not only that, but there is certainly a 1-to-many relationship between value/descriptor on the consumer side
+    //    and constants on the producer side.
+    val inferredUsages = context.project.inferredConstants
+    val usedConstants = capability.constants.asSequence()
+      .flatMap { it.value }
+      .filter { candidate ->
+        val descriptor = candidate.descriptor
+        val value = candidate.value
+
+        inferredUsages.any { usage ->
+          descriptor == usage.descriptor && value == usage.value
+        }
+      }
+      .toSortedSet()
+
+    val candidateImports = capability.constants.asSequence()
+      .map { (fqcn, _) -> fqcn.replace('$', '.') }
+      .toSet()
+
+    // This test is slightly wrong in a couple of ways:
+    // 1. Something might be imported but not used.
+    // 2. The thing being imported might be an annotation, and those are generally compileOnly
+    // 3. The way this test is used in Reason would result in misleading output about _how_ the dep is being used
+    val usedImports = context.project.imports.asSequence()
+      .filter { import -> candidateImports.contains(import) }
+      .toSet()
+
+    // Because both of the above tests are "slightly wrong," we combine them and hope their deficiencies cancel each
+    // other out. The import test should ensure we don't have a false positive and declare an unused dependency as used.
+    // The ldc test will restrict the import heuristic, allowing us to report more meaningful (inferred) usage
+    // information.
+    return if (usedImports.isNotEmpty() && usedConstants.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ConstantBytecode(usedConstants)
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun usesConstantByImport(
     coordinates: Coordinates,
     capability: ConstantCapability,
     context: GraphViewVisitor.Context,
@@ -635,12 +680,14 @@ private class GraphVisitor(
 
     val ktFiles = capability.ktFiles
     val candidateImports = capability.constants.asSequence()
-      .flatMap { (fqcn, names) ->
-        val ktPrefix = ktFiles.find {
-          it.fqcn == fqcn
-        }?.name?.let { name ->
-          fqcn.removeSuffix(name)
-        }
+      .flatMap { (fqcn, fields) ->
+        val names = fields.mapToOrderedSet { it.name }
+
+        val ktPrefix = ktFiles
+          .find { ktFile -> ktFile.fqcn == fqcn }
+          ?.name
+          ?.let { name -> fqcn.removeSuffix(name) }
+
         val ktImports = names.mapNotNull { name -> ktPrefix?.let { "$it$name" } }
 
         ktImports +
@@ -650,15 +697,15 @@ private class GraphVisitor(
           optionalCompanionImport(names, fqcn)
       }
       // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/687
-      .map { it.replace('$', '.') }
+      .map { import -> import.replace('$', '.') }
       .toSet()
 
-    val imports = context.project.imports.asSequence().filter { import ->
-      candidateImports.contains(import)
-    }.toSortedSet()
+    val imports = context.project.imports.asSequence()
+      .filter { import -> candidateImports.contains(import) }
+      .toSortedSet()
 
     return if (imports.isNotEmpty()) {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Constant(imports)
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ConstantImport(imports)
       true
     } else {
       false
@@ -696,61 +743,67 @@ private class GraphVisitor(
     }
   }
 
-  // TODO(tsr): do we want a flag to report all usages, even though it's slower?
+  @Suppress("DuplicatedCode") // stop bothering me
   private fun usesResByRes(
     coordinates: Coordinates,
     capability: AndroidResCapability,
     context: GraphViewVisitor.Context,
-  ): Boolean {
-    val styleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
-    val attrRefs = mutableSetOf<AndroidResSource.AttrRef>()
+  ): ResByResAnalysisResult {
+    // compile-time
+    val compileTimeStyleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
+    val compileTimeAttrRefs = mutableSetOf<AndroidResSource.AttrRef>()
+
+    // runtime
+    val runtimeStyleParentRefs = mutableSetOf<AndroidResSource.StyleParentRef>()
+    val runtimeAttrRefs = mutableSetOf<AndroidResSource.AttrRef>()
 
     // By exiting at the first discovered usage, we can conclude the dependency is used without being able to report ALL
     // the usages via Reason. But that's ok, this should be faster.
-    outer@ for ((type, id) in capability.lines) {
+    for ((type, id) in capability.lines) {
+      // compile-time
       for (candidate in context.project.androidResSource) {
-        val styleParentRef = candidate.styleParentRefs.find { styleParentRef ->
+        candidate.styleParentRefs.find { styleParentRef ->
           id == styleParentRef.styleParent
-        }
-        if (styleParentRef != null) {
-          styleParentRefs.add(styleParentRef)
-          break@outer
-        }
+        }?.let { compileTimeStyleParentRefs.add(it) }
 
-        val attrRef = candidate.attrRefs.find { attrRef ->
+        candidate.attrRefs.find { attrRef ->
           type == attrRef.type && id == attrRef.id
-        }
-        if (attrRef != null) {
-          attrRefs.add(attrRef)
-          break@outer
-        }
+        }?.let { compileTimeAttrRefs.add(it) }
+      }
 
-        // This is more expensive but finds _all_ usages.
-        // candidate.styleParentRefs.find { styleParentRef ->
-        //   id == styleParentRef.styleParent
-        // }?.let { styleParentRefs.add(it) }
-        //
-        // candidate.attrRefs.find { attrRef ->
-        //   type == attrRef.type && id == attrRef.id
-        // }?.let { attrRefs.add(it) }
+      // runtime
+      for (candidate in context.project.androidResRuntimeSource) {
+        candidate.styleParentRefs.find { styleParentRef ->
+          id == styleParentRef.styleParent
+        }?.let { runtimeStyleParentRefs.add(it) }
+
+        candidate.attrRefs.find { attrRef ->
+          type == attrRef.type && id == attrRef.id
+        }?.let { runtimeAttrRefs.add(it) }
       }
     }
 
-    var used = if (styleParentRefs.isNotEmpty()) {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.styleParentRefs(styleParentRefs)
+    val allCompileTimeRefs: Set<AndroidResSource.ResRef> = compileTimeStyleParentRefs + compileTimeAttrRefs
+    val allRuntimeRefs: Set<AndroidResSource.ResRef> = runtimeStyleParentRefs + runtimeAttrRefs
+
+    val usesForCompileTime = if (allCompileTimeRefs.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.resRefs(allCompileTimeRefs)
       true
     } else {
       false
     }
 
-    used = used || if (attrRefs.isNotEmpty()) {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByRes.attrRefs(attrRefs)
+    val usesForRuntime = if (allRuntimeRefs.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ResByResRuntime.resRefs(allRuntimeRefs)
       true
     } else {
       false
     }
 
-    return used
+    return ResByResAnalysisResult(
+      usesForCompileTime = usesForCompileTime,
+      usesForRuntime = usesForRuntime,
+    )
   }
 
   private fun usesInlineMember(
@@ -826,7 +879,7 @@ private class AnnotationProcessorDetector(
 
   private fun ProjectVariant.usedByClass(): Boolean {
     val theUsedClasses = mutableSetOf<String>()
-    for (clazz in (usedNonAnnotationClasses + usedAnnotationClassesBySrc)) {
+    for (clazz in usedNonAnnotationClasses) {
       if (supportedTypes.contains(clazz) || stars.any { it.matches(clazz) }) {
         theUsedClasses.add(clazz)
       }
@@ -844,3 +897,8 @@ private class AnnotationProcessorDetector(
     reportBuilder[coordinates, Kind.ANNOTATION_PROCESSOR] = reason
   }
 }
+
+private class ResByResAnalysisResult(
+  val usesForCompileTime: Boolean,
+  val usesForRuntime: Boolean,
+)

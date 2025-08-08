@@ -32,54 +32,78 @@ public class Source @JvmOverloads constructor(
     public const val DEFAULT_SOURCE_SET: String = "main"
 
     /**
+     * Match a JVM package declaration, capturing the package.
+     *
+     * `?:` => non-capturing group.
+     */
+    private val PACKAGE_REGEX =
+      "package ((?:\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*);?".toRegex()
+
+    /**
+     * Match a JVM clas-like declaration, capturing the `class`, `interface`, or `object` (Kotlin) name.
+     *
+     * `?:` => non-capturing group.
+     */
+    private val CLASS_NAME_REGEX =
+      "(?:class|interface|object) (\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)".toRegex()
+
+    /**
      * Usage example:
      * ```
      * val source: Source = Source.groovy("...") // valid Groovy source code
-     *   .withPath("com/example/package", "MyClass")
+     *   .withPath("com.example.package", "MyClass")
      *   .build()
      * ```
+     * Note that `withPath` is optional if [source] includes a `package` declaration and a `class` or `interface`
+     * declaration.
      */
     @JvmStatic
-    public fun groovy(@Language("Groovy") source: String): Builder = Builder().withGroovy(source)
+    public fun groovy(@Language("Groovy") source: String): Builder = Builder().withGroovy(source).maybeWithPath()
 
     /**
      * Usage example:
      * ```
      * val source: Source = Source.java("...") // valid Java source code
-     *   .withPath("com/example/package", "MyClass")
+     *   .withPath("com.example.package", "MyClass")
      *   .build()
      * ```
+     * Note that `withPath` is optional if [source] includes a `package` declaration and a `class` or `interface`
+     * declaration.
      */
     @JvmStatic
-    public fun java(@Language("Java") source: String): Builder = Builder().withJava(source)
+    public fun java(@Language("Java") source: String): Builder = Builder().withJava(source).maybeWithPath()
 
     /**
      * Usage example:
      * ```
      * val source: Source = Source.kotlin("...") // valid Kotlin source code
-     *   .withPath("com/example/package", "MyClass")
+     *   .withPath("com.example.package", "MyClass")
      *   .build()
      * ```
+     * Note that `withPath` is optional if [source] includes a `package` declaration and a `class`, `interface`, or
+     * `object` declaration.
      */
     @JvmStatic
-    public fun kotlin(@Language("kt") source: String): Builder = Builder().withKotlin(source)
+    public fun kotlin(@Language("kt") source: String): Builder = Builder().withKotlin(source).maybeWithPath()
 
     /**
      * Usage example:
      * ```
      * val source: Source = Source.scala("...") // valid Scala source code
-     *   .withPath("com/example/package", "MyClass")
+     *   .withPath("com.example.package", "MyClass")
      *   .build()
      * ```
+     * Note that `withPath` is optional if [source] includes a `package` declaration and a `class` or `interface`
+     * declaration.
      */
     @JvmStatic
-    public fun scala(@Language("Scala") source: String): Builder = Builder().withScala(source)
+    public fun scala(@Language("Scala") source: String): Builder = Builder().withScala(source).maybeWithPath()
 
     /**
      * Usage example:
      * ```
      * val source: Source = Source.groovyGradleDsl("...") // valid Groovy source code
-     *   .withPath("com/example/package", "MyClass")
+     *   .withPath("com.example.file.path", "FileName")
      *   .build()
      * ```
      */
@@ -90,12 +114,29 @@ public class Source @JvmOverloads constructor(
      * Usage example:
      * ```
      * val source: Source = Source.kotlinGradleDsl("...") // valid Kotlin source code
-     *   .withPath("com/example/package", "MyClass")
+     *   .withPath("com.example.file.path", "FileName")
      *   .build()
      * ```
      */
     @JvmStatic
     public fun kotlinGradleDsl(@Language("kt") source: String): Builder = Builder().withKotlinGradleDsl(source)
+
+    /**
+     * Automatically detects package and class (file) name from source code, if source code contains required elements.
+     * Otherwise, returns original [Builder].
+     */
+    private fun Builder.maybeWithPath(): Builder {
+      val source = sourceCode ?: error("'sourceCode' is null!")
+
+      val pkg = PACKAGE_REGEX.find(source)?.groups?.get(1)?.value
+      val className = CLASS_NAME_REGEX.find(source)?.groups?.get(1)?.value
+
+      return if (pkg == null || className == null) {
+        this
+      } else {
+        withPath(packagePath = pkg, className = className)
+      }
+    }
   }
 
   internal fun rootPath(): String {

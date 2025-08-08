@@ -11,7 +11,8 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 
-abstract class MergeProjectGraphsTask : DefaultTask() {
+@CacheableTask
+public abstract class MergeProjectGraphsTask : DefaultTask() {
 
   init {
     description = "Merges the project graphs of all variants into a single graph"
@@ -19,12 +20,12 @@ abstract class MergeProjectGraphsTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val projectGraphs: ListProperty<RegularFile>
+  public abstract val projectGraphs: ListProperty<RegularFile>
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val output = output.getAndDelete()
 
     val graph = projectGraphs.get()

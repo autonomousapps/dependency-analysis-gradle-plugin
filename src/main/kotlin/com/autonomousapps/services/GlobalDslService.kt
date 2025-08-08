@@ -1,15 +1,16 @@
 package com.autonomousapps.services
 
 import com.autonomousapps.BuildHealthPlugin
+import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.extension.*
 import com.autonomousapps.internal.utils.VersionNumber
 import com.autonomousapps.internal.utils.mapToMutableList
-import com.autonomousapps.subplugin.DEPENDENCY_ANALYSIS_PLUGIN
 import com.google.common.graph.Graphs
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
@@ -22,7 +23,7 @@ import javax.inject.Inject
  * [DependencyAnalysisSubExtension][com.autonomousapps.DependencyAnalysisSubExtension] to safely (in isolated projects-
  * terms) configure the entire build, globally, without any subproject touching mutable properties of any other project.
  */
-abstract class GlobalDslService @Inject constructor(
+public abstract class GlobalDslService @Inject constructor(
   objects: ObjectFactory,
 ) : BuildService<BuildServiceParameters.None> {
 
@@ -77,7 +78,7 @@ abstract class GlobalDslService @Inject constructor(
           }
           
           plugins {
-            id("$DEPENDENCY_ANALYSIS_PLUGIN") version "<<version>>"
+            id("${DependencyAnalysisPlugin.ID}") version "<<version>>"
             
             // Optional
             id("org.jetbrains.kotlin.android") version "<<version>>" apply false
@@ -109,7 +110,7 @@ abstract class GlobalDslService @Inject constructor(
         
           // root build.gradle[.kts]
           plugins {
-            id("$DEPENDENCY_ANALYSIS_PLUGIN") version "<<version>>"
+            id("${DependencyAnalysisPlugin.ID}") version "<<version>>"
             id("org.jetbrains.kotlin.<jvm|android|etc>") version "<<version>>" apply false
           }
       """.trimIndent()
@@ -171,6 +172,7 @@ abstract class GlobalDslService @Inject constructor(
   }
 
   // Global handlers, one instance each for the whole build.
+  internal val useTypesafeProjectAccessors: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
   internal val abiHandler: AbiHandler = objects.newInstance()
   internal val dependenciesHandler: DependenciesHandler = objects.newInstance()
   internal val reportingHandler: ReportingHandler = objects.newInstance()

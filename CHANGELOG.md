@@ -1,5 +1,48 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.0.0 (unreleased)
+* [Breaking]: annotations and their parameter classes are always considered `compileOnly`.
+
+  Annotations for which the class file is not present are treated like being non-existent by the JVM.
+  If someone wants to consume an annotation via reflection, they are in charge to provide the class file
+  at runtime, so from the annotating project's view, annotations are always `compileOnly`.
+  The same is true for classes and enums used as annotation arguments.
+  The only exception is a class literal as argument that is coming from a different artifact than the
+  annotation like a JUnit 4 runner implementation, those are considered `implementation`.
+* [Feat]: report excluded dependencies as unused.
+* [Feat]: add coordinates identifier in the error message for invalid change.
+* [Feat]: moving `internal.artifacts` package to new module, `com.autonomousapps:variant-artifacts`.
+* [Fix]: Move `useTypesafeProjectAccessors` to global dsl service.
+* [Fix]: reason works on included builds.
+* [Fix]: recognize test fixtures not only in Android libraries, but in Android app modules, too.
+* [Chore]: build with and test against Gradle 8.14.2.
+* [Chore]: update guava to 33.4.8-jre.
+* [Chore]: update AGP to the latest stable version, 8.11.0, and test against AGP 8.12 alpha.
+* [Chore]: add API-tracking tasks using metalava.
+
+# Version 2.19.0
+* [Feat]: support advices for Android test fixtures source sets
+* [Feat]: support typesafe project accessors in IssueHandler
+* [Fix]: bump kotlin-metadata-jvm to 2.1.21 to support K2.2 projects.
+* [Chore]: move publishing to new `central.sonatype.com` repo.
+
+# Version 2.18.0
+* [Breaking]: update min support AGP version to 8.3.
+* [Feat]: Allow excluding violations by regex patterns.
+* [Feat]: add `ProviderConvertible` support.
+* [Feat]: add support for Activity `theme` in `AndroidManifest.xml`
+* [Feat]: Android merged manifests are now treated as runtime (not compile-time) requirements.
+* [Feat]: detect code source files that live outside of src/main as an AGP feature being used.
+* [Fix]: detect class references in the base package.
+* [Fix]: detect constants defined in Kotlin companion objects.
+* [Fix]: detect androidTest source set as a test source-set.
+* [Fix]: set android dependencies weight to 100.
+* [Fix]: also check for com.android.test.
+* [Chore]: use Gradle 8.14.
+* [Chore]: `kotlin.metadata.jvm` no longer needs to be non-transitive, since bumping to K2 for this project.
+* [Chore]: fix snapshot publishing by making task dependency more lazy.
+* [Chore]: update badge to point to actual workflow.
+
 # Version 2.17.0
 * [Fix]: duplicate class warning doesn't warn about multiple dependencies with same GAV.
 * [Fix]: ensure all capabilities are internally sorted; also synthesized dependencies.

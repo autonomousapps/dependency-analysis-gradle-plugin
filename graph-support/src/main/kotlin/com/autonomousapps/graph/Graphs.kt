@@ -43,7 +43,6 @@ public object Graphs {
     }
   }
 
-  // TODO(tsr): this function hasn't been published yet.
   /** Returns all nodes in this graph that are reachable from all nodes matching [predicate]. */
   public fun <N : Any> Graph<N>.reachableNodesMatching(predicate: (N) -> Boolean): Set<N> {
     return nodes().asSequence()

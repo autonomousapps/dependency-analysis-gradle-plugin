@@ -5,7 +5,6 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapToOrderedSet
-import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.internal.AndroidAssetSource
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -18,7 +17,8 @@ import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
-abstract class AssetSourceExploderTask @Inject constructor(
+@CacheableTask
+public abstract class AssetSourceExploderTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
   private val layout: ProjectLayout,
 ) : DefaultTask() {
@@ -29,12 +29,12 @@ abstract class AssetSourceExploderTask @Inject constructor(
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val androidLocalAssets: ConfigurableFileCollection
+  public abstract val androidLocalAssets: ConfigurableFileCollection
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(Action::class.java) {
       projectDir.set(layout.projectDirectory)
       androidLocalAssets.setFrom(this@AssetSourceExploderTask.androidLocalAssets)
@@ -42,13 +42,13 @@ abstract class AssetSourceExploderTask @Inject constructor(
     }
   }
 
-  interface Parameters : WorkParameters {
-    val projectDir: DirectoryProperty
-    val androidLocalAssets: ConfigurableFileCollection
-    val output: RegularFileProperty
+  public interface Parameters : WorkParameters {
+    public val projectDir: DirectoryProperty
+    public val androidLocalAssets: ConfigurableFileCollection
+    public val output: RegularFileProperty
   }
 
-  abstract class Action : WorkAction<Parameters> {
+  public abstract class Action : WorkAction<Parameters> {
     override fun execute() {
       val output = parameters.output.getAndDelete()
       val projectDir = parameters.projectDir.get().asFile

@@ -6,21 +6,22 @@
 package com.autonomousapps.internal.utils
 
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.source.SourceKind
 import com.google.common.graph.Graph
 import com.squareup.moshi.*
 import com.squareup.moshi.Types.newParameterizedType
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dev.zacsweers.moshix.sealed.reflect.MoshiSealedJsonAdapterFactory
-import okio.*
-import org.gradle.api.file.RegularFileProperty
+import okio.BufferedSource
+import okio.GzipSink
+import okio.buffer
+import okio.sink
 import java.io.File
-import kotlin.io.use
 
-const val noJsonIndent = ""
+public const val noJsonIndent: String = ""
 
-val MOSHI: Moshi by lazy {
+public val MOSHI: Moshi by lazy {
   Moshi.Builder()
     .add(GraphAdapter())
     .add(MoshiSealedJsonAdapterFactory())
@@ -29,7 +30,7 @@ val MOSHI: Moshi by lazy {
     .build()
 }
 
-inline fun <reified T> JsonAdapter<T>.withNulls(withNulls: Boolean): JsonAdapter<T> {
+public inline fun <reified T> JsonAdapter<T>.withNulls(withNulls: Boolean): JsonAdapter<T> {
   return if (withNulls) {
     serializeNulls()
   } else {
@@ -37,54 +38,54 @@ inline fun <reified T> JsonAdapter<T>.withNulls(withNulls: Boolean): JsonAdapter
   }
 }
 
-inline fun <reified T> getJsonAdapter(withNulls: Boolean = false): JsonAdapter<T> {
+public inline fun <reified T> getJsonAdapter(withNulls: Boolean = false): JsonAdapter<T> {
   return MOSHI.adapter(T::class.java).withNulls(withNulls)
 }
 
-inline fun <reified T> getJsonListAdapter(withNulls: Boolean = false): JsonAdapter<List<T>> {
+public inline fun <reified T> getJsonListAdapter(withNulls: Boolean = false): JsonAdapter<List<T>> {
   val type = newParameterizedType(List::class.java, T::class.java)
   return MOSHI.adapter<List<T>>(type).withNulls(withNulls)
 }
 
-inline fun <reified T> getJsonSetAdapter(withNulls: Boolean = false): JsonAdapter<Set<T>> {
+public inline fun <reified T> getJsonSetAdapter(withNulls: Boolean = false): JsonAdapter<Set<T>> {
   val type = newParameterizedType(Set::class.java, T::class.java)
   return MOSHI.adapter<Set<T>>(type).withNulls(withNulls)
 }
 
-inline fun <reified K, reified V> getJsonMapAdapter(withNulls: Boolean = false): JsonAdapter<Map<K, V>> {
+public inline fun <reified K, reified V> getJsonMapAdapter(withNulls: Boolean = false): JsonAdapter<Map<K, V>> {
   val type = newParameterizedType(Map::class.java, K::class.java, V::class.java)
   return MOSHI.adapter<Map<K, V>>(type).withNulls(withNulls)
 }
 
-inline fun <reified K, reified V> getJsonMapSetAdapter(withNulls: Boolean = false): JsonAdapter<Map<K, Set<V>>> {
+public inline fun <reified K, reified V> getJsonMapSetAdapter(withNulls: Boolean = false): JsonAdapter<Map<K, Set<V>>> {
   val setType = newParameterizedType(Set::class.java, V::class.java)
   val mapType = newParameterizedType(Map::class.java, K::class.java, setType)
   return MOSHI.adapter<Map<K, Set<V>>>(mapType).withNulls(withNulls)
 }
 
-inline fun <reified T> String.fromJson(): T {
+public inline fun <reified T> String.fromJson(): T {
   return getJsonAdapter<T>().fromJson(this)!!
 }
 
-inline fun <reified T> T.toJson(withNulls: Boolean = false): String {
+public inline fun <reified T> T.toJson(withNulls: Boolean = false): String {
   return getJsonAdapter<T>(withNulls).toJson(this)
 }
 
-inline fun <reified T> String.fromJsonList(withNulls: Boolean = false): List<T> {
+public inline fun <reified T> String.fromJsonList(withNulls: Boolean = false): List<T> {
   return getJsonListAdapter<T>(withNulls).fromJson(this)!!
 }
 
-inline fun <reified T> String.fromJsonSet(withNulls: Boolean = false): Set<T> {
+public inline fun <reified T> String.fromJsonSet(withNulls: Boolean = false): Set<T> {
   return getJsonSetAdapter<T>(withNulls).fromJson(this)!!
 }
 
-inline fun <reified K, reified V> String.fromJsonMap(): Map<K, V> {
+public inline fun <reified K, reified V> String.fromJsonMap(): Map<K, V> {
   val mapType = newParameterizedType(Map::class.java, K::class.java, V::class.java)
   val adapter = MOSHI.adapter<Map<K, V>>(mapType)
   return adapter.fromJson(this)!!
 }
 
-inline fun <reified K, reified V> BufferedSource.fromJsonMapList(): Map<K, List<V>> {
+public inline fun <reified K, reified V> BufferedSource.fromJsonMapList(): Map<K, List<V>> {
   val listType = newParameterizedType(List::class.java, V::class.java)
   val mapType = newParameterizedType(Map::class.java, K::class.java, listType)
   val adapter = MOSHI.adapter<Map<K, List<V>>>(mapType)
@@ -92,7 +93,7 @@ inline fun <reified K, reified V> BufferedSource.fromJsonMapList(): Map<K, List<
   return adapter.fromJson(this)!!
 }
 
-inline fun <reified K, reified V> BufferedSource.fromJsonMapSet(): Map<K, Set<V>> {
+public inline fun <reified K, reified V> BufferedSource.fromJsonMapSet(): Map<K, Set<V>> {
   return getJsonMapSetAdapter<K, V>().fromJson(this)!!
 }
 
@@ -103,7 +104,7 @@ inline fun <reified K, reified V> BufferedSource.fromJsonMapSet(): Map<K, Set<V>
  * @param set The set to write to file
  * @param indent The indent to control how the result is formatted
  */
-inline fun <reified K, reified V> File.bufferWriteJsonMap(
+public inline fun <reified K, reified V> File.bufferWriteJsonMap(
   set: Map<K, V>,
   withNulls: Boolean = false,
   indent: String = noJsonIndent
@@ -120,7 +121,10 @@ inline fun <reified K, reified V> File.bufferWriteJsonMap(
  * @param set The set to write to file
  * @param indent The indent to control how the result is formatted
  */
-inline fun <reified K, reified V> File.bufferWriteJsonMapSet(set: Map<K, Set<V>>, indent: String = noJsonIndent) {
+public inline fun <reified K, reified V> File.bufferWriteJsonMapSet(
+  set: Map<K, Set<V>>,
+  indent: String = noJsonIndent
+) {
   JsonWriter.of(sink().buffer()).use { writer ->
     getJsonMapSetAdapter<K, V>().indent(indent).toJson(writer, set)
   }
@@ -133,36 +137,33 @@ inline fun <reified K, reified V> File.bufferWriteJsonMapSet(set: Map<K, Set<V>>
  * @param set The set to write to file
  * @param indent The indent to control how the result is formatted
  */
-inline fun <reified T> File.bufferWriteJsonList(set: List<T>, indent: String = noJsonIndent) {
+public inline fun <reified T> File.bufferWriteJsonList(set: List<T>, indent: String = noJsonIndent) {
   JsonWriter.of(sink().buffer()).use { writer ->
     getJsonListAdapter<T>().indent(indent).toJson(writer, set)
   }
 }
 
 /**
- * Buffers writes of the set to disk, using the indent to make the output human-readable.
- * By default, the output is compacted.
+ * Buffers writes of the set to disk, using the indent to make the output human-readable. By default, the output is
+ * compacted (no indent).
  *
  * @param set The set to write to file
+ * @param compress Whether to compress output with gzip.
  * @param indent The indent to control how the result is formatted
  */
-inline fun <reified T> File.bufferWriteJsonSet(set: Set<T>, indent: String = noJsonIndent) {
-  JsonWriter.of(sink().buffer()).use { writer ->
-    getJsonSetAdapter<T>().indent(indent).toJson(writer, set)
+public inline fun <reified T> File.bufferWriteJsonSet(
+  set: Set<T>,
+  compress: Boolean = false,
+  indent: String = noJsonIndent,
+) {
+  val buffer = if (compress) {
+    GzipSink(sink()).buffer()
+  } else {
+    sink().buffer()
   }
-}
 
-// TODO(tsr): gzip. centralize, update docs
-inline fun <reified T> File.gzipCompress(set: Set<T>, indent: String = noJsonIndent) {
-  JsonWriter.of(GzipSink(sink()).buffer()).use { writer ->
+  JsonWriter.of(buffer).use { writer ->
     getJsonSetAdapter<T>().indent(indent).toJson(writer, set)
-  }
-}
-
-// TODO(tsr): gzip. centralize, update docs
-inline fun <reified T> RegularFileProperty.gzipDecompress(): Set<T> {
-  return GzipSource(get().asFile.source()).buffer().use { source ->
-    getJsonSetAdapter<T>().fromJson(source)!!
   }
 }
 
@@ -173,13 +174,13 @@ inline fun <reified T> RegularFileProperty.gzipDecompress(): Set<T> {
  * @param obj The object to write to file
  * @param indent The indent to control how the result is formatted
  */
-inline fun <reified T> File.bufferWriteJson(obj: T, indent: String = noJsonIndent) {
+public inline fun <reified T> File.bufferWriteJson(obj: T, indent: String = noJsonIndent) {
   JsonWriter.of(sink().buffer()).use { writer ->
     getJsonAdapter<T>().indent(indent).toJson(writer, obj)
   }
 }
 
-inline fun <reified A, reified B> File.bufferWriteParameterizedJson(
+public inline fun <reified A, reified B> File.bufferWriteParameterizedJson(
   parameterizedData: A,
   indent: String = noJsonIndent
 ) {
@@ -202,7 +203,7 @@ internal class GraphAdapter {
 
   @ToJson fun graphViewToJson(graphView: DependencyGraphView): GraphViewJson {
     return GraphViewJson(
-      variant = graphView.variant,
+      sourceKind = graphView.sourceKind,
       configurationName = graphView.configurationName,
       graphJson = GraphJson(
         nodes = graphView.graph.nodes().toSortedSet(),
@@ -215,7 +216,7 @@ internal class GraphAdapter {
 
   @FromJson fun jsonToGraphView(json: GraphViewJson): DependencyGraphView {
     return DependencyGraphView(
-      variant = json.variant,
+      sourceKind = json.sourceKind,
       configurationName = json.configurationName,
       graph = jsonToGraph(json),
     )
@@ -253,7 +254,7 @@ internal class GraphAdapter {
 
   @JsonClass(generateAdapter = false)
   internal data class GraphViewJson(
-    val variant: Variant,
+    val sourceKind: SourceKind,
     val configurationName: String,
     val graphJson: GraphJson,
   )
@@ -266,7 +267,6 @@ internal class GraphAdapter {
 
   @JsonClass(generateAdapter = false)
   internal data class EdgeJson(val source: Coordinates, val target: Coordinates) : Comparable<EdgeJson> {
-    // TODO(tsr): similar code in GraphWriter
     override fun compareTo(other: EdgeJson): Int {
       return compareBy(EdgeJson::source)
         .thenComparing(EdgeJson::target)

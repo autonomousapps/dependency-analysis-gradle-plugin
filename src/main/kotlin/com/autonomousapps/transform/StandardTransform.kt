@@ -8,13 +8,14 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.Coordinates.Companion.copy
+import com.autonomousapps.model.FlatCoordinates
 import com.autonomousapps.model.IncludedBuildCoordinates
-import com.autonomousapps.model.declaration.internal.Bucket
-import com.autonomousapps.model.declaration.internal.Declaration
-import com.autonomousapps.model.declaration.SourceSetKind
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.ModuleCoordinates
+import com.autonomousapps.model.internal.declaration.Bucket
+import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.model.internal.intermediates.Usage
+import com.autonomousapps.model.source.SourceKind
 import com.google.common.collect.SetMultimap
 import org.gradle.api.attributes.Category
 
@@ -26,10 +27,12 @@ import org.gradle.api.attributes.Category
 internal class StandardTransform(
   private val coordinates: Coordinates,
   private val declarations: Set<Declaration>,
-  private val directDependencies: SetMultimap<String, Variant>,
+  private val directDependencies: SetMultimap<String, SourceKind>,
+  private val dependenciesToClasspaths: SetMultimap<String, String>,
   private val supportedSourceSets: Set<String>,
   private val buildPath: String,
   private val explicitSourceSets: Set<String> = emptySet(),
+  private val isAndroidProject: Boolean,
   private val isKaptApplied: Boolean = false,
 ) : Usage.Transform {
 
@@ -38,20 +41,22 @@ internal class StandardTransform(
 
     val declarations = declarations.forCoordinates(coordinates)
 
-    var (mainUsages, testUsages, androidTestUsages, customJvmUsage) = usages.mutPartitionOf(
-      { it.variant.kind == SourceSetKind.MAIN },
-      { it.variant.kind == SourceSetKind.TEST },
-      { it.variant.kind == SourceSetKind.ANDROID_TEST },
-      { it.variant.kind == SourceSetKind.CUSTOM_JVM },
+    var (mainUsages, testUsages, androidTestFixturesUsages, androidTestUsages, customJvmUsage) = usages.mutPartitionOf(
+      { it.sourceKind.kind == SourceKind.MAIN_KIND },
+      { it.sourceKind.kind == SourceKind.TEST_KIND },
+      { it.sourceKind.kind == SourceKind.ANDROID_TEST_FIXTURES_KIND },
+      { it.sourceKind.kind == SourceKind.ANDROID_TEST_KIND },
+      { it.sourceKind.kind == SourceKind.CUSTOM_JVM_KIND },
     )
 
     val hasCustomSourceSets = hasCustomSourceSets(usages)
-    val (mainDeclarations, testDeclarations, androidTestDeclarations, customJvmDeclarations) =
+    val (mainDeclarations, testDeclarations, androidTestFixturesDeclarations, androidTestDeclarations, customJvmDeclarations) =
       declarations.mutPartitionOf(
-        { it.variant(supportedSourceSets, hasCustomSourceSets)?.kind == SourceSetKind.MAIN },
-        { it.variant(supportedSourceSets, hasCustomSourceSets)?.kind == SourceSetKind.TEST },
-        { it.variant(supportedSourceSets, hasCustomSourceSets)?.kind == SourceSetKind.ANDROID_TEST },
-        { it.variant(supportedSourceSets, hasCustomSourceSets)?.kind == SourceSetKind.CUSTOM_JVM },
+        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.MAIN_KIND },
+        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.TEST_KIND },
+        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.ANDROID_TEST_FIXTURES_KIND },
+        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.ANDROID_TEST_KIND },
+        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.CUSTOM_JVM_KIND },
       )
 
     /*
@@ -75,6 +80,17 @@ internal class StandardTransform(
       reduceUsages(testUsages)
     }
     computeAdvice(advice, testUsages, testDeclarations, testUsages.size == 1)
+
+    /*
+     * Android test fixtures usages.
+     */
+    androidTestFixturesUsages = reduceUsages(androidTestFixturesUsages)
+    computeAdvice(
+      advice,
+      androidTestFixturesUsages,
+      androidTestFixturesDeclarations,
+      androidTestFixturesUsages.size == 1
+    )
 
     /*
      * Android test usages.
@@ -101,8 +117,8 @@ internal class StandardTransform(
   private fun reduceUsages(usages: MutableSet<Usage>): MutableSet<Usage> {
     if (usages.isEmpty()) return usages
 
-    val kinds = usages.mapToSet { it.variant.kind }
-    check(kinds.size == 1) { "Expected a single ${SourceSetKind::class.java.simpleName}. Got: $kinds" }
+    val kinds = usages.mapToSet { it.sourceKind.kind }
+    check(kinds.size == 1) { "Expected a single ${SourceKind::class.java.simpleName}. Got: $kinds" }
 
     // This could be a JVM module or an Android module only analyzing a singe variant. For the latter, we need to
     // transform it into a "main" variant.
@@ -111,14 +127,14 @@ internal class StandardTransform(
       Usage(
         buildType = null,
         flavor = null,
-        variant = usage.variant.base(),
+        sourceKind = usage.sourceKind.base(),
         bucket = usage.bucket,
-        reasons = usage.reasons
+        reasons = usage.reasons,
       ).intoMutableSet()
     } else if (!isSingleBucketForSingleVariant(usages)) {
       // More than one usage _and_ multiple buckets: in a variant situation (Android), there are no "main" usages, by
       // definition. Everything is debugImplementation, releaseApi, etc. If each variant has a different usage, we
-      // respect that. In JVM, each variant is distinct (feature variant).
+      // respect that. In JVM, each (feature) variant is distinct.
       usages
     } else {
       // More than one usage, but all in the same bucket with the same variant. We reduce the usages to a single usage.
@@ -126,9 +142,9 @@ internal class StandardTransform(
       Usage(
         buildType = null,
         flavor = null,
-        variant = usage.variant.base(),
+        sourceKind = usage.sourceKind.base(),
         bucket = usage.bucket,
-        reasons = usages.flatMapToSet { it.reasons }
+        reasons = usages.flatMapToSet { it.reasons },
       ).intoMutableSet()
     }
   }
@@ -146,7 +162,7 @@ internal class StandardTransform(
     while (usageIter.hasNext()) {
       val usage = usageIter.next()
       val declarationsForVariant = declarations.filterToSet { declaration ->
-        declaration.variant(supportedSourceSets, hasCustomSourceSets) == usage.variant
+        usage.sourceKind == declaration.findSourceKind(hasCustomSourceSets)
       }
 
       // We have a declaration on the same variant as the usage. Remove or change it, if necessary.
@@ -229,7 +245,7 @@ internal class StandardTransform(
           coordinates = declarationCoordinates(lastDeclaration),
           fromConfiguration = lastDeclaration.configurationName,
           toConfiguration = lastUsage.toConfiguration(
-            forceVariant = lastDeclaration.variant(supportedSourceSets, hasCustomSourceSets)
+            forcedKind = lastDeclaration.findSourceKind(hasCustomSourceSets)
           )
         )
 
@@ -247,7 +263,27 @@ internal class StandardTransform(
       // and fail to add a required runtimeOnly dependency that was part of the unused dep's transitive graph. Removing
       // this line would lead to "super strict" declarations that are, perhaps, more bazel-like (every classpath
       // consists only of positively-declared dependencies).
-      .filterNot { it.bucket == Bucket.RUNTIME_ONLY || it.bucket == Bucket.COMPILE_ONLY }
+      .filterNot { usage -> usage.bucket == Bucket.COMPILE_ONLY }
+      // TODO(tsr): reconsider this. Craft a scenario where we'd remove one dep even though a transitive supplies a
+      //  runtime capability and see what happens. We may want to add runtimeOnly declarations.
+      .filterNot { usage -> usage.bucket == Bucket.RUNTIME_ONLY }
+      // Don't add something that is only present on the compileClasspath as that will change the runtimeClasspath,
+      // which we do not want to do.
+      .filterNot { usage ->
+        // coordinate with `ComputeAdviceTask::flattenDependencies`
+        val identifier = if (coordinates is IncludedBuildCoordinates) {
+          coordinates.resolvedProject.identifier
+        } else {
+          coordinates.identifier
+        }
+
+        val currentClasspaths = dependenciesToClasspaths.get(identifier)
+        val isRuntimeUsage = usage.bucket == Bucket.API || usage.bucket == Bucket.IMPL
+
+        // if it would be a runtime usage and this dep isn't currently in the matching runtime classpath, don't add it
+        // there.
+        isRuntimeUsage && !usage.runtimeMatches(currentClasspaths)
+      }
       .mapTo(advice) { usage ->
         val preferredCoordinatesNotation =
           if (coordinates is IncludedBuildCoordinates && coordinates.resolvedProject.buildPath == buildPath) {
@@ -267,6 +303,14 @@ internal class StandardTransform(
       }
   }
 
+  private fun Declaration.findSourceKind(hasCustomSourceSets: Boolean): SourceKind? {
+    return sourceSetKind(
+      supportedSourceSets,
+      isAndroidProject = isAndroidProject,
+      hasCustomSourceSets = hasCustomSourceSets,
+    )
+  }
+
   /**
    * Returns true if [sourceSet] is in the set of [explicitSourceSets], or if [explicitSourceSets] is set for all source
    * sets.
@@ -277,13 +321,23 @@ internal class StandardTransform(
   }
 
   /** Use coordinates/variant of the original declaration when reporting remove/change as it is more precise. */
-  private fun declarationCoordinates(decl: Declaration) = when {
-    coordinates is IncludedBuildCoordinates && decl.identifier.startsWith(":") -> coordinates.resolvedProject
-    else -> coordinates
-  }.copy(decl.identifier, decl.gradleVariantIdentification)
+  private fun declarationCoordinates(decl: Declaration): Coordinates {
+    return when {
+      coordinates is IncludedBuildCoordinates && decl.identifier.startsWith(":") -> coordinates.resolvedProject
 
-  private fun hasCustomSourceSets(usages: Set<Usage>) =
-    usages.any { it.variant.kind == SourceSetKind.CUSTOM_JVM }
+      // This handles the case where we have an unused dependency because it's been excluded via
+      // configurations.<foo>.exclude(group = "group", module = "module")
+      coordinates is FlatCoordinates && decl.version != null -> {
+        ModuleCoordinates(coordinates.identifier, decl.version, decl.gradleVariantIdentification)
+      }
+
+      else -> coordinates
+    }.copy(decl.identifier, decl.gradleVariantIdentification)
+  }
+
+  private fun hasCustomSourceSets(usages: Set<Usage>): Boolean {
+    return usages.any { it.sourceKind.kind == SourceKind.CUSTOM_JVM_KIND }
+  }
 
   /**
    * Simply advice by transforming matching pairs of add-advice and remove-advice into a single change-advice. In
@@ -362,7 +416,7 @@ internal class StandardTransform(
     val anyDowngrade = allAdvice.any { it.isDowngrade() }
     if (anyDowngrade) return false
 
-    val sourceSets = directDependencies[advice.coordinates.identifier].map { it.variant }
+    val sourceSets = directDependencies[advice.coordinates.identifier].map { it.name }
 
     // There's "no point" in adding a new declaration when that dependency is already available as a direct dependency,
     // UNLESS we also happen to have some advice that might DOWNGRADE/REMOVE that declaration. For example, we might be
@@ -386,59 +440,60 @@ internal class StandardTransform(
   }
 
   /** e.g., "debug" + "implementation" -> "debugImplementation" */
-  private fun Usage.toConfiguration(forceVariant: Variant? = null): String {
+  private fun Usage.toConfiguration(forcedKind: SourceKind? = null): String {
     check(bucket != Bucket.NONE) { "You cannot 'declare' an unused dependency" }
 
     fun processor() = if (isKaptApplied) "kapt" else "annotationProcessor"
 
-    fun Variant.configurationNamePrefix(): String = when (kind) {
-      SourceSetKind.MAIN -> variant
-      SourceSetKind.TEST -> "test"
-      SourceSetKind.ANDROID_TEST -> "androidTest"
-      SourceSetKind.CUSTOM_JVM -> variant
+    fun SourceKind.configurationNamePrefix(): String = when (kind) {
+      SourceKind.MAIN_KIND -> name
+      SourceKind.TEST_KIND -> SourceKind.TEST_NAME
+      SourceKind.ANDROID_TEST_FIXTURES_KIND -> "testFixtures"
+      SourceKind.ANDROID_TEST_KIND -> SourceKind.ANDROID_TEST_NAME
+      SourceKind.CUSTOM_JVM_KIND -> name
+      else -> error("Unexpected kind: $kind")
     }
 
-    fun Variant.configurationNameSuffix(): String = when (kind) {
-      SourceSetKind.MAIN -> variant.replaceFirstChar(Char::uppercase)
-      SourceSetKind.TEST -> "Test"
-      SourceSetKind.ANDROID_TEST -> "AndroidTest"
-      SourceSetKind.CUSTOM_JVM -> variant.replaceFirstChar(Char::uppercase)
+    fun SourceKind.configurationNameSuffix(): String = when (kind) {
+      SourceKind.MAIN_KIND -> name.replaceFirstChar(Char::uppercase)
+      SourceKind.TEST_KIND -> "Test"
+      SourceKind.ANDROID_TEST_FIXTURES_KIND -> "TestFixtures"
+      SourceKind.ANDROID_TEST_KIND -> "AndroidTest"
+      SourceKind.CUSTOM_JVM_KIND -> name.replaceFirstChar(Char::uppercase)
+      else -> error("Unexpected kind: $kind")
     }
 
-    val theVariant = forceVariant ?: variant
+    val theSourceKind = forcedKind ?: sourceKind
 
     if (bucket == Bucket.ANNOTATION_PROCESSOR) {
       val original = processor()
-      return if (theVariant.variant == Variant.MAIN_NAME) {
+      return if (theSourceKind.name == SourceKind.MAIN_NAME) {
         // "main" + "annotationProcessor" -> "annotationProcessor"
         // "main" + "kapt" -> "kapt"
-        if ("annotationProcessor" in original) {
-          "annotationProcessor"
-        } else if ("kapt" in original) {
-          "kapt"
-        } else {
-          throw IllegalArgumentException("Unknown annotation processor: $original")
+        when (original) {
+          "annotationProcessor" -> "annotationProcessor"
+          "kapt" -> "kapt"
+          else -> throw IllegalArgumentException("Unknown annotation processor: $original")
         }
       } else {
         // "debug" + "annotationProcessor" -> "debugAnnotationProcessor"
         // "test" + "kapt" -> "kaptTest"
-        if ("annotationProcessor" in original) {
-          "${theVariant.configurationNamePrefix()}AnnotationProcessor"
-        } else if ("kapt" in original) {
-          "kapt${theVariant.configurationNameSuffix()}"
-        } else {
-          throw IllegalArgumentException("Unknown annotation processor: $original")
+        when (original) {
+          "annotationProcessor" -> "${theSourceKind.configurationNamePrefix()}AnnotationProcessor"
+          "kapt" -> "kapt${theSourceKind.configurationNameSuffix()}"
+          else -> throw IllegalArgumentException("Unknown annotation processor: $original")
         }
       }
     }
 
-    return if (theVariant.variant == Variant.MAIN_NAME && theVariant.kind == SourceSetKind.MAIN) {
+    // not an annotation processor
+    return if (theSourceKind.name == SourceKind.MAIN_NAME && theSourceKind.kind == SourceKind.MAIN_KIND) {
       // "main" + "api" -> "api"
       bucket.value
     } else {
       // "debug" + "implementation" -> "debugImplementation"
       // "test" + "implementation" -> "testImplementation"
-      "${theVariant.configurationNamePrefix()}${bucket.value.capitalizeSafely()}"
+      "${theSourceKind.configurationNamePrefix()}${bucket.value.capitalizeSafely()}"
     }
   }
 }
@@ -456,8 +511,11 @@ private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Decla
 }
 
 private fun isSingleBucketForSingleVariant(usages: Set<Usage>): Boolean {
-  return if (usages.size == 1) true
-  else usages.mapToSet { it.bucket }.size == 1 && usages.mapToSet { it.variant.base() }.size == 1
+  return if (usages.size == 1) {
+    true
+  } else {
+    usages.mapToSet { it.bucket }.size == 1 && usages.mapToSet { it.sourceKind.base() }.size == 1
+  }
 }
 
 private fun Sequence<Usage>.filterUsed() = filterNot { it.bucket == Bucket.NONE }

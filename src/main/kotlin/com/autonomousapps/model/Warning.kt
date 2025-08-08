@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 
 /** Warnings about the project for which the plugin cannot yet make universally actionable advice. */
 @JsonClass(generateAdapter = false)
-data class Warning(
+public data class Warning(
   val duplicateClasses: Set<DuplicateClass>,
 ) : Comparable<Warning> {
 
@@ -19,6 +19,6 @@ data class Warning(
       .compare(duplicateClasses, other.duplicateClasses)
   }
 
-  fun isEmpty(): Boolean = duplicateClasses.isEmpty()
-  fun isNotEmpty(): Boolean = !isEmpty()
+  public fun isEmpty(): Boolean = duplicateClasses.isEmpty()
+  public fun isNotEmpty(): Boolean = !isEmpty()
 }

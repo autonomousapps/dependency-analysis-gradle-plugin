@@ -11,8 +11,10 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.UntrackedTask
 
-abstract class PrintDuplicateDependenciesTask : DefaultTask() {
+@UntrackedTask(because = "Always prints output")
+public abstract class PrintDuplicateDependenciesTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -21,9 +23,9 @@ abstract class PrintDuplicateDependenciesTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val duplicateDependenciesReport: RegularFileProperty
+  public abstract val duplicateDependenciesReport: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val report = duplicateDependenciesReport.fromJsonMapSet<String, String>()
     val total = report.size
     val sum = report.values.sumOf { it.size }

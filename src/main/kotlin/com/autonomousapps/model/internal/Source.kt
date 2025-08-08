@@ -5,6 +5,7 @@ package com.autonomousapps.model.internal
 import com.autonomousapps.internal.parse.AndroidResParser
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.efficient
+import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -34,17 +35,24 @@ internal data class CodeSource(
   /** Every class discovered in the bytecode of [className], and not as an annotation. */
   val usedNonAnnotationClasses: Set<String>,
 
-  /** Every class discovered in the bytecode of [className], and as a visible annotation. */
-  val usedAnnotationClasses: Set<String>,
+  /** Every class discovered in the bytecode of [className], not as an annotation but used inside a visible annotation. */
+  val usedNonAnnotationClassesWithinVisibleAnnotation: Map<String, String>,
 
-  /** Every class discovered in the bytecode of [className], and as an invisible annotation. */
-  val usedInvisibleAnnotationClasses: Set<String>,
+  /** Every class discovered in the bytecode of [className], and as an annotation. */
+  val usedAnnotationClasses: Set<String>,
 
   /** Every class discovered in the bytecode of [className], and which is exposed as part of the ABI. */
   val exposedClasses: Set<String>,
 
   /** Every import in this source file. */
   val imports: Set<String>,
+
+  /**
+   * Things inferred to be constants based on `visitLdcInsn()`.
+   *
+   * TODO(tsr): fold into binaryClassAccesses once that property is actually used.
+   */
+  val inferredConstants: Set<LdcConstant>,
 
   // /** Every [MemberAccess] to another class from [this class][className]. */
   // val binaryClassAccesses: Map<String, Set<MemberAccess>>,
@@ -58,10 +66,11 @@ internal data class CodeSource(
         .thenComparing(compareBy<CodeSource, String?>(nullsFirst()) { it.superClass })
         .thenBy(LexicographicIterableComparator()) { it.interfaces }
         .thenBy(LexicographicIterableComparator()) { it.usedNonAnnotationClasses }
+        .thenBy(LexicographicIterableComparator()) { it.usedNonAnnotationClassesWithinVisibleAnnotation.map { it.key } }
         .thenBy(LexicographicIterableComparator()) { it.usedAnnotationClasses }
-        .thenBy(LexicographicIterableComparator()) { it.usedInvisibleAnnotationClasses }
         .thenBy(LexicographicIterableComparator()) { it.exposedClasses }
         .thenBy(LexicographicIterableComparator()) { it.imports }
+        .thenBy(LexicographicIterableComparator()) { it.inferredConstants }
         .compare(this, other)
     } else {
       1
@@ -119,9 +128,12 @@ internal data class AndroidResSource(
     }
   }
 
-  @JsonClass(generateAdapter = false)
+  /** Marker interface, used by [Reason][com.autonomousapps.model.internal.intermediates.Reason]. */
+  interface ResRef
+
   /** The parent of a style resource, e.g. "Theme.AppCompat.Light.DarkActionBar". */
-  data class StyleParentRef(val styleParent: String) : Comparable<StyleParentRef> {
+  @JsonClass(generateAdapter = false)
+  data class StyleParentRef(val styleParent: String) : ResRef, Comparable<StyleParentRef> {
 
     init {
       assertNoDots("styleParent", styleParent)
@@ -139,7 +151,7 @@ internal data class AndroidResSource(
 
   /** Any attribute that looks like a reference to another resource. */
   @JsonClass(generateAdapter = false)
-  data class AttrRef(val type: String, val id: String) : Comparable<AttrRef> {
+  data class AttrRef(val type: String, val id: String) : ResRef, Comparable<AttrRef> {
 
     init {
       assertNoDots("id", id)

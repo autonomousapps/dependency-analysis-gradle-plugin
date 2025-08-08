@@ -10,6 +10,3 @@ Release procedure for gradle-testkit-plugin
 1. Update version number in `testkit/gradle-testkit-plugin/build.gradle.kts` to next snapshot version (x.y-SNAPSHOT)
 1. `git commit -am "chore(testkit): prepare next development version of testkit-plugin."`
 1. `git push && git push --tags`
-1. (Optional) Follow instructions in console output to release from Maven Central's staging repo.
-   This step is now automated via the `:promote` task, and should only be necessary if that task
-   fails.

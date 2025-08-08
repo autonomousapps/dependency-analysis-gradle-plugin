@@ -4,10 +4,10 @@
 
 package com.autonomousapps.services
 
+import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.Flags.cacheSize
 import com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
-import com.autonomousapps.subplugin.DEPENDENCY_ANALYSIS_PLUGIN
 import com.autonomousapps.tasks.KotlinCapabilities
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -18,15 +18,15 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 
-abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
+public abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
 
-  interface Params : BuildServiceParameters {
-    val cacheSize: Property<Long>
+  public interface Params : BuildServiceParameters {
+    public val cacheSize: Property<Long>
   }
 
   private val cacheSize = parameters.cacheSize.get()
 
-  private inline fun <reified K, reified V> newCache(maxSize: Long = cacheSize): Cache<K, V> {
+  private inline fun <reified K : Any, reified V> newCache(maxSize: Long = cacheSize): Cache<K, V> {
     val builder = Caffeine.newBuilder()
     if (maxSize >= 0) builder.maximumSize(maxSize)
     return builder.build()
@@ -52,7 +52,7 @@ abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
     procs.asMap().putIfAbsent(procName, proc)
   }
 
-  companion object {
+  internal companion object {
     private const val SHARED_SERVICES_IN_MEMORY_CACHE = "inMemoryCache"
     private const val DEFAULT_CACHE_VALUE = -1L
 
@@ -72,8 +72,8 @@ abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
         return thisBuild
       }
 
-      val thisPluginInstance = thisBuild.rootProject.plugins.findPlugin(DEPENDENCY_ANALYSIS_PLUGIN)
-      val rootPluginInstance = rootBuild.rootProject.plugins.findPlugin(DEPENDENCY_ANALYSIS_PLUGIN)
+      val thisPluginInstance = thisBuild.rootProject.plugins.findPlugin(DependencyAnalysisPlugin.ID)
+      val rootPluginInstance = rootBuild.rootProject.plugins.findPlugin(DependencyAnalysisPlugin.ID)
 
       if (thisPluginInstance == null || rootPluginInstance == null) {
         return thisBuild
@@ -86,7 +86,7 @@ abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
       }
     }
 
-    internal fun register(project: Project): Provider<InMemoryCache> = project
+    fun register(project: Project): Provider<InMemoryCache> = project
       .serviceHoldingBuild()
       .sharedServices
       .registerIfAbsent(SHARED_SERVICES_IN_MEMORY_CACHE, InMemoryCache::class.java) {

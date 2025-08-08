@@ -23,7 +23,7 @@ import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 @CacheableTask
-abstract class GenerateProjectHealthReportTask @Inject constructor(
+public abstract class GenerateProjectHealthReportTask @Inject constructor(
   private val workerExecutor: WorkerExecutor
 ) : DefaultTask() {
 
@@ -33,25 +33,25 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val projectAdvice: RegularFileProperty
+  public abstract val projectAdvice: RegularFileProperty
 
   // TODO(tsr): this shouldn't be a Property for Complicated Reasons
   @get:Nested
-  abstract val reportingConfig: Property<ReportingHandler.Config>
+  public abstract val reportingConfig: Property<ReportingHandler.Config>
 
   @get:Input
-  abstract val dslKind: Property<DslKind>
+  public abstract val dslKind: Property<DslKind>
 
   @get:Input
-  abstract val dependencyMap: MapProperty<String, String>
+  public abstract val dependencyMap: MapProperty<String, String>
 
   @get:Input
-  abstract val useTypesafeProjectAccessors: Property<Boolean>
+  public abstract val useTypesafeProjectAccessors: Property<Boolean>
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ProjectHealthAction::class.java) {
       advice.set(this@GenerateProjectHealthReportTask.projectAdvice)
       reportingConfig.set(this@GenerateProjectHealthReportTask.reportingConfig)
@@ -62,16 +62,16 @@ abstract class GenerateProjectHealthReportTask @Inject constructor(
     }
   }
 
-  interface ProjectHealthParameters : WorkParameters {
-    val advice: RegularFileProperty
-    val reportingConfig: Property<ReportingHandler.Config>
-    val dslKind: Property<DslKind>
-    val dependencyMap: MapProperty<String, String>
-    val useTypesafeProjectAccessors: Property<Boolean>
-    val output: RegularFileProperty
+  public interface ProjectHealthParameters : WorkParameters {
+    public val advice: RegularFileProperty
+    public val reportingConfig: Property<ReportingHandler.Config>
+    public val dslKind: Property<DslKind>
+    public val dependencyMap: MapProperty<String, String>
+    public val useTypesafeProjectAccessors: Property<Boolean>
+    public val output: RegularFileProperty
   }
 
-  abstract class ProjectHealthAction : WorkAction<ProjectHealthParameters> {
+  public abstract class ProjectHealthAction : WorkAction<ProjectHealthParameters> {
 
     override fun execute() {
       val output = parameters.output.getAndDelete()

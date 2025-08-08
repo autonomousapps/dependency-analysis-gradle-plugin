@@ -30,7 +30,7 @@ import javax.inject.Inject
  * }
  * ```
  */
-abstract class SourceSetsHandler @Inject constructor(
+public abstract class SourceSetsHandler @Inject constructor(
   private val sourceSetName: String,
   projectPath: String,
   objects: ObjectFactory

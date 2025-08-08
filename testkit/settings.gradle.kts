@@ -13,26 +13,38 @@ pluginManagement {
     gradlePluginPortal()
     mavenCentral()
 
+    // This is for the `com.android.tools.metalava:metalava` dependency
+    exclusiveContent {
+      forRepository {
+        maven(url = "https://dl.google.com/dl/android/maven2/")
+      }
+      filter {
+        includeGroup("com.android.tools.metalava")
+        includeGroup("com.android.tools")
+        includeGroup("com.android.tools.layoutlib")
+        includeGroup("com.android.tools.ddms")
+        includeGroup("com.android.tools.build")
+        includeGroup("com.android.tools.analytics-library")
+        includeGroup("com.android.tools.lint")
+        includeGroup("com.android.tools.external.com-intellij")
+        includeGroup("com.android.tools.external.org-jetbrains")
+      }
+    }
+
     // snapshots are permitted, but only for dependencies I own
     maven {
-      url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+      url = uri("https://central.sonatype.com/repository/maven-snapshots/")
       content {
         includeGroup("com.autonomousapps")
         includeGroup("com.autonomousapps.dependency-analysis")
       }
     }
   }
-  plugins {
-    id("com.autonomousapps.testkit") version "0.8"
-    id("com.gradleup.shadow") version "8.3.0"
-    id("com.gradle.develocity") version "3.18.2"
-    id("com.gradle.plugin-publish") version "1.1.0"
-    id("org.jetbrains.dokka") version "1.9.20"
-  }
 }
 
 plugins {
-  id("com.gradle.develocity")
+  id("com.gradle.develocity") version "4.0.2"
+  id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
 dependencyResolutionManagement {
@@ -43,7 +55,7 @@ dependencyResolutionManagement {
     }
     // snapshots are permitted, but only for dependencies I own
     maven {
-      url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+      url = uri("https://central.sonatype.com/repository/maven-snapshots/")
       content {
         includeGroup("com.autonomousapps")
         includeGroup("com.autonomousapps.dependency-analysis")

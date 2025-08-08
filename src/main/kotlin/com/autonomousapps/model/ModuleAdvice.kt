@@ -3,18 +3,19 @@
 package com.autonomousapps.model
 
 import com.autonomousapps.extension.Behavior
+import com.autonomousapps.extension.anyMatches
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.model.internal.intermediates.AndroidScoreVariant
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
 @JsonClass(generateAdapter = false, generator = "sealed:type")
-sealed class ModuleAdvice : Comparable<ModuleAdvice> {
+public sealed class ModuleAdvice : Comparable<ModuleAdvice> {
 
-  abstract val name: String
+  public abstract val name: String
 
   internal fun shouldIgnore(behavior: Behavior): Boolean {
-    return behavior.filter.contains(name)
+    return behavior.filter.anyMatches(name)
   }
 
   internal abstract fun isActionable(): Boolean
@@ -46,7 +47,7 @@ sealed class ModuleAdvice : Comparable<ModuleAdvice> {
 
 @TypeLabel("android_score")
 @JsonClass(generateAdapter = false)
-data class AndroidScore(
+public data class AndroidScore(
   val hasAndroidAssets: Boolean,
   val hasAndroidRes: Boolean,
   val usesAndroidClasses: Boolean,
@@ -70,10 +71,10 @@ data class AndroidScore(
   }
 
   /** True if this project uses no Android facilities at all. */
-  fun shouldBeJvm(): Boolean = score == 0f
+  public fun shouldBeJvm(): Boolean = score == 0f
 
   /** True if this project only uses some limited number of Android facilities. */
-  fun couldBeJvm(): Boolean = score < THRESHOLD
+  public fun couldBeJvm(): Boolean = score < THRESHOLD
 
   override fun isActionable(): Boolean = couldBeJvm()
 

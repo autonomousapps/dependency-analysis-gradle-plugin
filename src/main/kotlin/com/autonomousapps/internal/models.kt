@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
-import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.filterNotToSet
 import com.autonomousapps.internal.utils.mapToSet
+import com.autonomousapps.model.internal.AccessFlags
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
+import com.autonomousapps.model.internal.intermediates.producer.Constant
 import com.autonomousapps.model.internal.intermediates.producer.Member
 import com.squareup.moshi.JsonClass
 import java.lang.annotation.RetentionPolicy
@@ -41,10 +42,10 @@ internal data class AnalyzedClass(
    * class only exists as a sort of "namespace" for the annotations it contains.
    */
   val hasNoMembers: Boolean,
-  val access: Access,
+  val access: AccessFlags,
   val methods: Set<Method>,
   val innerClasses: Set<String>,
-  val constantFields: Set<String>,
+  val constants: Set<Constant>,
   val binaryClass: BinaryClass,
 ) : Comparable<AnalyzedClass> {
   constructor(
@@ -55,10 +56,10 @@ internal data class AnalyzedClass(
     retentionPolicy: String?,
     isAnnotation: Boolean,
     hasNoMembers: Boolean,
-    access: Access,
+    access: AccessFlags,
     methods: Set<Method>,
     innerClasses: Set<String>,
-    constantClasses: Set<String>,
+    constants: Set<Constant>,
     effectivelyPublicFields: Set<Member.Field>,
     effectivelyPublicMethods: Set<Member.Method>,
   ) : this(
@@ -70,7 +71,7 @@ internal data class AnalyzedClass(
     access = access,
     methods = methods,
     innerClasses = innerClasses,
-    constantFields = constantClasses,
+    constants = constants,
     binaryClass = BinaryClass(
       className = className.intern(),
       superClassName = superClassName?.intern(),
@@ -94,36 +95,7 @@ internal data class AnalyzedClass(
   override fun compareTo(other: AnalyzedClass): Int = className.compareTo(other.className)
 }
 
-// TODO(tsr): this is very similar to code in asmUtils.kt.
-internal enum class Access {
-  PUBLIC,
-  PROTECTED,
-  PRIVATE,
-  PACKAGE_PRIVATE;
-
-  companion object {
-    fun fromInt(access: Int): Access {
-      return when {
-        isPublic(access) -> PUBLIC
-        isProtected(access) -> PROTECTED
-        isPrivate(access) -> PRIVATE
-        isPackagePrivate(access) -> PACKAGE_PRIVATE
-        else -> throw IllegalArgumentException("Access <$access> is an unknown value")
-      }
-    }
-
-    private fun isPackagePrivate(access: Int): Boolean =
-      !isPublic(access) && !isPrivate(access) && !isProtected(access)
-
-    private fun isPublic(access: Int): Boolean = access and Opcodes.ACC_PUBLIC != 0
-
-    private fun isPrivate(access: Int): Boolean = access and Opcodes.ACC_PRIVATE != 0
-
-    private fun isProtected(access: Int): Boolean = access and Opcodes.ACC_PROTECTED != 0
-  }
-}
-
-internal data class Method internal constructor(val types: Set<String>) {
+internal data class Method(val types: Set<String>) {
 
   constructor(descriptor: String) : this(findTypes(descriptor))
 
@@ -181,6 +153,10 @@ internal data class UsagesExclusions(
 
   fun excludeClassesFromSet(fqcn: Set<String>): Set<String> {
     return fqcn.filterNotToSet { excludesClass(it) }
+  }
+
+  fun excludeClassesFromMap(fqcn: Map<String, String>): Map<String, String> {
+    return fqcn.filterNot { excludesClass(it.key) }
   }
 
   // The user-facing regex expects FQCNs to be delimited with dots, not slashes

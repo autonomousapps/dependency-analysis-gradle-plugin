@@ -23,7 +23,7 @@ import org.gradle.api.tasks.*
 
 @Suppress("UnstableApiUsage") // Guava graphs
 @CacheableTask
-abstract class ResolveExternalDependenciesTask : DefaultTask() {
+public abstract class ResolveExternalDependenciesTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -31,28 +31,28 @@ abstract class ResolveExternalDependenciesTask : DefaultTask() {
   }
 
   @get:Internal
-  abstract val compileClasspathResult: Property<ResolvedComponentResult>
+  public abstract val compileClasspathResult: Property<ResolvedComponentResult>
 
   @get:Internal
-  abstract val compileClasspathFileCoordinates: SetProperty<Coordinates>
+  public abstract val compileClasspathFileCoordinates: SetProperty<Coordinates>
 
   @get:Internal
-  abstract val runtimeClasspathResult: Property<ResolvedComponentResult>
+  public abstract val runtimeClasspathResult: Property<ResolvedComponentResult>
 
   @get:Internal
-  abstract val runtimeClasspathFileCoordinates: SetProperty<Coordinates>
+  public abstract val runtimeClasspathFileCoordinates: SetProperty<Coordinates>
 
   @get:PathSensitive(PathSensitivity.NAME_ONLY)
   @get:InputFiles
-  abstract val compileFiles: ConfigurableFileCollection
+  public abstract val compileFiles: ConfigurableFileCollection
 
   @get:PathSensitive(PathSensitivity.NAME_ONLY)
   @get:InputFiles
-  abstract val runtimeFiles: ConfigurableFileCollection
+  public abstract val runtimeFiles: ConfigurableFileCollection
 
   /** Output in flat txt format for external dependencies on compile and runtime classpaths. */
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
   internal fun configureTask(
     project: Project,
@@ -78,7 +78,7 @@ abstract class ResolveExternalDependenciesTask : DefaultTask() {
     runtimeFiles.setFrom(project.provider { runtimeClasspath.externalArtifactsFor(jarAttr).artifactFiles })
   }
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val output = output.getAndDelete()
 
     val compileGraph = GraphViewBuilder(compileClasspathResult.get(), compileClasspathFileCoordinates.get()).graph

@@ -4,15 +4,15 @@ package com.autonomousapps.model.internal.intermediates
 
 import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.declaration.internal.Bucket
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.internal.declaration.Bucket
+import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = false)
 internal data class DependencyTraceReport(
   val buildType: String?,
   val flavor: String?,
-  val variant: Variant,
+  val sourceKind: SourceKind,
   val dependencies: Set<Trace>,
   val annotationProcessors: Set<Trace>,
 ) {
@@ -33,7 +33,7 @@ internal data class DependencyTraceReport(
   class Builder(
     private val buildType: String?,
     private val flavor: String?,
-    private val variant: Variant,
+    private val sourceKind: SourceKind,
   ) {
 
     private val dependencies = mutableMapOf<Coordinates, Trace>()
@@ -131,7 +131,7 @@ internal data class DependencyTraceReport(
     fun build(): DependencyTraceReport = DependencyTraceReport(
       buildType = buildType,
       flavor = flavor,
-      variant = variant,
+      sourceKind = sourceKind,
       dependencies = dependencies.withReasons(),
       annotationProcessors = annotationProcessors.withReasons()
     )

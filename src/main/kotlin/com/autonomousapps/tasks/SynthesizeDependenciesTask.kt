@@ -3,27 +3,10 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.fromJson
-import com.autonomousapps.internal.utils.fromJsonSet
-import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.model.*
-import com.autonomousapps.model.internal.Capability
-import com.autonomousapps.model.internal.Dependency
-import com.autonomousapps.model.internal.FlatDependency
-import com.autonomousapps.model.internal.IncludedBuildDependency
-import com.autonomousapps.model.internal.ModuleDependency
-import com.autonomousapps.model.internal.PhysicalArtifact
-import com.autonomousapps.model.internal.ProjectDependency
+import com.autonomousapps.model.internal.*
+import com.autonomousapps.model.internal.intermediates.*
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
-import com.autonomousapps.model.internal.intermediates.AndroidAssetDependency
-import com.autonomousapps.model.internal.intermediates.AndroidManifestDependency
-import com.autonomousapps.model.internal.intermediates.AndroidResDependency
-import com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency
-import com.autonomousapps.model.internal.intermediates.DependencyView
-import com.autonomousapps.model.internal.intermediates.InlineMemberDependency
-import com.autonomousapps.model.internal.intermediates.NativeLibDependency
-import com.autonomousapps.model.internal.intermediates.ServiceLoaderDependency
-import com.autonomousapps.model.internal.intermediates.TypealiasDependency
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
@@ -37,7 +20,7 @@ import java.io.File
 import javax.inject.Inject
 
 @CacheableTask
-abstract class SynthesizeDependenciesTask @Inject constructor(
+public abstract class SynthesizeDependenciesTask @Inject constructor(
   private val workerExecutor: WorkerExecutor
 ) : DefaultTask() {
 
@@ -46,43 +29,43 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   }
 
   @get:Internal
-  abstract val inMemoryCache: Property<InMemoryCache>
+  public abstract val inMemoryCache: Property<InMemoryCache>
 
   /** Needed to disambiguate other projects that might have otherwise identical inputs. */
   @get:Input
-  abstract val projectPath: Property<String>
+  public abstract val projectPath: Property<String>
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val compileDependencies: RegularFileProperty
+  public abstract val compileDependencies: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val physicalArtifacts: RegularFileProperty
+  public abstract val physicalArtifacts: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val explodedJars: RegularFileProperty
+  public abstract val explodedJars: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val inlineMembers: RegularFileProperty
+  public abstract val inlineMembers: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val typealiases: RegularFileProperty
+  public abstract val typealiases: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val serviceLoaders: RegularFileProperty
+  public abstract val serviceLoaders: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val annotationProcessors: RegularFileProperty
+  public abstract val annotationProcessors: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val nativeLibs: RegularFileProperty
+  public abstract val nativeLibs: RegularFileProperty
 
   /*
    * Android-specific and therefore optional.
@@ -91,22 +74,22 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val manifestComponents: RegularFileProperty
+  public abstract val manifestComponents: RegularFileProperty
 
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val androidRes: RegularFileProperty
+  public abstract val androidRes: RegularFileProperty
 
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val androidAssets: RegularFileProperty
+  public abstract val androidAssets: RegularFileProperty
 
   @get:OutputDirectory
-  abstract val outputDir: DirectoryProperty
+  public abstract val outputDir: DirectoryProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(SynthesizeDependenciesWorkAction::class.java) {
       inMemoryCache.set(this@SynthesizeDependenciesTask.inMemoryCache)
       compileDependencies.set(this@SynthesizeDependenciesTask.compileDependencies)
@@ -124,36 +107,35 @@ abstract class SynthesizeDependenciesTask @Inject constructor(
     }
   }
 
-  interface SynthesizeDependenciesParameters : WorkParameters {
-    val inMemoryCache: Property<InMemoryCache>
-    val compileDependencies: RegularFileProperty
-    val physicalArtifacts: RegularFileProperty
-    val explodedJars: RegularFileProperty
-    val inlineMembers: RegularFileProperty
-    val typealiases: RegularFileProperty
-    val serviceLoaders: RegularFileProperty
-    val annotationProcessors: RegularFileProperty
-    val nativeLibs: RegularFileProperty
+  public interface SynthesizeDependenciesParameters : WorkParameters {
+    public val inMemoryCache: Property<InMemoryCache>
+    public val compileDependencies: RegularFileProperty
+    public val physicalArtifacts: RegularFileProperty
+    public val explodedJars: RegularFileProperty
+    public val inlineMembers: RegularFileProperty
+    public val typealiases: RegularFileProperty
+    public val serviceLoaders: RegularFileProperty
+    public val annotationProcessors: RegularFileProperty
+    public val nativeLibs: RegularFileProperty
 
     // Android-specific and therefore optional
-    val manifestComponents: RegularFileProperty
-    val androidRes: RegularFileProperty
-    val androidAssets: RegularFileProperty
+    public val manifestComponents: RegularFileProperty
+    public val androidRes: RegularFileProperty
+    public val androidAssets: RegularFileProperty
 
-    val outputDir: DirectoryProperty
+    public val outputDir: DirectoryProperty
   }
 
-  abstract class SynthesizeDependenciesWorkAction : WorkAction<SynthesizeDependenciesParameters> {
+  public abstract class SynthesizeDependenciesWorkAction : WorkAction<SynthesizeDependenciesParameters> {
 
     private val builders = sortedMapOf<Coordinates, DependencyBuilder>()
 
     override fun execute() {
-      val outputDir = parameters.outputDir
+      val outputDir = parameters.outputDir.delete()
 
       val dependencies = parameters.compileDependencies.fromJson<CoordinatesContainer>().coordinates
       val physicalArtifacts = parameters.physicalArtifacts.fromJsonSet<PhysicalArtifact>()
-      // val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>() // TODO(tsr): gzip
-      val explodedJars = parameters.explodedJars.gzipDecompress<ExplodedJar>() // TODO(tsr): gzip
+      val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>(compressed = true)
       val inlineMembers = parameters.inlineMembers.fromJsonSet<InlineMemberDependency>()
       val typealiases = parameters.typealiases.fromJsonSet<TypealiasDependency>()
       val serviceLoaders = parameters.serviceLoaders.fromJsonSet<ServiceLoaderDependency>()

@@ -6,8 +6,9 @@ import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ProjectCoordinates
-import com.autonomousapps.model.declaration.Variant
 import com.autonomousapps.model.internal.CodeSource.Kind
+import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
+import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
 import org.gradle.api.file.Directory
 
@@ -18,11 +19,13 @@ internal data class ProjectVariant(
   val coordinates: ProjectCoordinates,
   val buildType: String?,
   val flavor: String?,
-  val variant: Variant,
+  val sourceKind: SourceKind,
   val sources: Set<Source>,
+  val runtimeSources: Set<Source>,
   val classpath: Set<Coordinates>,
   val annotationProcessors: Set<Coordinates>,
-  val testInstrumentationRunner: String?
+  val testInstrumentationRunner: String?,
+  val excludedIdentifiers: Set<ExcludedIdentifier>,
 ) {
 
   val codeSource: List<CodeSource> by unsafeLazy {
@@ -39,25 +42,16 @@ internal data class ProjectVariant(
     }
   }
 
+  val usedNonAnnotationClassesWithinVisibleAnnotationBySrc: Map<String, String> by unsafeLazy {
+    codeSource.flatMapToSet {
+      it.usedNonAnnotationClassesWithinVisibleAnnotation.entries
+    }.associate { it.toPair() }
+  }
+
   val usedAnnotationClassesBySrc: Set<String> by unsafeLazy {
     codeSource.flatMapToSet {
       it.usedAnnotationClasses
     }
-  }
-
-  /** Invisible annotations are required at compile time but not at runtime. */
-  val usedInvisibleAnnotationClassesBySrc: Set<String> by unsafeLazy {
-    codeSource.flatMapToSet {
-      it.usedInvisibleAnnotationClasses
-    }
-  }
-
-  /**
-   * For typealiases, we check for presence in the bytecode in any context, annotation or otherwise. We do not check
-   * usages in Android res.
-   */
-  val usedClassesBySrc: Set<String> by unsafeLazy {
-    usedNonAnnotationClassesBySrc + usedAnnotationClassesBySrc
   }
 
   val usedClassesByRes: Set<String> by unsafeLazy {
@@ -68,9 +62,7 @@ internal data class ProjectVariant(
 
   /** All class references from any context. */
   val usedClasses: Set<String> by unsafeLazy {
-    codeSource.flatMapToSet {
-      usedClassesBySrc + usedClassesByRes
-    }
+    usedClassesByRes + usedNonAnnotationClassesBySrc + usedNonAnnotationClassesWithinVisibleAnnotationBySrc.map { it.key }
   }
 
   val usedNonAnnotationClasses: Set<String> by unsafeLazy {
@@ -80,6 +72,12 @@ internal data class ProjectVariant(
   val exposedClasses: Set<String> by unsafeLazy {
     codeSource.flatMapToSet {
       it.exposedClasses
+    }
+  }
+
+  val inferredConstants: Set<LdcConstant> by unsafeLazy {
+    codeSource.flatMapToSet {
+      it.inferredConstants
     }
   }
 
@@ -103,6 +101,10 @@ internal data class ProjectVariant(
 
   val androidResSource: List<AndroidResSource> by unsafeLazy {
     sources.filterIsInstance<AndroidResSource>()
+  }
+
+  val androidResRuntimeSource: List<AndroidResSource> by unsafeLazy {
+    runtimeSources.filterIsInstance<AndroidResSource>()
   }
 
   val androidAssetsSource: List<AndroidAssetSource> by unsafeLazy {

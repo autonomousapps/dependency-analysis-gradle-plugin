@@ -9,6 +9,7 @@ import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
+import com.autonomousapps.model.internal.intermediates.producer.Constant
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -229,9 +230,9 @@ internal data class BinaryClassCapability(
   /**
    * Partitions and returns artificial pair of [BinaryClasses][BinaryClass]. Non-null elements indicate relevant (to
    * [memberAccess] matching and non-matching members of this `BinaryClass`. Matching members are binary-compatible; and
-   * non-matching members have the same [name][com.autonomousapps.model.intermediates.producer.Member.name] but
-   * incompatible [descriptors][com.autonomousapps.model.intermediates.producer.Member.descriptor], and are therefore
-   * binary-incompatible.
+   * non-matching members have the same [name][com.autonomousapps.model.internal.intermediates.producer.Member.name] but
+   * incompatible [descriptors][com.autonomousapps.model.internal.intermediates.producer.Member.descriptor], and are
+   * therefore binary-incompatible.
    *
    * nb: We don't want this as a method directly in BinaryClass because it can't safely assert the prerequisite that
    * it's only called on "relevant" classes. THIS class, however, can, via findRelevantBinaryClasses.
@@ -272,14 +273,14 @@ internal data class BinaryClassCapability(
 @TypeLabel("const")
 @JsonClass(generateAdapter = false)
 internal data class ConstantCapability(
-  /** Map of fully-qualified class names to constant field names. */
-  val constants: Map<String, Set<String>>,
+  /** Map of fully-qualified class names to constant fields. */
+  val constants: Map<String, Set<Constant>>,
   /** Kotlin classes with top-level declarations. */
   val ktFiles: Set<KtFile>,
 ) : Capability() {
 
   companion object {
-    fun newInstance(constants: Map<String, Set<String>>, ktFiles: Set<KtFile>): ConstantCapability {
+    fun newInstance(constants: Map<String, Set<Constant>>, ktFiles: Set<KtFile>): ConstantCapability {
       return ConstantCapability(constants.toSortedMap().efficient(), ktFiles.toSortedSet().efficient())
     }
   }
@@ -293,14 +294,13 @@ internal data class ConstantCapability(
 @JsonClass(generateAdapter = false)
 internal data class InferredCapability(
   /**
-   * True if this dependency contains only annotations that are only needed at compile-time (`CLASS` and `SOURCE` level
-   * retention policies). False otherwise.
+   * True if this dependency contains only annotations. False otherwise.
    */
-  val isCompileOnlyAnnotations: Boolean,
+  val isAnnotations: Boolean,
 ) : Capability() {
 
   override fun merge(other: Capability): Capability {
-    return InferredCapability(isCompileOnlyAnnotations && (other as InferredCapability).isCompileOnlyAnnotations)
+    return InferredCapability(isAnnotations && (other as InferredCapability).isAnnotations)
   }
 }
 

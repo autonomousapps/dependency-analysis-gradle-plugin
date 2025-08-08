@@ -5,26 +5,28 @@ package com.autonomousapps.internal
 import com.autonomousapps.Flags
 import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.*
-import com.autonomousapps.internal.kotlin.AccessFlags
 import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_ASM
 import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.genericTypes
+import com.autonomousapps.model.internal.AccessFlags
+import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.internal.intermediates.producer.Constant
 import com.autonomousapps.model.internal.intermediates.producer.Member
 import org.gradle.api.logging.Logger
-import java.util.SortedSet
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.metadata.jvm.Metadata
 
-private val logDebug: Boolean get() = Flags.logBytecodeDebug()
+private val logDebug: Boolean = Flags.logBytecodeDebug()
 private const val ASM_VERSION = Opcodes.ASM9
 
 /** This will collect the class name and information about annotations. */
 internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : ClassVisitor(ASM_VERSION) {
 
   private lateinit var className: String
-  private lateinit var access: Access
+  private lateinit var access: AccessFlags
   private var outerClassName: String? = null
   private var superClassName: String? = null
 
@@ -40,7 +42,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   private var fieldCount = 0
 
   // From old ConstantVisitor
-  private val constantClasses = mutableSetOf<String>()
+  private val constants = sortedSetOf<Constant>()
 
   internal fun getAnalyzedClass(): AnalyzedClass {
     val className = this.className
@@ -58,7 +60,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       access = access,
       methods = methods.efficient(),
       innerClasses = innerClasses.efficient(),
-      constantClasses = constantClasses.efficient(),
+      constants = constants.efficient(),
       effectivelyPublicFields = effectivelyPublicFields.efficient(),
       effectivelyPublicMethods = effectivelyPublicMethods.efficient(),
     )
@@ -82,7 +84,8 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     if (interfaces?.contains("java/lang/annotation/Annotation") == true) {
       isAnnotation = true
     }
-    this.access = Access.fromInt(access)
+
+    this.access = AccessFlags(access)
 
     val implementsClause = if (interfaces.isNullOrEmpty()) {
       ""
@@ -103,7 +106,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   override fun visitMethod(
     access: Int, name: String, descriptor: String, signature: String?, exceptions: Array<out String>?
   ): MethodVisitor? {
-    log { "- visitMethod: ${Access.fromInt(access)} descriptor=$descriptor name=$name signature=$signature" }
+    log { "- visitMethod: ${AccessFlags(access).getModifierString()} descriptor=$descriptor name=$name signature=$signature" }
 
     if (!("()V" == descriptor && ("<init>" == name || "<clinit>" == name))) {
       // ignore constructors and static initializers
@@ -128,12 +131,20 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   override fun visitField(
     access: Int, name: String, descriptor: String, signature: String?, value: Any?
   ): FieldVisitor? {
-    log { "- visitField: ${Access.fromInt(access)} descriptor=$descriptor name=$name signature=$signature value=$value" }
+    val flags = AccessFlags(access)
+
+    log { "- visitField: ${flags.getModifierString()} descriptor=$descriptor name=$name signature=$signature value=$value" }
     fieldCount++
 
     // from old ConstantVisitor
-    if (isStaticFinal(access)) {
-      constantClasses.add(name.intern())
+    if (flags.isPublicConstant) {
+      constants.add(
+        Constant(
+          name = name.intern(),
+          descriptor = descriptor,
+          value = value.toString(),
+        )
+      )
     }
 
     // TODO(tsr): uncomment once intermediate artifact shrinking is complete
@@ -155,7 +166,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   }
 
   override fun visitInnerClass(name: String, outerName: String?, innerName: String?, access: Int) {
-    log { "- visitInnerClass: ${Access.fromInt(access)} name=$name outerName=$outerName innerName=$innerName" }
+    log { "- visitInnerClass: ${AccessFlags(access).getModifierString()} name=$name outerName=$outerName innerName=$innerName" }
     if (outerName != null) {
       outerClassName = canonicalize(outerName)
     }
@@ -200,22 +211,18 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
 internal data class ClassRef(
   val classRef: String,
   val kind: Kind,
+  val enclosingAnnotation: String? = null,
 ) : Comparable<ClassRef> {
 
   enum class Kind {
-    ANNOTATION_VISIBLE,
-    ANNOTATION_HIDDEN,
+    ANNOTATION,
     NOT_ANNOTATION,
-    ;
-
-    companion object {
-      fun annotation(visible: Boolean): Kind = if (visible) ANNOTATION_VISIBLE else ANNOTATION_HIDDEN
-    }
   }
 
   override fun compareTo(other: ClassRef): Int {
     return compareBy<ClassRef> { it.classRef }
       .thenBy { it.kind }
+      .thenBy { it.enclosingAnnotation }
       .compare(this, other)
   }
 }
@@ -232,11 +239,13 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
 
   val classes = mutableSetOf<ClassRef>()
   private val binaryClasses = sortedMapOf<String, SortedSet<MemberAccess>>()
+  private val constants = sortedSetOf<LdcConstant>()
 
-  private val methodAnalyzer = MethodAnalyzer(logger, classes, binaryClasses)
+  private val methodAnalyzer = MethodAnalyzer(logger, classes, binaryClasses, constants)
   private val fieldAnalyzer = FieldAnalyzer(logger, classes)
 
-  fun getBinaryClasses(): Map<String, Set<MemberAccess>> = binaryClasses
+  fun getBinaryClasses(): Map<String, Set<MemberAccess>> = binaryClasses.efficient()
+  fun getInferredConstants(): Set<LdcConstant> = constants.efficient()
 
   private fun addClass(className: String?, kind: ClassRef.Kind) {
     classes.addClass(className, kind)
@@ -261,7 +270,7 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
     superName: String?,
     interfaces: Array<out String>?
   ) {
-    log { "ClassAnalyzer#visit: ${Access.fromInt(access)} $name extends $superName" }
+    log { "ClassAnalyzer#visit: ${AccessFlags(access).getModifierString()} $name extends $superName" }
     className = name
     superClass = superName
     this.interfaces.addAll(interfaces.orEmpty())
@@ -279,7 +288,8 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
     signature: String?,
     value: Any?
   ): FieldVisitor {
-    log { "ClassAnalyzer#visitField: ${Access.fromInt(access)} $descriptor $name" }
+    log { "ClassAnalyzer#visitField: ${AccessFlags(access).getModifierString()} descriptor=$descriptor name=$name signature=$signature value=$value" }
+
     addClass(descriptor, ClassRef.Kind.NOT_ANNOTATION)
 
     // TODO probably do this for other `visitX` methods as well
@@ -297,7 +307,7 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
     signature: String?,
     exceptions: Array<out String>?
   ): MethodVisitor {
-    log { "ClassAnalyzer#visitMethod: ${Access.fromInt(access)} $name $descriptor" }
+    log { "ClassAnalyzer#visitMethod: ${AccessFlags(access).getModifierString()} $name $descriptor" }
 
     METHOD_DESCRIPTOR_REGEX.findAll(descriptor).forEach { result ->
       addClass(result.value, ClassRef.Kind.NOT_ANNOTATION)
@@ -306,21 +316,21 @@ internal class ClassAnalyzer(private val logger: Logger) : ClassVisitor(ASM_VERS
     return methodAnalyzer
   }
 
-  override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
+  override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor {
     log { "ClassAnalyzer#visitAnnotation: descriptor=$descriptor visible=$visible" }
-    addClass(descriptor, ClassRef.Kind.annotation(visible))
-    return AnnotationAnalyzer(visible, logger, classes)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    return AnnotationAnalyzer(descriptor, visible, logger, classes)
   }
 
   override fun visitTypeAnnotation(
     typeRef: Int,
     typePath: TypePath?,
-    descriptor: String?,
+    descriptor: String,
     visible: Boolean
   ): AnnotationVisitor {
     log { "ClassAnalyzer#visitTypeAnnotation: typeRef=$typeRef typePath=$typePath descriptor=$descriptor visible=$visible" }
-    addClass(descriptor, ClassRef.Kind.annotation(visible))
-    return AnnotationAnalyzer(visible, logger, classes)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    return AnnotationAnalyzer(descriptor, visible, logger, classes)
   }
 
   override fun visitEnd() {
@@ -332,6 +342,7 @@ private class MethodAnalyzer(
   private val logger: Logger,
   private val classes: MutableSet<ClassRef>,
   private val binaryClasses: MutableMap<String, SortedSet<MemberAccess>>,
+  private val constants: MutableSet<LdcConstant>,
 ) : MethodVisitor(ASM_VERSION) {
 
   private fun addClass(className: String?, kind: ClassRef.Kind) {
@@ -424,46 +435,46 @@ private class MethodAnalyzer(
     start: Array<out Label>?,
     end: Array<out Label>?,
     index: IntArray?,
-    descriptor: String?,
+    descriptor: String,
     visible: Boolean
   ): AnnotationVisitor {
     log { "- MethodAnalyzer#visitLocalVariableAnnotation: $descriptor" }
     addClass(descriptor, ClassRef.Kind.NOT_ANNOTATION)
-    return AnnotationAnalyzer(visible, logger, classes)
+    return AnnotationAnalyzer(descriptor, visible, logger, classes)
   }
 
-  override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
+  override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor {
     log { "- MethodAnalyzer#visitAnnotation: $descriptor" }
-    addClass(descriptor, ClassRef.Kind.annotation(visible))
-    return AnnotationAnalyzer(visible, logger, classes)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    return AnnotationAnalyzer(descriptor, visible, logger, classes)
   }
 
   override fun visitInsnAnnotation(
     typeRef: Int,
     typePath: TypePath?,
-    descriptor: String?,
+    descriptor: String,
     visible: Boolean
   ): AnnotationVisitor {
     log { "- MethodAnalyzer#visitInsnAnnotation: $descriptor" }
-    addClass(descriptor, ClassRef.Kind.annotation(visible))
-    return AnnotationAnalyzer(visible, logger, classes)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    return AnnotationAnalyzer(descriptor, visible, logger, classes)
   }
 
-  override fun visitParameterAnnotation(parameter: Int, descriptor: String?, visible: Boolean): AnnotationVisitor {
+  override fun visitParameterAnnotation(parameter: Int, descriptor: String, visible: Boolean): AnnotationVisitor {
     log { "- MethodAnalyzer#visitParameterAnnotation: $descriptor" }
-    addClass(descriptor, ClassRef.Kind.ANNOTATION_VISIBLE)
-    return AnnotationAnalyzer(visible, logger, classes)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    return AnnotationAnalyzer(descriptor, visible, logger, classes)
   }
 
   override fun visitTypeAnnotation(
     typeRef: Int,
     typePath: TypePath?,
-    descriptor: String?,
+    descriptor: String,
     visible: Boolean
   ): AnnotationVisitor {
     log { "- MethodAnalyzer#visitTypeAnnotation: $descriptor" }
-    addClass(descriptor, ClassRef.Kind.annotation(visible))
-    return AnnotationAnalyzer(visible, logger, classes)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    return AnnotationAnalyzer(descriptor, visible, logger, classes)
   }
 
   override fun visitTryCatchBlock(start: Label?, end: Label?, handler: Label?, type: String?) {
@@ -474,16 +485,22 @@ private class MethodAnalyzer(
   override fun visitTryCatchAnnotation(
     typeRef: Int,
     typePath: TypePath?,
-    descriptor: String?,
+    descriptor: String,
     visible: Boolean
   ): AnnotationVisitor {
     log { "- MethodAnalyzer#visitTryCatchAnnotation: $descriptor" }
-    addClass(descriptor, ClassRef.Kind.annotation(visible))
-    return AnnotationAnalyzer(visible, logger, classes)
+    addClass(descriptor, ClassRef.Kind.ANNOTATION)
+    return AnnotationAnalyzer(descriptor, visible, logger, classes)
+  }
+
+  override fun visitLdcInsn(value: Any?) {
+    log { "- MethodAnalyzer#visitLdcInsn: $value${value?.javaClass?.canonicalName?.let { " (type=$it)" }}" }
+    constants.add(LdcConstant.of(value))
   }
 }
 
 private class AnnotationAnalyzer(
+  private val annotationClass: String,
   private val visible: Boolean,
   private val logger: Logger,
   private val classes: MutableSet<ClassRef>,
@@ -495,16 +512,12 @@ private class AnnotationAnalyzer(
   private var isTypeAlias = false
   private val arrayElements = mutableSetOf<ClassRef>()
 
-  // If this is a visible annotation, then internal references are needed at runtime (as well as compile time).
-  // Our poor shorthand for modeling that is to say that reference is a `Kind.NOT_ANNOTATION`
-  // nb: this is intentionally if confusingly different from the behavior of `ClassRef.Kind.annotation(visible)`
-  private val kind = if (visible) ClassRef.Kind.NOT_ANNOTATION else ClassRef.Kind.ANNOTATION_VISIBLE
-
-  private fun addClass(className: String?, kind: ClassRef.Kind) {
-    classes.addClass(className, kind)
+  private fun addClass(className: String?, enclosingAnnotation: String? = null) {
+    classes.addClass(className, ClassRef.Kind.ANNOTATION, enclosingAnnotation)
 
     if (arrayName == "d2") {
-      arrayElements.addClass(className, kind)
+      // Use "Kind.NOT_ANNOTATION" always so that our "is this typealias used?" algorithm works.
+      arrayElements.addClass(className, ClassRef.Kind.NOT_ANNOTATION)
     }
   }
 
@@ -529,34 +542,40 @@ private class AnnotationAnalyzer(
 
     if (value is String) {
       METHOD_DESCRIPTOR_REGEX.findAll(value).forEach { result ->
-        addClass(result.value, kind)
+        if (visible) {
+          addClass(result.value, annotationClass.fqcnFromSpec)
+        } else {
+          addClass(result.value)
+        }
       }
     } else if (value is Type) {
-      addClass(value.descriptor, kind)
+      if (visible) {
+        addClass(value.descriptor, annotationClass.fqcnFromSpec)
+      } else {
+        addClass(value.descriptor)
+      }
     }
   }
 
   override fun visitEnum(name: String?, descriptor: String?, value: String?) {
     log { "${indent()}- AnnotationAnalyzer#visitEnum: name=$name, descriptor=$descriptor, value=$value" }
-    addClass(descriptor, kind)
+    addClass(descriptor)
   }
 
-  override fun visitAnnotation(name: String?, descriptor: String?): AnnotationVisitor {
+  override fun visitAnnotation(name: String?, descriptor: String): AnnotationVisitor {
     log { "${indent()}- AnnotationAnalyzer#visitAnnotation: name=$name, descriptor=$descriptor" }
-    addClass(descriptor, kind)
-    return AnnotationAnalyzer(visible, logger, classes, level + 1)
+    addClass(descriptor)
+    return AnnotationAnalyzer(descriptor, visible, logger, classes, level + 1)
   }
 
   override fun visitArray(name: String?): AnnotationVisitor {
     log { "${indent()}- AnnotationAnalyzer#visitArray: name=$name" }
-    return AnnotationAnalyzer(if (name == "d2") false else visible, logger, classes, level + 1, name)
+    return AnnotationAnalyzer(annotationClass, visible, logger, classes, level + 1, name)
   }
 
   override fun visitEnd() {
     if (isTypeAlias()) {
-      // Transform the "Kind.ANNOTATION" references into "Kind.NOT_ANNOTATION" references so that our
-      // "is this typealias used?" algorithm works.
-      classes.addAll(arrayElements.map { ClassRef(it.classRef, ClassRef.Kind.NOT_ANNOTATION) })
+      classes.addAll(arrayElements)
     }
   }
 
@@ -576,25 +595,27 @@ private class FieldAnalyzer(
     }
   }
 
-  private fun addClass(className: String?, kind: ClassRef.Kind) {
-    classes.addClass(className, kind)
+  private fun addClass(className: String?) {
+    classes.addClass(className, ClassRef.Kind.ANNOTATION)
   }
 
-  override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
+  override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor {
     log { "- FieldAnalyzer#visitAnnotation: $descriptor" }
-    addClass(descriptor, ClassRef.Kind.annotation(visible))
-    return AnnotationAnalyzer(visible, logger, classes)
+    addClass(descriptor)
+    return AnnotationAnalyzer(descriptor, visible, logger, classes)
   }
 }
 
-private fun MutableSet<ClassRef>.addClass(classRef: String?, kind: ClassRef.Kind) {
+private fun MutableSet<ClassRef>.addClass(classRef: String?, kind: ClassRef.Kind, enclosingAnnotation: String? = null) {
   classRef ?: return
 
   JAVA_FQCN_REGEX_ASM.findAll(classRef)
     .map { it.value }
     // strip off leading "L" and trailing ";"
-    .forEach { add(ClassRef(it.substring(1, it.length - 1), kind)) }
+    .forEach { add(ClassRef(it.fqcnFromSpec, kind, enclosingAnnotation)) }
 }
+
+private val String.fqcnFromSpec get() = substring(1, length - 1)
 
 /* ===================================================================================================
  * Below here used for parsing kotlin.Metadata with the ultimate goal of listing all inline functions.
@@ -702,18 +723,10 @@ internal class KotlinMetadataVisitor(
   }
 }
 
-fun stringValueOfArrayElement(value: Any?): String {
+private fun stringValueOfArrayElement(value: Any?): String {
   return if (value is String && value.contains("\n")) {
     "..."
   } else {
     value.toString()
   }
-}
-
-private fun isStaticFinal(access: Int): Boolean =
-  access and Opcodes.ACC_STATIC != 0 && access and Opcodes.ACC_FINAL != 0
-
-private fun isEffectivelyPublic(access: Int): Boolean {
-  val flags = AccessFlags(access)
-  return flags.isPublic || flags.isProtected
 }

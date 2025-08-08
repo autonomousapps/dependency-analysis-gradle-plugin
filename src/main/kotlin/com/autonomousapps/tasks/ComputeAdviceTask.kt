@@ -9,13 +9,12 @@ import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.CoordinatesString.Companion.toStringCoordinates
 import com.autonomousapps.model.*
-import com.autonomousapps.model.declaration.Variant
-import com.autonomousapps.model.declaration.internal.Bucket
-import com.autonomousapps.model.declaration.internal.Configurations
-import com.autonomousapps.model.declaration.internal.Declaration
+import com.autonomousapps.model.internal.declaration.Bucket
+import com.autonomousapps.model.internal.declaration.Configurations
+import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.*
-import com.autonomousapps.model.internal.intermediates.Usage
+import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.transform.StandardTransform
 import com.google.common.collect.SetMultimap
 import org.gradle.api.DefaultTask
@@ -36,7 +35,7 @@ import javax.inject.Inject
  * advice.
  */
 @CacheableTask
-abstract class ComputeAdviceTask @Inject constructor(
+public abstract class ComputeAdviceTask @Inject constructor(
   private val workerExecutor: WorkerExecutor,
 ) : DefaultTask() {
 
@@ -45,68 +44,72 @@ abstract class ComputeAdviceTask @Inject constructor(
   }
 
   @get:Input
-  abstract val projectPath: Property<String>
+  public abstract val projectPath: Property<String>
 
   @get:Input
-  abstract val buildPath: Property<String>
+  public abstract val buildPath: Property<String>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val dependencyUsageReports: ListProperty<RegularFile>
+  public abstract val dependencyUsageReports: ListProperty<RegularFile>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val dependencyGraphViews: ListProperty<RegularFile>
+  public abstract val dependencyGraphViews: ListProperty<RegularFile>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val androidScoreReports: ListProperty<RegularFile>
+  public abstract val androidScoreReports: ListProperty<RegularFile>
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val declarations: RegularFileProperty
+  public abstract val declarations: RegularFileProperty
 
   @get:Nested
-  abstract val bundles: Property<DependenciesHandler.SerializableBundles>
+  public abstract val bundles: Property<DependenciesHandler.SerializableBundles>
 
   @get:Input
-  abstract val supportedSourceSets: SetProperty<String>
+  public abstract val supportedSourceSets: SetProperty<String>
 
   @get:Input
-  abstract val ignoreKtx: Property<Boolean>
+  public abstract val ignoreKtx: Property<Boolean>
 
   @get:Input
-  abstract val explicitSourceSets: SetProperty<String>
+  public abstract val explicitSourceSets: SetProperty<String>
+
+  /** Android (true) or JVM (false). */
+  @get:Input
+  public abstract val android: Property<Boolean>
 
   @get:Input
-  abstract val kapt: Property<Boolean>
+  public abstract val kapt: Property<Boolean>
 
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val redundantJvmPluginReport: RegularFileProperty
+  public abstract val redundantJvmPluginReport: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  abstract val duplicateClassesReports: ListProperty<RegularFile>
+  public abstract val duplicateClassesReports: ListProperty<RegularFile>
 
   /*
    * Outputs.
    */
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
   @get:OutputFile
-  abstract val dependencyUsages: RegularFileProperty
+  public abstract val dependencyUsages: RegularFileProperty
 
   @get:OutputFile
-  abstract val annotationProcessorUsages: RegularFileProperty
+  public abstract val annotationProcessorUsages: RegularFileProperty
 
   @get:OutputFile
-  abstract val bundledTraces: RegularFileProperty
+  public abstract val bundledTraces: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ComputeAdviceAction::class.java) {
       projectPath.set(this@ComputeAdviceTask.projectPath)
       buildPath.set(this@ComputeAdviceTask.buildPath)
@@ -118,6 +121,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       supportedSourceSets.set(this@ComputeAdviceTask.supportedSourceSets)
       ignoreKtx.set(this@ComputeAdviceTask.ignoreKtx)
       explicitSourceSets.set(this@ComputeAdviceTask.explicitSourceSets)
+      android.set(this@ComputeAdviceTask.android)
       kapt.set(this@ComputeAdviceTask.kapt)
       redundantPluginReport.set(this@ComputeAdviceTask.redundantJvmPluginReport)
       duplicateClassesReports.set(this@ComputeAdviceTask.duplicateClassesReports)
@@ -129,28 +133,29 @@ abstract class ComputeAdviceTask @Inject constructor(
     }
   }
 
-  interface ComputeAdviceParameters : WorkParameters {
-    val projectPath: Property<String>
-    val buildPath: Property<String>
-    val dependencyUsageReports: ListProperty<RegularFile>
-    val dependencyGraphViews: ListProperty<RegularFile>
-    val androidScoreReports: ListProperty<RegularFile>
-    val declarations: RegularFileProperty
-    val bundles: Property<DependenciesHandler.SerializableBundles>
-    val supportedSourceSets: SetProperty<String>
-    val ignoreKtx: Property<Boolean>
-    val explicitSourceSets: SetProperty<String>
-    val kapt: Property<Boolean>
-    val redundantPluginReport: RegularFileProperty
-    val duplicateClassesReports: ListProperty<RegularFile>
+  public interface ComputeAdviceParameters : WorkParameters {
+    public val projectPath: Property<String>
+    public val buildPath: Property<String>
+    public val dependencyUsageReports: ListProperty<RegularFile>
+    public val dependencyGraphViews: ListProperty<RegularFile>
+    public val androidScoreReports: ListProperty<RegularFile>
+    public val declarations: RegularFileProperty
+    public val bundles: Property<DependenciesHandler.SerializableBundles>
+    public val supportedSourceSets: SetProperty<String>
+    public val ignoreKtx: Property<Boolean>
+    public val explicitSourceSets: SetProperty<String>
+    public val android: Property<Boolean>
+    public val kapt: Property<Boolean>
+    public val redundantPluginReport: RegularFileProperty
+    public val duplicateClassesReports: ListProperty<RegularFile>
 
-    val output: RegularFileProperty
-    val dependencyUsages: RegularFileProperty
-    val annotationProcessorUsages: RegularFileProperty
-    val bundledTraces: RegularFileProperty
+    public val output: RegularFileProperty
+    public val dependencyUsages: RegularFileProperty
+    public val annotationProcessorUsages: RegularFileProperty
+    public val bundledTraces: RegularFileProperty
   }
 
-  abstract class ComputeAdviceAction : WorkAction<ComputeAdviceParameters> {
+  public abstract class ComputeAdviceAction : WorkAction<ComputeAdviceParameters> {
 
     override fun execute() {
       val output = parameters.output.getAndDelete()
@@ -163,7 +168,7 @@ abstract class ComputeAdviceTask @Inject constructor(
       val declarations = parameters.declarations.fromJsonSet<Declaration>()
       val dependencyGraph = parameters.dependencyGraphViews.get()
         .map { it.fromJson<DependencyGraphView>() }
-        .associateBy { it.name }
+        .associateBy { "${it.name},${it.configurationName}" }
       val androidScore = parameters.androidScoreReports.get()
         .map { it.fromJson<AndroidScoreVariant>() }
         .run { AndroidScore.ofVariants(this) }
@@ -172,15 +177,18 @@ abstract class ComputeAdviceTask @Inject constructor(
       val traces = parameters.dependencyUsageReports.get().mapToSet { it.fromJson<DependencyTraceReport>() }
       val usageBuilder = UsageBuilder(
         traces = traces,
-        // TODO: it would be clearer to get this from a SyntheticProject
-        variants = dependencyGraph.values.map { it.variant }
+        // TODO(tsr): it would be clearer to get this from a SyntheticProject
+        // TODO(tsr): this now includes the runtime graph. Maybe strip it if it's problematic here
+        sourceKinds = dependencyGraph.values.map { it.sourceKind },
       )
       val dependencyUsages = usageBuilder.dependencyUsages
       val annotationProcessorUsages = usageBuilder.annotationProcessingUsages
       val supportedSourceSets = parameters.supportedSourceSets.get()
       val explicitSourceSets = parameters.explicitSourceSets.get()
+      val isAndroidProject = parameters.android.get()
       val isKaptApplied = parameters.kapt.get()
       val directDependencies = computeDirectDependenciesMap(dependencyGraph)
+      val dependenciesToClasspaths = computeDependenciesToClasspathsMap(dependencyGraph)
 
       val ignoreKtx = parameters.ignoreKtx.get()
 
@@ -200,8 +208,10 @@ abstract class ComputeAdviceTask @Inject constructor(
         annotationProcessorUsages = annotationProcessorUsages,
         declarations = declarations,
         directDependencies = directDependencies,
+        dependenciesToClasspaths = dependenciesToClasspaths,
         supportedSourceSets = supportedSourceSets,
         explicitSourceSets = explicitSourceSets,
+        isAndroidProject = isAndroidProject,
         isKaptApplied = isKaptApplied,
       )
 
@@ -237,26 +247,53 @@ abstract class ComputeAdviceTask @Inject constructor(
 
     /**
      * Returns the set of direct (non-transitive) dependencies from [dependencyGraph], associated with the source sets
-     * ([Variant.variant][com.autonomousapps.model.declaration.Variant.variant]) they're used by.
+     * ([Variant.variant][com.autonomousapps.model.source.SourceKind]) they're related to.
      *
      * These are _direct_ dependencies that are not _declared_ because they're coming from associated classpaths. For
      * example, the `test` source set extends from the `main` source set (and also the compile and runtime classpaths).
      */
     private fun computeDirectDependenciesMap(
       dependencyGraph: Map<String, DependencyGraphView>,
-    ): SetMultimap<String, Variant> {
-      return newSetMultimap<String, Variant>().apply {
+    ): SetMultimap<String, SourceKind> {
+      return newSetMultimap<String, SourceKind>().apply {
         dependencyGraph.values.map { graphView ->
           val root = graphView.graph.root()
           graphView.graph.children(root).forEach { directDependency ->
+            // An attempt to normalize the identifier
             val identifier = if (directDependency is IncludedBuildCoordinates) {
-              // An attempt to normalize the identifier
               directDependency.resolvedProject.identifier
             } else {
-              // TODO: just identifier and not gav()?
               directDependency.identifier
             }
-            put(identifier, graphView.variant)
+
+            put(identifier, graphView.sourceKind)
+          }
+        }
+      }
+    }
+
+    /**
+     * This results in a map like:
+     * * "group:name:1.0" -> (compileClasspath, runtimeClasspath)
+     * * ":project" -> (compileClasspath)
+     *
+     * etc.
+     */
+    private fun computeDependenciesToClasspathsMap(
+      dependencyGraph: Map<String, DependencyGraphView>,
+    ): SetMultimap<String, String> {
+      return newSetMultimap<String, String>().apply {
+        dependencyGraph.values.map { graphView ->
+          graphView.graph.nodes().forEach { node ->
+            // coordinate with `StandardTransform`
+            // An attempt to normalize the identifier
+            val identifier = if (node is IncludedBuildCoordinates) {
+              node.resolvedProject.identifier
+            } else {
+              node.identifier
+            }
+
+            put(identifier, graphView.configurationName)
           }
         }
       }
@@ -298,9 +335,11 @@ internal class DependencyAdviceBuilder(
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
   private val declarations: Set<Declaration>,
-  private val directDependencies: SetMultimap<String, Variant>,
+  private val directDependencies: SetMultimap<String, SourceKind>,
+  private val dependenciesToClasspaths: SetMultimap<String, String>,
   private val supportedSourceSets: Set<String>,
   private val explicitSourceSets: Set<String>,
+  private val isAndroidProject: Boolean,
   private val isKaptApplied: Boolean,
 ) {
 
@@ -338,9 +377,11 @@ internal class DependencyAdviceBuilder(
           coordinates = coordinates,
           declarations = declarations,
           directDependencies = directDependencies,
+          dependenciesToClasspaths = dependenciesToClasspaths,
           supportedSourceSets = supportedSourceSets,
           buildPath = buildPath,
           explicitSourceSets = explicitSourceSets,
+          isAndroidProject = isAndroidProject,
         )
           .reduce(usages)
           .map { advice -> advice to coordinates }
@@ -398,9 +439,11 @@ internal class DependencyAdviceBuilder(
           coordinates = coordinates,
           declarations = declarations,
           directDependencies = emptySetMultimap(),
+          dependenciesToClasspaths = emptySetMultimap(),
           supportedSourceSets = supportedSourceSets,
           buildPath = buildPath,
           explicitSourceSets = explicitSourceSets,
+          isAndroidProject = isAndroidProject,
           isKaptApplied = isKaptApplied,
         ).reduce(usages)
       }

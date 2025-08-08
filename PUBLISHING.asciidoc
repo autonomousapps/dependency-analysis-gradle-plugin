@@ -252,8 +252,9 @@ publishing {
       if (sonatypeUsername != null && sonatypePassword != null) {
         maven {
           name = "sonatype"
+          // TODO(tsr): update URL
           val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-          val snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+          val snapshotsRepoUrl = "https://central.sonatype.com/repository/maven-snapshots/"
           url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
           credentials {
             username = sonatypeUsername
@@ -335,7 +336,7 @@ Plugin Portal, you must tell Gradle about other repositories. Do that by opening
 pluginsManagement {
   repositories {
     maven {
-      url "https://oss.sonatype.org/content/repositories/snapshots/"
+      url "https://central.sonatype.com/repository/maven-snapshots/"
     }
     gradlePluginPortal() // there by default
   }
@@ -369,7 +370,7 @@ this will now publish to the staging repository.
 It is possible to automate this process, but I haven't attempted it, yet. When I do, I will update this
 documentation.
 
-Go to https://oss.sonatype.org/ and login with your Jira credentials. Click on *Staging Repositories* on
+Go to https://central.sonatype.com/ and login with your Jira credentials. Click on *Staging Repositories* on
 the left. You should see one repo, which you just staged with that Gradle command. Click on it. Now verify
 that all the files are there as expected. In addition to all of the normal files, you should see a duplicate
 of each with the extension `.asc`, indicating they have been signed. Every file must be signed or Maven Central

@@ -2,7 +2,6 @@ package com.autonomousapps
 
 import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.services.GlobalDslService
-import com.autonomousapps.subplugin.DEPENDENCY_ANALYSIS_PLUGIN
 import org.gradle.api.Plugin
 import org.gradle.api.initialization.Settings
 
@@ -14,7 +13,7 @@ import org.gradle.api.initialization.Settings
  * }
  * ```
  */
-abstract class BuildHealthPlugin : Plugin<Settings> {
+public abstract class BuildHealthPlugin : Plugin<Settings> {
 
   internal companion object {
     const val ID = "com.autonomousapps.build-health"
@@ -36,7 +35,7 @@ abstract class BuildHealthPlugin : Plugin<Settings> {
     }
 
     gradle.lifecycle.beforeProject {
-      pluginManager.apply(DEPENDENCY_ANALYSIS_PLUGIN)
+      pluginManager.apply(DependencyAnalysisPlugin.ID)
     }
   }
 }

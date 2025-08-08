@@ -14,8 +14,10 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.UntrackedTask
 
-abstract class ProjectHealthTask : DefaultTask() {
+@UntrackedTask(because = "Always prints output")
+public abstract class ProjectHealthTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -23,17 +25,17 @@ abstract class ProjectHealthTask : DefaultTask() {
   }
 
   @get:Input
-  abstract val buildFilePath: Property<String>
+  public abstract val buildFilePath: Property<String>
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val projectAdvice: RegularFileProperty
+  public abstract val projectAdvice: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val consoleReport: RegularFileProperty
+  public abstract val consoleReport: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val consoleReport = consoleReport.get().asFile.readText()
     val projectAdvice = projectAdvice.fromJson<ProjectAdvice>()
 

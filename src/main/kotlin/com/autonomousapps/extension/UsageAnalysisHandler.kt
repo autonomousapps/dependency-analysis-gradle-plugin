@@ -19,12 +19,12 @@ import javax.inject.Inject
  * }
  * ```
  */
-abstract class UsageAnalysisHandler @Inject constructor(objects: ObjectFactory) {
+public abstract class UsageAnalysisHandler @Inject constructor(objects: ObjectFactory) {
 
   internal val checkSuperClasses = objects.property<Boolean>().convention(false)
 
   @Suppress("unused") // public API
-  fun checkSuperClasses(shouldCheck: Boolean) {
+  public fun checkSuperClasses(shouldCheck: Boolean) {
     checkSuperClasses.set(shouldCheck)
     checkSuperClasses.disallowChanges()
   }

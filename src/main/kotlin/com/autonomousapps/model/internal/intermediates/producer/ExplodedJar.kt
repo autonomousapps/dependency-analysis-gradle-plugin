@@ -12,7 +12,7 @@ import java.io.File
 
 /**
  * A library or project, along with the set of classes declared by, and other information contained within, this
- * exploded jar. This is the serialized form of [ExplodingJar].
+ * exploded jar. This is the serialized form of [ExplodingJar]. TODO(tsr): can we collapse these types?
  */
 @JsonClass(generateAdapter = false)
 internal data class ExplodedJar(
@@ -21,10 +21,9 @@ internal data class ExplodedJar(
   val jarFile: File,
 
   /**
-   * True if this dependency contains only annotation that are only needed at compile-time (`CLASS`
-   * and `SOURCE` level retention policies). False otherwise.
+   * True if this dependency contains only annotations. False otherwise.
    */
-  val isCompileOnlyAnnotations: Boolean = false,
+  val isAnnotations: Boolean = false,
   /**
    * The set of classes that are service providers (they extend [java.security.Provider]). May be
    * empty.
@@ -47,9 +46,9 @@ internal data class ExplodedJar(
    * A map of each class declared by this library to the set of constants it defines. The latter may
    * be empty for any given declared class.
    */
-  val constantFields: Map<String, Set<String>>,
+  val constants: Map<String, Set<Constant>>,
   /**
-   * All of the "Kt" files within this component.
+   * All the "Kt" files within this component.
    */
   val ktFiles: Set<KtFile>,
 ) : DependencyView<ExplodedJar> {
@@ -60,12 +59,12 @@ internal data class ExplodedJar(
   ) : this(
     coordinates = artifact.coordinates,
     jarFile = artifact.file,
-    isCompileOnlyAnnotations = exploding.isCompileOnlyCandidate,
+    isAnnotations = exploding.isCompileOnlyCandidate,
     securityProviders = exploding.securityProviders,
     androidLintRegistry = exploding.androidLintRegistry,
     isLintJar = exploding.isLintJar,
     binaryClasses = exploding.binaryClasses,
-    constantFields = exploding.constants,
+    constants = exploding.constants,
     ktFiles = exploding.ktFiles
   )
 
@@ -83,9 +82,9 @@ internal data class ExplodedJar(
 
   override fun toCapabilities(): List<Capability> {
     val capabilities = mutableListOf<Capability>()
-    capabilities += InferredCapability(isCompileOnlyAnnotations)
+    capabilities += InferredCapability(isAnnotations)
     binaryClasses.ifNotEmpty { capabilities += BinaryClassCapability.newInstance(it) }
-    constantFields.ifNotEmpty { capabilities += ConstantCapability.newInstance(it, ktFiles) }
+    constants.ifNotEmpty { capabilities += ConstantCapability.newInstance(it, ktFiles) }
     securityProviders.ifNotEmpty { capabilities += SecurityProviderCapability.newInstance(it) }
     androidLintRegistry?.let { capabilities += AndroidLinterCapability(it, isLintJar) }
     return capabilities

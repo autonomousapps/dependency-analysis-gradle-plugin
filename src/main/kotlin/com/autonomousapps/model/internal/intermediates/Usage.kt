@@ -5,22 +5,18 @@ package com.autonomousapps.model.internal.intermediates
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ModuleCoordinates
-import com.autonomousapps.model.declaration.internal.Bucket
-import com.autonomousapps.model.declaration.Variant
+import com.autonomousapps.model.internal.declaration.Bucket
+import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = false)
 internal data class Usage(
   val buildType: String?,
   val flavor: String?,
-  val variant: Variant,
+  val sourceKind: SourceKind,
   val bucket: Bucket,
   val reasons: Set<Reason>
 ) {
-
-  companion object {
-    val BY_VARIANT: Comparator<Usage> = compareBy { it.variant }
-  }
 
   /**
    * Transform the variant-specific [usages][Usage] of a specific dependency, represented by its
@@ -29,11 +25,20 @@ internal data class Usage(
   interface Transform {
     fun reduce(usages: Set<Usage>): Set<Advice>
   }
+
+  companion object {
+    val BY_VARIANT: Comparator<Usage> = compareBy { it.sourceKind }
+  }
+
+  /** @see [SourceKind.runtimeMatches] */
+  fun runtimeMatches(classpaths: Collection<String>): Boolean {
+    return sourceKind.runtimeMatches(classpaths)
+  }
 }
 
 internal class UsageBuilder(
   traces: Set<DependencyTraceReport>,
-  private val variants: Collection<Variant>
+  private val sourceKinds: Collection<SourceKind>,
 ) {
 
   val dependencyUsages: Map<Coordinates, Set<Usage>>
@@ -64,14 +69,14 @@ internal class UsageBuilder(
   // (Bucket.NONE and Reason.UNDECLARED).
   private fun addMissingVariants(map: MutableMap<Coordinates, MutableSet<Usage>>) {
     map.forEach { (_, theseUsages) ->
-      if (theseUsages.size < variants.size) {
-        variants.filterNot { variant ->
-          theseUsages.any { it.variant == variant }
+      if (theseUsages.size < sourceKinds.size) {
+        sourceKinds.filterNot { sourceKind ->
+          theseUsages.any { it.sourceKind == sourceKind }
         }.forEach { missingVariant ->
           theseUsages += Usage(
             buildType = null,
             flavor = null,
-            variant = missingVariant,
+            sourceKind = missingVariant,
             bucket = Bucket.NONE,
             reasons = setOf(Reason.Undeclared)
           )
@@ -87,7 +92,7 @@ internal class UsageBuilder(
     val usage = Usage(
       buildType = report.buildType,
       flavor = report.flavor,
-      variant = report.variant,
+      sourceKind = report.sourceKind,
       bucket = trace.bucket,
       reasons = trace.reasons
     )

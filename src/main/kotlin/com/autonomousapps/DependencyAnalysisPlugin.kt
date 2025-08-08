@@ -8,7 +8,6 @@ import com.autonomousapps.Flags.compatibility
 import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.utils.getLogger
-import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.subplugin.ProjectPlugin
 import com.autonomousapps.subplugin.RootPlugin
 import org.gradle.api.Plugin
@@ -21,7 +20,7 @@ internal const val TASK_GROUP_DEP = "dependency-analysis"
 internal val PROJECT_LOGGER: Logger = getLogger<DependencyAnalysisPlugin>()
 
 @Suppress("unused")
-class DependencyAnalysisPlugin : Plugin<Project> {
+public class DependencyAnalysisPlugin : Plugin<Project> {
 
   internal companion object {
     const val ID = "com.autonomousapps.dependency-analysis"
@@ -63,7 +62,7 @@ class DependencyAnalysisPlugin : Plugin<Project> {
       val message = "The Dependency Analysis plugin is only known to work with versions of AGP between " +
         "${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}. " +
         "Proceed at your own risk."
-      @Suppress("KotlinConstantConditions")
+
       when (compatibility) {
         Flags.Compatibility.DEBUG -> logger.debug(message)
         Flags.Compatibility.WARN -> logger.warn(message)

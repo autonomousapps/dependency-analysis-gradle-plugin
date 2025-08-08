@@ -5,6 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.extension.Behavior
 import com.autonomousapps.extension.Ignore
 import com.autonomousapps.extension.Issue
+import com.autonomousapps.extension.anyMatches
 import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.advice.SeverityHandler
 import com.autonomousapps.internal.utils.bufferWriteJson
@@ -22,7 +23,7 @@ import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 @CacheableTask
-abstract class FilterAdviceTask @Inject constructor(
+public abstract class FilterAdviceTask @Inject constructor(
   private val workerExecutor: WorkerExecutor
 ) : DefaultTask() {
 
@@ -32,48 +33,48 @@ abstract class FilterAdviceTask @Inject constructor(
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  abstract val projectAdvice: RegularFileProperty
+  public abstract val projectAdvice: RegularFileProperty
 
   @get:Input
-  abstract val dataBindingEnabled: Property<Boolean>
+  public abstract val dataBindingEnabled: Property<Boolean>
 
   @get:Input
-  abstract val viewBindingEnabled: Property<Boolean>
+  public abstract val viewBindingEnabled: Property<Boolean>
 
   @get:Input
-  abstract val anyBehavior: ListProperty<Behavior>
+  public abstract val anyBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val unusedDependenciesBehavior: ListProperty<Behavior>
+  public abstract val unusedDependenciesBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val usedTransitiveDependenciesBehavior: ListProperty<Behavior>
+  public abstract val usedTransitiveDependenciesBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val incorrectConfigurationBehavior: ListProperty<Behavior>
+  public abstract val incorrectConfigurationBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val unusedProcsBehavior: ListProperty<Behavior>
+  public abstract val unusedProcsBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val compileOnlyBehavior: ListProperty<Behavior>
+  public abstract val compileOnlyBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val runtimeOnlyBehavior: ListProperty<Behavior>
+  public abstract val runtimeOnlyBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val duplicateClassWarningsBehavior: ListProperty<Behavior>
+  public abstract val duplicateClassWarningsBehavior: ListProperty<Behavior>
 
   @get:Input
-  abstract val redundantPluginsBehavior: Property<Behavior>
+  public abstract val redundantPluginsBehavior: Property<Behavior>
 
   @get:Input
-  abstract val moduleStructureBehavior: Property<Behavior>
+  public abstract val moduleStructureBehavior: Property<Behavior>
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(FilterAdviceAction::class.java) {
       projectAdvice.set(this@FilterAdviceTask.projectAdvice)
       dataBindingEnabled.set(this@FilterAdviceTask.dataBindingEnabled)
@@ -92,24 +93,24 @@ abstract class FilterAdviceTask @Inject constructor(
     }
   }
 
-  interface FilterAdviceParameters : WorkParameters {
-    val projectAdvice: RegularFileProperty
-    val dataBindingEnabled: Property<Boolean>
-    val viewBindingEnabled: Property<Boolean>
-    val anyBehavior: ListProperty<Behavior>
-    val unusedDependenciesBehavior: ListProperty<Behavior>
-    val usedTransitiveDependenciesBehavior: ListProperty<Behavior>
-    val incorrectConfigurationBehavior: ListProperty<Behavior>
-    val unusedProcsBehavior: ListProperty<Behavior>
-    val compileOnlyBehavior: ListProperty<Behavior>
-    val runtimeOnlyBehavior: ListProperty<Behavior>
-    val duplicateClassWarningsBehavior: ListProperty<Behavior>
-    val redundantPluginsBehavior: Property<Behavior>
-    val moduleStructureBehavior: Property<Behavior>
-    val output: RegularFileProperty
+  public interface FilterAdviceParameters : WorkParameters {
+    public val projectAdvice: RegularFileProperty
+    public val dataBindingEnabled: Property<Boolean>
+    public val viewBindingEnabled: Property<Boolean>
+    public val anyBehavior: ListProperty<Behavior>
+    public val unusedDependenciesBehavior: ListProperty<Behavior>
+    public val usedTransitiveDependenciesBehavior: ListProperty<Behavior>
+    public val incorrectConfigurationBehavior: ListProperty<Behavior>
+    public val unusedProcsBehavior: ListProperty<Behavior>
+    public val compileOnlyBehavior: ListProperty<Behavior>
+    public val runtimeOnlyBehavior: ListProperty<Behavior>
+    public val duplicateClassWarningsBehavior: ListProperty<Behavior>
+    public val redundantPluginsBehavior: Property<Behavior>
+    public val moduleStructureBehavior: Property<Behavior>
+    public val output: RegularFileProperty
   }
 
-  abstract class FilterAdviceAction : WorkAction<FilterAdviceParameters> {
+  public abstract class FilterAdviceAction : WorkAction<FilterAdviceParameters> {
 
     private val dataBindingEnabled = parameters.dataBindingEnabled.get()
     private val viewBindingEnabled = parameters.viewBindingEnabled.get()
@@ -152,11 +153,11 @@ abstract class FilterAdviceTask @Inject constructor(
         .toSortedSet()
 
       val pluginAdvice: Set<PluginAdvice> = projectAdvice.pluginAdvice.asSequence()
-        .filterNot {
-          anyBehavior.first is Ignore || anyBehavior.first.filter.contains(it.redundantPlugin)
+        .filterNot { pa ->
+          anyBehavior.first is Ignore || anyBehavior.first.filter.any { it.matches(pa.redundantPlugin) }
         }
-        .filterNot {
-          redundantPluginsBehavior is Ignore || redundantPluginsBehavior.filter.contains(it.redundantPlugin)
+        .filterNot { pa ->
+          redundantPluginsBehavior is Ignore || redundantPluginsBehavior.filter.any { it.matches(pa.redundantPlugin) }
         }
         .toSortedSet()
 
@@ -209,8 +210,8 @@ abstract class FilterAdviceTask @Inject constructor(
 
       val byGlobal: (Advice) -> Boolean = { a ->
         globalBehavior is Ignore
-          || globalBehavior.filter.contains(a.coordinates.identifier)
-          || globalBehavior.filter.contains(a.coordinates.gav())
+          || globalBehavior.filter.anyMatches(a.coordinates.identifier)
+          || globalBehavior.filter.anyMatches(a.coordinates.gav())
       }
 
       val bySourceSets: (Advice) -> Boolean = { a ->
@@ -225,8 +226,8 @@ abstract class FilterAdviceTask @Inject constructor(
         // reduce() will fail on an empty collection, so use reduceOrNull().
         behaviors.map {
           it is Ignore
-            || it.filter.contains(a.coordinates.identifier)
-            || it.filter.contains(a.coordinates.gav())
+            || it.filter.anyMatches(a.coordinates.identifier)
+            || it.filter.anyMatches(a.coordinates.gav())
         }.reduceOrNull { acc, b ->
           acc || b
         } ?: false
@@ -283,8 +284,8 @@ abstract class FilterAdviceTask @Inject constructor(
     }
   }
 
-  companion object {
-    private val databindingDependencies = listOf(
+  private companion object {
+    val databindingDependencies = listOf(
       "androidx.databinding:databinding-adapters",
       "androidx.databinding:databinding-runtime",
       "androidx.databinding:databinding-common",
@@ -292,7 +293,7 @@ abstract class FilterAdviceTask @Inject constructor(
       "androidx.databinding:databinding-ktx"
     )
 
-    private val viewBindingDependencies = listOf(
+    val viewBindingDependencies = listOf(
       "androidx.databinding:viewbinding"
     )
   }

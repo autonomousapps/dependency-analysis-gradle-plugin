@@ -5,7 +5,7 @@ package com.autonomousapps.model.internal.intermediates.producer
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.efficient
 import com.squareup.moshi.JsonClass
-import java.util.SortedSet
+import java.util.*
 
 /**
  * Represents a class parsed from bytecode (see `asm.kt`). Includes the [className], the [superClassName] (may be

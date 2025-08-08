@@ -9,9 +9,9 @@ import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toIdentifiers
 import com.autonomousapps.model.GradleVariantIdentification
-import com.autonomousapps.model.declaration.internal.Configurations.isForAnnotationProcessor
-import com.autonomousapps.model.declaration.internal.Configurations.isForRegularDependency
-import com.autonomousapps.model.declaration.internal.Declaration
+import com.autonomousapps.model.internal.declaration.Configurations.isForAnnotationProcessor
+import com.autonomousapps.model.internal.declaration.Configurations.isForRegularDependency
+import com.autonomousapps.model.internal.declaration.Declaration
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -22,32 +22,32 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
 
 @CacheableTask
-abstract class FindDeclarationsTask : DefaultTask() {
+public abstract class FindDeclarationsTask : DefaultTask() {
 
   init {
     description = "Produces a report of all dependencies and the configurations on which they are declared"
   }
 
   @get:Input
-  abstract val projectPath: Property<String>
+  public abstract val projectPath: Property<String>
 
   @get:Input
-  abstract val shouldAnalyzeTest: Property<Boolean>
+  public abstract val shouldAnalyzeTest: Property<Boolean>
 
   @get:Nested
-  abstract val declarationContainer: Property<DeclarationContainer>
+  public abstract val declarationContainer: Property<DeclarationContainer>
 
   @get:OutputFile
-  abstract val output: RegularFileProperty
+  public abstract val output: RegularFileProperty
 
-  @TaskAction fun action() {
+  @TaskAction public fun action() {
     val output = output.getAndDelete()
     val declarations = Locator(declarationContainer.get()).declarations()
     output.bufferWriteJsonSet(declarations)
   }
 
-  companion object {
-    internal fun configureTask(
+  internal companion object {
+    fun configureTask(
       task: FindDeclarationsTask,
       project: Project,
       outputPaths: NoVariantOutputPaths
@@ -88,13 +88,13 @@ abstract class FindDeclarationsTask : DefaultTask() {
     }
   }
 
-  class DeclarationContainer(
+  public class DeclarationContainer(
     @get:Input
-    val mapping: Map<String, Set<Pair<ModuleInfo, GradleVariantIdentification>>>
+    public val mapping: Map<String, Set<Pair<ModuleInfo, GradleVariantIdentification>>>
   ) {
 
-    companion object {
-      internal fun of(
+    internal companion object {
+      fun of(
         mapping: Map<String, Set<Pair<ModuleInfo, GradleVariantIdentification>>>
       ): DeclarationContainer {
         // We sort the map so that the task input property is consistent in different environments

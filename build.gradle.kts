@@ -1,18 +1,15 @@
 // Copyright (c) 2024. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-@file:Suppress("UnstableApiUsage", "HasPlatformType", "PropertyName")
-
 plugins {
-  id("java-gradle-plugin")
-  id("com.gradle.plugin-publish")
+  id("build-logic.plugin")
   `kotlin-dsl`
   id("groovy")
-  id("convention")
-  alias(libs.plugins.dependencyAnalysis)
-  id("com.autonomousapps.testkit")
+  alias(libs.plugins.gradlePublishPlugin)
+  alias(libs.plugins.dokka)
 }
 
 // This version string comes from gradle.properties
+@Suppress("PropertyName")
 val VERSION: String by project
 version = VERSION
 
@@ -26,10 +23,6 @@ dagp {
     description.set("Analyzes dependency usage in Android and JVM projects")
     inceptionYear.set("2019")
   }
-  publishTaskDescription(
-    "Publishes plugin marker and plugin artifacts to Maven Central " +
-      "(${if (version.toString().endsWith("SNAPSHOT")) "snapshots" else "staging"})"
-  )
 }
 
 // For publishing to the Gradle Plugin Portal
@@ -74,7 +67,7 @@ sourceSets {
 }
 
 // Add a source set for the functional test suite. This must come _above_ the `dependencies` block.
-val functionalTestSourceSet = sourceSets.maybeCreate("functionalTest").apply {
+sourceSets.maybeCreate("functionalTest").apply {
   compileClasspath += main.output + configurations["testRuntimeClasspath"] + commonTest.output
   runtimeClasspath += output + compileClasspath
 }
@@ -82,7 +75,6 @@ val functionalTestSourceSet = sourceSets.maybeCreate("functionalTest").apply {
 val functionalTestImplementation = configurations
   .getByName("functionalTestImplementation")
   .extendsFrom(configurations.getByName("testImplementation"))
-val functionalTestApi = configurations.getByName("functionalTestApi")
 
 val compileFunctionalTestKotlin = tasks.named("compileFunctionalTestKotlin")
 tasks.named<AbstractCompile>("compileFunctionalTestGroovy") {
@@ -112,14 +104,17 @@ dependencies {
   api(libs.moshix.sealed.runtime)
 
   implementation(project(":graph-support"))
+  implementation(project(":variant-artifacts"))
   implementation(libs.guava)
   implementation(libs.kotlin.stdlib.jdk8)
   implementation(libs.kotlin.editor.relocated)
-  // implementation(libs.kryo5)
   implementation(libs.moshi.kotlin)
   implementation(libs.moshix.sealed.reflect)
   implementation(libs.okio)
-  implementation(libs.kotlin.metadata.jvm)
+  implementation(libs.kotlin.metadata.jvm) {
+    // Trying to get support for analyzing K2.2 projects without bumping our stdlib
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+  }
   implementation(libs.caffeine) {
     because("High performance, concurrent cache")
   }
@@ -148,16 +143,14 @@ dependencies {
   testImplementation(libs.junit.api)
   testImplementation(libs.junit.params)
   testImplementation(libs.truth)
+
   testRuntimeOnly(libs.junit.engine)
+  testRuntimeOnly(libs.junit.launcher)
+
+  functionalTestImplementation(libs.jspecify)
 
   smokeTestImplementation(libs.commons.io) {
     because("For FileUtils.deleteDirectory()")
-  }
-}
-
-fun shadowed(): Action<ExternalModuleDependency> = Action {
-  attributes {
-    attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.SHADOWED))
   }
 }
 
@@ -201,6 +194,11 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
     "jvm" -> {
       include("com/autonomousapps/jvm/**")
 
+      // We advertise that we support Java 11
+      javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(11))
+      })
+
       "Run JVM tests"
     }
 
@@ -230,7 +228,7 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
   }
 }
 
-val quickFunctionalTest by tasks.registering {
+tasks.register("quickFunctionalTest") {
   dependsOn(functionalTest)
   System.setProperty("funcTest.quick", "true")
 }
@@ -238,7 +236,7 @@ val quickFunctionalTest by tasks.registering {
 val smokeTestVersionKey = "com.autonomousapps.version"
 val smokeTestVersion: String = System.getProperty(smokeTestVersionKey, latestRelease())
 
-val smokeTest by tasks.registering(Test::class) {
+val smokeTest = tasks.register<Test>("smokeTest") {
   mustRunAfter(tasks.named("test"), functionalTest)
 
   description = "Runs the smoke tests."
@@ -279,18 +277,18 @@ fun latestRelease(): String {
 val check = tasks.named("check")
 
 val publishToMavenCentral = tasks.named("publishToMavenCentral") {
-  // Note that publishing a release requires a successful smokeTest
-  if (isRelease) {
-    dependsOn(check, smokeTest)
-  }
+  configureForRelease()
 }
 
 val publishToPluginPortal = tasks.named("publishPlugins") {
   // Can't publish snapshots to the portal
-  onlyIf { isRelease }
+  onlyIf("only publish releases to the plugin portal") { isRelease }
   shouldRunAfter(publishToMavenCentral)
 
-  // Note that publishing a release requires a successful smokeTest
+  configureForRelease()
+}
+
+fun Task.configureForRelease() {
   if (isRelease) {
     dependsOn(check, smokeTest)
   }
@@ -303,6 +301,25 @@ tasks.register("publishEverywhere") {
   description = "Publishes to Plugin Portal and Maven Central"
 }
 
+// see also `pubLocal` in testkit/build.gradle.kts
+tasks.register("pubLocal") {
+  group = "publishing"
+  description = "Publish all local artifacts to maven local"
+
+  val tasks = allprojects
+    .map { p -> p.path }
+    .map { path ->
+      if (path == ":") {
+        ":publishToMavenLocal"
+      } else {
+        "$path:publishToMavenLocal"
+      }
+    }
+
+  dependsOn(tasks)
+  dependsOn(gradle.includedBuild("testkit").task(":pubLocal"))
+}
+
 tasks.withType<GroovyCompile>().configureEach {
   options.isIncremental = true
 }
@@ -310,7 +327,7 @@ tasks.withType<GroovyCompile>().configureEach {
 // TODO(tsr): gzip. also register this task in ProjectPlugin
 // To run:
 // ```
-// ./gradlew :readFile --input path/to/gzipped-file
+// ./gradlew :gunzip --file path/to/gzipped-file
 // ```
 tasks.register<com.autonomousapps.convention.tasks.GunzipTask>("gunzip") {
   runtimeClasspath.setFrom(sourceSets.main.map { it.runtimeClasspath })
@@ -319,6 +336,9 @@ tasks.register<com.autonomousapps.convention.tasks.GunzipTask>("gunzip") {
 }
 
 dependencyAnalysis {
+  reporting {
+    printBuildHealth(true)
+  }
   structure {
     bundle("agp") {
       primary("com.android.tools.build:gradle")
@@ -336,7 +356,6 @@ dependencyAnalysis {
       includeDependency("org.checkerframework:checker-qual")
     }
   }
-
   abi {
     exclusions {
       excludeSourceSets(
@@ -345,7 +364,6 @@ dependencyAnalysis {
       )
     }
   }
-
   issues {
     all {
       onAny {

@@ -6,7 +6,7 @@ import com.autonomousapps.internal.utils.reallyAll
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = false)
-data class BuildHealth(
+public data class BuildHealth(
   val projectAdvice: Set<ProjectAdvice>,
   val shouldFail: Boolean,
   val projectCount: Int,
@@ -20,11 +20,11 @@ data class BuildHealth(
 ) {
 
   @JsonClass(generateAdapter = false)
-  data class AndroidScoreMetrics(
+  public data class AndroidScoreMetrics(
     val shouldBeJvmCount: Int,
     val couldBeJvmCount: Int,
   ) {
-    class Builder {
+    internal class Builder {
       var shouldBeJvmCount: Int = 0
       var couldBeJvmCount: Int = 0
 
@@ -36,5 +36,5 @@ data class BuildHealth(
   }
 
   /** Returns true if all `projectAdvice` [is empty][ProjectAdvice.isEmpty] or contains only warnings. */
-  fun isEmptyOrWarningOnly(): Boolean = projectAdvice.reallyAll { it.isEmptyOrWarningOnly() }
+  public fun isEmptyOrWarningOnly(): Boolean = projectAdvice.reallyAll { it.isEmptyOrWarningOnly() }
 }

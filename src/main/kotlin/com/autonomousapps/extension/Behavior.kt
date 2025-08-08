@@ -4,9 +4,9 @@ package com.autonomousapps.extension
 
 import java.io.Serializable
 
-sealed class Behavior(
-  val filter: Set<String> = setOf(),
-  val sourceSetName: String = Issue.ALL_SOURCE_SETS
+public sealed class Behavior(
+  public val filter: Set<Exclusion> = setOf(),
+  public val sourceSetName: String = Issue.ALL_SOURCE_SETS
 ) : Serializable, Comparable<Behavior> {
 
   /**
@@ -43,30 +43,30 @@ sealed class Behavior(
   }
 }
 
-class Fail(
-  filter: Set<String> = mutableSetOf(),
+public class Fail(
+  filter: Set<Exclusion> = mutableSetOf(),
   sourceSetName: String = Issue.ALL_SOURCE_SETS
 ) : Behavior(
   filter = filter,
   sourceSetName = sourceSetName
 )
 
-class Warn(
-  filter: Set<String> = mutableSetOf(),
+public class Warn(
+  filter: Set<Exclusion> = mutableSetOf(),
   sourceSetName: String = Issue.ALL_SOURCE_SETS
 ) : Behavior(
   filter = filter,
   sourceSetName = sourceSetName
 )
 
-class Ignore(
+public class Ignore(
   sourceSetName: String = Issue.ALL_SOURCE_SETS
 ) : Behavior(
   sourceSetName = sourceSetName
 )
 
-class Undefined(
-  filter: Set<String> = mutableSetOf(),
+public class Undefined(
+  filter: Set<Exclusion> = mutableSetOf(),
   sourceSetName: String = Issue.ALL_SOURCE_SETS
 ) : Behavior(
   filter = filter,
