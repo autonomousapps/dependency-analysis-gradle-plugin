@@ -28,4 +28,12 @@ class AttrRefTest {
     )
   }
 
+  @Test
+  fun `theme with period is parsed as an AttrRef`() {
+    assertEquals(
+      AttrRef(type = "style", id = "AppTheme_Dot"),
+      from("android:theme" to "@style/AppTheme.Dot"),
+    )
+  }
+
 }

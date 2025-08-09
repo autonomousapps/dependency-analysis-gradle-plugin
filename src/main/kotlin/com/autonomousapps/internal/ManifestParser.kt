@@ -3,10 +3,11 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.utils.buildDocument
+import com.autonomousapps.internal.utils.document.attrs
 import com.autonomousapps.internal.utils.document.mapToSet
+import com.autonomousapps.model.internal.AndroidResSource
 import org.w3c.dom.Document
 import org.w3c.dom.Element
-import org.w3c.dom.Node
 import java.io.File
 
 internal class ManifestParser(
@@ -18,8 +19,8 @@ internal class ManifestParser(
     val packageName: String,
     /** The value of the `android:name` attribute. May be empty. */
     val applicationName: String,
-    /** The values of the `android:theme` attributes of application and activities. May be empty. */
-    val themes: Set<String>,
+    /** The resource references (e.g. activity themes, meta-data values, etc.). May be empty. */
+    val attrRefs: Set<AndroidResSource.AttrRef>,
     val components: Map<String, Set<String>>
   )
 
@@ -33,9 +34,6 @@ internal class ManifestParser(
     val packageName = packageName(manifest, document)
     val application = application(document)
     val applicationName = application?.getAttribute("android:name") ?: ""
-
-    val applicationTheme = application?.theme()
-    val activityThemes = application?.getElementsByTagName(Manifest.Component.ACTIVITY.tagName)?.mapToSet { it.theme() }?.filterNotNull() ?: emptySet()
 
     val services = application?.componentNames(Manifest.Component.SERVICE, packageName) ?: emptySet()
     val providers = application?.componentNames(Manifest.Component.PROVIDER, packageName) ?: emptySet()
@@ -53,10 +51,12 @@ internal class ManifestParser(
       if (receivers.isNotEmpty()) componentsMapping[Manifest.Component.RECEIVER.mapKey] = receivers
     }
 
+    val attrRefs = document.attrs().mapNotNull(AndroidResSource.AttrRef::from).toSet()
+
     return ParseResult(
       packageName = packageName,
       applicationName = applicationName,
-      themes = setOfNotNull(applicationTheme) + activityThemes,
+      attrRefs = attrRefs,
       components = componentsMapping
     )
   }
@@ -91,11 +91,6 @@ internal class ManifestParser(
         }
       }
     }
-  }
-
-  private fun Node.theme(): String? {
-    return attributes?.getNamedItem("android:theme")
-      ?.nodeValue?.substringAfter("@style/")
   }
 
   private fun Element.componentNames(

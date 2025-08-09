@@ -3,7 +3,9 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.ManifestParser.ManifestParseException
+import com.autonomousapps.model.internal.AndroidResSource.AttrRef
 import com.google.common.truth.Truth.assertThat
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -150,26 +152,60 @@ class ManifestParserTest {
     assertThat(manifest.applicationName).isEqualTo("mutual.aid.explode")
   }
 
-  @Test fun `parse themes`() {
+  @Test fun `parse resource references`() {
     val manifest = parse(
       manifest = """
         <?xml version="1.0" encoding="utf-8"?>
-        <manifest
-          xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools" >
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools">
         
-          <application android:theme="@style/TheEternalVoid">
-            <activity android:name=".MainActivity" android:theme="@style/TheTwistedLand"/>
-          </application>
+            <application android:icon="@mipmap/ic_launcher" android:label="@string/app_name"
+                android:networkSecurityConfig="@xml/network_security_config"
+                android:theme="@style/TheEternalVoid">
+                <activity android:name=".MainActivity" android:theme="@style/TheTwistedLand">
+                    <intent-filter android:autoVerify="true">
+                        <action android:name="android.intent.action.VIEW" />
+                        <category android:name="android.intent.category.DEFAULT" />
+                        <category android:name="android.intent.category.BROWSABLE" />
+                        <data android:scheme="https" />
+                        <data android:host="@string/deeplink_host" />
+                        <data android:path="@string/deeplink_path" />
+                    </intent-filter>
+                </activity>
+                <provider android:name="androidx.startup.InitializationProvider"
+                    android:authorities="${'$'}{applicationId}.androidx-startup"
+                    android:exported="false" tools:node="merge">
+                    <meta-data android:name="com.app.MyInitializer"
+                        android:value="@string/androidx_startup" />
+                </provider>
+                <meta-data android:name="com.google.android.geo.API_KEY"
+                    android:value="@string/google_maps_api_key" />
+                <meta-data android:name="com.google.android.gms.version"
+                    android:value="@integer/google_play_services_version" />
+                <meta-data android:name="google_analytics_default_allow_analytics_storage"
+                    android:value="@bool/google_analytics_enabled" />
+            </application>
         </manifest>
       """.trimIndent(),
       dslNamespace = "com.app"
     )
 
-    assertThat(manifest.themes).isEqualTo(setOf("TheEternalVoid", "TheTwistedLand"))
+    assertThat(manifest.attrRefs).containsExactly(
+      AttrRef(type = "mipmap", id = "ic_launcher"),
+      AttrRef(type = "string", id = "app_name"),
+      AttrRef(type = "xml", id = "network_security_config"),
+      AttrRef(type = "style", id = "TheEternalVoid"),
+      AttrRef(type = "style", id = "TheTwistedLand"),
+      AttrRef(type = "string", id = "deeplink_host"),
+      AttrRef(type = "string", id = "deeplink_path"),
+      AttrRef(type = "string", id = "androidx_startup"),
+      AttrRef(type = "string", id = "google_maps_api_key"),
+      AttrRef(type = "integer", id = "google_play_services_version"),
+      AttrRef(type = "bool", id = "google_analytics_enabled"),
+    )
   }
 
-  private fun parse(manifest: String, dslNamespace: String = ""): ManifestParser.ParseResult {
+  private fun parse(@Language("XML") manifest: String, dslNamespace: String = ""): ManifestParser.ParseResult {
     val file = tempFolder.resolve("AndroidManifest.xml").toFile()
     file.writeText(manifest)
     return ManifestParser(dslNamespace).parse(file)
