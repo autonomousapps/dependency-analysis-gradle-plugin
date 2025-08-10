@@ -29,6 +29,8 @@ abstract class AbstractProject extends AbstractGradleProject {
   /** Applies the 'java', 'application', and 'com.autonomousapps.dependency-analysis' plugins. */
   protected static final List<Plugin> javaApp = [Plugin.java, Plugin.application, Plugins.dependencyAnalysisNoVersion]
 
+  protected static final Plugin javaTestFixtures = Plugins.javaTestFixtures
+
   protected final DependencyProvider dependencies
   protected final PluginProvider plugins
 

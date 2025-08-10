@@ -1,16 +1,12 @@
-// Copyright (c) 2024. Tony Robalik.
+// Copyright (c) 2025. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-package com.autonomousapps.transform
+package com.autonomousapps.internal.transform
 
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.Advice
-import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.*
 import com.autonomousapps.model.Coordinates.Companion.copy
-import com.autonomousapps.model.FlatCoordinates
-import com.autonomousapps.model.IncludedBuildCoordinates
-import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.Reason
@@ -35,6 +31,11 @@ internal class StandardTransform(
   private val isAndroidProject: Boolean,
   private val isKaptApplied: Boolean = false,
 ) : Usage.Transform {
+
+  private val mapper = UsageToConfigurationMapper(
+    isKaptApplied = isKaptApplied,
+    isAndroidProject = isAndroidProject,
+  )
 
   override fun reduce(usages: Set<Usage>): Set<Advice> {
     val advice = mutableSetOf<Advice>()
@@ -197,7 +198,7 @@ internal class StandardTransform(
             advice += Advice.ofChange(
               coordinates = declarationCoordinates(decl),
               fromConfiguration = decl.configurationName,
-              toConfiguration = usage.toConfiguration()
+              toConfiguration = mapper.toConfiguration(usage)
             )
           }
         }
@@ -225,7 +226,7 @@ internal class StandardTransform(
               advice += Advice.ofChange(
                 coordinates = declarationCoordinates(theDecl),
                 fromConfiguration = theDecl.configurationName,
-                toConfiguration = usage.toConfiguration()
+                toConfiguration = mapper.toConfiguration(usage)
               )
             }
           }
@@ -244,7 +245,8 @@ internal class StandardTransform(
         advice += Advice.ofChange(
           coordinates = declarationCoordinates(lastDeclaration),
           fromConfiguration = lastDeclaration.configurationName,
-          toConfiguration = lastUsage.toConfiguration(
+          toConfiguration = mapper.toConfiguration(
+            usage = lastUsage,
             forcedKind = lastDeclaration.findSourceKind(hasCustomSourceSets)
           )
         )
@@ -291,7 +293,7 @@ internal class StandardTransform(
           } else {
             coordinates
           }
-        Advice.ofAdd(preferredCoordinatesNotation.withoutDefaultCapability(), usage.toConfiguration())
+        Advice.ofAdd(preferredCoordinatesNotation.withoutDefaultCapability(), mapper.toConfiguration(usage))
       }
 
     // Any remaining declarations should be removed
@@ -382,7 +384,7 @@ internal class StandardTransform(
   }
 
   /**
-   * We don't want to be forced to redeclare dependencies in related source sets. Consider (pseudo-code):
+   * We don't want to be forced to redeclare dependencies in related source sets. Consider (pseudocode):
    * ```
    * // build.gradle
    * sourceSets.functionalTest.extendsFrom sourceSets.test
@@ -437,64 +439,6 @@ internal class StandardTransform(
     if (!DependencyScope.isTestRelated(sourceSetName)) return advice
 
     return advice.copy(toConfiguration = "${sourceSetName}Implementation")
-  }
-
-  /** e.g., "debug" + "implementation" -> "debugImplementation" */
-  private fun Usage.toConfiguration(forcedKind: SourceKind? = null): String {
-    check(bucket != Bucket.NONE) { "You cannot 'declare' an unused dependency" }
-
-    fun processor() = if (isKaptApplied) "kapt" else "annotationProcessor"
-
-    fun SourceKind.configurationNamePrefix(): String = when (kind) {
-      SourceKind.MAIN_KIND -> name
-      SourceKind.TEST_KIND -> SourceKind.TEST_NAME
-      SourceKind.ANDROID_TEST_FIXTURES_KIND -> "testFixtures"
-      SourceKind.ANDROID_TEST_KIND -> SourceKind.ANDROID_TEST_NAME
-      SourceKind.CUSTOM_JVM_KIND -> name
-      else -> error("Unexpected kind: $kind")
-    }
-
-    fun SourceKind.configurationNameSuffix(): String = when (kind) {
-      SourceKind.MAIN_KIND -> name.replaceFirstChar(Char::uppercase)
-      SourceKind.TEST_KIND -> "Test"
-      SourceKind.ANDROID_TEST_FIXTURES_KIND -> "TestFixtures"
-      SourceKind.ANDROID_TEST_KIND -> "AndroidTest"
-      SourceKind.CUSTOM_JVM_KIND -> name.replaceFirstChar(Char::uppercase)
-      else -> error("Unexpected kind: $kind")
-    }
-
-    val theSourceKind = forcedKind ?: sourceKind
-
-    if (bucket == Bucket.ANNOTATION_PROCESSOR) {
-      val original = processor()
-      return if (theSourceKind.name == SourceKind.MAIN_NAME) {
-        // "main" + "annotationProcessor" -> "annotationProcessor"
-        // "main" + "kapt" -> "kapt"
-        when (original) {
-          "annotationProcessor" -> "annotationProcessor"
-          "kapt" -> "kapt"
-          else -> throw IllegalArgumentException("Unknown annotation processor: $original")
-        }
-      } else {
-        // "debug" + "annotationProcessor" -> "debugAnnotationProcessor"
-        // "test" + "kapt" -> "kaptTest"
-        when (original) {
-          "annotationProcessor" -> "${theSourceKind.configurationNamePrefix()}AnnotationProcessor"
-          "kapt" -> "kapt${theSourceKind.configurationNameSuffix()}"
-          else -> throw IllegalArgumentException("Unknown annotation processor: $original")
-        }
-      }
-    }
-
-    // not an annotation processor
-    return if (theSourceKind.name == SourceKind.MAIN_NAME && theSourceKind.kind == SourceKind.MAIN_KIND) {
-      // "main" + "api" -> "api"
-      bucket.value
-    } else {
-      // "debug" + "implementation" -> "debugImplementation"
-      // "test" + "implementation" -> "testImplementation"
-      "${theSourceKind.configurationNamePrefix()}${bucket.value.capitalizeSafely()}"
-    }
   }
 }
 

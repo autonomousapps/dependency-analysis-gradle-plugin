@@ -101,6 +101,7 @@ public class AndroidManifest(public val content: String) {
     @JvmField
     public val DEFAULT_APP: AndroidManifest = app(null)
 
+    // TODO: stop using package
     @JvmStatic
     public fun defaultLib(packageName: String): AndroidManifest = AndroidManifest(
       """

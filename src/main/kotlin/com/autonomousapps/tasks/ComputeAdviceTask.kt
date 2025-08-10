@@ -15,7 +15,7 @@ import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.*
 import com.autonomousapps.model.source.SourceKind
-import com.autonomousapps.transform.StandardTransform
+import com.autonomousapps.internal.transform.StandardTransform
 import com.google.common.collect.SetMultimap
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile

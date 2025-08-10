@@ -47,6 +47,17 @@ abstract class AbstractVariantProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withRootProject { root ->
         root.gradleProperties = properties
+        root.withBuildScript { bs ->
+          bs.withGroovy(
+            '''\
+            dependencyAnalysis {
+              reporting {
+                printBuildHealth(true)
+              }
+            }
+            '''.stripIndent()
+          )
+        }
       }
       .withAndroidSubproject('app') { a ->
         a.sources = sources
