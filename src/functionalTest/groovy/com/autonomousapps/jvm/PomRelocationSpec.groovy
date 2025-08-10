@@ -7,7 +7,7 @@ import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
 /**
- * See also discussion in {@link com.autonomousapps.transform.StandardTransform#computeAdvice} function. There we
+ * See also discussion in {@link com.autonomousapps.internal.transform.StandardTransform#computeAdvice} function. There we
  * deliberately strip possible advice to declare {@code runtimeOnly} dependencies that are in the transitive graph.
  * Doing that would likely be disruptive, so a more targeted approach is to try to find some direct way of supporting
  * {@code relocation}s in a .pom file.

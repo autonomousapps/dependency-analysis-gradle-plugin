@@ -17,6 +17,11 @@ public data class GradleVariantIdentification(
     internal const val ENFORCED_PLATFORM = "-enforced-platform"
     internal const val PLATFORM = "-platform"
     internal const val TEST_FIXTURES = "-test-fixtures"
+
+    @JvmStatic
+    public fun ofCapabilities(vararg capabilities: String): GradleVariantIdentification {
+      return GradleVariantIdentification(capabilities.toSet(), emptyMap())
+    }
   }
 
   override fun compareTo(other: GradleVariantIdentification): Int {
