@@ -3,19 +3,13 @@
 build/
 out/
 .idea/
+
 *.iml
-*~
-*.hprof
+
 # sometimes antlr barfs, and I don't want to add those files by accident
 src/main/gen/
-# common in android projects
-local.properties
 
-#macos bs
+# macos bs
 .DS_STORE
 
-.bash_history
 *.salive
-
-# kotlin 2 makes a temp dir in gradle build root directories.
-.kotlin/
