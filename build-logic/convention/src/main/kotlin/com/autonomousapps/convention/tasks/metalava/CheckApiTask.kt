@@ -125,7 +125,7 @@ public abstract class CheckApiTask @Inject constructor(
       } else {
         val msg = """
             API changed! Run `./gradlew ${updateApi()}` and then commit the changes. For backwards-incompatible
-            changes, be sure to update the major version.
+            changes, be sure to update the major version. DO NOT USE JDK 24.
           """.trimIndent().wrapInStars(margin = 1)
 
         try {
