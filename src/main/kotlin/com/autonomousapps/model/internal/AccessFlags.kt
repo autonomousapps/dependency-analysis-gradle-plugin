@@ -1,11 +1,5 @@
-/*
- * Copyright 2010-2018 JetBrains s.r.o. and Kotlin Programming Language contributors.
- * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
- *
- * Copied from https://github.com/JetBrains/kotlin/tree/master/libraries/tools/binary-compatibility-validator
- *
- * nb: this code used to live in asmUtils.kt but was moved here to clarify new usages.
- */
+// Copyright (c) 2025. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal
 
 import com.autonomousapps.internal.asm.Opcodes
