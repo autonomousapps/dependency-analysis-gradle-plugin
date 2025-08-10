@@ -2,7 +2,8 @@
 .kotlin/
 build/
 out/
-.idea/
+.idea/*
+!.idea/copyright
 
 *.iml
 
