@@ -163,29 +163,8 @@ internal fun RegularFileProperty.readText(): String = get().asFile.readText()
 
 private fun File.bufferRead(): BufferedSource = source().buffer()
 
-/**
- * TODO: Replace this with
- *  `String.replaceFirstChar(Char::uppercase)`
- *
- * copied from StringsJVM.kt
- */
-@Deprecated("Replace with `String.replaceFirstChar(Char::uppercase)`")
-internal fun String.capitalizeSafely(locale: Locale = Locale.ROOT): String {
-  if (isNotEmpty()) {
-    val firstChar = this[0]
-    if (firstChar.isLowerCase()) {
-      return buildString {
-        val titleChar = firstChar.titlecaseChar()
-        if (titleChar != firstChar.uppercaseChar()) {
-          append(titleChar)
-        } else {
-          append(this@capitalizeSafely.substring(0, 1).uppercase(locale))
-        }
-        append(this@capitalizeSafely.substring(1))
-      }
-    }
-  }
-  return this
+internal fun String.capitalizeSafely(): String {
+  return replaceFirstChar(Char::uppercase)
 }
 
 // copied from StringsJVM.kt
