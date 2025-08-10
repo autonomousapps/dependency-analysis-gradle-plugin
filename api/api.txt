@@ -399,6 +399,7 @@ package com.autonomousapps.model {
     method public com.autonomousapps.model.GradleVariantIdentification copy(java.util.Set<java.lang.String> capabilities, java.util.Map<java.lang.String,java.lang.String> attributes);
     method public java.util.Map<java.lang.String,java.lang.String> getAttributes();
     method public java.util.Set<java.lang.String> getCapabilities();
+    method public static com.autonomousapps.model.GradleVariantIdentification ofCapabilities(java.lang.String... capabilities);
     property public final java.util.Map<java.lang.String,java.lang.String> attributes;
     property public final java.util.Set<java.lang.String> capabilities;
     field public static final com.autonomousapps.model.GradleVariantIdentification.Companion Companion;
@@ -406,6 +407,7 @@ package com.autonomousapps.model {
 
   public static final class GradleVariantIdentification.Companion {
     method public com.autonomousapps.model.GradleVariantIdentification getEMPTY();
+    method public com.autonomousapps.model.GradleVariantIdentification ofCapabilities(java.lang.String... capabilities);
     property public final com.autonomousapps.model.GradleVariantIdentification EMPTY;
   }
 
@@ -565,12 +567,12 @@ package com.autonomousapps.model.source {
     property public abstract String name;
     property public abstract String runtimeClasspathName;
     field public static final String ANDROID_TEST_FIXTURES_KIND = "ANDROID_TEST_FIXTURES";
-    field public static final String ANDROID_TEST_FIXTURES_NAME = "testFixtures";
     field public static final String ANDROID_TEST_KIND = "ANDROID_TEST";
     field public static final String ANDROID_TEST_NAME = "androidTest";
     field public static final String CUSTOM_JVM_KIND = "CUSTOM_JVM";
     field public static final String MAIN_KIND = "MAIN";
     field public static final String MAIN_NAME = "main";
+    field public static final String TEST_FIXTURES_NAME = "testFixtures";
     field public static final String TEST_KIND = "TEST";
     field public static final String TEST_NAME = "test";
   }
