@@ -19,7 +19,7 @@ internal class AdviceFinder(
     val identifier = reversedDependencyMap(rawIdentifier)
     
     // Handle type-safe project accessors (e.g., "projects.myModule" -> ":my-module")
-    val normalizedIdentifier = normalizeTypeSafeProjectAccessor(identifier)
+    val normalizedIdentifier = TypeSafeAccessorUtils.normalizeTypeSafeProjectAccessor(identifier)
 
     return advice.find {
       // First match on GAV/identifier
@@ -63,7 +63,7 @@ internal class AdviceFinder(
     return when (dependencyDeclaration.type) {
       DependencyDeclaration.Type.MODULE -> {
         // Check if this coordinates is actually a project but was parsed as module due to type-safe accessor
-        if (coordinates is ProjectCoordinates && isTypeSafeProjectAccessor(rawIdentifier)) {
+        if (coordinates is ProjectCoordinates && TypeSafeAccessorUtils.isTypeSafeProjectAccessor(rawIdentifier)) {
           true
         } else {
           coordinates is ModuleCoordinates
@@ -97,33 +97,5 @@ internal class AdviceFinder(
     }
   }
 
-  /**
-   * Converts type-safe project accessor patterns to canonical project paths.
-   * E.g., "projects.myModule" -> ":my-module"
-   *       "projects.nested.subModule" -> ":nested:sub-module"
-   */
-  private fun normalizeTypeSafeProjectAccessor(identifier: String): String {
-    if (!isTypeSafeProjectAccessor(identifier)) {
-      return identifier
-    }
 
-    // Remove "projects" prefix and convert camelCase to kebab-case project path
-    val projectPath = identifier.removePrefix("projects")
-      .split('.')
-      .joinToString(":") { segment ->
-        // Convert camelCase to kebab-case
-        segment.replace(Regex("([a-z0-9])([A-Z])")) { matchResult ->
-          "${matchResult.groupValues[1]}-${matchResult.groupValues[2].lowercase()}"
-        }
-      }
-
-    return if (projectPath.startsWith(":")) projectPath else ":$projectPath"
-  }
-
-  /**
-   * Checks if the given identifier is a type-safe project accessor pattern.
-   */
-  private fun isTypeSafeProjectAccessor(identifier: String): Boolean {
-    return identifier.startsWith("projects.") || identifier == "projects"
-  }
 }
