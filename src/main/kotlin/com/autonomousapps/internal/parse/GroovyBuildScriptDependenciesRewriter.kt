@@ -178,8 +178,8 @@ internal class GroovyBuildScriptDependenciesRewriter private constructor(
       // strip double or single quotes as well
       DependencyKind.FILE -> dependency.normalize("files", "file")
 
-      // nothing to change
-      DependencyKind.EXTERNAL -> dependency
+      // Handle type-safe project accessors for Groovy (e.g., "projects.myModule" -> ":my-module")
+      DependencyKind.EXTERNAL -> normalizeTypeSafeProjectAccessor(dependency)
     }
 
     return advice.find {
@@ -187,6 +187,37 @@ internal class GroovyBuildScriptDependenciesRewriter private constructor(
       (it.coordinates.gav() == normalizedDeclaration || it.coordinates.identifier == normalizedDeclaration)
         && it.fromConfiguration == currentConfiguration
     }
+  }
+
+  /**
+   * Converts type-safe project accessor patterns to canonical project paths.
+   * E.g., "projects.myModule" -> ":my-module"
+   *       "projects.nested.subModule" -> ":nested:sub-module"
+   */
+  private fun normalizeTypeSafeProjectAccessor(identifier: String): String {
+    if (!isTypeSafeProjectAccessor(identifier)) {
+      return identifier
+    }
+
+    // Remove "projects" prefix and convert camelCase to kebab-case project path
+    val projectPath = identifier.removePrefix("projects")
+      .split('.')
+      .filter { it.isNotEmpty() }
+      .joinToString(":") { segment ->
+        // Convert camelCase to kebab-case
+        segment.replace(Regex("([a-z0-9])([A-Z])")) { matchResult ->
+          "${matchResult.groupValues[1]}-${matchResult.groupValues[2].lowercase()}"
+        }
+      }
+
+    return if (projectPath.startsWith(":")) projectPath else ":$projectPath"
+  }
+
+  /**
+   * Checks if the given identifier is a type-safe project accessor pattern.
+   */
+  private fun isTypeSafeProjectAccessor(identifier: String): Boolean {
+    return identifier.startsWith("projects.") || identifier == "projects"
   }
 
   internal companion object {

@@ -707,6 +707,145 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     ).inOrder()
   }
 
+  @Test fun `can parse and modify existing type-safe project accessors`() {
+    // Given
+    val sourceFile = dir.resolve("build.gradle.kts")
+    sourceFile.writeText(
+      """
+        dependencies {
+          implementation(projects.myModule)
+          api(projects.nested.subModule)
+          testImplementation(projects.myOtherModule)
+        }
+      """.trimIndent()
+    )
+    val advice = setOf(
+      Advice.ofChange(Coordinates.of(":my-module"), "implementation", "api"),
+      Advice.ofRemove(Coordinates.of(":nested:sub-module"), "api"),
+      Advice.ofChange(Coordinates.of(":my-other-module"), "testImplementation", "implementation"),
+    )
+
+    // When
+    val parser = KotlinBuildScriptDependenciesRewriter.of(
+      sourceFile,
+      advice,
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
+    )
+
+    // Then
+    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      """
+        dependencies {
+          api(projects.myModule)
+          implementation(projects.myOtherModule)
+        }
+      """.trimIndent().trimmedLines()
+    ).inOrder()
+  }
+
+  @Test fun `can parse type-safe accessors with camelCase conversion`() {
+    // Given - using camelCase accessor that should map to kebab-case project path
+    val sourceFile = dir.resolve("build.gradle.kts")
+    sourceFile.writeText(
+      """
+        dependencies {
+          implementation(projects.myOtherModule)
+        }
+      """.trimIndent()
+    )
+    val advice = setOf(
+      Advice.ofChange(Coordinates.of(":my-other-module"), "implementation", "api"),
+    )
+
+    // When
+    val parser = KotlinBuildScriptDependenciesRewriter.of(
+      sourceFile,
+      advice,
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
+    )
+
+    // Then
+    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      """
+        dependencies {
+          api(projects.myOtherModule)
+        }
+      """.trimIndent().trimmedLines()
+    ).inOrder()
+  }
+
+  @Test fun `can parse and modify type-safe accessors without parentheses`() {
+    // Given - using syntax WITHOUT parentheses
+    val sourceFile = dir.resolve("build.gradle.kts")
+    sourceFile.writeText(
+      """
+        dependencies {
+          implementation projects.myModule
+          api projects.nested.subModule
+          testImplementation projects.myOtherModule
+        }
+      """.trimIndent()
+    )
+    val advice = setOf(
+      Advice.ofChange(Coordinates.of(":my-module"), "implementation", "api"),
+      Advice.ofRemove(Coordinates.of(":nested:sub-module"), "api"),
+      Advice.ofChange(Coordinates.of(":my-other-module"), "testImplementation", "implementation")
+    )
+
+    // When
+    val parser = KotlinBuildScriptDependenciesRewriter.of(
+      sourceFile,
+      advice,
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
+    )
+
+    // Then - should work with non-parentheses syntax
+    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      """
+        dependencies {
+          api(projects.myModule)
+          implementation(projects.myOtherModule)
+        }
+      """.trimIndent().trimmedLines()
+    ).inOrder()
+  }
+
+  @Test fun `can parse mixed syntax with libs and projects accessors`() {
+    // Given - mixed syntax with libs. and projects. accessors
+    val sourceFile = dir.resolve("build.gradle.kts")
+    sourceFile.writeText(
+      """
+        dependencies {
+          implementation projects.myModule
+          api libs.someLibrary
+          testImplementation projects.testUtils
+        }
+      """.trimIndent()
+    )
+    val advice = setOf(
+      Advice.ofChange(Coordinates.of(":my-module"), "implementation", "api"),
+      Advice.ofChange(Coordinates.of(":test-utils"), "testImplementation", "implementation")
+    )
+
+    // When
+    val parser = KotlinBuildScriptDependenciesRewriter.of(
+      sourceFile,
+      advice,
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
+    )
+
+    // Then - should handle both projects. and libs. accessors
+    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      """
+        dependencies {
+          api(projects.myModule)
+          api(libs.someLibrary)
+          implementation(projects.testUtils)
+        }
+      """.trimIndent().trimmedLines()
+    ).inOrder()
+  }
+
   private fun Path.writeText(text: String): Path = Files.writeString(this, text)
   private fun String.trimmedLines() = lines().map { it.trimEnd() }
 }

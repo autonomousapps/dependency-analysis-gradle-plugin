@@ -145,7 +145,7 @@ internal class KotlinBuildScriptDependenciesRewriter(
       val errorListener = CollectingErrorListener()
 
       return Parser(
-        file = Parser.readOnlyInputStream(file),
+        file = preprocessFileForTypeSafeAccessors(file),
         errorListener = errorListener,
         startRule = { it.script() },
         listenerFactory = { input, tokens, _ ->
@@ -159,6 +159,40 @@ internal class KotlinBuildScriptDependenciesRewriter(
           )
         }
       ).listener()
+    }
+
+    /**
+     * Preprocesses the build script to normalize type-safe accessor syntax.
+     * Converts "implementation projects.myModule" to "implementation(projects.myModule)"
+     * so the parser can handle both syntaxes.
+     */
+    private fun preprocessFileForTypeSafeAccessors(file: Path): java.io.InputStream {
+      val content = file.toFile().readText()
+      val normalizedContent = normalizeTypeSafeAccessorSyntax(content)
+      return normalizedContent.byteInputStream()
+    }
+
+    /**
+     * Normalizes type-safe accessor syntax by adding parentheses where missing.
+     * 
+     * Transforms:
+     *   implementation projects.myModule -> implementation(projects.myModule)
+     *   api libs.someLibrary -> api(libs.someLibrary)
+     *   testImplementation projects.nested.module -> testImplementation(projects.nested.module)
+     */
+    private fun normalizeTypeSafeAccessorSyntax(content: String): String {
+      // Regex to match dependency configurations followed by type-safe accessors without parentheses
+      // Captures: configuration name + exactly one space + accessor (avoids matching already parenthesized)
+      val typeSafeAccessorRegex = Regex(
+        """(\b(?:implementation|api|compileOnly|runtimeOnly|testImplementation|testCompileOnly|testRuntimeOnly|androidTestImplementation|debugImplementation|releaseImplementation))\s+((?:projects|libs)\.[\w.]+)(?!\s*\()""",
+        RegexOption.MULTILINE
+      )
+      
+      return typeSafeAccessorRegex.replace(content) { matchResult ->
+        val configuration = matchResult.groupValues[1]
+        val accessor = matchResult.groupValues[2]
+        "$configuration($accessor)"
+      }
     }
   }
 }
