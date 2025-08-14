@@ -12,6 +12,8 @@ internal class AdvicePrinter(
   /** Customize how dependencies are printed. */
   private val dependencyMap: ((String) -> String?)? = null,
   private val useTypesafeProjectAccessors: Boolean,
+  /** Whether to use parentheses syntax for Kotlin DSL. If false, uses space syntax like Groovy. */
+  private val useParenthesesSyntax: Boolean = true,
 ) {
 
   private companion object {
@@ -39,7 +41,7 @@ internal class AdvicePrinter(
     }.let { id ->
       if (coordinates.gradleVariantIdentification.capabilities.isEmpty()) {
         when (dslKind) {
-          DslKind.KOTLIN -> "($id)"
+          DslKind.KOTLIN -> if (useParenthesesSyntax) "($id)" else " $id"
           DslKind.GROOVY -> " $id"
         }
       } else if (coordinates.gradleVariantIdentification.capabilities.any { it.endsWith(GradleVariantIdentification.TEST_FIXTURES) }) {

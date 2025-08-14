@@ -37,6 +37,8 @@ internal class KotlinBuildScriptDependenciesRewriter(
   private val printer: AdvicePrinter,
   /** Reverse map from custom representation to standard. */
   private val reversedDependencyMap: (String) -> String,
+  /** Original file content before preprocessing, used for style detection */
+  private val originalFileContent: String,
 ) : BuildScriptDependenciesRewriter, KotlinParserBaseListener() {
 
   private val rewriter = Rewriter(tokens)
@@ -128,10 +130,54 @@ internal class KotlinBuildScriptDependenciesRewriter(
           rewriter.deleteWhitespaceToLeft(context.start)
           rewriter.deleteNewlineToRight(context.stop)
         } else if (a.isAnyChange()) {
-          rewriter.replace(context.start, context.stop, printer.toDeclaration(a).trim())
+          // Detect original syntax style and create appropriate replacement
+          val originalText = tokens.getText(context.start, context.stop)
+          val replacement = createStyleAwareReplacement(a, originalText)
+          rewriter.replace(context.start, context.stop, replacement.trim())
         }
       }
     }
+  }
+
+  /**
+   * Creates a replacement string that preserves the original syntax style.
+   */
+  private fun createStyleAwareReplacement(advice: Advice, originalText: String): String {
+    val useParentheses = detectParenthesesSyntax(originalText)
+    
+    // Create a temporary printer with the detected style
+    val styleAwarePrinter = AdvicePrinter(
+      dslKind = com.autonomousapps.internal.advice.DslKind.KOTLIN,
+      dependencyMap = null, // We don't have access to the original dependencyMap, but it's typically null
+      useTypesafeProjectAccessors = true, // We're in the context of type-safe accessors
+      useParenthesesSyntax = useParentheses
+    )
+    
+    return styleAwarePrinter.toDeclaration(advice)
+  }
+
+  /**
+   * Detects whether the original text uses parentheses syntax.
+   * After preprocessing, all type-safe accessors have parentheses, but we can detect
+   * if it was originally non-parentheses by looking for the specific pattern our
+   * preprocessing creates: "configuration(projects." with exactly one space before the paren.
+   */
+  private fun detectParenthesesSyntax(originalText: String): Boolean {
+    // Extract the configuration and accessor from the current text
+    // Current text after preprocessing: "implementation(projects.myModule)"
+    val currentPattern = Regex("""(\w+)\(((?:projects|libs)\.[\w.]+)\)""")
+    val match = currentPattern.find(originalText.trim()) ?: return true
+    
+    val configuration = match.groupValues[1]
+    val accessor = match.groupValues[2]
+    
+    // Check if the original file content had this in non-parentheses format
+    val nonParenthesesPattern = Regex("""$configuration\s+$accessor\b""")
+    val hadNonParenthesesSyntax = nonParenthesesPattern.find(originalFileContent) != null
+    
+    // If original had non-parentheses syntax, output non-parentheses
+    // If original had parentheses syntax, output parentheses
+    return !hadNonParenthesesSyntax
   }
 
   companion object {
@@ -143,6 +189,7 @@ internal class KotlinBuildScriptDependenciesRewriter(
       reversedDependencyMap: (String) -> String = { it }
     ): KotlinBuildScriptDependenciesRewriter {
       val errorListener = CollectingErrorListener()
+      val originalContent = file.toFile().readText() // Read original content before preprocessing
 
       return Parser(
         file = preprocessFileForTypeSafeAccessors(file),
@@ -155,7 +202,8 @@ internal class KotlinBuildScriptDependenciesRewriter(
             errorListener = errorListener,
             advice = advice,
             printer = advicePrinter,
-            reversedDependencyMap = reversedDependencyMap
+            reversedDependencyMap = reversedDependencyMap,
+            originalFileContent = originalContent
           )
         }
       ).listener()

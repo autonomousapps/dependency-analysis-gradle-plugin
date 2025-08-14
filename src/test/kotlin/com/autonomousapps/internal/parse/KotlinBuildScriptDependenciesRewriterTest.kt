@@ -799,12 +799,12 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
       AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
     )
 
-    // Then - should work with non-parentheses syntax
+    // Then - should preserve non-parentheses syntax style
     assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
       """
         dependencies {
-          api(projects.myModule)
-          implementation(projects.myOtherModule)
+          api projects.myModule
+          implementation projects.myOtherModule
         }
       """.trimIndent().trimmedLines()
     ).inOrder()
@@ -834,13 +834,13 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
       AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
     )
 
-    // Then - should handle both projects. and libs. accessors
+    // Then - should handle both projects. and libs. accessors while preserving style
     assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
       """
         dependencies {
-          api(projects.myModule)
-          api(libs.someLibrary)
-          implementation(projects.testUtils)
+          api projects.myModule
+          api libs.someLibrary
+          implementation projects.testUtils
         }
       """.trimIndent().trimmedLines()
     ).inOrder()
