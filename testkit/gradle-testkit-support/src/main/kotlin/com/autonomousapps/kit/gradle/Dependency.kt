@@ -30,6 +30,14 @@ public data class Dependency @JvmOverloads constructor(
     return copy(capability = CAPABILITY_TEST_FIXTURES)
   }
 
+  public fun onEnforcedPlatform(): Dependency {
+    return copy(capability = CAPABILITY_ENFORCED_PLATFORM)
+  }
+
+  public fun onPlatform(): Dependency {
+    return copy(capability = CAPABILITY_PLATFORM)
+  }
+
   /**
    * Convert into a [dependency] with extension [ext].
    *

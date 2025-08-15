@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
-import com.autonomousapps.internal.GradleVersions
 import com.autonomousapps.services.GlobalDslService
 import org.gradle.api.Plugin
 import org.gradle.api.initialization.Settings
@@ -22,10 +21,6 @@ public abstract class BuildHealthPlugin : Plugin<Settings> {
   }
 
   override fun apply(target: Settings): Unit = target.run {
-    if (!GradleVersions.isAtLeastGradle88) {
-      error("'$ID' requires Gradle 8.8 or higher.")
-    }
-
     // Create extension
     DependencyAnalysisExtension.of(this)
 

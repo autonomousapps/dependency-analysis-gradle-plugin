@@ -44,7 +44,7 @@ internal interface DependencyAnalyzer {
   val annotationProcessorConfigurationName: String
 
   /** E.g., "androidx.test.runner.AndroidJUnitRunner" */
-  val testInstrumentationRunner: Provider<String?>
+  val testInstrumentationRunner: Provider<String>
 
   val attributeValueJar: String
 
@@ -92,7 +92,7 @@ internal abstract class AbstractDependencyAnalyzer(
 ) : DependencyAnalyzer {
 
   // Always null for JVM projects. May be null for Android projects.
-  override val testInstrumentationRunner: Provider<String?> = project.provider { null }
+  override val testInstrumentationRunner: Provider<String> = project.provider { null }
 
   protected fun kaptConf(): Configuration? = try {
     project.configurations[kaptConfigurationName]

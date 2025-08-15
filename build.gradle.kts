@@ -136,18 +136,19 @@ dependencies {
   }
 
   testImplementation(platform(libs.junit.bom))
+  testImplementation(libs.groovy)
   testImplementation(libs.spock) {
+    // TODO: check if this is still needed
     exclude(group = "org.codehaus.groovy")
     because("For Spock tests")
   }
   testImplementation(libs.junit.api)
   testImplementation(libs.junit.params)
   testImplementation(libs.truth)
-
   testRuntimeOnly(libs.junit.engine)
   testRuntimeOnly(libs.junit.launcher)
 
-  functionalTestImplementation(libs.jspecify)
+  functionalTestImplementation(libs.groovy)
 
   smokeTestImplementation(libs.commons.io) {
     because("For FileUtils.deleteDirectory()")
