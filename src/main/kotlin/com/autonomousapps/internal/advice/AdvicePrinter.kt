@@ -16,6 +16,9 @@ internal class AdvicePrinter(
   private val useParenthesesSyntax: Boolean = true,
 ) {
 
+  val usesTypesafeProjectAccessors: Boolean get() = useTypesafeProjectAccessors
+  val getDependencyMap: ((String) -> String?)? get() = dependencyMap
+
   private companion object {
     val PROJECT_PATH_PATTERN = "[-_][a-z0-9]".toRegex()
 

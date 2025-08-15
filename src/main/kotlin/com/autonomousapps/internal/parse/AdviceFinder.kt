@@ -26,8 +26,8 @@ internal class AdviceFinder(
       (it.matchesIdentifier(identifier) || it.matchesIdentifier(normalizedIdentifier))
         // Then match on configuration
         && it.matchesConfiguration(dependencyDeclaration)
-        // Then match on type (project, module, etc) - enhanced for type-safe accessors
-        && it.matchesTypeEnhanced(dependencyDeclaration, rawIdentifier)
+        // Then match on type (project, module, etc)
+        && it.matchesType(dependencyDeclaration, rawIdentifier)
         // Then match on capabilities
         && it.matchesCapabilities(dependencyDeclaration)
     }
@@ -41,25 +41,12 @@ internal class AdviceFinder(
     return fromConfiguration == dependencyDeclaration.configuration
   }
 
-  private fun Advice.matchesType(dependencyDeclaration: DependencyDeclaration): Boolean {
-    return when (dependencyDeclaration.type) {
-      DependencyDeclaration.Type.MODULE -> coordinates is ModuleCoordinates
-      DependencyDeclaration.Type.PROJECT -> coordinates is ProjectCoordinates
-
-      // TODO(tsr): I think returning false is fine. We can't replace these.
-      DependencyDeclaration.Type.GRADLE_DISTRIBUTION -> false
-      DependencyDeclaration.Type.FILE -> false
-      DependencyDeclaration.Type.FILES -> false
-      DependencyDeclaration.Type.FILE_TREE -> false
-    }
-  }
-
   /**
-   * Enhanced type matching that also considers type-safe project accessor patterns.
+   * Matches the type of dependency, with enhanced logic for type-safe project accessors.
    * Type-safe accessors like "projects.myModule" might be parsed as MODULE type
    * instead of PROJECT type, so we need additional logic to handle them.
    */
-  private fun Advice.matchesTypeEnhanced(dependencyDeclaration: DependencyDeclaration, rawIdentifier: String): Boolean {
+  private fun Advice.matchesType(dependencyDeclaration: DependencyDeclaration, rawIdentifier: String): Boolean {
     return when (dependencyDeclaration.type) {
       DependencyDeclaration.Type.MODULE -> {
         // Check if this coordinates is actually a project but was parsed as module due to type-safe accessor

@@ -124,16 +124,27 @@ internal class KotlinBuildScriptDependenciesRewriter(
       val context = it.statement.leafRule() as? PostfixUnaryExpressionContext ?: return@forEach
       val declaration = it.declaration
 
-      adviceFinder.findAdvice(declaration)?.let { a ->
-        if (a.isAnyRemove()) {
+      val advice = adviceFinder.findAdvice(declaration)
+      if (advice != null) {
+        if (advice.isAnyRemove()) {
           rewriter.delete(context.start, context.stop)
           rewriter.deleteWhitespaceToLeft(context.start)
           rewriter.deleteNewlineToRight(context.stop)
-        } else if (a.isAnyChange()) {
+        } else if (advice.isAnyChange()) {
           // Detect original syntax style and create appropriate replacement
           val originalText = tokens.getText(context.start, context.stop)
-          val replacement = createStyleAwareReplacement(a, originalText)
+          val replacement = createStyleAwareReplacement(advice, originalText)
           rewriter.replace(context.start, context.stop, replacement.trim())
+        }
+      } else {
+        // No advice for this dependency, but check if we need to restore original syntax
+        // due to preprocessing changes (e.g., libs.someLibrary or projects.unchanged)
+        val originalText = tokens.getText(context.start, context.stop)
+        if (needsSyntaxRestoration(originalText)) {
+          val restoredText = restoreOriginalSyntax(originalText)
+          if (restoredText != originalText) {
+            rewriter.replace(context.start, context.stop, restoredText.trim())
+          }
         }
       }
     }
@@ -148,12 +159,43 @@ internal class KotlinBuildScriptDependenciesRewriter(
     // Create a temporary printer with the detected style
     val styleAwarePrinter = AdvicePrinter(
       dslKind = com.autonomousapps.internal.advice.DslKind.KOTLIN,
-      dependencyMap = null, // We don't have access to the original dependencyMap, but it's typically null
-      useTypesafeProjectAccessors = true, // We're in the context of type-safe accessors
+      dependencyMap = printer.getDependencyMap,
+      useTypesafeProjectAccessors = printer.usesTypesafeProjectAccessors,
       useParenthesesSyntax = useParentheses
     )
     
     return styleAwarePrinter.toDeclaration(advice)
+  }
+
+  /**
+   * Checks if this dependency needs syntax restoration due to preprocessing.
+   */
+  private fun needsSyntaxRestoration(text: String): Boolean {
+    // Check if this looks like a preprocessed type-safe accessor
+    val pattern = Regex("""(\w+)\(((?:projects|libs)\.[\w.]+)\)""")
+    return pattern.find(text.trim()) != null
+  }
+
+  /**
+   * Restores the original syntax for a dependency that was changed by preprocessing
+   * but has no advice (so should be unchanged).
+   */
+  private fun restoreOriginalSyntax(text: String): String {
+    val pattern = Regex("""(\w+)\(((?:projects|libs)\.[\w.]+)\)""")
+    val match = pattern.find(text.trim()) ?: return text
+    
+    val configuration = match.groupValues[1]
+    val accessor = match.groupValues[2]
+    
+    // Check if the original file content had this in non-parentheses format
+    val nonParenthesesPattern = Regex("""$configuration\s+$accessor\b""")
+    val hadNonParenthesesSyntax = nonParenthesesPattern.find(originalFileContent) != null
+    
+    return if (hadNonParenthesesSyntax) {
+      "$configuration $accessor"
+    } else {
+      text // Keep parentheses syntax
+    }
   }
 
   /**
