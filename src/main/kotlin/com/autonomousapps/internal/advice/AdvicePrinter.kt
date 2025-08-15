@@ -12,7 +12,26 @@ internal class AdvicePrinter(
   /** Customize how dependencies are printed. */
   private val dependencyMap: ((String) -> String?)? = null,
   private val useTypesafeProjectAccessors: Boolean,
+  private val useParenthesesSyntax: Boolean = true,
 ) {
+
+  /**
+   * Creates a copy of this AdvicePrinter with a different useParenthesesSyntax setting.
+   * Used for style-aware dependency printing.
+   */
+  fun copy(
+    dslKind: DslKind = this.dslKind,
+    dependencyMap: ((String) -> String?)? = this.dependencyMap,
+    useTypesafeProjectAccessors: Boolean = this.useTypesafeProjectAccessors,
+    useParenthesesSyntax: Boolean = this.useParenthesesSyntax,
+  ): AdvicePrinter {
+    return AdvicePrinter(
+      dslKind = dslKind,
+      dependencyMap = dependencyMap,
+      useTypesafeProjectAccessors = useTypesafeProjectAccessors,
+      useParenthesesSyntax = useParenthesesSyntax
+    )
+  }
 
   private companion object {
     val PROJECT_PATH_PATTERN = "[-_][a-z0-9]".toRegex()
@@ -34,18 +53,41 @@ internal class AdvicePrinter(
     val quotedDep = coordinates.mapped()
 
     return when (coordinates) {
-      is ProjectCoordinates -> getProjectFormat(quotedDep)
+      is ProjectCoordinates -> {
+        val projectFormat = getProjectFormat(quotedDep)
+        // For type-safe accessors, return the identifier directly without additional wrapping
+        if (useTypesafeProjectAccessors) {
+          when (dslKind) {
+            DslKind.KOTLIN -> if (useParenthesesSyntax) "($projectFormat)" else " $projectFormat"
+            DslKind.GROOVY -> " $projectFormat"
+          }
+        } else {
+          // For project() calls, wrap as normal
+          when (dslKind) {
+            DslKind.KOTLIN -> if (useParenthesesSyntax) "($projectFormat)" else " $projectFormat"
+            DslKind.GROOVY -> " $projectFormat"
+          }
+        }
+      }
       else -> quotedDep
     }.let { id ->
-      if (coordinates.gradleVariantIdentification.capabilities.isEmpty()) {
-        when (dslKind) {
-          DslKind.KOTLIN -> "($id)"
-          DslKind.GROOVY -> " $id"
+      if (coordinates.gradleVariantIdentification.capabilities.any { it.endsWith(GradleVariantIdentification.TEST_FIXTURES) }) {
+        val cleanId = if (coordinates is ProjectCoordinates && id.startsWith("(") && id.endsWith(")")) {
+          id.substring(1, id.length - 1) // Remove outer parentheses
+        } else {
+          id
         }
-      } else if (coordinates.gradleVariantIdentification.capabilities.any { it.endsWith(GradleVariantIdentification.TEST_FIXTURES) }) {
         when (dslKind) {
-          DslKind.KOTLIN -> "(testFixtures($id))"
-          DslKind.GROOVY -> " testFixtures($id)"
+          DslKind.KOTLIN -> "(testFixtures($cleanId))"
+          DslKind.GROOVY -> " testFixtures($cleanId)"
+        }
+      } else if (coordinates is ProjectCoordinates) {
+        // ProjectCoordinates are already handled above, just return the formatted ID
+        id
+      } else if (coordinates.gradleVariantIdentification.capabilities.isEmpty()) {
+        when (dslKind) {
+          DslKind.KOTLIN -> if (useParenthesesSyntax) "($id)" else " $id"
+          DslKind.GROOVY -> " $id"
         }
       } else {
         val quote = when (dslKind) {
