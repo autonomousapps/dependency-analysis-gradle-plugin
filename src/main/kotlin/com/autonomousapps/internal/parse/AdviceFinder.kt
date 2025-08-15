@@ -15,18 +15,39 @@ internal class AdviceFinder(
 ) {
 
   fun findAdvice(dependencyDeclaration: DependencyDeclaration): Advice? {
-    val identifier = reversedDependencyMap(dependencyDeclaration.identifier.path.removeSurrounding("\""))
+    val rawIdentifier = reversedDependencyMap(dependencyDeclaration.identifier.path.removeSurrounding("\""))
+    val normalizedIdentifier = normalizeTypeSafeProjectAccessor(rawIdentifier)
 
     return advice.find {
-      // First match on GAV/identifier
-      it.matchesIdentifier(identifier)
+      // First match on GAV/identifier (check both original and normalized)
+      (it.matchesIdentifier(rawIdentifier) || it.matchesIdentifier(normalizedIdentifier))
         // Then match on configuration
         && it.matchesConfiguration(dependencyDeclaration)
-        // Then match on type (project, module, etc)
-        && it.matchesType(dependencyDeclaration)
+        // Then match on type (project, module, etc) with type-safe accessor support
+        && it.matchesType(dependencyDeclaration, rawIdentifier)
         // Then match on capabilities
         && it.matchesCapabilities(dependencyDeclaration)
     }
+  }
+
+  /**
+   * Normalizes type-safe project accessors to standard project path format.
+   * E.g., "projects.myModule" -> ":my-module"
+   */
+  private fun normalizeTypeSafeProjectAccessor(identifier: String): String {
+    if (!identifier.startsWith("projects.")) {
+      return identifier
+    }
+
+    // Convert "projects.myModule" -> ":my-module"
+    // Handle camelCase to kebab-case conversion
+    val projectName = identifier.removePrefix("projects.")
+      .replace(Regex("([a-z])([A-Z])")) { matchResult ->
+        "${matchResult.groupValues[1]}-${matchResult.groupValues[2].lowercase()}"
+      }
+      .replace(".", ":")
+
+    return ":$projectName"
   }
 
   private fun Advice.matchesIdentifier(identifier: String): Boolean {
@@ -37,7 +58,15 @@ internal class AdviceFinder(
     return fromConfiguration == dependencyDeclaration.configuration
   }
 
-  private fun Advice.matchesType(dependencyDeclaration: DependencyDeclaration): Boolean {
+  private fun Advice.matchesType(dependencyDeclaration: DependencyDeclaration, rawIdentifier: String): Boolean {
+    // Special handling for type-safe project accessors that might be misclassified by the parser
+    // Type-safe project accessors like "projects.myModule" might be parsed as MODULE type
+    // instead of PROJECT type by the ANTLR parser.
+    if (rawIdentifier.startsWith("projects.") && coordinates is ProjectCoordinates) {
+      return true
+    }
+
+    // Standard type matching
     return when (dependencyDeclaration.type) {
       DependencyDeclaration.Type.MODULE -> coordinates is ModuleCoordinates
       DependencyDeclaration.Type.PROJECT -> coordinates is ProjectCoordinates

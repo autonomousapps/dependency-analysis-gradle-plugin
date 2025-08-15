@@ -12,7 +12,26 @@ internal class AdvicePrinter(
   /** Customize how dependencies are printed. */
   private val dependencyMap: ((String) -> String?)? = null,
   private val useTypesafeProjectAccessors: Boolean,
+  private val useParenthesesSyntax: Boolean = true,
 ) {
+
+  /**
+   * Creates a copy of this AdvicePrinter with a different useParenthesesSyntax setting.
+   * Used for style-aware dependency printing.
+   */
+  fun copy(
+    dslKind: DslKind = this.dslKind,
+    dependencyMap: ((String) -> String?)? = this.dependencyMap,
+    useTypesafeProjectAccessors: Boolean = this.useTypesafeProjectAccessors,
+    useParenthesesSyntax: Boolean = this.useParenthesesSyntax,
+  ): AdvicePrinter {
+    return AdvicePrinter(
+      dslKind = dslKind,
+      dependencyMap = dependencyMap,
+      useTypesafeProjectAccessors = useTypesafeProjectAccessors,
+      useParenthesesSyntax = useParenthesesSyntax
+    )
+  }
 
   private companion object {
     val PROJECT_PATH_PATTERN = "[-_][a-z0-9]".toRegex()
@@ -39,7 +58,7 @@ internal class AdvicePrinter(
     }.let { id ->
       if (coordinates.gradleVariantIdentification.capabilities.isEmpty()) {
         when (dslKind) {
-          DslKind.KOTLIN -> "($id)"
+          DslKind.KOTLIN -> if (useParenthesesSyntax) "($id)" else " $id"
           DslKind.GROOVY -> " $id"
         }
       } else if (coordinates.gradleVariantIdentification.capabilities.any { it.endsWith(GradleVariantIdentification.TEST_FIXTURES) }) {
