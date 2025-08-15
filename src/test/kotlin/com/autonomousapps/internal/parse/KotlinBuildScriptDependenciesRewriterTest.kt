@@ -846,6 +846,80 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     ).inOrder()
   }
 
+  @Test fun `missing dependencies should match existing file style - non-parentheses`() {
+    // Given
+    val sourceFile = dir.resolve("build.gradle.kts")
+    sourceFile.writeText(
+      """
+        dependencies {
+          implementation projects.existingModule
+          api libs.existingLibrary
+        }
+      """.trimIndent()
+    )
+    val advice = setOf(
+      Advice.ofAdd(Coordinates.of(":new-module"), "implementation"),
+      Advice.ofAdd(Coordinates.of("com.example:new-library:1.0"), "api")
+    )
+
+    // When
+    val parser = KotlinBuildScriptDependenciesRewriter.of(
+      sourceFile,
+      advice,
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
+    )
+
+    // Then - missing dependencies should use appropriate syntax (parentheses for strings, file style for type-safe accessors)
+    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      """
+        dependencies {
+          implementation projects.existingModule
+          api libs.existingLibrary
+          api("com.example:new-library:1.0")
+          implementation projects.newModule
+        }
+      """.trimIndent().trimmedLines()
+    ).inOrder()
+  }
+
+  @Test fun `missing dependencies should match existing file style - parentheses`() {
+    // Given
+    val sourceFile = dir.resolve("build.gradle.kts")
+    sourceFile.writeText(
+      """
+        dependencies {
+          implementation(projects.existingModule)
+          api(libs.existingLibrary)
+        }
+      """.trimIndent()
+    )
+    val advice = setOf(
+      Advice.ofAdd(Coordinates.of(":new-module"), "implementation"),
+      Advice.ofAdd(Coordinates.of("com.example:new-library:1.0"), "api")
+    )
+
+    // When
+    val parser = KotlinBuildScriptDependenciesRewriter.of(
+      sourceFile,
+      advice,
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
+    )
+
+    // Then - missing dependencies should use parentheses style to match existing
+    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      """
+        dependencies {
+          implementation(projects.existingModule)
+          api(libs.existingLibrary)
+          api("com.example:new-library:1.0")
+          implementation(projects.newModule)
+        }
+      """.trimIndent().trimmedLines()
+    ).inOrder()
+  }
+
+
+
   private fun Path.writeText(text: String): Path = Files.writeString(this, text)
   private fun String.trimmedLines() = lines().map { it.trimEnd() }
 }

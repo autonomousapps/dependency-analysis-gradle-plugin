@@ -18,6 +18,7 @@ import com.autonomousapps.internal.squareup.cash.grammar.KotlinParserBaseListene
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.ifNotEmpty
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectCoordinates
 import java.nio.file.Path
 
 /**
@@ -39,6 +40,8 @@ internal class KotlinBuildScriptDependenciesRewriter(
   private val reversedDependencyMap: (String) -> String,
   /** Style information from preprocessing */
   private val styleMap: Map<String, Boolean>,
+  /** File's overall style preference for type-safe accessors */
+  private val fileStylePreference: Boolean,
 ) : BuildScriptDependenciesRewriter, KotlinParserBaseListener() {
 
   private val rewriter = Rewriter(tokens)
@@ -110,10 +113,32 @@ internal class KotlinBuildScriptDependenciesRewriter(
       rewriter.insertBefore(
         beforeToken,
         addAdvice.joinToString(prefix = prefix, postfix = postfix, separator = "\n") { a ->
-          printer.toDeclaration(a)
+          createStyleAwareAdvicePrinterForAdvice(a).toDeclaration(a)
         }
       )
     }
+  }
+
+  /**
+   * Creates an AdvicePrinter for a specific advice, with style aware of the dependency type.
+   * - Type-safe accessors (projects.*, libs.*): use file's detected style preference
+   * - Regular string dependencies: always use parentheses (required by Kotlin syntax)
+   */
+  private fun createStyleAwareAdvicePrinterForAdvice(advice: Advice): AdvicePrinter {
+    val useParentheses = if (advice.coordinates is ProjectCoordinates && printer.usesTypesafeProjectAccessors) {
+      // For type-safe project accessors, use the file's style preference
+      fileStylePreference
+    } else {
+      // For all other dependencies (regular libraries, etc.), always use parentheses (required by Kotlin)
+      true
+    }
+    
+    return AdvicePrinter(
+      dslKind = com.autonomousapps.internal.advice.DslKind.KOTLIN,
+      dependencyMap = printer.getDependencyMap,
+      useTypesafeProjectAccessors = printer.usesTypesafeProjectAccessors,
+      useParenthesesSyntax = useParentheses
+    )
   }
 
   private fun handleDependencies(ctx: NamedBlockContext) {
@@ -203,7 +228,8 @@ internal class KotlinBuildScriptDependenciesRewriter(
             advice = advice,
             printer = advicePrinter,
             reversedDependencyMap = reversedDependencyMap,
-            styleMap = preprocessingResult.styleMap
+            styleMap = preprocessingResult.styleMap,
+            fileStylePreference = preprocessingResult.fileStylePreference
           )
         }
       ).listener()

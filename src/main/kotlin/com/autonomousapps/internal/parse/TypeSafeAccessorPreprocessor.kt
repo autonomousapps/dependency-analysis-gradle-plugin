@@ -16,7 +16,8 @@ internal class TypeSafeAccessorPreprocessor {
   data class PreprocessingResult(
     val content: String,
     val originalContent: String,
-    val styleMap: Map<String, Boolean> // accessor -> hasParentheses
+    val styleMap: Map<String, Boolean>, // accessor -> hasParentheses
+    val fileStylePreference: Boolean // true = prefer parentheses, false = prefer no parentheses
   )
 
   companion object {
@@ -35,6 +36,9 @@ internal class TypeSafeAccessorPreprocessor {
     fun preprocess(originalContent: String): PreprocessingResult {
       val styleMap = mutableMapOf<String, Boolean>()
       
+      // Check if file has any non-parentheses type-safe accessors
+      val hasNonParenthesesAccessors = TYPE_SAFE_ACCESSOR_REGEX.find(originalContent) != null
+      
       val transformedContent = TYPE_SAFE_ACCESSOR_REGEX.replace(originalContent) { matchResult ->
         val configuration = matchResult.groupValues[1]
         val accessor = matchResult.groupValues[2]
@@ -46,10 +50,15 @@ internal class TypeSafeAccessorPreprocessor {
         "$configuration($accessor)"
       }
       
+      // Simple logic: if file has non-parentheses accessors, prefer non-parentheses style
+      // Otherwise, prefer parentheses style (default)
+      val fileStylePreference = !hasNonParenthesesAccessors
+      
       return PreprocessingResult(
         content = transformedContent,
         originalContent = originalContent,
-        styleMap = styleMap
+        styleMap = styleMap,
+        fileStylePreference = fileStylePreference
       )
     }
 
