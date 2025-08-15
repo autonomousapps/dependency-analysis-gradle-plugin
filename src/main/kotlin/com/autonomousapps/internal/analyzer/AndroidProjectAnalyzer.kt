@@ -40,7 +40,7 @@ internal abstract class AndroidAnalyzer(
   final override val runtimeConfigurationName = androidSources.runtimeClasspathConfigurationName
   final override val kaptConfigurationName = kaptConfName()
   final override val annotationProcessorConfigurationName = "${variantName}AnnotationProcessorClasspath"
-  final override val testInstrumentationRunner: Provider<String?> = variant.testInstrumentationRunner
+  final override val testInstrumentationRunner: Provider<String> = variant.testInstrumentationRunner
   final override val kotlinSourceFiles: Provider<Iterable<File>> = androidSources.getKotlinSources()
   final override val javaSourceFiles: Provider<Iterable<File>> = androidSources.getJavaSources()
   final override val groovySourceFiles: Provider<Iterable<File>> = project.provider { project.files() }
