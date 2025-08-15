@@ -16,6 +16,7 @@ internal class AdvicePrinter(
   private val useParenthesesSyntax: Boolean = true,
 ) {
 
+  // Temporary public accessors needed for style preservation
   val usesTypesafeProjectAccessors: Boolean get() = useTypesafeProjectAccessors
   val getDependencyMap: ((String) -> String?)? get() = dependencyMap
 

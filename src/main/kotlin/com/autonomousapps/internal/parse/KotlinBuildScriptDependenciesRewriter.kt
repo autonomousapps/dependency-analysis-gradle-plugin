@@ -37,8 +37,8 @@ internal class KotlinBuildScriptDependenciesRewriter(
   private val printer: AdvicePrinter,
   /** Reverse map from custom representation to standard. */
   private val reversedDependencyMap: (String) -> String,
-  /** Original file content before preprocessing, used for style detection */
-  private val originalFileContent: String,
+  /** Style information from preprocessing */
+  private val styleMap: Map<String, Boolean>,
 ) : BuildScriptDependenciesRewriter, KotlinParserBaseListener() {
 
   private val rewriter = Rewriter(tokens)
@@ -125,26 +125,22 @@ internal class KotlinBuildScriptDependenciesRewriter(
       val declaration = it.declaration
 
       val advice = adviceFinder.findAdvice(declaration)
+      val originalText = tokens.getText(context.start, context.stop)
+      
       if (advice != null) {
         if (advice.isAnyRemove()) {
           rewriter.delete(context.start, context.stop)
           rewriter.deleteWhitespaceToLeft(context.start)
           rewriter.deleteNewlineToRight(context.stop)
         } else if (advice.isAnyChange()) {
-          // Detect original syntax style and create appropriate replacement
-          val originalText = tokens.getText(context.start, context.stop)
           val replacement = createStyleAwareReplacement(advice, originalText)
           rewriter.replace(context.start, context.stop, replacement.trim())
         }
-      } else {
-        // No advice for this dependency, but check if we need to restore original syntax
-        // due to preprocessing changes (e.g., libs.someLibrary or projects.unchanged)
-        val originalText = tokens.getText(context.start, context.stop)
-        if (needsSyntaxRestoration(originalText)) {
-          val restoredText = restoreOriginalSyntax(originalText)
-          if (restoredText != originalText) {
-            rewriter.replace(context.start, context.stop, restoredText.trim())
-          }
+      } else if (TypeSafeAccessorPreprocessor.isPreprocessedAccessor(originalText)) {
+        // Restore original syntax for unchanged dependencies that were preprocessed
+        val restoredText = TypeSafeAccessorPreprocessor.restoreOriginalSyntax(originalText, styleMap)
+        if (restoredText != originalText) {
+          rewriter.replace(context.start, context.stop, restoredText.trim())
         }
       }
     }
@@ -154,72 +150,33 @@ internal class KotlinBuildScriptDependenciesRewriter(
    * Creates a replacement string that preserves the original syntax style.
    */
   private fun createStyleAwareReplacement(advice: Advice, originalText: String): String {
-    val useParentheses = detectParenthesesSyntax(originalText)
+    val accessorInfo = TypeSafeAccessorUtils.extractAccessorInfo(originalText)
     
-    // Create a temporary printer with the detected style
-    val styleAwarePrinter = AdvicePrinter(
+    // For type-safe accessors, check if original had parentheses
+    val useParentheses = if (accessorInfo != null) {
+      val key = "${accessorInfo.configuration} ${accessorInfo.accessor}"
+      styleMap[key] ?: true  // Default to parentheses if not in style map
+    } else {
+      true // Non-type-safe accessors use parentheses
+    }
+    
+    // Create a style-aware printer for this specific replacement
+    return createAdvicePrinterWithStyle(useParentheses).toDeclaration(advice)
+  }
+  
+  /**
+   * Creates an AdvicePrinter with the same configuration as the main printer
+   * but with the specified parentheses style.
+   */
+  private fun createAdvicePrinterWithStyle(useParentheses: Boolean): AdvicePrinter {
+    // We need to access the main printer's configuration
+    // For now, we'll restore the public accessors temporarily
+    return AdvicePrinter(
       dslKind = com.autonomousapps.internal.advice.DslKind.KOTLIN,
       dependencyMap = printer.getDependencyMap,
       useTypesafeProjectAccessors = printer.usesTypesafeProjectAccessors,
       useParenthesesSyntax = useParentheses
     )
-    
-    return styleAwarePrinter.toDeclaration(advice)
-  }
-
-  /**
-   * Checks if this dependency needs syntax restoration due to preprocessing.
-   */
-  private fun needsSyntaxRestoration(text: String): Boolean {
-    // Check if this looks like a preprocessed type-safe accessor
-    val pattern = Regex("""(\w+)\(((?:projects|libs)\.[\w.]+)\)""")
-    return pattern.find(text.trim()) != null
-  }
-
-  /**
-   * Restores the original syntax for a dependency that was changed by preprocessing
-   * but has no advice (so should be unchanged).
-   */
-  private fun restoreOriginalSyntax(text: String): String {
-    val pattern = Regex("""(\w+)\(((?:projects|libs)\.[\w.]+)\)""")
-    val match = pattern.find(text.trim()) ?: return text
-    
-    val configuration = match.groupValues[1]
-    val accessor = match.groupValues[2]
-    
-    // Check if the original file content had this in non-parentheses format
-    val nonParenthesesPattern = Regex("""$configuration\s+$accessor\b""")
-    val hadNonParenthesesSyntax = nonParenthesesPattern.find(originalFileContent) != null
-    
-    return if (hadNonParenthesesSyntax) {
-      "$configuration $accessor"
-    } else {
-      text // Keep parentheses syntax
-    }
-  }
-
-  /**
-   * Detects whether the original text uses parentheses syntax.
-   * After preprocessing, all type-safe accessors have parentheses, but we can detect
-   * if it was originally non-parentheses by looking for the specific pattern our
-   * preprocessing creates: "configuration(projects." with exactly one space before the paren.
-   */
-  private fun detectParenthesesSyntax(originalText: String): Boolean {
-    // Extract the configuration and accessor from the current text
-    // Current text after preprocessing: "implementation(projects.myModule)"
-    val currentPattern = Regex("""(\w+)\(((?:projects|libs)\.[\w.]+)\)""")
-    val match = currentPattern.find(originalText.trim()) ?: return true
-    
-    val configuration = match.groupValues[1]
-    val accessor = match.groupValues[2]
-    
-    // Check if the original file content had this in non-parentheses format
-    val nonParenthesesPattern = Regex("""$configuration\s+$accessor\b""")
-    val hadNonParenthesesSyntax = nonParenthesesPattern.find(originalFileContent) != null
-    
-    // If original had non-parentheses syntax, output non-parentheses
-    // If original had parentheses syntax, output parentheses
-    return !hadNonParenthesesSyntax
   }
 
   companion object {
@@ -231,10 +188,11 @@ internal class KotlinBuildScriptDependenciesRewriter(
       reversedDependencyMap: (String) -> String = { it }
     ): KotlinBuildScriptDependenciesRewriter {
       val errorListener = CollectingErrorListener()
-      val originalContent = file.toFile().readText() // Read original content before preprocessing
+      val originalContent = file.toFile().readText()
+      val preprocessingResult = TypeSafeAccessorPreprocessor.preprocess(originalContent)
 
       return Parser(
-        file = preprocessFileForTypeSafeAccessors(file),
+        file = TypeSafeAccessorPreprocessor.createInputStream(preprocessingResult),
         errorListener = errorListener,
         startRule = { it.script() },
         listenerFactory = { input, tokens, _ ->
@@ -245,44 +203,10 @@ internal class KotlinBuildScriptDependenciesRewriter(
             advice = advice,
             printer = advicePrinter,
             reversedDependencyMap = reversedDependencyMap,
-            originalFileContent = originalContent
+            styleMap = preprocessingResult.styleMap
           )
         }
       ).listener()
-    }
-
-    /**
-     * Preprocesses the build script to normalize type-safe accessor syntax.
-     * Converts "implementation projects.myModule" to "implementation(projects.myModule)"
-     * so the parser can handle both syntaxes.
-     */
-    private fun preprocessFileForTypeSafeAccessors(file: Path): java.io.InputStream {
-      val content = file.toFile().readText()
-      val normalizedContent = normalizeTypeSafeAccessorSyntax(content)
-      return normalizedContent.byteInputStream()
-    }
-
-    /**
-     * Normalizes type-safe accessor syntax by adding parentheses where missing.
-     * 
-     * Transforms:
-     *   implementation projects.myModule -> implementation(projects.myModule)
-     *   api libs.someLibrary -> api(libs.someLibrary)
-     *   testImplementation projects.nested.module -> testImplementation(projects.nested.module)
-     */
-    private fun normalizeTypeSafeAccessorSyntax(content: String): String {
-      // Regex to match dependency configurations followed by type-safe accessors without parentheses
-      // Captures: configuration name + exactly one space + accessor (avoids matching already parenthesized)
-      val typeSafeAccessorRegex = Regex(
-        """(\b(?:implementation|api|compileOnly|runtimeOnly|testImplementation|testCompileOnly|testRuntimeOnly|androidTestImplementation|debugImplementation|releaseImplementation))\s+((?:projects|libs)\.[\w.]+)(?!\s*\()""",
-        RegexOption.MULTILINE
-      )
-      
-      return typeSafeAccessorRegex.replace(content) { matchResult ->
-        val configuration = matchResult.groupValues[1]
-        val accessor = matchResult.groupValues[2]
-        "$configuration($accessor)"
-      }
     }
   }
 }
