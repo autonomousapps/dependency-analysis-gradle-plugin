@@ -53,10 +53,28 @@ internal class AdvicePrinter(
     val quotedDep = coordinates.mapped()
 
     return when (coordinates) {
-      is ProjectCoordinates -> getProjectFormat(quotedDep)
+      is ProjectCoordinates -> {
+        val projectFormat = getProjectFormat(quotedDep)
+        // For type-safe accessors, return the identifier directly without additional wrapping
+        if (useTypesafeProjectAccessors) {
+          when (dslKind) {
+            DslKind.KOTLIN -> if (useParenthesesSyntax) "($projectFormat)" else " $projectFormat"
+            DslKind.GROOVY -> " $projectFormat"
+          }
+        } else {
+          // For project() calls, wrap as normal
+          when (dslKind) {
+            DslKind.KOTLIN -> if (useParenthesesSyntax) "($projectFormat)" else " $projectFormat"
+            DslKind.GROOVY -> " $projectFormat"
+          }
+        }
+      }
       else -> quotedDep
     }.let { id ->
-      if (coordinates.gradleVariantIdentification.capabilities.isEmpty()) {
+      if (coordinates is ProjectCoordinates) {
+        // ProjectCoordinates are already handled above, just return the formatted ID
+        id
+      } else if (coordinates.gradleVariantIdentification.capabilities.isEmpty()) {
         when (dslKind) {
           DslKind.KOTLIN -> if (useParenthesesSyntax) "($id)" else " $id"
           DslKind.GROOVY -> " $id"
