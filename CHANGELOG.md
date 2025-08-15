@@ -1,24 +1,25 @@
 Dependency Analysis Plugin Changelog
 
 # Version 3.0.0 (unreleased)
+* [Build] now building with Gradle 9.0.0.
+* [Breaking] minimum supported version of Gradle is now 8.1.1.
 * [Breaking]: annotations and their parameter classes are always considered `compileOnly`.
 
   Annotations for which the class file is not present are treated like being non-existent by the JVM.
-  If someone wants to consume an annotation via reflection, they are in charge to provide the class file
+  If someone wants to consume an annotation via reflection, they are responsible for providing the class file
   at runtime, so from the annotating project's view, annotations are always `compileOnly`.
   The same is true for classes and enums used as annotation arguments.
   The only exception is a class literal as argument that is coming from a different artifact than the
-  annotation like a JUnit 4 runner implementation, those are considered `implementation`.
+  annotation, such as a JUnit 4 runner implementation; those are considered `implementation`.
 * [Feat]: report excluded dependencies as unused.
 * [Feat]: add coordinates identifier in the error message for invalid change.
 * [Feat]: moving `internal.artifacts` package to new module, `com.autonomousapps:variant-artifacts`.
 * [Fix]: Move `useTypesafeProjectAccessors` to global dsl service.
 * [Fix]: reason works on included builds.
 * [Fix]: recognize test fixtures not only in Android libraries, but in Android app modules, too.
-* [Chore]: build with and test against Gradle 8.14.2.
 * [Chore]: update guava to 33.4.8-jre.
-* [Chore]: update AGP to the latest stable version, 8.11.0, and test against AGP 8.12 alpha.
-* [Chore]: add API-tracking tasks using metalava.
+* [Chore]: update AGP to the latest stable version, 8.12.0, and test against 8.13.0-alpha03.
+* [Chore]: add API-tracking tasks using metalava. Adopt semantic versioning.
 
 # Version 2.19.0
 * [Feat]: support advices for Android test fixtures source sets
