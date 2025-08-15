@@ -26,8 +26,8 @@ internal class PluginTest {
     @JvmStatic fun gradleVersions(): List<GradleVersion> {
       return listOf(
         GradleVersion.current(),
-        GradleVersion.version("8.4"),
-        GradleVersion.version("8.5-rc-2"),
+        GradleVersion.version("8.14.3"),
+        GradleVersion.version("8.11.1"),
       ).distinctBy { it.version }
     }
   }
