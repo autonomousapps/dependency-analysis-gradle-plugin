@@ -707,6 +707,62 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     ).inOrder()
   }
 
+  @Test fun `type-safe accessor configuration change preserves non-parentheses style`() {
+    // Given - this specifically tests the user's reported scenario 
+    val sourceFile = dir.resolve("build.gradle.kts")
+    sourceFile.writeText(
+      """
+        dependencies {
+          implementation projects.common.viewmodels
+          api libs.someLibrary
+        }
+      """.trimIndent()
+    )
+    val advice = setOf(
+      Advice.ofChange(
+        coordinates = Coordinates.of(":common:viewmodels"),
+        fromConfiguration = "implementation",
+        toConfiguration = "api"
+      )
+    )
+
+    // When - using the BuildScriptDependenciesRewriter factory method which now has our fix
+    val parser = BuildScriptDependenciesRewriter.of(
+      sourceFile.toFile(),
+      advice,
+      AdvicePrinter(
+        dslKind = DslKind.KOTLIN,
+        dependencyMap = null,
+        useTypesafeProjectAccessors = true,
+        useParenthesesSyntax = false  // Testing non-parentheses style
+      ),
+      reversedDependencyMap = { identifier ->
+        // This mimics our enhanced createReversedDependencyMap logic
+        if (identifier.startsWith("projects.")) {
+          val projectPath = identifier.removePrefix("projects.")
+            .replace(Regex("([a-z])([A-Z])")) { matchResult ->
+              "${matchResult.groupValues[1]}-${matchResult.groupValues[2].lowercase()}"
+            }
+            .replace(".", ":")
+          ":$projectPath"
+        } else {
+          identifier
+        }
+      }
+    )
+
+    // Then - the type-safe accessor should maintain its non-parentheses style
+    // AND the configuration should be changed from 'implementation' to 'api'
+    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      """
+        dependencies {
+          api projects.common.viewmodels
+          api libs.someLibrary
+        }
+      """.trimIndent().trimmedLines()
+    ).inOrder()
+  }
+
   private fun Path.writeText(text: String): Path = Files.writeString(this, text)
   private fun String.trimmedLines() = lines().map { it.trimEnd() }
 }
