@@ -47,7 +47,7 @@ errorProne = { module = "com.google.errorprone:error_prone_annotations", version
 gradle-publish-plugin = { module = "com.gradle.plugin-publish:com.gradle.plugin-publish.gradle.plugin", version.ref = "gradle-publish-plugin" }
 gradleTestKitPlugin = { module = "com.autonomousapps:gradle-testkit-plugin", version.ref = "gradleTestKitPlugin" }
 grammar = { module = "com.autonomousapps:gradle-script-grammar", version.ref = "grammar" }
-groovy = { module = "org.codehaus.groovy:groovy", version.ref = "groovy" }
+groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 javax-inject = "javax.inject:javax.inject:1"
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
