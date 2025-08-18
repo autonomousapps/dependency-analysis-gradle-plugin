@@ -12,26 +12,8 @@ internal class AdvicePrinter(
   /** Customize how dependencies are printed. */
   private val dependencyMap: ((String) -> String?)? = null,
   private val useTypesafeProjectAccessors: Boolean,
-  private val useParenthesesSyntax: Boolean = true,
+  private val useParenthesesForGroovy: Boolean = false,
 ) {
-
-  /**
-   * Creates a copy of this AdvicePrinter with a different useParenthesesSyntax setting.
-   * Used for style-aware dependency printing.
-   */
-  fun copy(
-    dslKind: DslKind = this.dslKind,
-    dependencyMap: ((String) -> String?)? = this.dependencyMap,
-    useTypesafeProjectAccessors: Boolean = this.useTypesafeProjectAccessors,
-    useParenthesesSyntax: Boolean = this.useParenthesesSyntax,
-  ): AdvicePrinter {
-    return AdvicePrinter(
-      dslKind = dslKind,
-      dependencyMap = dependencyMap,
-      useTypesafeProjectAccessors = useTypesafeProjectAccessors,
-      useParenthesesSyntax = useParenthesesSyntax
-    )
-  }
 
   private companion object {
     val PROJECT_PATH_PATTERN = "[-_][a-z0-9]".toRegex()
@@ -55,18 +37,9 @@ internal class AdvicePrinter(
     return when (coordinates) {
       is ProjectCoordinates -> {
         val projectFormat = getProjectFormat(quotedDep)
-        // For type-safe accessors, return the identifier directly without additional wrapping
-        if (useTypesafeProjectAccessors) {
-          when (dslKind) {
-            DslKind.KOTLIN -> if (useParenthesesSyntax) "($projectFormat)" else " $projectFormat"
-            DslKind.GROOVY -> " $projectFormat"
-          }
-        } else {
-          // For project() calls, wrap as normal
-          when (dslKind) {
-            DslKind.KOTLIN -> if (useParenthesesSyntax) "($projectFormat)" else " $projectFormat"
-            DslKind.GROOVY -> " $projectFormat"
-          }
+        when (dslKind) {
+          DslKind.KOTLIN -> "($projectFormat)"
+          DslKind.GROOVY -> if (useParenthesesForGroovy) "($projectFormat)" else " $projectFormat"
         }
       }
       else -> quotedDep
@@ -86,8 +59,8 @@ internal class AdvicePrinter(
         id
       } else if (coordinates.gradleVariantIdentification.capabilities.isEmpty()) {
         when (dslKind) {
-          DslKind.KOTLIN -> if (useParenthesesSyntax) "($id)" else " $id"
-          DslKind.GROOVY -> " $id"
+          DslKind.KOTLIN -> "($id)"
+          DslKind.GROOVY -> if (useParenthesesForGroovy) "($id)" else " $id"
         }
       } else {
         val quote = when (dslKind) {

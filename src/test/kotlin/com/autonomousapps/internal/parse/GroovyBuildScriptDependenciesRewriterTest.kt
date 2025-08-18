@@ -490,5 +490,107 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
     )
   }
 
+  @Test fun `can handle type-safe project accessors in Groovy DSL - space syntax`() {
+    // Given
+    val sourceFile = dir.resolve("build.gradle")
+    sourceFile.writeText(
+      """
+        dependencies {
+          implementation projects.myModule
+          api libs.someLibrary
+        }
+      """.trimIndent()
+    )
+    val advice = setOf(
+      Advice.ofChange(
+        coordinates = Coordinates.of(":my-module"),
+        fromConfiguration = "implementation",
+        toConfiguration = "api"
+      ),
+      Advice.ofAdd(Coordinates.of(":new-module"), "testImplementation")
+    )
+
+    // When
+    val parser = GroovyBuildScriptDependenciesRewriter.of(
+      sourceFile,
+      advice,
+      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = true, useParenthesesForGroovy = false),
+      reversedDependencyMap = { identifier ->
+        if (identifier.startsWith("projects.")) {
+          val projectPath = identifier.removePrefix("projects.")
+            .replace(Regex("([a-z])([A-Z])")) { matchResult ->
+              "${matchResult.groupValues[1]}-${matchResult.groupValues[2].lowercase()}"
+            }
+            .replace(".", ":")
+          ":$projectPath"
+        } else {
+          identifier
+        }
+      }
+    )
+
+    // Then
+    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      """
+        dependencies {
+          api projects.myModule
+          api libs.someLibrary
+          testImplementation projects.newModule
+        }
+      """.trimIndent().trimmedLines()
+    ).inOrder()
+  }
+
+  @Test fun `can handle type-safe project accessors in Groovy DSL - parentheses syntax`() {
+    // Given
+    val sourceFile = dir.resolve("build.gradle")
+    sourceFile.writeText(
+      """
+        dependencies {
+          implementation(projects.myModule)
+          api(libs.someLibrary)
+        }
+      """.trimIndent()
+    )
+    val advice = setOf(
+      Advice.ofChange(
+        coordinates = Coordinates.of(":my-module"),
+        fromConfiguration = "implementation",
+        toConfiguration = "api"
+      ),
+      Advice.ofAdd(Coordinates.of(":new-module"), "testImplementation")
+    )
+
+    // When
+    val parser = GroovyBuildScriptDependenciesRewriter.of(
+      sourceFile,
+      advice,
+      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = true, useParenthesesForGroovy = true),
+      reversedDependencyMap = { identifier ->
+        if (identifier.startsWith("projects.")) {
+          val projectPath = identifier.removePrefix("projects.")
+            .replace(Regex("([a-z])([A-Z])")) { matchResult ->
+              "${matchResult.groupValues[1]}-${matchResult.groupValues[2].lowercase()}"
+            }
+            .replace(".", ":")
+          ":$projectPath"
+        } else {
+          identifier
+        }
+      }
+    )
+
+    // Then
+    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      """
+        dependencies {
+          api(projects.myModule)
+          api(libs.someLibrary)
+          testImplementation(projects.newModule)
+        }
+      """.trimIndent().trimmedLines()
+    ).inOrder()
+  }
+
   private fun String.trimmedLines() = lines().map { it.trimEnd() }
 }
