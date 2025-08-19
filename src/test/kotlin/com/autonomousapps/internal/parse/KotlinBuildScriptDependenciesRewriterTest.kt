@@ -707,6 +707,66 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     ).inOrder()
   }
 
+  @Test fun `can parse type-safe project accessors`() {
+    // Given
+    val sourceFile = dir.resolve("build.gradle.kts")
+    sourceFile.writeText(
+      """
+        dependencies {
+          implementation(projects.myModule)
+          api(libs.someLibrary)
+        }
+      """.trimIndent()
+    )
+
+    // When
+    val parser = KotlinBuildScriptDependenciesRewriter.of(
+      sourceFile,
+      emptySet(),
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
+    )
+
+    // Then
+    val result = parser.rewritten()
+    assertThat(result).contains("implementation(projects.myModule)")
+    assertThat(result).contains("api(libs.someLibrary)")
+  }
+
+  @Test fun `should handle type-safe project accessors with parentheses`() {
+    // Given
+    val sourceFile = dir.resolve("build.gradle.kts")
+    sourceFile.writeText(
+      """
+        dependencies {
+          implementation(projects.myModule)
+        }
+      """.trimIndent()
+    )
+    val advice = setOf(
+      Advice.ofChange(
+        coordinates = Coordinates.of(":my-module"),
+        fromConfiguration = "implementation",
+        toConfiguration = "api"
+      )
+    )
+
+    // When
+    val parser = KotlinBuildScriptDependenciesRewriter.of(
+      sourceFile,
+      advice,
+      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
+    )
+
+    // Then - should successfully parse and modify
+    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      """
+        dependencies {
+          api(projects.myModule)
+        }
+      """.trimIndent().trimmedLines()
+    ).inOrder()
+  }
+
   private fun Path.writeText(text: String): Path = Files.writeString(this, text)
   private fun String.trimmedLines() = lines().map { it.trimEnd() }
 }

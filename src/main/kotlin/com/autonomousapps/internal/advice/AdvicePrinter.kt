@@ -12,6 +12,7 @@ internal class AdvicePrinter(
   /** Customize how dependencies are printed. */
   private val dependencyMap: ((String) -> String?)? = null,
   private val useTypesafeProjectAccessors: Boolean,
+  private val useParenthesesForGroovy: Boolean = false,
 ) {
 
   private companion object {
@@ -34,18 +35,32 @@ internal class AdvicePrinter(
     val quotedDep = coordinates.mapped()
 
     return when (coordinates) {
-      is ProjectCoordinates -> getProjectFormat(quotedDep)
+      is ProjectCoordinates -> {
+        val projectFormat = getProjectFormat(quotedDep)
+        when (dslKind) {
+          DslKind.KOTLIN -> "($projectFormat)"
+          DslKind.GROOVY -> if (useParenthesesForGroovy) "($projectFormat)" else " $projectFormat"
+        }
+      }
       else -> quotedDep
     }.let { id ->
-      if (coordinates.gradleVariantIdentification.capabilities.isEmpty()) {
+      if (coordinates.gradleVariantIdentification.capabilities.any { it.endsWith(GradleVariantIdentification.TEST_FIXTURES) }) {
+        val cleanId = if (coordinates is ProjectCoordinates && id.startsWith("(") && id.endsWith(")")) {
+          id.substring(1, id.length - 1) // Remove outer parentheses
+        } else {
+          id
+        }
+        when (dslKind) {
+          DslKind.KOTLIN -> "(testFixtures($cleanId))"
+          DslKind.GROOVY -> " testFixtures($cleanId)"
+        }
+      } else if (coordinates is ProjectCoordinates) {
+        // ProjectCoordinates are already handled above, just return the formatted ID
+        id
+      } else if (coordinates.gradleVariantIdentification.capabilities.isEmpty()) {
         when (dslKind) {
           DslKind.KOTLIN -> "($id)"
-          DslKind.GROOVY -> " $id"
-        }
-      } else if (coordinates.gradleVariantIdentification.capabilities.any { it.endsWith(GradleVariantIdentification.TEST_FIXTURES) }) {
-        when (dslKind) {
-          DslKind.KOTLIN -> "(testFixtures($id))"
-          DslKind.GROOVY -> " testFixtures($id)"
+          DslKind.GROOVY -> if (useParenthesesForGroovy) "($id)" else " $id"
         }
       } else {
         val quote = when (dslKind) {
