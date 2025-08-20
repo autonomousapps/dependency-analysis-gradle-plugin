@@ -79,7 +79,7 @@ internal class GraphAdapter {
     }
   }
 
-  private fun <T> newGraphBuilder(): ImmutableGraph.Builder<T> {
+  private fun <T : Any> newGraphBuilder(): ImmutableGraph.Builder<T> {
     return GraphBuilder.directed()
       .allowsSelfLoops(false)
       .incidentEdgeOrder(ElementOrder.stable<T>())
