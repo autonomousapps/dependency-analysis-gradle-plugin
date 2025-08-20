@@ -1,5 +1,8 @@
 Graph-Support Changelog
 
+# Version 0.7
+* [Feat]: Build with Gradle 9.0.0, change API to non-nullable.
+
 # Version 0.6
 * [Fix]: `DominanceTree` doesn't loop forever.
 
