@@ -8,6 +8,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+internal fun Project.configureDokka(versionCatalog: VersionCatalog) {
+  val dokka = versionCatalog.findLibrary("kotlin.dokka").get()
+  dependencies.add("dokkaHtmlPlugin", dokka)
+}
+
 internal fun Project.configureKotlin(versionCatalog: VersionCatalog) {
   extensions.getByType(KotlinJvmProjectExtension::class.java)
     .explicitApi()
@@ -22,9 +27,4 @@ internal fun Project.configureKotlin(versionCatalog: VersionCatalog) {
       )
     }
   }
-}
-
-internal fun Project.configureDokka(versionCatalog: VersionCatalog) {
-  val dokka = versionCatalog.findLibrary("kotlin.dokka").get()
-  dependencies.add("dokkaHtmlPlugin", dokka)
 }

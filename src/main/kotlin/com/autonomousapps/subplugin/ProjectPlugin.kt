@@ -12,11 +12,14 @@ import com.autonomousapps.Flags.androidIgnoredVariants
 import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
-import com.autonomousapps.internal.*
+import com.autonomousapps.internal.AbiExclusions
+import com.autonomousapps.internal.NoVariantOutputPaths
+import com.autonomousapps.internal.UsagesExclusions
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.artifacts.DagpArtifacts
+import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.addAll
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.project.buildPath
@@ -787,22 +790,19 @@ internal class ProjectPlugin(private val project: Project) {
      * Optional utility tasks (not part of buildHealth). Here because they can easily utilize DAGP's infrastructure.
      */
 
-    // This is an optional task that only works for Gradle 7.5+
-    if (GradleVersions.isAtLeastGradle75) {
-      val resolveExternalDependencies =
-        tasks.register<ResolveExternalDependenciesTask>("resolveExternalDependencies$taskNameSuffix") {
-          configureTask(
-            project = this@analyzeDependencies,
-            compileClasspath = configurations[dependencyAnalyzer.compileConfigurationName],
-            runtimeClasspath = configurations[dependencyAnalyzer.runtimeConfigurationName],
-            jarAttr = dependencyAnalyzer.attributeValueJar
-          )
-          output.set(outputPaths.externalDependenciesPath)
-        }
-
-      computeResolvedDependenciesTask.configure {
-        externalDependencies.add(resolveExternalDependencies.flatMap { it.output })
+    val resolveExternalDependencies =
+      tasks.register<ResolveExternalDependenciesTask>("resolveExternalDependencies$taskNameSuffix") {
+        configureTask(
+          project = this@analyzeDependencies,
+          compileClasspath = configurations[dependencyAnalyzer.compileConfigurationName],
+          runtimeClasspath = configurations[dependencyAnalyzer.runtimeConfigurationName],
+          jarAttr = dependencyAnalyzer.attributeValueJar
+        )
+        output.set(outputPaths.externalDependenciesPath)
       }
+
+    computeResolvedDependenciesTask.configure {
+      externalDependencies.add(resolveExternalDependencies.flatMap { it.output })
     }
 
     val computeDominatorCompile =

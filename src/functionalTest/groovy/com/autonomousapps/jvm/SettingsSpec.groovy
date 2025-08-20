@@ -22,7 +22,7 @@ final class SettingsSpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
-    gradleVersion << gradleVersionsSettingsApi()
+    gradleVersion << gradleVersions()
   }
 
   def "BuildHealthPlugin can be configured in settings script in jvm project (#gradleVersion)"() {
@@ -37,7 +37,7 @@ final class SettingsSpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
-    gradleVersion << gradleVersionsSettingsApi()
+    gradleVersion << gradleVersions()
   }
 
   def "BuildHealthPlugin can be applied to settings script in kotlin project (#gradleVersion)"() {
@@ -52,7 +52,7 @@ final class SettingsSpec extends AbstractJvmSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
-    gradleVersion << gradleVersionsSettingsApi()
+    gradleVersion << gradleVersions()
   }
 
   def "configuration fails with useful error when KGP not on classpath (#gradleVersion)"() {
@@ -67,6 +67,6 @@ final class SettingsSpec extends AbstractJvmSpec {
     result.output.contains('Kotlin Gradle Plugin (KGP) not found on classpath')
 
     where:
-    gradleVersion << gradleVersionsSettingsApi()
+    gradleVersion << gradleVersions()
   }
 }

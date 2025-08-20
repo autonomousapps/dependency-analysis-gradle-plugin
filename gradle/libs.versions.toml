@@ -13,14 +13,16 @@ error-prone = "2.41.0"
 gradle-publish-plugin = "1.2.1"
 gradleTestKitPlugin = "0.13"
 grammar = "0.5"
-groovy = "3.0.25"
+groovy = "4.0.28"
 guava = "33.4.8-jre"
 javaTarget = "11"
 jdkVersion = "17"
 jspecify = "1.0.0"
 junit = "5.13.4"
-kotlin = "2.0.21"
+kotlin = "2.2.10"
+# TODO update to 2.2.10?
 kotlinMetadata = "2.1.21"
+# TODO is this going to cause a problem?
 kotlinDokka = "2.0.0"
 # Cannot be called kotlin-editor as it causes `libs.versions.kotlin.get()` to fail
 kotlineditor-core = "0.18"
@@ -32,7 +34,7 @@ moshix = "0.30.0"
 #moshix = "0.31.0"
 okio = "3.15.0"
 shadow = "8.3.7"
-spock = "2.3-groovy-3.0"
+spock = "2.3-groovy-4.0"
 truth = "1.4.4"
 
 [libraries]
@@ -47,7 +49,7 @@ errorProne = { module = "com.google.errorprone:error_prone_annotations", version
 gradle-publish-plugin = { module = "com.gradle.plugin-publish:com.gradle.plugin-publish.gradle.plugin", version.ref = "gradle-publish-plugin" }
 gradleTestKitPlugin = { module = "com.autonomousapps:gradle-testkit-plugin", version.ref = "gradleTestKitPlugin" }
 grammar = { module = "com.autonomousapps:gradle-script-grammar", version.ref = "grammar" }
-groovy = { module = "org.codehaus.groovy:groovy", version.ref = "groovy" }
+groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 javax-inject = "javax.inject:javax.inject:1"
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
