@@ -24,6 +24,6 @@ final class AssembleArchivesSpec extends AbstractJvmSpec {
     ])
 
     where:
-    gradleVersion << (gradleVersions() + GRADLE_8_4)
+    gradleVersion << gradleVersions()
   }
 }

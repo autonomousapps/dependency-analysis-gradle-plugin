@@ -7,7 +7,6 @@ import com.autonomousapps.jvm.projects.NestedSubprojectsProject
 import com.autonomousapps.jvm.projects.ReasonProject
 import com.autonomousapps.utils.Colors
 import org.gradle.testkit.runner.BuildResult
-import org.gradle.util.GradleVersion
 import spock.lang.PendingFeature
 
 import static com.autonomousapps.utils.Runner.build
@@ -90,7 +89,7 @@ final class ReasonSpec extends AbstractJvmSpec {
       "> Coordinates 'com.squareup.okio:oki' matches more than 1 dependency [com.squareup.okio:okio-jvm:3.0.0, com.squareup.okio:okio:3.0.0]")
 
     where:
-    gradleVersion << [GradleVersion.current()]
+    gradleVersion << gradleVersions()
   }
 
   def "reason matches startsWith when there is no ambiguity (#gradleVersion)"() {
@@ -185,7 +184,7 @@ final class ReasonSpec extends AbstractJvmSpec {
     )
 
     where:
-    gradleVersion << [GradleVersion.current()]
+    gradleVersion << gradleVersions()
   }
 
   def "can request reason for test-fixtures capability (#gradleVersion)"() {

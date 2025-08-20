@@ -11,14 +11,14 @@ internal interface AndroidVariant {
   val flavorName: String
   val variantName: String
   val buildType: String
-  val testInstrumentationRunner: Provider<String?>
+  val testInstrumentationRunner: Provider<String>
 }
 
 internal class DefaultAndroidVariant(
   override val flavorName: String,
   override val variantName: String,
   override val buildType: String,
-  override val testInstrumentationRunner: Provider<String?>,
+  override val testInstrumentationRunner: Provider<String>,
 ) : AndroidVariant {
   constructor(project: Project, variant: Variant) : this(
     flavorName = variant.flavorName.orEmpty(),
@@ -28,7 +28,7 @@ internal class DefaultAndroidVariant(
   )
 
   private companion object {
-    fun getTestInstrumentationRunner(project: Project, variant: Variant): Provider<String?> {
+    fun getTestInstrumentationRunner(project: Project, variant: Variant): Provider<String> {
       return if (variant is HasAndroidTest) {
         variant.androidTest?.instrumentationRunner ?: project.provider { null }
       } else {

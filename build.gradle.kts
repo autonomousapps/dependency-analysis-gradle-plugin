@@ -136,18 +136,17 @@ dependencies {
   }
 
   testImplementation(platform(libs.junit.bom))
+  testImplementation(libs.groovy)
   testImplementation(libs.spock) {
-    exclude(group = "org.codehaus.groovy")
     because("For Spock tests")
   }
   testImplementation(libs.junit.api)
   testImplementation(libs.junit.params)
   testImplementation(libs.truth)
-
   testRuntimeOnly(libs.junit.engine)
   testRuntimeOnly(libs.junit.launcher)
 
-  functionalTestImplementation(libs.jspecify)
+  functionalTestImplementation(libs.groovy)
 
   smokeTestImplementation(libs.commons.io) {
     because("For FileUtils.deleteDirectory()")
@@ -196,7 +195,7 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
 
       // We advertise that we support Java 11
       javaLauncher.set(javaToolchains.launcherFor {
-        languageVersion.set(JavaLanguageVersion.of(11))
+        languageVersion.set(JavaLanguageVersion.of(17))
       })
 
       "Run JVM tests"
@@ -318,10 +317,6 @@ tasks.register("pubLocal") {
 
   dependsOn(tasks)
   dependsOn(gradle.includedBuild("testkit").task(":pubLocal"))
-}
-
-tasks.withType<GroovyCompile>().configureEach {
-  options.isIncremental = true
 }
 
 // TODO(tsr): gzip. also register this task in ProjectPlugin

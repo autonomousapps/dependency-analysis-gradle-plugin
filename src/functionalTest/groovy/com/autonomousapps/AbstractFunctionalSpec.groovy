@@ -14,18 +14,14 @@ abstract class AbstractFunctionalSpec extends Specification {
   @SuppressWarnings('unused')
   protected static final String FLAG_LOG_BYTECODE = "-D${Flags.BYTECODE_LOGGING}=true"
 
-  protected static final GRADLE_7_5 = GradleVersion.version('7.5.1')
-  protected static final GRADLE_7_6 = GradleVersion.version('7.6.6')
-  protected static final GRADLE_8_0 = GradleVersion.version('8.0.2')
-  protected static final GRADLE_8_4 = GradleVersion.version('8.4')
-  protected static final GRADLE_8_9 = GradleVersion.version('8.9')
-  protected static final GRADLE_8_10 = GradleVersion.version('8.10.2')
   protected static final GRADLE_8_11 = GradleVersion.version('8.11.1')
   protected static final GRADLE_8_12 = GradleVersion.version('8.12.1')
   protected static final GRADLE_8_13 = GradleVersion.version('8.13')
   protected static final GRADLE_8_14 = GradleVersion.version('8.14.3')
+  protected static final GRADLE_9_0_0 = GradleVersion.version('9.0.0')
+  protected static final GRADLE_9_1_0 = GradleVersion.version('9.1.0-rc-1')
 
-  protected static final GRADLE_LATEST = GRADLE_8_14
+  protected static final GRADLE_LATEST = GRADLE_9_0_0
 
   // For faster CI times, we only test min + max. Testing all would be preferable, but we don't have till the heat death
   // of the universe.
@@ -69,7 +65,17 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {
     // See https://developer.android.com/build/releases/gradle-plugin#updating-gradle
-    if (agpVersion >= AgpVersion.version('8.7.0')) {
+    if (agpVersion >= AgpVersion.version('8.12.0')) {
+      return gradleVersion >= GradleVersion.version('8.13')
+    } else if (agpVersion >= AgpVersion.version('8.11.0')) {
+      return gradleVersion >= GradleVersion.version('8.13')
+    } else if (agpVersion >= AgpVersion.version('8.10.0')) {
+      return gradleVersion >= GradleVersion.version('8.11.1')
+    } else if (agpVersion >= AgpVersion.version('8.9.0')) {
+      return gradleVersion >= GradleVersion.version('8.11.1')
+    } else if (agpVersion >= AgpVersion.version('8.8.0')) {
+      return gradleVersion >= GradleVersion.version('8.10.2')
+    } else if (agpVersion >= AgpVersion.version('8.7.0')) {
       return gradleVersion >= GradleVersion.version('8.9')
     } else if (agpVersion >= AgpVersion.version('8.5.0')) {
       return gradleVersion >= GradleVersion.version('8.7')
@@ -77,25 +83,6 @@ abstract class AbstractFunctionalSpec extends Specification {
       return gradleVersion >= GradleVersion.version('8.6')
     } else if (agpVersion >= AgpVersion.version('8.3.0')) {
       return gradleVersion >= GradleVersion.version('8.4')
-    } else if (agpVersion >= AgpVersion.version('8.2.0')) {
-      return gradleVersion >= GradleVersion.version('8.1')
-    } else if (agpVersion >= AgpVersion.version('8.0.0')) {
-      return gradleVersion >= GradleVersion.version('8.0')
-    } else if (agpVersion >= AgpVersion.version('7.4.0')) {
-      return gradleVersion >= GradleVersion.version('7.5')
-    } else if (agpVersion >= AgpVersion.version('7.3.0')) {
-      return gradleVersion >= GradleVersion.version('7.4')
-    } else if (agpVersion >= AgpVersion.version('7.2.0')) {
-      return gradleVersion >= GradleVersion.version('7.3')
-    } else if (agpVersion >= AgpVersion.version('7.1.0')) {
-      return gradleVersion >= GradleVersion.version('7.2') &&
-        gradleVersion < GradleVersion.version('8.0-rc-1')
-    } else if (agpVersion >= AgpVersion.version('7.0.0')) {
-      return gradleVersion >= GradleVersion.version('7.0') &&
-        gradleVersion < GradleVersion.version('8.0-rc-1')
-    } else if (agpVersion >= AgpVersion.version('4.2.0')) {
-      return gradleVersion >= GradleVersion.version('6.7') &&
-        gradleVersion < GradleVersion.version('8.0-rc-1')
     }
 
     throw new IllegalArgumentException("Unsupported AGP version supplied. Was $agpVersion")
@@ -118,15 +105,6 @@ abstract class AbstractFunctionalSpec extends Specification {
     } else {
       return gradleVersions
     }
-  }
-
-  // TODO only needed due to some CC issues in 7.4, remove and replace with above, once 7.5 becomes the minimum.
-  protected static List<GradleVersion> gradleVersionsCC() {
-    return gradleVersions().collect { it == GradleVersions.minGradleVersion ? GRADLE_7_5 : it }
-  }
-
-  protected static List<GradleVersion> gradleVersionsSettingsApi() {
-    return gradleVersions().findAll { it >= GRADLE_8_9 }
   }
 
   /**

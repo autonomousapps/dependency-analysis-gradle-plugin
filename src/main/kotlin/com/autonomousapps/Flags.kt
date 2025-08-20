@@ -75,9 +75,10 @@ public object Flags {
 
   internal fun Project.compatibility(): Compatibility {
     return getGradlePropForConfiguration(DISABLE_COMPATIBILITY, Compatibility.WARN.name).let {
-      @Suppress("DEPRECATION") val value = it.toUpperCase(Locale.US)
-      Compatibility.values().find { it.name == value } ?: error(
-        "Unrecognized value '$it' for 'dependency.analysis.compatibility' property. Allowed values are ${Compatibility.values()}"
+      @Suppress("DEPRECATION")
+      val value = it.uppercase(Locale.US)
+      Compatibility.entries.find { compatibility -> compatibility.name == value } ?: error(
+        "Unrecognized value '$it' for 'dependency.analysis.compatibility' property. Allowed values are ${Compatibility.entries.toTypedArray()}"
       )
     }
   }

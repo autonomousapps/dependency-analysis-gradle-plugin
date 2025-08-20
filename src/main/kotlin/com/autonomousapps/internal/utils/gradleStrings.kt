@@ -21,6 +21,7 @@ import org.gradle.api.capabilities.Capability
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.internal.artifacts.DefaultProjectComponentIdentifier
+import org.gradle.api.internal.artifacts.dependencies.SelfResolvingDependencyInternal
 import org.gradle.api.provider.Provider
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
@@ -45,9 +46,7 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
   val resolved = ProjectCoordinates(
     identifier = (selected.id as ProjectComponentIdentifier).projectPath(),
     gradleVariantIdentification = gradleVariantIdentification,
-    buildPath = (selected.id as ProjectComponentIdentifier).build.let {
-      if (GradleVersions.isAtLeastGradle82) it.buildPath else @Suppress("DEPRECATION") it.name
-    }
+    buildPath = (selected.id as ProjectComponentIdentifier).build.buildPath
   )
 
   return IncludedBuildCoordinates.of(requested, resolved)
@@ -106,8 +105,7 @@ private fun ComponentIdentifier.toCoordinates(gradleVariantIdentification: Gradl
   val identifier = toIdentifier()
   return when (this) {
     is ProjectComponentIdentifier -> {
-      val buildPath = if (GradleVersions.isAtLeastGradle82) build.buildPath else @Suppress("DEPRECATION") build.name
-      ProjectCoordinates(identifier, gradleVariantIdentification, buildPath)
+      ProjectCoordinates(identifier, gradleVariantIdentification, build.buildPath)
     }
 
     is ModuleComponentIdentifier -> {
@@ -200,12 +198,7 @@ internal fun Dependency.toCoordinates(): Coordinates? {
  */
 internal fun Dependency.toIdentifier(): Pair<ModuleInfo, GradleVariantIdentification>? = when (this) {
   is ProjectDependency -> {
-    val identifier = if (GradleVersions.isAtLeastGradle811) {
-      path
-    } else {
-      @Suppress("DEPRECATION")
-      dependencyProject.path
-    }
+    val identifier = path
     Pair(ModuleInfo(identifier.intern()), targetGradleVariantIdentification())
   }
 
@@ -251,7 +244,8 @@ internal fun Dependency.toIdentifier(): Pair<ModuleInfo, GradleVariantIdentifica
   // Don't have enough information, so ignore it. Please note that a `FileCollectionDependency` is
   // also a `SelfResolvingDependency`, but not all `SelfResolvingDependency`s are
   // `FileCollectionDependency`s.
-  is SelfResolvingDependency -> null
+  // TODO(tsr): evaluate whether we need to care about these kinds of dependencies
+  is SelfResolvingDependencyInternal -> null
   else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
 }
 
@@ -263,7 +257,9 @@ internal fun Dependency.resolvedVersion(): String? = when (this) {
   }
 
   is FileCollectionDependency -> null
-  is SelfResolvingDependency -> null
+
+  // TODO(tsr): evaluate whether we need to care about these kinds of dependencies
+  is SelfResolvingDependencyInternal -> null
   else -> throw GradleException("Unknown Dependency subtype: \n$this\n${javaClass.name}")
 }?.intern()
 

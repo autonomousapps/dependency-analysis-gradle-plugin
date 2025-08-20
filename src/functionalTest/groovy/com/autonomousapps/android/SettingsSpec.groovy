@@ -30,7 +30,7 @@ final class SettingsSpec extends AbstractAndroidSpec {
       .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
 
     where:
-    [gradleVersion, agpVersion] << gradleAgpMatrixSettingsApi()
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
   def "configuration fails with useful error when AGP not on classpath (#gradleVersion AGP #agpVersion)"() {
@@ -45,6 +45,6 @@ final class SettingsSpec extends AbstractAndroidSpec {
     result.output.contains('Android Gradle Plugin (AGP) not found on classpath')
 
     where:
-    [gradleVersion, agpVersion] << gradleAgpMatrixSettingsApi()
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 }

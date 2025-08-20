@@ -9,8 +9,10 @@ import com.vanniktech.maven.publish.GradlePublishPlugin
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.publish.maven.tasks.AbstractPublishToMaven
+import org.gradle.api.tasks.compile.GroovyCompile
 import org.gradle.plugin.devel.tasks.ValidatePlugins
 
 public abstract class PluginConventionPlugin : Plugin<Project> {
@@ -26,10 +28,21 @@ public abstract class PluginConventionPlugin : Plugin<Project> {
     val versionCatalog = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
 
     configureDokka(versionCatalog)
+    configureGroovy(versionCatalog)
     configureKotlin(versionCatalog)
     configurePlugins()
     configurePublishing()
     disableConfigurationCache()
+  }
+
+  private fun Project.configureGroovy(versionCatalog: VersionCatalog) {
+    val javaTarget = versionCatalog.findVersion("javaTarget").orElseThrow().requiredVersion
+
+    tasks.withType(GroovyCompile::class.java).configureEach { t ->
+      // Groovy doesn't have a 'release' concept, so we must use source/target compatibility.
+      t.sourceCompatibility = javaTarget
+      t.targetCompatibility = javaTarget
+    }
   }
 
   /**
