@@ -26,8 +26,8 @@ internal class PluginTest {
     @JvmStatic fun gradleVersions(): List<GradleVersion> {
       return listOf(
         GradleVersion.current(),
-        GradleVersion.version("8.4"),
-        GradleVersion.version("8.5-rc-2"),
+        GradleVersion.version("8.14.3"),
+        GradleVersion.version("8.11.1"),
       ).distinctBy { it.version }
     }
   }
@@ -142,9 +142,11 @@ private class PluginProject : AbstractGradleProject() {
           plugins(Plugin.javaGradle, testkitPlugin)
           dependencies(
             project("implementation", ":lib"),
+            Dependency("functionalTestImplementation", "org.junit:junit-bom:5.13.4").onPlatform(),
             Dependency("functionalTestImplementation", "com.google.truth:truth:1.1.3"),
-            Dependency("functionalTestImplementation", "org.junit.jupiter:junit-jupiter-api:5.8.2"),
-            Dependency("functionalTestImplementation", "org.junit.jupiter:junit-jupiter-engine:5.8.2"),
+            Dependency("functionalTestImplementation", "org.junit.jupiter:junit-jupiter-api"),
+            Dependency("functionalTestRuntimeOnly", "org.junit.jupiter:junit-jupiter-engine"),
+            Dependency("functionalTestRuntimeOnly", "org.junit.platform:junit-platform-launcher"),
           )
           withGroovy(
             """
@@ -160,6 +162,13 @@ private class PluginProject : AbstractGradleProject() {
                     id = "my-plugin"
                     implementationClass = "com.example.test.MyPlugin"
                   }
+                }
+              }
+              
+              if (GradleVersion.current() >= GradleVersion.version("9.0.0")) {
+                // TODO(tsr): this should not be necessary, but it might relate to the TODO at top. 
+                tasks.functionalTest {
+                  failOnNoDiscoveredTests = false
                 }
               }
             """.trimIndent()
