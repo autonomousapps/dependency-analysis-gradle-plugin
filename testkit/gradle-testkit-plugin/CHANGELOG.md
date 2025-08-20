@@ -1,5 +1,9 @@
 Gradle TestKit Plugin Changelog
 
+# Version 0.15
+* [Feat]: Build with Gradle 9.0.0 and update to non-nullable types.
+* [Feat] Update default support lib version to 0.19.
+
 # Version 0.14
 * [Feat]: support functional tests of Gradle 'libraries' as well as plugins.
 
