@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
+import com.autonomousapps.internal.FunctionalTestBuildConfig.GRADLE_MIN_VERSION
 import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.kit.GradleBuilder.build
 import com.autonomousapps.kit.GradleProject
@@ -26,8 +27,7 @@ internal class PluginTest {
     @JvmStatic fun gradleVersions(): List<GradleVersion> {
       return listOf(
         GradleVersion.current(),
-        GradleVersion.version("8.14.3"),
-        GradleVersion.version("8.11.1"),
+        GradleVersion.version(GRADLE_MIN_VERSION),
       ).distinctBy { it.version }
     }
   }
