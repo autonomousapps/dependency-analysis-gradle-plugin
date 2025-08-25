@@ -1,5 +1,8 @@
 Variant-Artifacts Changelog
 
+# Version 0.3
+* [Fix] set apiVersion and languageVersion to 2.0 for Gradle 8.11 support.
+
 # Version 0.2
 * [Feat] keep `Configuration`s lazy. 
 

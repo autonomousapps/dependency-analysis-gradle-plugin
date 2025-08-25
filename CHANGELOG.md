@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.0.1
+* [Fix] set apiVersion and languageVersion to 2.0 for Gradle 8.11 support.
+
 # Version 3.0.0
 * [Build] now building with Gradle 9.0.0.
 * [Breaking] minimum supported version of Gradle is now 8.11.

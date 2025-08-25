@@ -1,5 +1,8 @@
 Gradle TestKit Plugin Changelog
 
+# Version 0.16
+* [Fix] set apiVersion and languageVersion to 2.0 for Gradle 8.11 support.
+
 # Version 0.15
 * [Feat]: Build with Gradle 9.0.0 and update to non-nullable types.
 * [Feat] Update default support lib version to 0.19.

@@ -1,5 +1,8 @@
 Graph-Support Changelog
 
+# Version 0.8
+* [Fix] set apiVersion and languageVersion to 2.0 for Gradle 8.11 support.
+
 # Version 0.7
 * [Feat]: Build with Gradle 9.0.0, change API to non-nullable.
 

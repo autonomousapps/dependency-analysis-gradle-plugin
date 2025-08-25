@@ -1,5 +1,8 @@
 Gradle TestKit Support Changelog
 
+# Version 0.20
+* [Fix] set apiVersion and languageVersion to 2.0 for Gradle 8.11 support.
+
 # Version 0.19
 * [Feat]: Add `onPlatform()` and `onEnforcedPlatform()` convenience functions to `Dependency`.
 * [Feat]: Build with Gradle 9.0.0, change API to non-nullable.
