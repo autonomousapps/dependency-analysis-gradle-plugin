@@ -6,6 +6,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 internal fun Project.configureDokka(versionCatalog: VersionCatalog) {
@@ -21,8 +22,12 @@ internal fun Project.configureKotlin(versionCatalog: VersionCatalog) {
 
   tasks.withType(KotlinCompile::class.java).configureEach { t ->
     t.compilerOptions {
+      // Ensure compatibility with Gradle 8.x. See https://docs.gradle.org/9.0.0/userguide/compatibility.html.
+      apiVersion.set(KotlinVersion.KOTLIN_2_0)
+      languageVersion.set(KotlinVersion.KOTLIN_2_0)
       jvmTarget.set(JvmTarget.fromTarget(javaTarget))
       freeCompilerArgs.add(
+        // equivalent to JavaCompile's `options.release`
         "-Xjdk-release=$javaTarget",
       )
     }

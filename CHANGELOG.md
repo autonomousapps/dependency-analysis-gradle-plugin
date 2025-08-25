@@ -2,7 +2,7 @@ Dependency Analysis Plugin Changelog
 
 # Version 3.0.0
 * [Build] now building with Gradle 9.0.0.
-* [Breaking] minimum supported version of Gradle is now 8.1.1.
+* [Breaking] minimum supported version of Gradle is now 8.11.
 * [Breaking]: annotations and their parameter classes are always considered `compileOnly`.
 
   Annotations for which the class file is not present are treated like being non-existent by the JVM.
