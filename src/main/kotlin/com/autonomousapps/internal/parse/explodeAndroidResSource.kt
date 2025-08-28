@@ -54,8 +54,6 @@ internal class AndroidResParser(
     fun nonLocalAttrRefs(): Set<AndroidResSource.AttrRef> = attrRefs - newIds
   }
 
-  private val container = Container()
-
   val androidResSource: Set<ExplodedRes> = resources.asSequence()
     .mapNotNull {
       try {
@@ -66,9 +64,10 @@ internal class AndroidResParser(
       }
     }
     .map { (file, doc) ->
+      val container = Container()
       // Populate the container
-      extractAttrsFromResourceXml(doc)
-      extractContentReferencesFromResourceXml(doc)
+      extractAttrsFromResourceXml(doc, container)
+      extractContentReferencesFromResourceXml(doc, container)
 
       ExplodedRes(
         relativePath = file.toRelativeString(projectDir),
@@ -88,13 +87,13 @@ internal class AndroidResParser(
         AndroidResSource.StyleParentRef.of(it)
       }
 
-  private fun extractAttrsFromResourceXml(doc: Document) {
+  private fun extractAttrsFromResourceXml(doc: Document, container: Container) {
     doc.attrs().forEach {
       AndroidResSource.AttrRef.from(it, container)
     }
   }
 
-  private fun extractContentReferencesFromResourceXml(doc: Document) {
+  private fun extractContentReferencesFromResourceXml(doc: Document, container: Container) {
     doc.contentReferences().entries.forEach {
       AndroidResSource.AttrRef.from(it.key to it.value, container)
     }
