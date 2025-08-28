@@ -101,7 +101,7 @@ private class SourceExploder(
 
   fun explode(): Set<ExplodingSourceCode> {
     val destination = sortedSetOf<ExplodingSourceCode>()
-    javaSourceFiles.mapTo(destination) {
+    javaSourceFiles.filter { it.exists() }.mapTo(destination) {
       val rel = relativize(it)
       ExplodingSourceCode(
         relativePath = rel,
@@ -110,7 +110,7 @@ private class SourceExploder(
         imports = SourceListener.parseSourceFileForImports(it)
       )
     }
-    kotlinSourceFiles.mapTo(destination) {
+    kotlinSourceFiles.filter { it.exists() }.mapTo(destination) {
       val rel = relativize(it)
       ExplodingSourceCode(
         relativePath = rel,
@@ -119,7 +119,7 @@ private class SourceExploder(
         imports = SourceListener.parseSourceFileForImports(it)
       )
     }
-    groovySourceFiles.mapTo(destination) {
+    groovySourceFiles.filter { it.exists() }.mapTo(destination) {
       val rel = relativize(it)
       ExplodingSourceCode(
         relativePath = rel,
@@ -128,7 +128,7 @@ private class SourceExploder(
         imports = SourceListener.parseSourceFileForImports(it)
       )
     }
-    scalaSourceFiles.mapTo(destination) {
+    scalaSourceFiles.filter { it.exists() }.mapTo(destination) {
       val rel = relativize(it)
       ExplodingSourceCode(
         relativePath = rel,
