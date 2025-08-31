@@ -3,6 +3,7 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.GradleTestKitSupportExtension
+import com.autonomousapps.internal.arguments.RepoAndVersionArgumentProvider
 import org.gradle.api.Project
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.SourceSetContainer
@@ -51,8 +52,10 @@ internal class Configurer(
         // Gradle tests generally require more metaspace
         jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:MaxMetaspaceSize=1g")
 
-        systemProperty("com.autonomousapps.plugin-under-test.repo", extension.funcTestRepo.invariantSeparatorsPath)
-        systemProperty("com.autonomousapps.plugin-under-test.version", version.toString())
+        jvmArgumentProviders += RepoAndVersionArgumentProvider(
+          repo = extension.funcTestRepo.invariantSeparatorsPath,
+          version = version.toString(),
+        )
       }
     }
     extension.setTestTask(functionalTest)
