@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
+import com.autonomousapps.GradleTestKitSupportExtension.Companion.DEFAULT_SUPPORT_VERSION
+import com.autonomousapps.GradleTestKitSupportExtension.Companion.DEFAULT_TRUTH_VERSION
 import com.autonomousapps.internal.Configurer
+import com.autonomousapps.internal.arguments.IncludeBuildReposArgumentProvider
 import com.autonomousapps.internal.capitalizeSafely
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -169,10 +172,7 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
     if (includedBuildRepos.isNotEmpty()) {
       testTask?.configure { t ->
         // All included build projects get installed to their own local repo
-        t.systemProperty(
-          "com.autonomousapps.plugin-under-test.repos-included",
-          includedBuildRepos.joinToString(separator = ",")
-        )
+        t.jvmArgumentProviders += IncludeBuildReposArgumentProvider(includedBuildRepos)
       }
     }
   }
