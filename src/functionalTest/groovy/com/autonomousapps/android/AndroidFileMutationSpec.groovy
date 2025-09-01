@@ -21,7 +21,7 @@ final class AndroidFileMutationSpec extends AbstractAndroidSpec {
     build(
       gradleVersion as GradleVersion,
       gradleProject.rootDir,
-      'buildHealth', '--configuration-cache'
+      'buildHealth'
     )
 
     then: 'the build health is as expected'
@@ -36,7 +36,7 @@ final class AndroidFileMutationSpec extends AbstractAndroidSpec {
     def result = build(
       gradleVersion as GradleVersion,
       gradleProject.rootDir,
-      'buildHealth', '--configuration-cache'
+      'buildHealth'
     )
 
     then: 'the build health is as expected'
@@ -60,7 +60,7 @@ final class AndroidFileMutationSpec extends AbstractAndroidSpec {
     build(
       gradleVersion as GradleVersion,
       gradleProject.rootDir,
-      'buildHealth', '--configuration-cache'
+      'buildHealth'
     )
 
     then: 'the build health is as expected'
@@ -75,7 +75,7 @@ final class AndroidFileMutationSpec extends AbstractAndroidSpec {
     def result = build(
       gradleVersion as GradleVersion,
       gradleProject.rootDir,
-      'buildHealth', '--configuration-cache'
+      'buildHealth'
     )
 
     then: 'the build health is as expected'
