@@ -6,7 +6,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
   id("java-gradle-plugin")
   id("org.jetbrains.kotlin.jvm")
-  id("com.autonomousapps.dependency-analysis")
 }
 
 kotlin {
@@ -69,28 +68,4 @@ dependencies {
   }
   implementation(libs.kotlinDokkaGradlePlugin)
   implementation(libs.shadowGradlePlugin)
-}
-
-// These exclusions are about build-logic exposing various dependencies deliberately to client projects. Some of these
-// could be runtimeOnly, but I don't feel like dealing with that now.
-dependencyAnalysis {
-  issues {
-    onUnusedDependencies {
-      exclude(
-        libs.dependencyAnalysisPlugin,
-        libs.gradleTestKitPlugin,
-        libs.gradle.publish.plugin,
-        libs.kotlinDokkaGradlePlugin,
-        libs.shadowGradlePlugin,
-      )
-    }
-    onUsedTransitiveDependencies {
-      // TODO(tsr): missing DAGP feature around plugin marker artifacts?
-      exclude(
-        "com.gradle.publish:plugin-publish-plugin",
-        "com.gradleup.shadow:shadow-gradle-plugin",
-        "org.jetbrains.dokka:dokka-gradle-plugin",
-      )
-    }
-  }
 }
