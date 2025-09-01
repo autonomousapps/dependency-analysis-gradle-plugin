@@ -45,7 +45,7 @@ final class AndroidFileMutationSpec extends AbstractAndroidSpec {
       .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedDeletionBuildHealth)
 
     and: 'the configuration cache was used'
-    assertThat(result.getOutput()).contains("Configuration cache entry reused.")
+    assertThat(result.output).contains("Configuration cache entry reused.")
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -84,7 +84,7 @@ final class AndroidFileMutationSpec extends AbstractAndroidSpec {
       .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedRenameBuildHealth)
 
     and: 'the configuration cache was used'
-    assertThat(result.getOutput()).contains("Configuration cache entry reused.")
+    assertThat(result.output).contains("Configuration cache entry reused.")
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
