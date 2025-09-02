@@ -4,16 +4,12 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
-import static com.autonomousapps.AdviceHelper.moduleCoordinates
-import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class AndroidFileMutationProject extends AbstractAndroidProject {
@@ -31,7 +27,7 @@ final class AndroidFileMutationProject extends AbstractAndroidProject {
   void deleteSourceFile() {
     def subProjectDir = gradleProject.projectDir(gradleProject.subprojects.first())
     def sourceInfo = sources.first()
-    def sourceInfoRootPath = "src/main/kotlin/" + sourceInfo.path + "/" + sourceInfo.name + ".kt"
+    def sourceInfoRootPath = sourceInfo.relativeFilePath()
     def sourceFile = subProjectDir.resolve(sourceInfoRootPath).toFile()
     sourceFile.delete()
   }
@@ -39,7 +35,7 @@ final class AndroidFileMutationProject extends AbstractAndroidProject {
   void renameAndRewriteSourceFile() {
     def subProjectDir = gradleProject.projectDir(gradleProject.subprojects.first())
     def sourceInfo = sources.first()
-    def sourceInfoRootPath = "src/main/kotlin/" + sourceInfo.path + "/" + sourceInfo.name + ".kt"
+    def sourceInfoRootPath = sourceInfo.relativeFilePath()
     def sourceFile = subProjectDir.resolve(sourceInfoRootPath).toFile()
     def newFile = new File(sourceFile.parentFile, "NewLibrary.kt")
     sourceFile.write(
@@ -78,37 +74,33 @@ final class AndroidFileMutationProject extends AbstractAndroidProject {
   }
 
   private sources = [
-    new Source(
-      SourceType.KOTLIN, 'Library', 'com/example',
-      """\
-        package com.example
+    Source.kotlin(
+      '''\
+      package com.example
         
-        import android.content.Context
-        import androidx.constraintlayout.widget.Group
-      
-        class Library {
-          fun provideGroup(context: Context): Group {
-            return Group(context)
-          }
+      import android.content.Context
+      import androidx.constraintlayout.widget.Group
+    
+      class Library {
+        fun provideGroup(context: Context): Group {
+          return Group(context)
         }
-      """
-    ),
-    new Source(
-      SourceType.KOTLIN, 'Library2', 'com/example',
-      """\
-        package com.example
-        
-        import android.content.Context
-        import android.telephony.TelephonyManager
-        import androidx.core.content.getSystemService
+      }'''.stripIndent()
+    ).build(),
+    Source.kotlin(
+      '''\
+      package com.example
       
-        class Library2 {
-          fun provideTelephonyManager(context: Context): TelephonyManager {
-            return context.getSystemService()!!
-          }
+      import android.content.Context
+      import android.telephony.TelephonyManager
+      import androidx.core.content.getSystemService
+    
+      class Library2 {
+        fun provideTelephonyManager(context: Context): TelephonyManager {
+          return context.getSystemService()!!
         }
-      """
-    )
+      }'''.stripIndent()
+    ).build(),
   ]
 
   Set<ProjectAdvice> actualBuildHealth() {
