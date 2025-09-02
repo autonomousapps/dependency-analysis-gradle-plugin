@@ -99,44 +99,59 @@ private class SourceExploder(
   private val scalaSourceFiles: ConfigurableFileCollection,
 ) {
 
+  /**
+   * TODO(tsr): the file-existence checks are only necessary for Android projects. It is currently unclear why.
+   *  [AndroidSources][com.autonomousapps.internal.analyzer.AndroidSources] may be buggy, or possibly AGP is buggy. This
+   *  may also be a source of more ~cache-adjacent bugs.
+   *
+   * @see <a href="https://github.com/autonomousapps/dependency-analysis-gradle-plugin/pull/1534">PR 1534</a>
+   */
   fun explode(): Set<ExplodingSourceCode> {
     val destination = sortedSetOf<ExplodingSourceCode>()
-    javaSourceFiles.filter { it.exists() }.mapTo(destination) {
-      val rel = relativize(it)
-      ExplodingSourceCode(
-        relativePath = rel,
-        className = canonicalClassName(rel),
-        kind = Kind.JAVA,
-        imports = SourceListener.parseSourceFileForImports(it)
-      )
-    }
-    kotlinSourceFiles.filter { it.exists() }.mapTo(destination) {
-      val rel = relativize(it)
-      ExplodingSourceCode(
-        relativePath = rel,
-        className = canonicalClassName(rel),
-        kind = Kind.KOTLIN,
-        imports = SourceListener.parseSourceFileForImports(it)
-      )
-    }
-    groovySourceFiles.filter { it.exists() }.mapTo(destination) {
-      val rel = relativize(it)
-      ExplodingSourceCode(
-        relativePath = rel,
-        className = canonicalClassName(rel),
-        kind = Kind.GROOVY,
-        imports = SourceListener.parseSourceFileForImports(it)
-      )
-    }
-    scalaSourceFiles.filter { it.exists() }.mapTo(destination) {
-      val rel = relativize(it)
-      ExplodingSourceCode(
-        relativePath = rel,
-        className = canonicalClassName(rel),
-        kind = Kind.SCALA,
-        imports = SourceListener.parseSourceFileForImports(it)
-      )
-    }
+    javaSourceFiles
+      .filter(File::exists)
+      .mapTo(destination) { f ->
+        val rel = relativize(f)
+        ExplodingSourceCode(
+          relativePath = rel,
+          className = canonicalClassName(rel),
+          kind = Kind.JAVA,
+          imports = SourceListener.parseSourceFileForImports(f)
+        )
+      }
+    kotlinSourceFiles
+      .filter(File::exists)
+      .mapTo(destination) { f ->
+        val rel = relativize(f)
+        ExplodingSourceCode(
+          relativePath = rel,
+          className = canonicalClassName(rel),
+          kind = Kind.KOTLIN,
+          imports = SourceListener.parseSourceFileForImports(f)
+        )
+      }
+    groovySourceFiles
+      .filter(File::exists)
+      .mapTo(destination) { f ->
+        val rel = relativize(f)
+        ExplodingSourceCode(
+          relativePath = rel,
+          className = canonicalClassName(rel),
+          kind = Kind.GROOVY,
+          imports = SourceListener.parseSourceFileForImports(f)
+        )
+      }
+    scalaSourceFiles
+      .filter(File::exists)
+      .mapTo(destination) { f ->
+        val rel = relativize(f)
+        ExplodingSourceCode(
+          relativePath = rel,
+          className = canonicalClassName(rel),
+          kind = Kind.SCALA,
+          imports = SourceListener.parseSourceFileForImports(f)
+        )
+      }
     return destination
   }
 
