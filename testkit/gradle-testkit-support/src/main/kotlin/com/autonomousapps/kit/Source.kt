@@ -139,6 +139,11 @@ public class Source @JvmOverloads constructor(
     }
   }
 
+  /** Returns the path to this source file, relative to the project directory. */
+  public fun relativeFilePath(): String {
+    return "${rootPath()}/${path}/${name}.${sourceType.fileExtension}"
+  }
+
   internal fun rootPath(): String {
     forceLanguage ?: return "src/${sourceSet}/${sourceType.value}"
     return "src/$sourceSet/$forceLanguage"
