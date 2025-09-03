@@ -13,7 +13,6 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.get
-import java.io.File
 
 /** Abstraction for differentiating between android-app, android-lib, and java-lib projects.  */
 internal interface DependencyAnalyzer {
@@ -48,18 +47,14 @@ internal interface DependencyAnalyzer {
 
   val attributeValueJar: String
 
-  /** Kotlin projects have no Java source */
-  val javaSourceFiles: Provider<Iterable<File>>?
-  val kotlinSourceFiles: Provider<Iterable<File>>
-  val groovySourceFiles: Provider<Iterable<File>>
-  val scalaSourceFiles: Provider<Iterable<File>>
-
   val isDataBindingEnabled: Provider<Boolean>
   val isViewBindingEnabled: Provider<Boolean>
 
   val outputPaths: OutputPaths
 
   fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask>
+
+  fun registerCodeSourceExploderTask(): TaskProvider<out CodeSourceExploderTask>
 
   fun registerManifestComponentsExtractionTask(): TaskProvider<ManifestComponentsExtractionTask>? = null
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.autonomousapps.internal.analyzer.Language
 import com.autonomousapps.internal.parse.AndroidLayoutParser
 import com.autonomousapps.internal.parse.AndroidManifestParser
 import com.autonomousapps.internal.parse.AndroidResBuilder
@@ -10,15 +11,14 @@ import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.internal.AndroidResSource
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.ProjectLayout
-import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.file.*
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
+import java.io.File
 import javax.inject.Inject
 
 /**
@@ -46,19 +46,15 @@ public abstract class XmlSourceExploderTask @Inject constructor(
   private val layout: ProjectLayout,
 ) : DefaultTask() {
 
+  @get:Optional
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  public abstract val androidLocalRes: ConfigurableFileCollection
-
-  /** Android layout XML files. */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
-  @get:InputFiles
-  public abstract val layoutFiles: ConfigurableFileCollection
+  public abstract val androidLocalRes: ListProperty<Collection<Directory>>
 
   /** AndroidManifest.xml files. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
-  public abstract val manifestFiles: ConfigurableFileCollection
+  public abstract val manifests: ListProperty<RegularFile>
 
   /** Merged AndroidManifest.xml files. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -75,12 +71,50 @@ public abstract class XmlSourceExploderTask @Inject constructor(
   @get:OutputFile
   public abstract val outputRuntime: RegularFileProperty
 
+  private fun getAndroidRes(): Iterable<File> {
+    return androidLocalRes.orNull
+      ?.flatMap { dirs ->
+        dirs.flatMap { dir ->
+          dir
+            .asFileTree
+            // Sometimes there's weird nonsense in the layout directories
+            .matching(Language.filterOf(Language.XML))
+            .files
+        }
+      }
+      .orEmpty()
+  }
+
+  /** Android layout XML files. */
+  private fun getLayoutFiles(): Iterable<File> {
+    // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1112
+    // https://issuetracker.google.com/issues/325307775
+    return try {
+      androidLocalRes.orNull
+        ?.flatMap { dirs ->
+          dirs.flatMap { dir ->
+            dir
+              .asFileTree
+              .matching { include("**/layout/**/*.xml") }
+              .files
+          }
+        }
+        .orEmpty()
+    } catch (_: Exception) {
+      emptyList()
+    }
+  }
+
+  private fun getManifestFiles(): Iterable<File> {
+    return manifests.get().map { manifest -> manifest.asFile }
+  }
+
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(XmlSourceExploderWorkAction::class.java) {
       projectDir.set(layout.projectDirectory)
-      androidRes.setFrom(androidLocalRes)
-      layouts.setFrom(layoutFiles)
-      manifests.setFrom(manifestFiles)
+      androidRes.setFrom(getAndroidRes())
+      layouts.setFrom(getLayoutFiles())
+      this.manifests.setFrom(getManifestFiles())
       mergedManifests.setFrom(mergedManifestFiles)
       namespace.set(this@XmlSourceExploderTask.namespace)
       output.set(this@XmlSourceExploderTask.output)

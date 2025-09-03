@@ -10,10 +10,7 @@ import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.services.InMemoryCache
-import com.autonomousapps.tasks.AbiAnalysisTask
-import com.autonomousapps.tasks.ClassListExploderTask
-import com.autonomousapps.tasks.FindDeclaredProcsTask
-import com.autonomousapps.tasks.FindNativeLibsTask
+import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
@@ -42,11 +39,6 @@ internal abstract class JvmAnalyzer(
 
   final override val attributeValueJar = "jar"
 
-  final override val kotlinSourceFiles: Provider<Iterable<File>> = getKotlinSources()
-  override val javaSourceFiles: Provider<Iterable<File>>? = getJavaSources()
-  final override val groovySourceFiles: Provider<Iterable<File>> = getGroovySources()
-  final override val scalaSourceFiles: Provider<Iterable<File>> = getScalaSources()
-
   final override val isDataBindingEnabled: Provider<Boolean> = project.provider { false }
   final override val isViewBindingEnabled: Provider<Boolean> = project.provider { false }
 
@@ -56,6 +48,16 @@ internal abstract class JvmAnalyzer(
     return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$taskNameSuffix") {
       classes.setFrom(sourceSet.classesDirs)
       output.set(outputPaths.explodingBytecodePath)
+    }
+  }
+
+  final override fun registerCodeSourceExploderTask(): TaskProvider<out CodeSourceExploderTask> {
+    return project.tasks.register<JvmCodeSourceExploderTask>("explodeCodeSource$taskNameSuffix") {
+      groovySource.setFrom(getGroovySources())
+      javaSource.setFrom(getJavaSources())
+      kotlinSource.setFrom(getKotlinSources())
+      scalaSource.setFrom(getScalaSources())
+      output.set(outputPaths.explodedSourcePath)
     }
   }
 

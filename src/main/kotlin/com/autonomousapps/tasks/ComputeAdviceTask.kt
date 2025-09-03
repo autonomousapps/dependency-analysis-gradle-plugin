@@ -6,16 +6,16 @@ import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.root
 import com.autonomousapps.internal.Bundles
+import com.autonomousapps.internal.transform.StandardTransform
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.CoordinatesString.Companion.toStringCoordinates
 import com.autonomousapps.model.*
+import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.Configurations
 import com.autonomousapps.model.internal.declaration.Declaration
-import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.*
 import com.autonomousapps.model.source.SourceKind
-import com.autonomousapps.internal.transform.StandardTransform
 import com.google.common.collect.SetMultimap
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile
@@ -448,19 +448,4 @@ internal class DependencyAdviceBuilder(
         ).reduce(usages)
       }
   }
-}
-
-/**
- * Equivalent to
- * ```
- * someBoolean.also { b ->
- *   if (b) block()
- * }
- * ```
- */
-internal inline fun Boolean.andIfTrue(block: () -> Unit): Boolean {
-  if (this) {
-    block()
-  }
-  return this
 }
