@@ -13,15 +13,15 @@ import com.android.build.api.variant.Variant
 import com.autonomousapps.model.source.AndroidSourceKind
 import com.autonomousapps.tasks.AndroidClassesTask
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
-/**
- * All the relevant sources for a given Android variant, including Java, Kotlin, assets, res, manifest files, and
- * layouts.
- */
 internal interface AndroidSources {
+  val sources: Sources
+
   val sourceKind: AndroidSourceKind
 
   /** E.g., `debugCompileClasspath` or `debugUnitTestCompileClasspath` */
@@ -30,18 +30,15 @@ internal interface AndroidSources {
   /** E.g., `debugRuntimeClasspath` or `debugUnitTestRuntimeClasspath` */
   val runtimeClasspathConfigurationName: String
 
-  fun getJavaSources(): Provider<Iterable<File>>
-  fun getKotlinSources(): Provider<Iterable<File>>
   fun getAndroidAssets(): Provider<Iterable<File>>
-  fun getAndroidRes(): Provider<Iterable<File>>
 
   /** Manifests stored in source, or perhaps generated. cf [getMergedManifest]. */
-  fun getManifestFiles(): Provider<Iterable<File>>
+  fun getManifestFiles(): Provider<out List<RegularFile>>
 
   /** Only ever a single file, but returning a list makes it easy to return an _empty_ list. cf [getManifestFiles]. */
   fun getMergedManifest(): Provider<Iterable<File>>
 
-  fun getLayoutFiles(): Provider<Iterable<File>>
+  fun getAndroidRes(): Provider<List<Collection<Directory>>>?
   fun wireWithClassFiles(task: TaskProvider<out AndroidClassesTask>)
 }
 
@@ -61,27 +58,11 @@ internal open class DefaultAndroidSources(
    * production artifacts (main/debug/release/etc), or the test or androidTest sources.
    */
   private val agpArtifacts: Artifacts,
-  private val sources: Sources,
+  override val sources: Sources,
   override val sourceKind: AndroidSourceKind,
   override val compileClasspathConfigurationName: String,
   override val runtimeClasspathConfigurationName: String,
 ) : AndroidSources {
-
-  final override fun getJavaSources(): Provider<Iterable<File>> {
-    return sources.kotlin?.all
-      ?.map { directories ->
-        directories.map { directory -> directory.asFileTree.matching(Language.filterOf(Language.JAVA)) }
-      }?.map { trees -> trees.flatten() }
-      ?: project.provider { emptyList() }
-  }
-
-  final override fun getKotlinSources(): Provider<Iterable<File>> {
-    return sources.kotlin?.all
-      ?.map { directories ->
-        directories.map { directory -> directory.asFileTree.matching(Language.filterOf(Language.KOTLIN)) }
-      }?.map { trees -> trees.flatten() }
-      ?: project.provider { emptyList() }
-  }
 
   final override fun getAndroidAssets(): Provider<Iterable<File>> {
     return sources.assets?.all
@@ -91,48 +72,16 @@ internal open class DefaultAndroidSources(
       ?: project.provider { emptyList() }
   }
 
-  // nb: android res is a superset of layouts. This means layouts will get parsed twice. This is currently simpler than
-  // rewriting a bunch of code (the two parsers look for different things).
-  override fun getAndroidRes(): Provider<Iterable<File>> {
-    // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1112
-    // https://issuetracker.google.com/issues/325307775
-    return try {
-      sources.res?.all
-        ?.map { layers -> layers.flatten() }
-        ?.map { directories ->
-          // Sometimes there's weird nonsense in the layout directories
-          directories.map { directory -> directory.asFileTree.matching(Language.filterOf(Language.XML)) }
-        }
-        ?.map { trees -> trees.flatten() }
-        ?: project.provider { emptyList() }
-    } catch (_: Exception) {
-      project.provider { emptyList() }
-    }
+  /**
+   * nb: android res is a superset of layouts. This means layouts will get parsed twice. This is currently simpler
+   * than rewriting a bunch of code (the two parsers look for different things).
+   */
+  override fun getAndroidRes(): Provider<List<Collection<Directory>>>? {
+    return sources.res?.all
   }
 
-  override fun getLayoutFiles(): Provider<Iterable<File>> {
-    // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1112
-    // https://issuetracker.google.com/issues/325307775
-    return try {
-      sources.res?.all
-        ?.map { layers -> layers.flatten() }
-        ?.map { directories -> directories.map { directory -> directory.asFileTree } }
-        ?.map { trees ->
-          trees.map { tree ->
-            tree.matching {
-              include("**/layout/**/*.xml")
-            }
-          }
-        }
-        ?.map { trees -> trees.flatten() }
-        ?: project.provider { emptyList() }
-    } catch (_: Exception) {
-      project.provider { emptyList() }
-    }
-  }
-
-  override fun getManifestFiles(): Provider<Iterable<File>> {
-    return sources.manifests.all.map { manifests -> manifests.map { manifest -> manifest.asFile } }
+  override fun getManifestFiles(): Provider<out List<RegularFile>> {
+    return sources.manifests.all
   }
 
   // For this one, we want to use the main variant's artifacts
@@ -176,9 +125,8 @@ internal class TestAndroidSources(
   compileClasspathConfigurationName,
   runtimeClasspathConfigurationName,
 ) {
-  override fun getAndroidRes(): Provider<Iterable<File>> = project.provider { emptyList() }
-  override fun getLayoutFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
-  override fun getManifestFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
+  override fun getAndroidRes(): Provider<List<Collection<Directory>>>? = null
+  override fun getManifestFiles(): Provider<out List<RegularFile>> = project.provider { emptyList() }
   override fun getMergedManifest(): Provider<Iterable<File>> = project.provider { emptyList() }
 }
 
@@ -213,6 +161,6 @@ internal class ComAndroidTestAndroidSources(
   compileClasspathConfigurationName,
   runtimeClasspathConfigurationName,
 ) {
-  override fun getManifestFiles(): Provider<Iterable<File>> = project.provider { emptyList() }
+  override fun getManifestFiles(): Provider<out List<RegularFile>> = project.provider { emptyList() }
   override fun getMergedManifest(): Provider<Iterable<File>> = project.provider { emptyList() }
 }

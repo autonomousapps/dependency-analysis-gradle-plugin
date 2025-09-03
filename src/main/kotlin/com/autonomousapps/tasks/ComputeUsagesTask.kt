@@ -712,18 +712,22 @@ private class GraphVisitor(
     }
   }
 
-  /**
-   * Returns `true` if `capability.assets` is not empty and if the project uses `android.content.res.AssetManager`.
-   */
+  /** Returns `true` if `capability.assets` is not empty and if the project uses `android.content.res.AssetManager`. */
   private fun usesAssets(
     coordinates: Coordinates,
     capability: AndroidAssetCapability,
     context: GraphViewVisitor.Context,
-  ): Boolean = (capability.assets.isNotEmpty()
-    && context.project.usedNonAnnotationClassesBySrc.contains("android.content.res.AssetManager")
-    ).andIfTrue {
+  ): Boolean {
+    val usesAssets = capability.assets.isNotEmpty()
+      && context.project.usedNonAnnotationClassesBySrc.contains("android.content.res.AssetManager")
+
+    return if (usesAssets) {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Asset(capability.assets)
+      true
+    } else {
+      false
     }
+  }
 
   private fun usesResBySource(
     coordinates: Coordinates,

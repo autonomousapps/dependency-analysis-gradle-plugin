@@ -17,7 +17,6 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.register
-import java.io.File
 
 /** Base class for analyzing an Android project (`com.android.application` or `com.android.library` only). */
 internal abstract class AndroidAnalyzer(
@@ -41,10 +40,6 @@ internal abstract class AndroidAnalyzer(
   final override val kaptConfigurationName = kaptConfName()
   final override val annotationProcessorConfigurationName = "${variantName}AnnotationProcessorClasspath"
   final override val testInstrumentationRunner: Provider<String> = variant.testInstrumentationRunner
-  final override val kotlinSourceFiles: Provider<Iterable<File>> = androidSources.getKotlinSources()
-  final override val javaSourceFiles: Provider<Iterable<File>> = androidSources.getJavaSources()
-  final override val groovySourceFiles: Provider<Iterable<File>> = project.provider { project.files() }
-  final override val scalaSourceFiles: Provider<Iterable<File>> = project.provider { project.files() }
 
   // TODO(3.0): verify this is the correct attribute.
   final override val attributeValueJar = ArtifactAttributes.ANDROID_CLASSES_JAR
@@ -71,6 +66,14 @@ internal abstract class AndroidAnalyzer(
     }
   }
 
+  final override fun registerCodeSourceExploderTask(): TaskProvider<out CodeSourceExploderTask> {
+    return project.tasks.register<AndroidCodeSourceExploderTask>("explodeCodeSource$taskNameSuffix") {
+      androidSources.sources.java?.all?.let { j -> javaSource.set(j) }
+      androidSources.sources.kotlin?.all?.let { k -> kotlinSource.set(k) }
+      output.set(outputPaths.explodedSourcePath)
+    }
+  }
+
   final override fun registerManifestComponentsExtractionTask(): TaskProvider<ManifestComponentsExtractionTask> {
     return project.tasks.register<ManifestComponentsExtractionTask>(
       "extractPackageNameFromManifest$taskNameSuffix"
@@ -93,9 +96,8 @@ internal abstract class AndroidAnalyzer(
 
   final override fun registerExplodeXmlSourceTask(): TaskProvider<XmlSourceExploderTask> {
     return project.tasks.register<XmlSourceExploderTask>("explodeXmlSource$taskNameSuffix") {
-      androidLocalRes.setFrom(androidSources.getAndroidRes())
-      layoutFiles.setFrom(androidSources.getLayoutFiles())
-      manifestFiles.setFrom(androidSources.getManifestFiles())
+      androidSources.getAndroidRes()?.let { r -> androidLocalRes.set(r) }
+      manifests.set(androidSources.getManifestFiles())
       mergedManifestFiles.setFrom(androidSources.getMergedManifest())
       namespace.set(agp.namespace())
       output.set(outputPaths.androidResToResUsagePath)

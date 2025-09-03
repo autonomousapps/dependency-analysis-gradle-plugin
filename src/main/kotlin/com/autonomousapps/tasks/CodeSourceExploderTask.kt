@@ -2,16 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.autonomousapps.internal.analyzer.Language
 import com.autonomousapps.internal.parse.SourceListener
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.internal.CodeSource.Kind
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingSourceCode
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.ProjectLayout
-import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.file.*
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -19,6 +18,87 @@ import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.nio.file.Paths
 import javax.inject.Inject
+
+@CacheableTask
+public abstract class JvmCodeSourceExploderTask @Inject constructor(
+  workerExecutor: WorkerExecutor,
+  layout: ProjectLayout
+) : CodeSourceExploderTask(workerExecutor, layout) {
+
+  /** The Groovy source of the current project. */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val groovySource: ConfigurableFileCollection
+
+  /** The Java source of the current project. */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val javaSource: ConfigurableFileCollection
+
+  /** The Kotlin source of the current project. */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val kotlinSource: ConfigurableFileCollection
+
+  /** The Scala source of the current project. */
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val scalaSource: ConfigurableFileCollection
+
+  final override fun getGroovySourceFiles(): Iterable<File> {
+    return groovySource.asFileTree.matching(Language.filterOf(Language.GROOVY))
+  }
+
+  final override fun getJavaSourceFiles(): Iterable<File> {
+    return javaSource.asFileTree.matching(Language.filterOf(Language.JAVA))
+  }
+
+  final override fun getKotlinSourceFiles(): Iterable<File> {
+    return kotlinSource.asFileTree.matching(Language.filterOf(Language.KOTLIN))
+  }
+
+  final override fun getScalaSourceFiles(): Iterable<File> {
+    return scalaSource.asFileTree.matching(Language.filterOf(Language.SCALA))
+  }
+}
+
+@CacheableTask
+public abstract class AndroidCodeSourceExploderTask @Inject constructor(
+  workerExecutor: WorkerExecutor,
+  layout: ProjectLayout
+) : CodeSourceExploderTask(workerExecutor, layout) {
+
+  /** The Java source of the current project. */
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val javaSource: ListProperty<Directory>
+
+  /** The Kotlin source of the current project. */
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val kotlinSource: ListProperty<Directory>
+
+  final override fun getJavaSourceFiles(): Iterable<File> {
+    return javaSource.orNull
+      ?.flatMap { dir -> dir.asFileTree.matching(Language.filterOf(Language.JAVA)) }
+      .orEmpty()
+  }
+
+  final override fun getKotlinSourceFiles(): Iterable<File> {
+    return kotlinSource.orNull
+      ?.flatMap { dir -> dir.asFileTree.matching(Language.filterOf(Language.KOTLIN)) }
+      .orEmpty()
+  }
+
+  /*
+   * Android projects only support Java and Kotlin.
+   */
+
+  final override fun getGroovySourceFiles(): Iterable<File> = emptyList()
+  final override fun getScalaSourceFiles(): Iterable<File> = emptyList()
+}
 
 @CacheableTask
 public abstract class CodeSourceExploderTask @Inject constructor(
@@ -31,24 +111,20 @@ public abstract class CodeSourceExploderTask @Inject constructor(
   }
 
   /** The Groovy source of the current project. */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
-  @get:InputFiles
-  public abstract val groovySourceFiles: ConfigurableFileCollection
+  @Internal
+  protected abstract fun getGroovySourceFiles(): Iterable<File>
 
   /** The Java source of the current project. */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
-  @get:InputFiles
-  public abstract val javaSourceFiles: ConfigurableFileCollection
+  @Internal
+  protected abstract fun getJavaSourceFiles(): Iterable<File>
 
   /** The Kotlin source of the current project. */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
-  @get:InputFiles
-  public abstract val kotlinSourceFiles: ConfigurableFileCollection
+  @Internal
+  protected abstract fun getKotlinSourceFiles(): Iterable<File>
 
   /** The Scala source of the current project. */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
-  @get:InputFiles
-  public abstract val scalaSourceFiles: ConfigurableFileCollection
+  @Internal
+  protected abstract fun getScalaSourceFiles(): Iterable<File>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
@@ -56,10 +132,10 @@ public abstract class CodeSourceExploderTask @Inject constructor(
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(CodeSourceExploderWorkAction::class.java) {
       projectDir.set(layout.projectDirectory)
-      groovySourceFiles.from(this@CodeSourceExploderTask.groovySourceFiles)
-      javaSourceFiles.from(this@CodeSourceExploderTask.javaSourceFiles)
-      kotlinSourceFiles.from(this@CodeSourceExploderTask.kotlinSourceFiles)
-      scalaSourceFiles.from(this@CodeSourceExploderTask.scalaSourceFiles)
+      groovySourceFiles.from(getGroovySourceFiles())
+      javaSourceFiles.from(getJavaSourceFiles())
+      kotlinSourceFiles.from(getKotlinSourceFiles())
+      scalaSourceFiles.from(getScalaSourceFiles())
       output.set(this@CodeSourceExploderTask.output)
     }
   }
@@ -99,59 +175,45 @@ private class SourceExploder(
   private val scalaSourceFiles: ConfigurableFileCollection,
 ) {
 
-  /**
-   * TODO(tsr): the file-existence checks are only necessary for Android projects. It is currently unclear why.
-   *  [AndroidSources][com.autonomousapps.internal.analyzer.AndroidSources] may be buggy, or possibly AGP is buggy. This
-   *  may also be a source of more ~cache-adjacent bugs.
-   *
-   * @see <a href="https://github.com/autonomousapps/dependency-analysis-gradle-plugin/pull/1534">PR 1534</a>
-   */
   fun explode(): Set<ExplodingSourceCode> {
     val destination = sortedSetOf<ExplodingSourceCode>()
-    javaSourceFiles
-      .filter(File::exists)
-      .mapTo(destination) { f ->
-        val rel = relativize(f)
-        ExplodingSourceCode(
-          relativePath = rel,
-          className = canonicalClassName(rel),
-          kind = Kind.JAVA,
-          imports = SourceListener.parseSourceFileForImports(f)
-        )
-      }
-    kotlinSourceFiles
-      .filter(File::exists)
-      .mapTo(destination) { f ->
-        val rel = relativize(f)
-        ExplodingSourceCode(
-          relativePath = rel,
-          className = canonicalClassName(rel),
-          kind = Kind.KOTLIN,
-          imports = SourceListener.parseSourceFileForImports(f)
-        )
-      }
-    groovySourceFiles
-      .filter(File::exists)
-      .mapTo(destination) { f ->
-        val rel = relativize(f)
-        ExplodingSourceCode(
-          relativePath = rel,
-          className = canonicalClassName(rel),
-          kind = Kind.GROOVY,
-          imports = SourceListener.parseSourceFileForImports(f)
-        )
-      }
-    scalaSourceFiles
-      .filter(File::exists)
-      .mapTo(destination) { f ->
-        val rel = relativize(f)
-        ExplodingSourceCode(
-          relativePath = rel,
-          className = canonicalClassName(rel),
-          kind = Kind.SCALA,
-          imports = SourceListener.parseSourceFileForImports(f)
-        )
-      }
+    javaSourceFiles.mapTo(destination) { f ->
+      val rel = relativize(f)
+      ExplodingSourceCode(
+        relativePath = rel,
+        className = canonicalClassName(rel),
+        kind = Kind.JAVA,
+        imports = SourceListener.parseSourceFileForImports(f)
+      )
+    }
+    kotlinSourceFiles.mapTo(destination) { f ->
+      val rel = relativize(f)
+      ExplodingSourceCode(
+        relativePath = rel,
+        className = canonicalClassName(rel),
+        kind = Kind.KOTLIN,
+        imports = SourceListener.parseSourceFileForImports(f)
+      )
+    }
+    groovySourceFiles.mapTo(destination) { f ->
+      val rel = relativize(f)
+      ExplodingSourceCode(
+        relativePath = rel,
+        className = canonicalClassName(rel),
+        kind = Kind.GROOVY,
+        imports = SourceListener.parseSourceFileForImports(f)
+      )
+    }
+    scalaSourceFiles.mapTo(destination) { f ->
+      val rel = relativize(f)
+      ExplodingSourceCode(
+        relativePath = rel,
+        className = canonicalClassName(rel),
+        kind = Kind.SCALA,
+        imports = SourceListener.parseSourceFileForImports(f)
+      )
+    }
+
     return destination
   }
 

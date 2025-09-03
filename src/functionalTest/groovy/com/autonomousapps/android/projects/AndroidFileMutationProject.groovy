@@ -25,25 +25,21 @@ final class AndroidFileMutationProject extends AbstractAndroidProject {
   }
 
   void deleteSourceFile() {
-    def subProjectDir = gradleProject.projectDir(gradleProject.subprojects.first())
-    def sourceInfo = sources.first()
-    def sourceInfoRootPath = sourceInfo.relativeFilePath()
-    def sourceFile = subProjectDir.resolve(sourceInfoRootPath).toFile()
-    sourceFile.delete()
+    getSourceFile().delete()
   }
 
   void renameAndRewriteSourceFile() {
-    def subProjectDir = gradleProject.projectDir(gradleProject.subprojects.first())
-    def sourceInfo = sources.first()
-    def sourceInfoRootPath = sourceInfo.relativeFilePath()
-    def sourceFile = subProjectDir.resolve(sourceInfoRootPath).toFile()
+    def sourceFile = getSourceFile()
     def newFile = new File(sourceFile.parentFile, "NewLibrary.kt")
     sourceFile.write(
       """\
         package com.example
         
         import android.content.Context
-      
+        // This import is unused, but we're using it to validate _source_ parsing via `CodeSourceExploderTask`. The
+        // advice should _not_ recommend removing the commons-collections dep, given this import statement.
+        import org.apache.commons.collections4.Bag
+
         class NewLibrary {
           fun provideContext(context: Context): Context {
             return context
@@ -55,6 +51,18 @@ final class AndroidFileMutationProject extends AbstractAndroidProject {
     println("${sourceFile.absolutePath} --> ${newFile.absolutePath}")
   }
 
+  void mutateSourceFile() {
+    def sourceFile = getSourceFile()
+    sourceFile.text = "private fun foo(): Nothing = TODO()"
+  }
+
+  private File getSourceFile() {
+    def subProjectDir = gradleProject.projectDir(gradleProject.subprojects.first())
+    def sourceInfo = sources.first()
+    def sourceInfoRootPath = sourceInfo.relativeFilePath()
+    return subProjectDir.resolve(sourceInfoRootPath).toFile()
+  }
+
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('lib') { l ->
@@ -63,6 +71,7 @@ final class AndroidFileMutationProject extends AbstractAndroidProject {
           bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock()
           bs.dependencies = [
+            commonsCollections('implementation'),
             constraintLayout('api'),
             coreKtx('implementation'),
             core('implementation'),
@@ -80,7 +89,7 @@ final class AndroidFileMutationProject extends AbstractAndroidProject {
         
       import android.content.Context
       import androidx.constraintlayout.widget.Group
-    
+      
       class Library {
         fun provideGroup(context: Context): Group {
           return Group(context)
@@ -107,19 +116,29 @@ final class AndroidFileMutationProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  private final Set<Advice> libAdvice = [
-    Advice.ofRemove(moduleCoordinates("androidx.constraintlayout:constraintlayout:1.1.3"), "api"),
-  ] as Set<Advice>
+  private final Advice removeConstraintLayout = Advice.ofRemove(
+    moduleCoordinates("androidx.constraintlayout:constraintlayout:1.1.3"),
+    "api"
+  )
+
+  private final Advice removeCommonsCollections = Advice.ofRemove(
+    moduleCoordinates("org.apache.commons:commons-collections4:4.4"),
+    "implementation"
+  )
+
+  final Set<ProjectAdvice> expectedOriginalBuildHealth = [
+    projectAdviceForDependencies(':lib', [removeCommonsCollections] as Set<Advice>),
+  ]
 
   final Set<ProjectAdvice> expectedDeletionBuildHealth = [
-    projectAdviceForDependencies(':lib', libAdvice),
+    projectAdviceForDependencies(':lib', [removeConstraintLayout, removeCommonsCollections] as Set<Advice>),
   ]
 
   final Set<ProjectAdvice> expectedRenameBuildHealth = [
-    projectAdviceForDependencies(':lib', libAdvice),
+    projectAdviceForDependencies(':lib', [removeConstraintLayout] as Set<Advice>),
   ]
 
-  final Set<ProjectAdvice> expectedOriginalBuildHealth = [
-    emptyProjectAdviceFor(':lib'),
+  final Set<ProjectAdvice> expectedMutationBuildHealth = [
+    projectAdviceForDependencies(':lib', [removeConstraintLayout, removeCommonsCollections] as Set<Advice>),
   ]
 }
