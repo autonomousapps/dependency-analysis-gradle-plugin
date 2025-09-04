@@ -63,6 +63,7 @@ internal abstract class JvmAnalyzer(
     if (!hasAbi) return null
 
     return project.tasks.register<AbiAnalysisTask>("abiAnalysis$taskNameSuffix") {
+      sourceFiles.setFrom(sourceSet.sourceCode)
       classes.setFrom(sourceSet.classesDirs)
       exclusions.set(abiExclusions)
       output.set(outputPaths.abiAnalysisPath)
