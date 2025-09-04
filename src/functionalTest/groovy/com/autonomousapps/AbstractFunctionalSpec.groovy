@@ -15,7 +15,7 @@ abstract class AbstractFunctionalSpec extends Specification {
   protected static final String FLAG_LOG_BYTECODE = "-D${Flags.BYTECODE_LOGGING}=true"
 
   protected static final GRADLE_9_0_0 = GradleVersion.version('9.0.0')
-  protected static final GRADLE_9_1_0 = GradleVersion.version('9.1.0-rc-1')
+  protected static final GRADLE_9_1_0 = GradleVersion.version('9.1.0-rc-2')
 
   protected static final GRADLE_LATEST = GRADLE_9_0_0
   protected static final GRADLE_MAX = GradleVersions.maxGradleVersion
