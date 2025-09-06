@@ -42,6 +42,10 @@ abstract class AbstractProject extends AbstractGradleProject {
     this(getKotlinVersion(), null)
   }
 
+  AbstractProject(String kotlinVersion) {
+    this(kotlinVersion, null)
+  }
+
   AbstractProject(
     String kotlinVersion,
     String agpVersion

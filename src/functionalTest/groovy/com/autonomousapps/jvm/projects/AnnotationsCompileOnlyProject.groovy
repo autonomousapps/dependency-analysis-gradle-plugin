@@ -42,7 +42,8 @@ final class AnnotationsCompileOnlyProject extends AbstractProject {
 
   final GradleProject gradleProject
 
-  AnnotationsCompileOnlyProject() {
+  AnnotationsCompileOnlyProject(String kgpVersion) {
+    super(kgpVersion)
     this.gradleProject = build()
   }
 

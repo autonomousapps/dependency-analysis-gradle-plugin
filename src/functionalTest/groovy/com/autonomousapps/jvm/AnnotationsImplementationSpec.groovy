@@ -7,6 +7,7 @@ import com.autonomousapps.jvm.projects.AnnotationsCompileOnlyProject
 import com.autonomousapps.jvm.projects.AnnotationsImplementationProject
 import com.autonomousapps.jvm.projects.AnnotationsImplementationProject2
 import com.autonomousapps.utils.Colors
+import org.gradle.util.GradleVersion
 import spock.lang.Issue
 
 import static com.autonomousapps.utils.Runner.build
@@ -85,7 +86,7 @@ final class AnnotationsImplementationSpec extends AbstractJvmSpec {
 
   def "classes used in compile-retained annotations are compileOnly (#gradleVersion)"() {
     given:
-    def project = new AnnotationsCompileOnlyProject()
+    def project = new AnnotationsCompileOnlyProject(kgpVersionFrom(gradleVersion))
     gradleProject = project.gradleProject
 
     when:
@@ -98,6 +99,14 @@ final class AnnotationsImplementationSpec extends AbstractJvmSpec {
 
     where:
     gradleVersion << gradleVersions()
+  }
+
+  private static String kgpVersionFrom(GradleVersion gradleVersion) {
+    if (gradleVersion < GradleVersion.version('9.0.0')) {
+      return '2.0.21'
+    } else {
+      return '2.2.10'
+    }
   }
 
   // This test ensures that we don't suggest adding an implementation dependency on errorprone annotations due to
