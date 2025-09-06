@@ -3,7 +3,6 @@
 package com.autonomousapps.extension
 
 import org.gradle.api.model.ObjectFactory
-import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
 /**
@@ -23,7 +22,7 @@ import javax.inject.Inject
  */
 public abstract class UsageAnalysisHandler @Inject constructor(objects: ObjectFactory) {
 
-  internal val checkSuperClasses = objects.property<Boolean>().convention(false)
+  internal val checkSuperClasses = objects.property(Boolean::class.java).convention(false)
 
   @Suppress("unused") // public API
   public fun checkSuperClasses(shouldCheck: Boolean) {

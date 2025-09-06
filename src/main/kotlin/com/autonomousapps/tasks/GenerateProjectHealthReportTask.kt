@@ -53,12 +53,12 @@ public abstract class GenerateProjectHealthReportTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ProjectHealthAction::class.java) {
-      advice.set(this@GenerateProjectHealthReportTask.projectAdvice)
-      reportingConfig.set(this@GenerateProjectHealthReportTask.reportingConfig)
-      dslKind.set(this@GenerateProjectHealthReportTask.dslKind)
-      dependencyMap.set(this@GenerateProjectHealthReportTask.dependencyMap)
-      useTypesafeProjectAccessors.set(this@GenerateProjectHealthReportTask.useTypesafeProjectAccessors)
-      output.set(this@GenerateProjectHealthReportTask.output)
+      it.advice.set(projectAdvice)
+      it.reportingConfig.set(reportingConfig)
+      it.dslKind.set(dslKind)
+      it.dependencyMap.set(dependencyMap)
+      it.useTypesafeProjectAccessors.set(useTypesafeProjectAccessors)
+      it.output.set(output)
     }
   }
 

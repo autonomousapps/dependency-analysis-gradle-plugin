@@ -14,11 +14,11 @@ internal enum class Language(val pattern: String) {
   ;
 
   companion object {
-    fun filterOf(language: Language): Action<in PatternFilterable> = Action {
+    fun filterOf(language: Language): Action<in PatternFilterable> = Action { patternFilterable ->
       Language.values().forEach {
         when (it) {
-          language -> include(it.pattern)
-          else -> exclude(it.pattern)
+          language -> patternFilterable.include(it.pattern)
+          else -> patternFilterable.exclude(it.pattern)
         }
       }
     }

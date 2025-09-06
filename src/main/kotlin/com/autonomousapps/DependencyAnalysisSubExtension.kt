@@ -7,7 +7,6 @@ import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.extension.ProjectIssueHandler
 import org.gradle.api.Action
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.create
 import javax.naming.OperationNotSupportedException
 
 /**
@@ -53,7 +52,7 @@ public abstract class DependencyAnalysisSubExtension(
 
   internal companion object {
     fun of(project: Project): DependencyAnalysisSubExtension {
-      return project.extensions.create(NAME, project)
+      return project.extensions.create(NAME, DependencyAnalysisSubExtension::class.java, project)
     }
   }
 }

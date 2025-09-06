@@ -21,17 +21,17 @@ private val attributeKey = Attribute.of("artifactType", String::class.java)
 internal fun Configuration.artifactsFor(attrValue: String): ArtifactCollection = artifactViewFor(attrValue).artifacts
 
 private fun Configuration.artifactViewFor(attrValue: String): ArtifactView = incoming.artifactView {
-  attributes.attribute(attributeKey, attrValue)
-  lenient(true)
+  it.attributes.attribute(attributeKey, attrValue)
+  it.lenient(true)
 }
 
 internal fun Configuration.externalArtifactsFor(attrValue: String): ArtifactCollection = externalArtifactViewFor(attrValue).artifacts
 
 private fun Configuration.externalArtifactViewFor(attrValue: String): ArtifactView = incoming.artifactView {
-  attributes.attribute(attributeKey, attrValue)
-  lenient(true)
+  it.attributes.attribute(attributeKey, attrValue)
+  it.lenient(true)
   // Only resolve external dependencies! Without this, all project dependencies will get _compiled_.
-  componentFilter { id -> id is ModuleComponentIdentifier }
+  it.componentFilter { id -> id is ModuleComponentIdentifier }
 }
 
 /**

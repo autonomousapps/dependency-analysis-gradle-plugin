@@ -16,8 +16,6 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.register
 import java.io.File
 
 internal abstract class JvmAnalyzer(
@@ -45,51 +43,51 @@ internal abstract class JvmAnalyzer(
   override val outputPaths = OutputPaths(project, variantName)
 
   final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
-    return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$taskNameSuffix") {
-      classes.setFrom(sourceSet.classesDirs)
-      output.set(outputPaths.explodingBytecodePath)
+    return project.tasks.register("explodeByteCodeSource$taskNameSuffix", ClassListExploderTask::class.java) {
+      it.classes.setFrom(sourceSet.classesDirs)
+      it.output.set(outputPaths.explodingBytecodePath)
     }
   }
 
   final override fun registerCodeSourceExploderTask(): TaskProvider<out CodeSourceExploderTask> {
-    return project.tasks.register<JvmCodeSourceExploderTask>("explodeCodeSource$taskNameSuffix") {
-      groovySource.setFrom(getGroovySources())
-      javaSource.setFrom(getJavaSources())
-      kotlinSource.setFrom(getKotlinSources())
-      scalaSource.setFrom(getScalaSources())
-      output.set(outputPaths.explodedSourcePath)
+    return project.tasks.register("explodeCodeSource$taskNameSuffix", JvmCodeSourceExploderTask::class.java) {
+      it.groovySource.setFrom(getGroovySources())
+      it.javaSource.setFrom(getJavaSources())
+      it.kotlinSource.setFrom(getKotlinSources())
+      it.scalaSource.setFrom(getScalaSources())
+      it.output.set(outputPaths.explodedSourcePath)
     }
   }
 
   final override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? {
     if (!hasAbi) return null
 
-    return project.tasks.register<AbiAnalysisTask>("abiAnalysis$taskNameSuffix") {
-      classes.setFrom(sourceSet.classesDirs)
-      exclusions.set(abiExclusions)
-      output.set(outputPaths.abiAnalysisPath)
-      abiDump.set(outputPaths.abiDumpPath)
+    return project.tasks.register("abiAnalysis$taskNameSuffix", AbiAnalysisTask::class.java) {
+      it.classes.setFrom(sourceSet.classesDirs)
+      it.exclusions.set(abiExclusions)
+      it.output.set(outputPaths.abiAnalysisPath)
+      it.abiDump.set(outputPaths.abiDumpPath)
     }
   }
 
   final override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> {
-    return project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$taskNameSuffix") {
-      inMemoryCacheProvider.set(InMemoryCache.register(project))
-      kaptConf()?.let {
-        setKaptArtifacts(it.incoming.artifacts)
+    return project.tasks.register("findDeclaredProcs$taskNameSuffix", FindDeclaredProcsTask::class.java) {
+      it.inMemoryCacheProvider.set(InMemoryCache.register(project))
+      kaptConf()?.let { configuration ->
+        it.setKaptArtifacts(configuration.incoming.artifacts)
       }
-      annotationProcessorConf()?.let {
-        setAnnotationProcessorArtifacts(it.incoming.artifacts)
+      annotationProcessorConf()?.let { configuration ->
+        it.setAnnotationProcessorArtifacts(configuration.incoming.artifacts)
       }
 
-      output.set(outputPaths.declaredProcPath)
+      it.output.set(outputPaths.declaredProcPath)
     }
   }
 
   override fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask> {
-    return project.tasks.register<FindNativeLibsTask>("findNativeLibs$taskNameSuffix") {
-      setMacNativeLibs(project.configurations[compileConfigurationName].artifactsFor(ArtifactAttributes.DYLIB))
-      output.set(outputPaths.nativeDependenciesPath)
+    return project.tasks.register("findNativeLibs$taskNameSuffix", FindNativeLibsTask::class.java) {
+      it.setMacNativeLibs(project.configurations.getByName(compileConfigurationName).artifactsFor(ArtifactAttributes.DYLIB))
+      it.output.set(outputPaths.nativeDependenciesPath)
     }
   }
 

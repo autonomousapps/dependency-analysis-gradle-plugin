@@ -54,11 +54,11 @@ public abstract class ExplodeJarTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ExplodeJarWorkAction::class.java) {
-      inMemoryCache.set(this@ExplodeJarTask.inMemoryCache)
-      physicalArtifacts.set(this@ExplodeJarTask.physicalArtifacts)
-      androidLinters.set(this@ExplodeJarTask.androidLinters)
+      it.inMemoryCache.set(inMemoryCache)
+      it.physicalArtifacts.set(physicalArtifacts)
+      it.androidLinters.set(androidLinters)
 
-      output.set(this@ExplodeJarTask.output)
+      it.output.set(output)
     }
   }
 

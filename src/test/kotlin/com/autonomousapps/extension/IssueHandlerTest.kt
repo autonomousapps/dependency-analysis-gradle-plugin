@@ -28,12 +28,12 @@ class IssueHandlerTest {
   @Test fun `when no behavior is defined for a sourceSet, defer to global behavior`() {
     // Given
     issueHandler.all {
-      onAny {
-        severity("fail")
+      it.onAny {
+        it.severity("fail")
       }
-      sourceSet("custom") {
-        onIncorrectConfiguration {
-          severity("ignore")
+      it.sourceSet("custom") {
+        it.onIncorrectConfiguration {
+          it.severity("ignore")
         }
       }
     }

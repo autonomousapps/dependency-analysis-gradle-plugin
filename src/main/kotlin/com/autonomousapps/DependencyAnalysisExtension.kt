@@ -8,7 +8,6 @@ import org.gradle.api.Project
 import org.gradle.api.initialization.Settings
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.model.ObjectFactory
-import org.gradle.kotlin.dsl.create
 import javax.inject.Inject
 
 /**
@@ -82,10 +81,10 @@ public abstract class DependencyAnalysisExtension @Inject constructor(
   internal companion object {
     fun of(project: Project): DependencyAnalysisExtension = project
       .extensions
-      .create(NAME, project.objects, project.gradle)
+      .create(NAME, DependencyAnalysisExtension::class.java, project.objects, project.gradle)
 
     fun of(settings: Settings): DependencyAnalysisExtension = settings
       .extensions
-      .create(NAME, settings.gradle)
+      .create(NAME, DependencyAnalysisExtension::class.java, settings.gradle)
   }
 }

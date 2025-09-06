@@ -39,9 +39,9 @@ public abstract class AndroidScoreTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(Action::class.java) {
-      syntheticProject.set(this@AndroidScoreTask.syntheticProject)
-      dependencies.set(this@AndroidScoreTask.dependencies)
-      output.set(this@AndroidScoreTask.output)
+      it.syntheticProject.set(syntheticProject)
+      it.dependencies.set(dependencies)
+      it.output.set(output)
     }
   }
 

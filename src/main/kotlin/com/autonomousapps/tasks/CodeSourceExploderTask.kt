@@ -131,12 +131,12 @@ public abstract class CodeSourceExploderTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(CodeSourceExploderWorkAction::class.java) {
-      projectDir.set(layout.projectDirectory)
-      groovySourceFiles.from(getGroovySourceFiles())
-      javaSourceFiles.from(getJavaSourceFiles())
-      kotlinSourceFiles.from(getKotlinSourceFiles())
-      scalaSourceFiles.from(getScalaSourceFiles())
-      output.set(this@CodeSourceExploderTask.output)
+      it.projectDir.set(layout.projectDirectory)
+      it.groovySourceFiles.from(getGroovySourceFiles())
+      it.javaSourceFiles.from(getJavaSourceFiles())
+      it.kotlinSourceFiles.from(getKotlinSourceFiles())
+      it.scalaSourceFiles.from(getScalaSourceFiles())
+      it.output.set(output)
     }
   }
 

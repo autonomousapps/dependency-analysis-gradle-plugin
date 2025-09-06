@@ -111,25 +111,25 @@ public abstract class ComputeAdviceTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ComputeAdviceAction::class.java) {
-      projectPath.set(this@ComputeAdviceTask.projectPath)
-      buildPath.set(this@ComputeAdviceTask.buildPath)
-      dependencyUsageReports.set(this@ComputeAdviceTask.dependencyUsageReports)
-      dependencyGraphViews.set(this@ComputeAdviceTask.dependencyGraphViews)
-      androidScoreReports.set(this@ComputeAdviceTask.androidScoreReports)
-      declarations.set(this@ComputeAdviceTask.declarations)
-      bundles.set(this@ComputeAdviceTask.bundles)
-      supportedSourceSets.set(this@ComputeAdviceTask.supportedSourceSets)
-      ignoreKtx.set(this@ComputeAdviceTask.ignoreKtx)
-      explicitSourceSets.set(this@ComputeAdviceTask.explicitSourceSets)
-      android.set(this@ComputeAdviceTask.android)
-      kapt.set(this@ComputeAdviceTask.kapt)
-      redundantPluginReport.set(this@ComputeAdviceTask.redundantJvmPluginReport)
-      duplicateClassesReports.set(this@ComputeAdviceTask.duplicateClassesReports)
+      it.projectPath.set(projectPath)
+      it.buildPath.set(buildPath)
+      it.dependencyUsageReports.set(dependencyUsageReports)
+      it.dependencyGraphViews.set(dependencyGraphViews)
+      it.androidScoreReports.set(androidScoreReports)
+      it.declarations.set(declarations)
+      it.bundles.set(bundles)
+      it.supportedSourceSets.set(supportedSourceSets)
+      it.ignoreKtx.set(ignoreKtx)
+      it.explicitSourceSets.set(explicitSourceSets)
+      it.android.set(android)
+      it.kapt.set(kapt)
+      it.redundantPluginReport.set(redundantJvmPluginReport)
+      it.duplicateClassesReports.set(duplicateClassesReports)
 
-      output.set(this@ComputeAdviceTask.output)
-      dependencyUsages.set(this@ComputeAdviceTask.dependencyUsages)
-      annotationProcessorUsages.set(this@ComputeAdviceTask.annotationProcessorUsages)
-      bundledTraces.set(this@ComputeAdviceTask.bundledTraces)
+      it.output.set(output)
+      it.dependencyUsages.set(dependencyUsages)
+      it.annotationProcessorUsages.set(annotationProcessorUsages)
+      it.bundledTraces.set(bundledTraces)
     }
   }
 

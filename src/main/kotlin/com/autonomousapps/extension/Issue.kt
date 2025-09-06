@@ -10,8 +10,6 @@ import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderConvertible
-import org.gradle.kotlin.dsl.property
-import org.gradle.kotlin.dsl.setProperty
 import org.intellij.lang.annotations.Language
 import javax.inject.Inject
 
@@ -42,10 +40,10 @@ public open class Issue @Inject constructor(
     const val ALL_SOURCE_SETS = "__all"
   }
 
-  internal val sourceSet = objects.property<String>().convention(ALL_SOURCE_SETS)
+  internal val sourceSet = objects.property(String::class.java).convention(ALL_SOURCE_SETS)
 
-  private val severity = objects.property<Behavior>().convention(Undefined())
-  private val excludes = objects.setProperty<Exclusion>().convention(emptySet())
+  private val severity = objects.property(Behavior::class.java).convention(Undefined())
+  private val excludes = objects.setProperty(Exclusion::class.java).convention(emptySet())
 
   /** Must be one of 'warn', 'fail', or 'ignore'. */
   public fun severity(value: String) {

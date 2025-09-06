@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
   id("build-logic.plugin")
-  `kotlin-dsl`
   id("groovy")
   alias(libs.plugins.gradlePublishPlugin)
   alias(libs.plugins.dokka)

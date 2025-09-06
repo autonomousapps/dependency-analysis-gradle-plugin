@@ -36,9 +36,9 @@ public abstract class AssetSourceExploderTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(Action::class.java) {
-      projectDir.set(layout.projectDirectory)
-      androidLocalAssets.setFrom(this@AssetSourceExploderTask.androidLocalAssets)
-      output.set(this@AssetSourceExploderTask.output)
+      it.projectDir.set(layout.projectDirectory)
+      it.androidLocalAssets.setFrom(androidLocalAssets)
+      it.output.set(output)
     }
   }
 

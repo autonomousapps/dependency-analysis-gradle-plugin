@@ -9,8 +9,6 @@ import com.autonomousapps.tasks.DetectRedundantJvmPluginTask
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.property
-import org.gradle.kotlin.dsl.register
 
 internal class RedundantJvmPlugin(
   private val project: Project,
@@ -19,19 +17,19 @@ internal class RedundantJvmPlugin(
 ) {
 
   private val outputPaths = RedundantSubPluginOutputPaths(project)
-  private val javaSource = project.objects.property<Boolean>().convention(false)
-  private val kotlinSource = project.objects.property<Boolean>().convention(false)
+  private val javaSource = project.objects.property(Boolean::class.java).convention(false)
+  private val kotlinSource = project.objects.property(Boolean::class.java).convention(false)
 
   fun configure() {
-    val detectRedundantJvmPlugin = project.tasks.register<DetectRedundantJvmPluginTask>("detectRedundantJvmPlugin") {
-      hasJava.set(javaSource)
-      hasKotlin.set(kotlinSource)
-      redundantPluginsBehavior.set(this@RedundantJvmPlugin.redundantPluginsBehavior)
-      output.set(outputPaths.pluginJvmAdvicePath)
+    val detectRedundantJvmPlugin = project.tasks.register("detectRedundantJvmPlugin", DetectRedundantJvmPluginTask::class.java) {
+      it.hasJava.set(javaSource)
+      it.hasKotlin.set(kotlinSource)
+      it.redundantPluginsBehavior.set(redundantPluginsBehavior)
+      it.output.set(outputPaths.pluginJvmAdvicePath)
     }
 
     computeAdviceTask.configure {
-      redundantJvmPluginReport.set(detectRedundantJvmPlugin.flatMap { it.output })
+      it.redundantJvmPluginReport.set(detectRedundantJvmPlugin.flatMap { it.output })
     }
   }
 

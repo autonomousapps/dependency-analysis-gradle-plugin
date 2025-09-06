@@ -15,8 +15,6 @@ import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.register
 
 /** Base class for analyzing an Android project (`com.android.application` or `com.android.library` only). */
 internal abstract class AndroidAnalyzer(
@@ -58,90 +56,91 @@ internal abstract class AndroidAnalyzer(
   final override val outputPaths = OutputPaths(project, "$variantName${suffix()}")
 
   final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
-    return project.tasks.register<ClassListExploderTask>("explodeByteCodeSource$taskNameSuffix") {
-      classes.setFrom(project.files())
-      output.set(outputPaths.explodingBytecodePath)
+    return project.tasks.register("explodeByteCodeSource$taskNameSuffix", ClassListExploderTask::class.java) {
+      it.classes.setFrom(project.files())
+      it.output.set(outputPaths.explodingBytecodePath)
     }.also { provider ->
       androidSources.wireWithClassFiles(provider)
     }
   }
 
   final override fun registerCodeSourceExploderTask(): TaskProvider<out CodeSourceExploderTask> {
-    return project.tasks.register<AndroidCodeSourceExploderTask>("explodeCodeSource$taskNameSuffix") {
-      androidSources.sources.java?.all?.let { j -> javaSource.set(j) }
-      androidSources.sources.kotlin?.all?.let { k -> kotlinSource.set(k) }
-      output.set(outputPaths.explodedSourcePath)
+    return project.tasks.register("explodeCodeSource$taskNameSuffix", AndroidCodeSourceExploderTask::class.java) {
+      androidSources.sources.java?.all?.let { j -> it.javaSource.set(j) }
+      androidSources.sources.kotlin?.all?.let { k -> it.kotlinSource.set(k) }
+      it.output.set(outputPaths.explodedSourcePath)
     }
   }
 
   final override fun registerManifestComponentsExtractionTask(): TaskProvider<ManifestComponentsExtractionTask> {
-    return project.tasks.register<ManifestComponentsExtractionTask>(
-      "extractPackageNameFromManifest$taskNameSuffix"
+    return project.tasks.register(
+      "extractPackageNameFromManifest$taskNameSuffix",
+      ManifestComponentsExtractionTask::class.java,
     ) {
-      setArtifacts(project.configurations[compileConfigurationName].artifactsFor("android-manifest"))
-      namespace.set(agp.namespace())
-      output.set(outputPaths.manifestPackagesPath)
+      it.setArtifacts(project.configurations.getByName(compileConfigurationName).artifactsFor("android-manifest"))
+      it.namespace.set(agp.namespace())
+      it.output.set(outputPaths.manifestPackagesPath)
     }
   }
 
   final override fun registerFindAndroidResTask(): TaskProvider<FindAndroidResTask> {
-    return project.tasks.register<FindAndroidResTask>("findAndroidResImports$taskNameSuffix") {
-      setAndroidSymbols(
-        project.configurations[compileConfigurationName].artifactsFor("android-symbol-with-package-name")
+    return project.tasks.register("findAndroidResImports$taskNameSuffix", FindAndroidResTask::class.java) {
+      it.setAndroidSymbols(
+        project.configurations.getByName(compileConfigurationName).artifactsFor("android-symbol-with-package-name")
       )
-      setAndroidPublicRes(project.configurations[compileConfigurationName].artifactsFor("android-public-res"))
-      output.set(outputPaths.androidResPath)
+      it.setAndroidPublicRes(project.configurations.getByName(compileConfigurationName).artifactsFor("android-public-res"))
+      it.output.set(outputPaths.androidResPath)
     }
   }
 
   final override fun registerExplodeXmlSourceTask(): TaskProvider<XmlSourceExploderTask> {
-    return project.tasks.register<XmlSourceExploderTask>("explodeXmlSource$taskNameSuffix") {
-      androidSources.getAndroidRes()?.let { r -> androidLocalRes.set(r) }
-      manifests.set(androidSources.getManifestFiles())
-      mergedManifestFiles.setFrom(androidSources.getMergedManifest())
-      namespace.set(agp.namespace())
-      output.set(outputPaths.androidResToResUsagePath)
-      outputRuntime.set(outputPaths.androidResToResUsageRuntimePath)
+    return project.tasks.register("explodeXmlSource$taskNameSuffix", XmlSourceExploderTask::class.java) {
+      androidSources.getAndroidRes()?.let { r -> it.androidLocalRes.set(r) }
+      it.manifests.set(androidSources.getManifestFiles())
+      it.mergedManifestFiles.setFrom(androidSources.getMergedManifest())
+      it.namespace.set(agp.namespace())
+      it.output.set(outputPaths.androidResToResUsagePath)
+      it.outputRuntime.set(outputPaths.androidResToResUsageRuntimePath)
     }
   }
 
   final override fun registerExplodeAssetSourceTask(): TaskProvider<AssetSourceExploderTask> {
-    return project.tasks.register<AssetSourceExploderTask>("explodeAssetSource$taskNameSuffix") {
-      androidLocalAssets.setFrom(androidSources.getAndroidAssets())
-      output.set(outputPaths.androidAssetSourcePath)
+    return project.tasks.register("explodeAssetSource$taskNameSuffix", AssetSourceExploderTask::class.java) {
+      it.androidLocalAssets.setFrom(androidSources.getAndroidAssets())
+      it.output.set(outputPaths.androidAssetSourcePath)
     }
   }
 
   final override fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask> {
-    return project.tasks.register<FindNativeLibsTask>("findNativeLibs$taskNameSuffix") {
-      setAndroidJni(project.configurations[compileConfigurationName].artifactsFor(ArtifactAttributes.ANDROID_JNI))
-      output.set(outputPaths.nativeDependenciesPath)
+    return project.tasks.register("findNativeLibs$taskNameSuffix", FindNativeLibsTask::class.java) {
+      it.setAndroidJni(project.configurations.getByName(compileConfigurationName).artifactsFor(ArtifactAttributes.ANDROID_JNI))
+      it.output.set(outputPaths.nativeDependenciesPath)
     }
   }
 
   final override fun registerFindAndroidLintersTask(): TaskProvider<FindAndroidLinters> =
-    project.tasks.register<FindAndroidLinters>("findAndroidLinters$taskNameSuffix") {
-      setLintJars(project.configurations[compileConfigurationName].artifactsFor(ArtifactAttributes.ANDROID_LINT))
-      output.set(outputPaths.androidLintersPath)
+    project.tasks.register("findAndroidLinters$taskNameSuffix", FindAndroidLinters::class.java) {
+      it.setLintJars(project.configurations.getByName(compileConfigurationName).artifactsFor(ArtifactAttributes.ANDROID_LINT))
+      it.output.set(outputPaths.androidLintersPath)
     }
 
   final override fun registerFindAndroidAssetProvidersTask(): TaskProvider<FindAndroidAssetProviders> =
-    project.tasks.register<FindAndroidAssetProviders>("findAndroidAssetProviders$taskNameSuffix") {
-      setAssets(project.configurations[runtimeConfigurationName].artifactsFor(ArtifactAttributes.ANDROID_ASSETS))
-      output.set(outputPaths.androidAssetsPath)
+    project.tasks.register("findAndroidAssetProviders$taskNameSuffix", FindAndroidAssetProviders::class.java) {
+      it.setAssets(project.configurations.getByName(runtimeConfigurationName).artifactsFor(ArtifactAttributes.ANDROID_ASSETS))
+      it.output.set(outputPaths.androidAssetsPath)
     }
 
   final override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> =
-    project.tasks.register<FindDeclaredProcsTask>("findDeclaredProcs$taskNameSuffix") {
-      inMemoryCacheProvider.set(InMemoryCache.register(project))
-      kaptConf()?.let {
-        setKaptArtifacts(it.incoming.artifacts)
+    project.tasks.register("findDeclaredProcs$taskNameSuffix", FindDeclaredProcsTask::class.java) {
+      it.inMemoryCacheProvider.set(InMemoryCache.register(project))
+      kaptConf()?.let { configuration ->
+        it.setKaptArtifacts(configuration.incoming.artifacts)
       }
-      annotationProcessorConf()?.let {
-        setAnnotationProcessorArtifacts(it.incoming.artifacts)
+      annotationProcessorConf()?.let { configuration ->
+        it.setAnnotationProcessorArtifacts(configuration.incoming.artifacts)
       }
 
-      output.set(outputPaths.declaredProcPath)
+      it.output.set(outputPaths.declaredProcPath)
     }
 
   private fun kaptConfName(): String {
@@ -195,10 +194,10 @@ internal class AndroidLibAnalyzer(
   override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? {
     if (!hasAbi) return null
 
-    return project.tasks.register<AbiAnalysisTask>("abiAnalysis$taskNameSuffix") {
-      exclusions.set(abiExclusions)
-      output.set(outputPaths.abiAnalysisPath)
-      abiDump.set(outputPaths.abiDumpPath)
+    return project.tasks.register("abiAnalysis$taskNameSuffix", AbiAnalysisTask::class.java) {
+      it.exclusions.set(abiExclusions)
+      it.output.set(outputPaths.abiAnalysisPath)
+      it.abiDump.set(outputPaths.abiDumpPath)
     }.also { provider ->
       androidSources.wireWithClassFiles(provider)
     }
@@ -210,10 +209,10 @@ internal class AndroidLibAnalyzer(
     synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
     synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
   ): TaskProvider<AndroidScoreTask> {
-    return project.tasks.register<AndroidScoreTask>("computeAndroidScore$taskNameSuffix") {
-      dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
-      syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
-      output.set(outputPaths.androidScorePath)
+    return project.tasks.register("computeAndroidScore$taskNameSuffix", AndroidScoreTask::class.java) {
+      it.dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
+      it.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
+      it.output.set(outputPaths.androidScorePath)
     }
   }
 }

@@ -69,14 +69,14 @@ public abstract class ComputeUsagesTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ComputeUsagesAction::class.java) {
-      graph.set(this@ComputeUsagesTask.graph)
-      declarations.set(this@ComputeUsagesTask.declarations)
-      dependencies.set(this@ComputeUsagesTask.dependencies)
-      syntheticProject.set(this@ComputeUsagesTask.syntheticProject)
-      kapt.set(this@ComputeUsagesTask.kapt)
-      checkSuperClasses.set(this@ComputeUsagesTask.checkSuperClasses)
-      duplicateClassesReports.set(this@ComputeUsagesTask.duplicateClassesReports)
-      output.set(this@ComputeUsagesTask.output)
+      it.graph.set(graph)
+      it.declarations.set(declarations)
+      it.dependencies.set(dependencies)
+      it.syntheticProject.set(syntheticProject)
+      it.kapt.set(kapt)
+      it.checkSuperClasses.set(checkSuperClasses)
+      it.duplicateClassesReports.set(duplicateClassesReports)
+      it.output.set(output)
     }
   }
 

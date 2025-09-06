@@ -70,11 +70,11 @@ public abstract class FindKotlinMagicTask @Inject constructor(
   @TaskAction
   public fun action() {
     workerExecutor.noIsolation().submit(FindKotlinMagicWorkAction::class.java) {
-      artifacts.set(this@FindKotlinMagicTask.artifacts)
-      inlineUsageReport.set(this@FindKotlinMagicTask.outputInlineMembers)
-      typealiasReport.set(this@FindKotlinMagicTask.outputTypealiases)
-      errorsReport.set(this@FindKotlinMagicTask.outputErrors)
-      inMemoryCacheProvider.set(this@FindKotlinMagicTask.inMemoryCacheProvider)
+      it.artifacts.set(artifacts)
+      it.inlineUsageReport.set(outputInlineMembers)
+      it.typealiasReport.set(outputTypealiases)
+      it.errorsReport.set(outputErrors)
+      it.inMemoryCacheProvider.set(inMemoryCacheProvider)
     }
   }
 

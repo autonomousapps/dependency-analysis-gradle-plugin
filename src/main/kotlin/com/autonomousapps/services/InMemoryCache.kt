@@ -90,7 +90,7 @@ public abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
       .serviceHoldingBuild()
       .sharedServices
       .registerIfAbsent(SHARED_SERVICES_IN_MEMORY_CACHE, InMemoryCache::class.java) {
-        parameters.cacheSize.set(project.cacheSize(DEFAULT_CACHE_VALUE))
+        it.parameters.cacheSize.set(project.cacheSize(DEFAULT_CACHE_VALUE))
       }
   }
 }

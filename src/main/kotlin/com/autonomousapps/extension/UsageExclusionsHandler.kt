@@ -3,7 +3,6 @@
 package com.autonomousapps.extension
 
 import org.gradle.api.model.ObjectFactory
-import org.gradle.kotlin.dsl.setProperty
 import org.intellij.lang.annotations.Language
 import javax.inject.Inject
 
@@ -22,7 +21,7 @@ import javax.inject.Inject
  */
 public abstract class UsageExclusionsHandler @Inject constructor(objects: ObjectFactory) {
 
-  internal val classExclusions = objects.setProperty<String>().convention(emptySet())
+  internal val classExclusions = objects.setProperty(String::class.java).convention(emptySet())
 
   @Suppress("unused") // public API
   public fun excludeClasses(@Language("RegExp") vararg classRegexes: String) {

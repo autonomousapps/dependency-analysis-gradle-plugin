@@ -49,13 +49,13 @@ public abstract class AbiAnalysisTask @Inject constructor(
   public fun action() {
     workerExecutor.noIsolation().submit(AbiAnalysisWorkAction::class.java) {
       // JVM projects
-      classFiles.setFrom(classes.asFileTree.filterToClassFiles().files)
+      it.classFiles.setFrom(classes.asFileTree.filterToClassFiles().files)
       // Android projects
-      classFiles.from(androidClassFiles())
+      it.classFiles.from(androidClassFiles())
 
-      exclusions.set(this@AbiAnalysisTask.exclusions)
-      output.set(this@AbiAnalysisTask.output)
-      abiDump.set(this@AbiAnalysisTask.abiDump)
+      it.exclusions.set(exclusions)
+      it.output.set(output)
+      it.abiDump.set(abiDump)
     }
   }
 

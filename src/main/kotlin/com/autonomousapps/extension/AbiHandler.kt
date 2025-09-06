@@ -6,8 +6,6 @@ package com.autonomousapps.extension
 
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
-import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.setProperty
 import org.intellij.lang.annotations.Language
 import javax.inject.Inject
 
@@ -32,7 +30,7 @@ import javax.inject.Inject
  */
 public abstract class AbiHandler @Inject constructor(objects: ObjectFactory) {
 
-  internal val exclusionsHandler: ExclusionsHandler = objects.newInstance()
+  internal val exclusionsHandler: ExclusionsHandler = objects.newInstance(ExclusionsHandler::class.java)
 
   public fun exclusions(action: Action<ExclusionsHandler>) {
     action.execute(exclusionsHandler)
@@ -42,10 +40,10 @@ public abstract class AbiHandler @Inject constructor(objects: ObjectFactory) {
 /** @see [AbiHandler]. */
 public abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
 
-  internal val classExclusions = objects.setProperty<String>().convention(emptySet())
-  internal val annotationExclusions = objects.setProperty<String>().convention(emptySet())
-  internal val pathExclusions = objects.setProperty<String>().convention(emptySet())
-  internal val excludedSourceSets = objects.setProperty<String>().convention(emptySet())
+  internal val classExclusions = objects.setProperty(String::class.java).convention(emptySet())
+  internal val annotationExclusions = objects.setProperty(String::class.java).convention(emptySet())
+  internal val pathExclusions = objects.setProperty(String::class.java).convention(emptySet())
+  internal val excludedSourceSets = objects.setProperty(String::class.java).convention(emptySet())
 
   /**
    * Exclude the given [sourceSets] from ABI analysis, which means that regardless of the level of exposure of any given
