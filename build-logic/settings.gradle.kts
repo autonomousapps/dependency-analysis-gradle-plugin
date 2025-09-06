@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pluginManagement {
   repositories {
+    // -Dlocal
+    if (providers.systemProperty("local").isPresent) {
+      mavenLocal()
+    }
     gradlePluginPortal()
     mavenCentral()
   }
@@ -14,10 +18,14 @@ dependencyResolutionManagement {
     }
   }
   repositories {
+    // -Dlocal
+    if (providers.systemProperty("local").isPresent) {
+      mavenLocal()
+    }
     google()
     mavenCentral()
     gradlePluginPortal() // gradle-publish-plugin
-//    maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") }
+    //maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") }
   }
 }
 
