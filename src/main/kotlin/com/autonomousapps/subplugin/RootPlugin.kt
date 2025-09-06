@@ -17,7 +17,6 @@ import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.register
 
 /** This "plugin" is applied to the root project only. */
 internal class RootPlugin(private val project: Project) {
@@ -91,45 +90,45 @@ internal class RootPlugin(private val project: Project) {
   private fun Project.configureRootProject() {
     val paths = RootOutputPaths(this)
 
-    val computeDuplicatesTask = tasks.register<ComputeDuplicateDependenciesTask>("computeDuplicateDependencies") {
-      resolvedDependenciesReports.setFrom(resolvedDepsResolver.artifactFilesProvider())
-      output.set(paths.duplicateDependenciesPath)
+    val computeDuplicatesTask = tasks.register("computeDuplicateDependencies", ComputeDuplicateDependenciesTask::class.java) {
+      it.resolvedDependenciesReports.setFrom(resolvedDepsResolver.artifactFilesProvider())
+      it.output.set(paths.duplicateDependenciesPath)
     }
 
-    tasks.register<PrintDuplicateDependenciesTask>("printDuplicateDependencies") {
-      duplicateDependenciesReport.set(computeDuplicatesTask.flatMap { it.output })
+    tasks.register("printDuplicateDependencies", PrintDuplicateDependenciesTask::class.java) {
+      it.duplicateDependenciesReport.set(computeDuplicatesTask.flatMap { it.output })
     }
 
-    tasks.register<ComputeAllDependenciesTask>("computeAllDependencies") {
-      resolvedDependenciesReports.setFrom(resolvedDepsResolver.artifactFilesProvider())
-      output.set(paths.allLibsVersionsTomlPath)
+    tasks.register("computeAllDependencies", ComputeAllDependenciesTask::class.java) {
+      it.resolvedDependenciesReports.setFrom(resolvedDepsResolver.artifactFilesProvider())
+      it.output.set(paths.allLibsVersionsTomlPath)
     }
 
-    val generateBuildHealthTask = tasks.register<GenerateBuildHealthTask>("generateBuildHealth") {
-      projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
-      reportingConfig.set(dagpExtension.reportingHandler.config())
-      projectCount.set(allprojects.size)
-      dslKind.set(DslKind.from(buildFile))
-      dependencyMap.set(dagpExtension.dependenciesHandler.map)
-      useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
+    val generateBuildHealthTask = tasks.register("generateBuildHealth", GenerateBuildHealthTask::class.java) {
+      it.projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      it.reportingConfig.set(dagpExtension.reportingHandler.config())
+      it.projectCount.set(allprojects.size)
+      it.dslKind.set(DslKind.from(buildFile))
+      it.dependencyMap.set(dagpExtension.dependenciesHandler.map)
+      it.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
 
-      output.set(paths.buildHealthPath)
-      consoleOutput.set(paths.consoleReportPath)
-      outputFail.set(paths.shouldFailPath)
+      it.output.set(paths.buildHealthPath)
+      it.consoleOutput.set(paths.consoleReportPath)
+      it.outputFail.set(paths.shouldFailPath)
     }
 
-    tasks.register<BuildHealthTask>("buildHealth") {
-      shouldFail.set(generateBuildHealthTask.flatMap { it.outputFail })
-      buildHealth.set(generateBuildHealthTask.flatMap { it.output })
-      consoleReport.set(generateBuildHealthTask.flatMap { it.consoleOutput })
-      printBuildHealth.set(dagpExtension.reportingHandler.printBuildHealth.orElse(printBuildHealth()))
-      postscript.set(dagpExtension.reportingHandler.postscript)
+    tasks.register("buildHealth", BuildHealthTask::class.java) {
+      it.shouldFail.set(generateBuildHealthTask.flatMap { it.outputFail })
+      it.buildHealth.set(generateBuildHealthTask.flatMap { it.output })
+      it.consoleReport.set(generateBuildHealthTask.flatMap { it.consoleOutput })
+      it.printBuildHealth.set(dagpExtension.reportingHandler.printBuildHealth.orElse(printBuildHealth()))
+      it.postscript.set(dagpExtension.reportingHandler.postscript)
     }
 
-    tasks.register<GenerateWorkPlan>("generateWorkPlan") {
-      buildPath.set(buildPath(combinedGraphResolver.internal.name))
-      combinedProjectGraphs.setFrom(combinedGraphResolver.internal.map { it.artifactsFor("json").artifactFiles })
-      outputDirectory.set(paths.workPlanDir)
+    tasks.register("generateWorkPlan", GenerateWorkPlan::class.java) {
+      it.buildPath.set(buildPath(combinedGraphResolver.internal.name))
+      it.combinedProjectGraphs.setFrom(combinedGraphResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      it.outputDirectory.set(paths.workPlanDir)
     }
 
     // Add a dependency from the root project to all projects (including itself).

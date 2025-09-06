@@ -119,22 +119,22 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(SynthesizeProjectViewWorkAction::class.java) {
-      projectPath.set(this@SynthesizeProjectViewTask.projectPath)
-      buildType.set(this@SynthesizeProjectViewTask.buildType)
-      flavor.set(this@SynthesizeProjectViewTask.flavor)
-      sourceKind.set(this@SynthesizeProjectViewTask.sourceKind)
-      graph.set(this@SynthesizeProjectViewTask.graph)
-      annotationProcessors.set(this@SynthesizeProjectViewTask.annotationProcessors)
-      explodedBytecode.set(this@SynthesizeProjectViewTask.explodedBytecode)
-      explodedSourceCode.set(this@SynthesizeProjectViewTask.explodedSourceCode)
-      explodingAbi.set(this@SynthesizeProjectViewTask.explodingAbi)
-      excludedIdentifiers.set(this@SynthesizeProjectViewTask.excludedIdentifiers)
-      usagesExclusions.set(this@SynthesizeProjectViewTask.usagesExclusions)
-      androidResSource.set(this@SynthesizeProjectViewTask.androidResSource)
-      androidResSourceRuntime.set(this@SynthesizeProjectViewTask.androidResSourceRuntime)
-      androidAssetsSource.set(this@SynthesizeProjectViewTask.androidAssetsSource)
-      testInstrumentationRunner.set(this@SynthesizeProjectViewTask.testInstrumentationRunner)
-      output.set(this@SynthesizeProjectViewTask.output)
+      it.projectPath.set(projectPath)
+      it.buildType.set(buildType)
+      it.flavor.set(flavor)
+      it.sourceKind.set(sourceKind)
+      it.graph.set(graph)
+      it.annotationProcessors.set(annotationProcessors)
+      it.explodedBytecode.set(explodedBytecode)
+      it.explodedSourceCode.set(explodedSourceCode)
+      it.explodingAbi.set(explodingAbi)
+      it.excludedIdentifiers.set(excludedIdentifiers)
+      it.usagesExclusions.set(usagesExclusions)
+      it.androidResSource.set(androidResSource)
+      it.androidResSourceRuntime.set(androidResSourceRuntime)
+      it.androidAssetsSource.set(androidAssetsSource)
+      it.testInstrumentationRunner.set(testInstrumentationRunner)
+      it.output.set(output)
     }
   }
 

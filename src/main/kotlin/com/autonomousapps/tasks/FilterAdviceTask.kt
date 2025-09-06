@@ -76,20 +76,20 @@ public abstract class FilterAdviceTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(FilterAdviceAction::class.java) {
-      projectAdvice.set(this@FilterAdviceTask.projectAdvice)
-      dataBindingEnabled.set(this@FilterAdviceTask.dataBindingEnabled)
-      viewBindingEnabled.set(this@FilterAdviceTask.viewBindingEnabled)
-      anyBehavior.set(this@FilterAdviceTask.anyBehavior)
-      unusedDependenciesBehavior.set(this@FilterAdviceTask.unusedDependenciesBehavior)
-      usedTransitiveDependenciesBehavior.set(this@FilterAdviceTask.usedTransitiveDependenciesBehavior)
-      incorrectConfigurationBehavior.set(this@FilterAdviceTask.incorrectConfigurationBehavior)
-      unusedProcsBehavior.set(this@FilterAdviceTask.unusedProcsBehavior)
-      compileOnlyBehavior.set(this@FilterAdviceTask.compileOnlyBehavior)
-      runtimeOnlyBehavior.set(this@FilterAdviceTask.runtimeOnlyBehavior)
-      duplicateClassWarningsBehavior.set(this@FilterAdviceTask.duplicateClassWarningsBehavior)
-      redundantPluginsBehavior.set(this@FilterAdviceTask.redundantPluginsBehavior)
-      moduleStructureBehavior.set(this@FilterAdviceTask.moduleStructureBehavior)
-      output.set(this@FilterAdviceTask.output)
+      it.projectAdvice.set(projectAdvice)
+      it.dataBindingEnabled.set(dataBindingEnabled)
+      it.viewBindingEnabled.set(viewBindingEnabled)
+      it.anyBehavior.set(anyBehavior)
+      it.unusedDependenciesBehavior.set(unusedDependenciesBehavior)
+      it.usedTransitiveDependenciesBehavior.set(usedTransitiveDependenciesBehavior)
+      it.incorrectConfigurationBehavior.set(incorrectConfigurationBehavior)
+      it.unusedProcsBehavior.set(unusedProcsBehavior)
+      it.compileOnlyBehavior.set(compileOnlyBehavior)
+      it.runtimeOnlyBehavior.set(runtimeOnlyBehavior)
+      it.duplicateClassWarningsBehavior.set(duplicateClassWarningsBehavior)
+      it.redundantPluginsBehavior.set(redundantPluginsBehavior)
+      it.moduleStructureBehavior.set(moduleStructureBehavior)
+      it.output.set(output)
     }
   }
 

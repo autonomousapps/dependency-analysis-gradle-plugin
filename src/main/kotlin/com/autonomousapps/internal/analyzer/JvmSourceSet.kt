@@ -8,7 +8,6 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.tasks.GroovySourceDirectorySet
 import org.gradle.api.tasks.SourceSet
-import org.gradle.kotlin.dsl.findByType
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
 
 internal interface JvmSourceSet {
@@ -69,7 +68,7 @@ internal fun JbKotlinSourceSet.kotlin(): FileTree {
 }
 
 internal fun SourceSet.groovy(): FileTree? {
-  return extensions.findByType<GroovySourceDirectorySet>()
+  return extensions.findByType(GroovySourceDirectorySet::class.java)
     ?.sourceDirectories
     ?.asFileTree
     ?.matching(Language.filterOf(Language.GROOVY))

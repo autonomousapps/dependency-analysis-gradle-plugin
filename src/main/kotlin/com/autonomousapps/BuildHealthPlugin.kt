@@ -31,8 +31,8 @@ public abstract class BuildHealthPlugin : Plugin<Settings> {
       }
     }
 
-    gradle.lifecycle.beforeProject {
-      pluginManager.apply(DependencyAnalysisPlugin.ID)
+    gradle.lifecycle.beforeProject { project ->
+      project.pluginManager.apply(DependencyAnalysisPlugin.ID)
     }
   }
 }

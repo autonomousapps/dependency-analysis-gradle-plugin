@@ -9,7 +9,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderConvertible
 import org.gradle.api.provider.SetProperty
-import org.gradle.kotlin.dsl.setProperty
 import org.intellij.lang.annotations.Language
 import javax.inject.Inject
 
@@ -49,7 +48,7 @@ public abstract class BundleHandler @Inject constructor(
   /**
    * Include all dependencies that match the regex as a single logical dependency.
    */
-  public val includes: SetProperty<Regex> = objects.setProperty<Regex>().convention(emptySet())
+  public val includes: SetProperty<Regex> = objects.setProperty(Regex::class.java).convention(emptySet())
 
   /**
    * (Optional): Specify the primary entry point that the user is "supposed" to declare.

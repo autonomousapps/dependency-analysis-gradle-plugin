@@ -12,7 +12,6 @@ import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.get
 
 /** Abstraction for differentiating between android-app, android-lib, and java-lib projects.  */
 internal interface DependencyAnalyzer {
@@ -90,13 +89,13 @@ internal abstract class AbstractDependencyAnalyzer(
   override val testInstrumentationRunner: Provider<String> = project.provider { null }
 
   protected fun kaptConf(): Configuration? = try {
-    project.configurations[kaptConfigurationName]
+    project.configurations.getByName(kaptConfigurationName)
   } catch (_: UnknownDomainObjectException) {
     null
   }
 
   protected fun annotationProcessorConf(): Configuration? = try {
-    project.configurations[annotationProcessorConfigurationName]
+    project.configurations.getByName(annotationProcessorConfigurationName)
   } catch (_: UnknownDomainObjectException) {
     null
   }

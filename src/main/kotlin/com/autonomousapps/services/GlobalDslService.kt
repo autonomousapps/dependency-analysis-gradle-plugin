@@ -16,8 +16,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
 /**
@@ -175,10 +173,10 @@ public abstract class GlobalDslService @Inject constructor(
 
   // Global handlers, one instance each for the whole build.
   internal val useTypesafeProjectAccessors: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
-  internal val abiHandler: AbiHandler = objects.newInstance()
-  internal val dependenciesHandler: DependenciesHandler = objects.newInstance()
-  internal val reportingHandler: ReportingHandler = objects.newInstance()
-  internal val usageHandler: UsageHandler = objects.newInstance()
+  internal val abiHandler: AbiHandler = objects.newInstance(AbiHandler::class.java)
+  internal val dependenciesHandler: DependenciesHandler = objects.newInstance(DependenciesHandler::class.java)
+  internal val reportingHandler: ReportingHandler = objects.newInstance(ReportingHandler::class.java)
+  internal val usageHandler: UsageHandler = objects.newInstance(UsageHandler::class.java)
 
   /**
    * Hydrate dependencies map with version catalog entries.
@@ -191,8 +189,8 @@ public abstract class GlobalDslService @Inject constructor(
    * Issues Handler, one instance per project.
    */
 
-  private val undefined = objects.newInstance<Issue>()
-  private val defaultBehavior = objects.property<Behavior>().convention(Warn())
+  private val undefined = objects.newInstance(Issue::class.java)
+  private val defaultBehavior = objects.property(Behavior::class.java).convention(Warn())
 
   private val all = objects.newInstance(ProjectIssueHandler::class.java, "__all")
   private val projects = objects.domainObjectContainer(ProjectIssueHandler::class.java)

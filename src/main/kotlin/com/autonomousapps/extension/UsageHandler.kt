@@ -6,7 +6,6 @@ package com.autonomousapps.extension
 
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
-import org.gradle.kotlin.dsl.newInstance
 import javax.inject.Inject
 
 /**
@@ -26,8 +25,8 @@ import javax.inject.Inject
  */
 public abstract class UsageHandler @Inject constructor(objects: ObjectFactory) {
 
-  internal val analysisHandler: UsageAnalysisHandler = objects.newInstance()
-  internal val exclusionsHandler: UsageExclusionsHandler = objects.newInstance()
+  internal val analysisHandler: UsageAnalysisHandler = objects.newInstance(UsageAnalysisHandler::class.java)
+  internal val exclusionsHandler: UsageExclusionsHandler = objects.newInstance(UsageExclusionsHandler::class.java)
 
   public fun analysis(action: Action<UsageAnalysisHandler>) {
     action.execute(analysisHandler)

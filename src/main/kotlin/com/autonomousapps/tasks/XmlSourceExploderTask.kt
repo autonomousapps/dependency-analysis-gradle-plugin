@@ -95,7 +95,7 @@ public abstract class XmlSourceExploderTask @Inject constructor(
           dirs.flatMap { dir ->
             dir
               .asFileTree
-              .matching { include("**/layout/**/*.xml") }
+              .matching { it.include("**/layout/**/*.xml") }
               .files
           }
         }
@@ -111,14 +111,14 @@ public abstract class XmlSourceExploderTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(XmlSourceExploderWorkAction::class.java) {
-      projectDir.set(layout.projectDirectory)
-      androidRes.setFrom(getAndroidRes())
-      layouts.setFrom(getLayoutFiles())
-      this.manifests.setFrom(getManifestFiles())
-      mergedManifests.setFrom(mergedManifestFiles)
-      namespace.set(this@XmlSourceExploderTask.namespace)
-      output.set(this@XmlSourceExploderTask.output)
-      outputRuntime.set(this@XmlSourceExploderTask.outputRuntime)
+      it.projectDir.set(layout.projectDirectory)
+      it.androidRes.setFrom(getAndroidRes())
+      it.layouts.setFrom(getLayoutFiles())
+      it.manifests.setFrom(getManifestFiles())
+      it.mergedManifests.setFrom(mergedManifestFiles)
+      it.namespace.set(namespace)
+      it.output.set(output)
+      it.outputRuntime.set(outputRuntime)
     }
   }
 
