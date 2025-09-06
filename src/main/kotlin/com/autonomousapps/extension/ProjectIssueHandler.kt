@@ -7,8 +7,6 @@ package com.autonomousapps.extension
 import org.gradle.api.Action
 import org.gradle.api.Named
 import org.gradle.api.model.ObjectFactory
-import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.setProperty
 import javax.inject.Inject
 
 /**
@@ -82,18 +80,18 @@ public abstract class ProjectIssueHandler @Inject constructor(
     SourceSetsHandler.Factory(projectPath, objects)
   )
 
-  internal val anyIssue = objects.newInstance<Issue>()
-  internal val unusedDependenciesIssue = objects.newInstance<Issue>()
-  internal val usedTransitiveDependenciesIssue = objects.newInstance<Issue>()
-  internal val incorrectConfigurationIssue = objects.newInstance<Issue>()
-  internal val unusedAnnotationProcessorsIssue = objects.newInstance<Issue>()
-  internal val compileOnlyIssue = objects.newInstance<Issue>()
-  internal val runtimeOnlyIssue = objects.newInstance<Issue>()
-  internal val redundantPluginsIssue = objects.newInstance<Issue>()
-  internal val moduleStructureIssue = objects.newInstance<Issue>()
-  internal val duplicateClassWarningsIssue = objects.newInstance<Issue>()
+  internal val anyIssue = objects.newInstance(Issue::class.java)
+  internal val unusedDependenciesIssue = objects.newInstance(Issue::class.java)
+  internal val usedTransitiveDependenciesIssue = objects.newInstance(Issue::class.java)
+  internal val incorrectConfigurationIssue = objects.newInstance(Issue::class.java)
+  internal val unusedAnnotationProcessorsIssue = objects.newInstance(Issue::class.java)
+  internal val compileOnlyIssue = objects.newInstance(Issue::class.java)
+  internal val runtimeOnlyIssue = objects.newInstance(Issue::class.java)
+  internal val redundantPluginsIssue = objects.newInstance(Issue::class.java)
+  internal val moduleStructureIssue = objects.newInstance(Issue::class.java)
+  internal val duplicateClassWarningsIssue = objects.newInstance(Issue::class.java)
 
-  internal val ignoreSourceSets = objects.setProperty<String>()
+  internal val ignoreSourceSets = objects.setProperty(String::class.java)
 
   public fun ignoreSourceSet(vararg ignore: String) {
     ignoreSourceSets.addAll(ignore.toSet())

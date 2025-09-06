@@ -125,28 +125,28 @@ public abstract class ReasonTask @Inject constructor(
     // Explain dependency advice
     options.id?.let { dependency ->
       workerExecutor.noIsolation().submit(ExplainDependencyAdviceAction::class.java) {
-        id.set(dependency)
-        capability.set(options.capability ?: "")
-        rootProjectName.set(this@ReasonTask.rootProjectName)
-        projectPath.set(this@ReasonTask.projectPath)
-        buildPath.set(this@ReasonTask.buildPath)
-        dependencyMap.set(this@ReasonTask.dependencyMap)
-        dependencyUsageReport.set(this@ReasonTask.dependencyUsageReport)
-        annotationProcessorUsageReport.set(this@ReasonTask.annotationProcessorUsageReport)
-        unfilteredAdviceReport.set(this@ReasonTask.unfilteredAdviceReport)
-        finalAdviceReport.set(this@ReasonTask.finalAdviceReport)
-        bundleTracesReport.set(this@ReasonTask.bundleTracesReport)
-        dependencyGraphViews.set(this@ReasonTask.dependencyGraphViews)
+        it.id.set(dependency)
+        it.capability.set(options.capability ?: "")
+        it.rootProjectName.set(rootProjectName)
+        it.projectPath.set(projectPath)
+        it.buildPath.set(buildPath)
+        it.dependencyMap.set(dependencyMap)
+        it.dependencyUsageReport.set(dependencyUsageReport)
+        it.annotationProcessorUsageReport.set(annotationProcessorUsageReport)
+        it.unfilteredAdviceReport.set(unfilteredAdviceReport)
+        it.finalAdviceReport.set(finalAdviceReport)
+        it.bundleTracesReport.set(bundleTracesReport)
+        it.dependencyGraphViews.set(dependencyGraphViews)
       }
     }
 
     // Explain module structure advice
     options.module?.let { moduleStructure ->
       workerExecutor.noIsolation().submit(ExplainModuleAdviceAction::class.java) {
-        module.set(moduleStructure)
-        projectPath.set(this@ReasonTask.projectPath)
-        unfilteredAdviceReport.set(this@ReasonTask.unfilteredAdviceReport)
-        finalAdviceReport.set(this@ReasonTask.finalAdviceReport)
+        it.module.set(moduleStructure)
+        it.projectPath.set(projectPath)
+        it.unfilteredAdviceReport.set(unfilteredAdviceReport)
+        it.finalAdviceReport.set(finalAdviceReport)
       }
     }
   }

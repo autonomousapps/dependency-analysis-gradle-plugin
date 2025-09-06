@@ -5,8 +5,6 @@ package com.autonomousapps.extension
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
-import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.property
 import javax.inject.Inject
 
 /**
@@ -26,12 +24,12 @@ import javax.inject.Inject
  */
 public abstract class ReportingHandler @Inject constructor(private val objects: ObjectFactory) {
 
-  internal val onlyOnFailure: Property<Boolean> = objects.property<Boolean>().convention(false)
-  internal val postscript: Property<String> = objects.property<String>().convention("")
+  internal val onlyOnFailure: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
+  internal val postscript: Property<String> = objects.property(String::class.java).convention("")
 
   // nb: this intentionally does not have a convention set. If the user does not supply a value, we then check the
   // value of the Gradle property, which itself supplies a default value.
-  internal val printBuildHealth: Property<Boolean> = objects.property<Boolean>()
+  internal val printBuildHealth: Property<Boolean> = objects.property(Boolean::class.java)
 
   /**
    * Whether to always include the postscript, or only when the report includes failure-level issues.
@@ -60,7 +58,7 @@ public abstract class ReportingHandler @Inject constructor(private val objects: 
   }
 
   internal fun config(): Config {
-    val config = objects.newInstance<Config>()
+    val config = objects.newInstance(Config::class.java)
     config.onlyOnFailure.set(onlyOnFailure)
     config.postscript.set(postscript)
     return config

@@ -91,19 +91,19 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(SynthesizeDependenciesWorkAction::class.java) {
-      inMemoryCache.set(this@SynthesizeDependenciesTask.inMemoryCache)
-      compileDependencies.set(this@SynthesizeDependenciesTask.compileDependencies)
-      physicalArtifacts.set(this@SynthesizeDependenciesTask.physicalArtifacts)
-      explodedJars.set(this@SynthesizeDependenciesTask.explodedJars)
-      inlineMembers.set(this@SynthesizeDependenciesTask.inlineMembers)
-      typealiases.set(this@SynthesizeDependenciesTask.typealiases)
-      serviceLoaders.set(this@SynthesizeDependenciesTask.serviceLoaders)
-      annotationProcessors.set(this@SynthesizeDependenciesTask.annotationProcessors)
-      nativeLibs.set(this@SynthesizeDependenciesTask.nativeLibs)
-      manifestComponents.set(this@SynthesizeDependenciesTask.manifestComponents)
-      androidRes.set(this@SynthesizeDependenciesTask.androidRes)
-      androidAssets.set(this@SynthesizeDependenciesTask.androidAssets)
-      outputDir.set(this@SynthesizeDependenciesTask.outputDir)
+      it.inMemoryCache.set(inMemoryCache)
+      it.compileDependencies.set(compileDependencies)
+      it.physicalArtifacts.set(physicalArtifacts)
+      it.explodedJars.set(explodedJars)
+      it.inlineMembers.set(inlineMembers)
+      it.typealiases.set(typealiases)
+      it.serviceLoaders.set(serviceLoaders)
+      it.annotationProcessors.set(annotationProcessors)
+      it.nativeLibs.set(nativeLibs)
+      it.manifestComponents.set(manifestComponents)
+      it.androidRes.set(androidRes)
+      it.androidAssets.set(androidAssets)
+      it.outputDir.set(outputDir)
     }
   }
 

@@ -11,8 +11,6 @@ import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.Input
-import org.gradle.kotlin.dsl.property
-import org.gradle.kotlin.dsl.setProperty
 import java.io.Serializable
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -80,21 +78,21 @@ public abstract class DependenciesHandler @Inject constructor(objects: ObjectFac
     // about this, even if it is "incorrect." So make all stdlib-related libraries a bundle and call
     // it a day.
     bundle("__kotlin-stdlib") {
-      include(".*kotlin-stdlib.*")
+      it.include(".*kotlin-stdlib.*")
     }
     // Firebase / Google services are tightly coupled
     bundle("__firebase") {
-      includeGroup("com.google.firebase")
-      includeGroup("com.google.android.gms")
+      it.includeGroup("com.google.firebase")
+      it.includeGroup("com.google.android.gms")
     }
     // The kotlin plugin is automatically adding another variant of the kotlin-test dependency, which can show up as
     // unused with no way to opt out.
     bundle("__kotlin-test") {
-      includeDependency("org.jetbrains.kotlin:kotlin-test")
+      it.includeDependency("org.jetbrains.kotlin:kotlin-test")
     }
   }
 
-  internal val explicitSourceSets = objects.setProperty<String>().also {
+  internal val explicitSourceSets = objects.setProperty(String::class.java).also {
     it.convention(emptySet())
   }
 
@@ -121,7 +119,7 @@ public abstract class DependenciesHandler @Inject constructor(objects: ObjectFac
     explicitSourceSets.disallowChanges()
   }
 
-  internal val ignoreKtx = objects.property<Boolean>().also {
+  internal val ignoreKtx = objects.property(Boolean::class.java).also {
     it.convention(false)
   }
 
@@ -134,7 +132,7 @@ public abstract class DependenciesHandler @Inject constructor(objects: ObjectFac
   public fun bundle(name: String, action: Action<BundleHandler>) {
     try {
       bundles.create(name) {
-        action.execute(this)
+        action.execute(it)
       }
     } catch (e: GradleException) {
       throw wrapException(e)

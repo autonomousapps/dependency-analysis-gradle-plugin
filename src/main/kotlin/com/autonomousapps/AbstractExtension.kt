@@ -11,7 +11,6 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.newInstance
 import javax.inject.Inject
 
 public abstract class AbstractExtension @Inject constructor(
@@ -26,7 +25,7 @@ public abstract class AbstractExtension @Inject constructor(
   private val dslService = GlobalDslService.of(gradle)
 
   // One instance of this per project
-  internal val issueHandler: IssueHandler = objects.newInstance(dslService)
+  internal val issueHandler: IssueHandler = objects.newInstance(IssueHandler::class.java,dslService)
 
   // Only one instance of each of these is allowed globally, so we delegate to the build service
 
@@ -71,7 +70,7 @@ public abstract class AbstractExtension @Inject constructor(
   public fun registerPostProcessingTask(task: TaskProvider<out AbstractPostProcessingTask>) {
     postProcessingTask = task
     task.configure {
-      input.set(adviceOutput())
+      it.input.set(adviceOutput())
     }
   }
 }

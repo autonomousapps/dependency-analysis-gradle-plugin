@@ -36,12 +36,12 @@ public abstract class ClassListExploderTask @Inject constructor(
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ClassListExploderWorkAction::class.java) {
       // JVM projects
-      classFiles.setFrom(classes.asFileTree.filterToClassFiles().files)
+      it.classFiles.setFrom(classes.asFileTree.filterToClassFiles().files)
       // Android projects
-      classFiles.from(androidClassFiles())
+      it.classFiles.from(androidClassFiles())
 
-      buildDir.set(layout.buildDirectory)
-      output.set(this@ClassListExploderTask.output)
+      it.buildDir.set(layout.buildDirectory)
+      it.output.set(output)
     }
   }
 

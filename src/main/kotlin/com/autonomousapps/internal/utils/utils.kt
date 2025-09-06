@@ -24,8 +24,8 @@ import java.util.*
  */
 internal fun DirectoryProperty.delete(): DirectoryProperty {
   get().asFileTree.visit {
-    if (!isDirectory) {
-      file.delete()
+    if (!it.isDirectory) {
+      it.file.delete()
     }
   }
 
