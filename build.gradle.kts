@@ -193,6 +193,7 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
 
   systemProperty("com.autonomousapps.quick", "${quickTest()}")
   systemProperty("com.autonomousapps.test.versions.kotlin", libs.versions.kotlin.get())
+  systemProperty("com.autonomousapps.test.versions.kotlin.android", libs.versions.kotlinForAndroidtests.get())
 
   beforeTest(closureOf<TestDescriptor> {
     logger.lifecycle("Running test: $this")

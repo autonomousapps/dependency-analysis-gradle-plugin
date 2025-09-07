@@ -7,6 +7,7 @@ import com.autonomousapps.kit.gradle.Plugin
 object Plugins {
 
   @JvmStatic val KOTLIN_VERSION: String = System.getProperty("com.autonomousapps.test.versions.kotlin")
+  @JvmStatic val KOTLIN_ANDROID_VERSION: String = System.getProperty("com.autonomousapps.test.versions.kotlin.android")
 
   private val provider = PluginProvider(
     kotlinVersion = KOTLIN_VERSION
