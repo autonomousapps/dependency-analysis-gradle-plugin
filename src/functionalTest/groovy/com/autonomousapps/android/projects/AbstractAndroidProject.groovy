@@ -26,11 +26,15 @@ abstract class AbstractAndroidProject extends AbstractProject {
   protected final String agpVersion
   protected final AgpVersion version
 
-  AbstractAndroidProject(String agpVersion) {
-    super(getKotlinVersion(), agpVersion)
+  AbstractAndroidProject(String kotlinVersion, String agpVersion) {
+    super(kotlinVersion, agpVersion)
 
     this.agpVersion = agpVersion
     this.version = AgpVersion.version(agpVersion)
+  }
+
+  AbstractAndroidProject(String agpVersion) {
+    this(getKotlinVersion(), agpVersion)
   }
 
   protected AndroidBlock defaultAndroidAppBlock(

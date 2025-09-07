@@ -38,6 +38,19 @@ abstract class AbstractProject extends AbstractGradleProject {
     return System.getProperty("com.autonomousapps.test.versions.kotlin")
   }
 
+  /**
+   * In some (but not all) cases, Android fixtures must be built with a different (later) version of Kotlin to avoid
+   * errors <a href="https://scans.gradle.com/s/fi4p2cqkohb24/tests/task/:functionalTest/details/com.autonomousapps.android.ResSpec/gracefully%20handles%20dataBinding%20expressions%20in%20res%20files%20(Gradle%209.0.0%20AGP%208.13.0)?top-execution=1">like this:</a>
+   *
+   * <pre>
+   * e: file:///home/runner/work/dependency-analysis-gradle-plugin/dependency-analysis-gradle-plugin/build/tmp/functionalTest/work/.gradle-test-kit/caches/9.0.0/transforms/abc6055f6fb5acdd209c94b73930a5e2/transformed/databinding-ktx-8.13.0-api.jar!/META-INF/databindingKtx_release.kotlin_module
+   *  Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.2.0, expected version is 2.0.0.
+   * </pre>
+   */
+  static String getKotlinVersionForAndroid() {
+    return System.getProperty("com.autonomousapps.test.versions.kotlin.android")
+  }
+
   AbstractProject() {
     this(getKotlinVersion(), null)
   }
