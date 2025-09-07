@@ -14,7 +14,6 @@ import com.autonomousapps.kit.gradle.dependencies.Plugins
 
 abstract class AbstractAndroidProject extends AbstractProject {
 
-  private static final AGP_8_0 = AgpVersion.version('8.0')
   private static final DEFAULT_APP_NAMESPACE = 'com.example'
   private static final DEFAULT_LIB_NAMESPACE = 'com.example.lib'
   private static final DEFAULT_TEST_NAMESPACE = 'com.example.test'
@@ -57,19 +56,19 @@ abstract class AbstractAndroidProject extends AbstractProject {
   }
 
   protected AndroidManifest appManifest(String namespace = DEFAULT_APP_NAMESPACE) {
-    return version >= AGP_8_0 ? AndroidManifest.appWithoutPackage(namespace) : AndroidManifest.app(namespace)
+    return AndroidManifest.appWithoutPackage(namespace)
   }
 
   protected AndroidManifest libraryManifest(String namespace = DEFAULT_LIB_NAMESPACE) {
-    return version >= AGP_8_0 ? null : AndroidManifest.defaultLib(namespace)
+    return null
   }
 
   private String defaultAppNamespace(String namespace) {
-    return version >= AGP_8_0 ? namespace : null
+    return namespace
   }
 
   private String defaultLibNamespace(String namespace) {
-    return version >= AGP_8_0 ? namespace : null
+    return namespace
   }
 
   protected GradleProject.Builder newAndroidGradleProjectBuilder(String agpVersion) {
@@ -82,9 +81,7 @@ abstract class AbstractAndroidProject extends AbstractProject {
       }
   }
 
-  protected GradleProject.Builder newAndroidSettingsProjectBuilder(
-    map = [:]
-  ) {
+  protected GradleProject.Builder newAndroidSettingsProjectBuilder(map = [:]) {
     def agpVersion = map['agpVersion'] as String
     if (agpVersion == null) {
       throw new IllegalArgumentException("'agpVersion' expected.")

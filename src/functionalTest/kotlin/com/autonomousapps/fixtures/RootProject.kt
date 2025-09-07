@@ -65,7 +65,6 @@ class RootSpec @JvmOverloads constructor(
       }
       
       rootProject.name = 'real-app'
-      // If agpVersion is null, assume this is a pure Java/Kotlin project, and no app module.
       ${agpVersion?.let { "include(':app')" } ?: ""}
       ${librarySpecs?.map { it.name }?.joinToString("\n") { "include(':$it')" } ?: ""}
     """.trimIndent()

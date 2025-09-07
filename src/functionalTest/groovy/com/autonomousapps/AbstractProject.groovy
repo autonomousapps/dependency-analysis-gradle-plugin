@@ -76,9 +76,7 @@ abstract class AbstractProject extends AbstractGradleProject {
       }
   }
 
-  protected GradleProject.Builder newSettingsProjectBuilder(
-    map = [:]
-  ) {
+  protected GradleProject.Builder newSettingsProjectBuilder(map = [:]) {
     def dslKind = map['dslKind'] ?: GradleProject.DslKind.GROOVY
     def withKotlin = map['withKotlin'] ?: false
 

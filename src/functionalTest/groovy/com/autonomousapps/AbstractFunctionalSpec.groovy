@@ -62,7 +62,9 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {
     // See https://developer.android.com/build/releases/gradle-plugin#updating-gradle
-    if (agpVersion >= AgpVersion.version('8.12.0')) {
+    if (agpVersion >= AgpVersion.version('8.13.0')) {
+      return gradleVersion >= GradleVersion.version('8.13')
+    } else if (agpVersion >= AgpVersion.version('8.12.0')) {
       return gradleVersion >= GradleVersion.version('8.13')
     } else if (agpVersion >= AgpVersion.version('8.11.0')) {
       return gradleVersion >= GradleVersion.version('8.13')
@@ -74,12 +76,12 @@ abstract class AbstractFunctionalSpec extends Specification {
       return gradleVersion >= GradleVersion.version('8.10.2')
     } else if (agpVersion >= AgpVersion.version('8.7.0')) {
       return gradleVersion >= GradleVersion.version('8.9')
+    } else if (agpVersion >= AgpVersion.version('8.6.0')) {
+      return gradleVersion >= GradleVersion.version('8.7')
     } else if (agpVersion >= AgpVersion.version('8.5.0')) {
       return gradleVersion >= GradleVersion.version('8.7')
     } else if (agpVersion >= AgpVersion.version('8.4.0')) {
       return gradleVersion >= GradleVersion.version('8.6')
-    } else if (agpVersion >= AgpVersion.version('8.3.0')) {
-      return gradleVersion >= GradleVersion.version('8.4')
     }
 
     throw new IllegalArgumentException("Unsupported AGP version supplied. Was $agpVersion")

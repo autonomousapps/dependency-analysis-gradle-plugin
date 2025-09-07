@@ -231,7 +231,6 @@ class AppModule(
 
   init {
     val agpVersion = "\${com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION}"
-    val afterEvaluate = "afterEvaluate { println \"AGP version: $agpVersion\" }"
 
     withBuildFile("""
       |${plugins()}
@@ -256,9 +255,6 @@ class AppModule(
       |  ${librarySpecs?.map { it.name }?.joinToString("\n\t") { "implementation project(':$it')" } ?: "" }
       |  ${appSpec.formattedDependencies()}
       |}
-      |
-      |$afterEvaluate
-      |
       |${appSpec.buildAdditions}"""
     )
 
