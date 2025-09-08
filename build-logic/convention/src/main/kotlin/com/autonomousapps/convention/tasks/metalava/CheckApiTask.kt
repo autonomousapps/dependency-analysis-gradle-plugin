@@ -9,7 +9,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.process.ExecOperations
-import org.gradle.process.internal.ExecException
+import org.gradle.process.ProcessExecutionException
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -132,7 +132,7 @@ public abstract class CheckApiTask @Inject constructor(
 
         try {
           result.assertNormalExitValue()
-        } catch (e: ExecException) {
+        } catch (e: ProcessExecutionException) {
           throw ApiChangedException(msg, e)
         }
       }
@@ -159,7 +159,6 @@ public abstract class CheckApiTask @Inject constructor(
       fun StringBuilder.insertRightMargin() {
         appendLine(" ".repeat(margin))
       }
-
 
       val lines = lines()
       return buildString {
