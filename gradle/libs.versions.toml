@@ -11,7 +11,7 @@ caffeine = "3.2.2"
 commons-io = "2.20.0"
 dagp = "3.0.1"
 error-prone = "2.41.0"
-gradle-publish-plugin = "1.2.1"
+gradle-publish-plugin = "2.0.0"
 gradle-version-min = "8.11.1"
 # TODO: bump to 9.1.0-rc-1?
 gradle-version-max = "9.0.0"
