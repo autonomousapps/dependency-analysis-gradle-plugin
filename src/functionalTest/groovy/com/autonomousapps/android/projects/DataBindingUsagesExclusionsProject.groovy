@@ -22,7 +22,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
   private final boolean excludeDataBinderMapper
 
   DataBindingUsagesExclusionsProject(String agpVersion, boolean excludeDataBinderMapper) {
-    super(getKotlinVersionForAndroid(), agpVersion)
+    super(getLaterKotlinVersion(), agpVersion)
     this.agpVersion = agpVersion
     this.excludeDataBinderMapper = excludeDataBinderMapper
     this.gradleProject = build()
