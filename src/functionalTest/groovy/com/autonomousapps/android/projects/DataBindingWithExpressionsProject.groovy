@@ -20,7 +20,7 @@ final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
   private final String agpVersion
 
   DataBindingWithExpressionsProject(String agpVersion) {
-    super(getKotlinVersionForAndroid(), agpVersion)
+    super(getLaterKotlinVersion(), agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
   }

@@ -80,7 +80,7 @@ class RootSpec @JvmOverloads constructor(
         }
         dependencies {
           ${agpVersion?.let { "classpath 'com.android.tools.build:gradle:$it'" } ?: ""}
-          classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:${Plugins.KOTLIN_ANDROID_VERSION}'
+          classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:${Plugins.KOTLIN_LATER_VERSION}'
         }
       }
       plugins {
