@@ -4,6 +4,7 @@ build/
 out/
 .idea/*
 !.idea/copyright
+local.properties
 
 *.iml
 
