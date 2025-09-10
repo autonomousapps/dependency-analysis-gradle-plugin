@@ -225,11 +225,9 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
     return configurations.findByName(classpath)?.allDependencies
       ?.filterIsInstance<ProjectDependency>()
       // filter out self-dependency
-      ?.filterNot { projectPath(it) == project.path }
-      ?.map { "${projectPath(it)}:$taskName" }
+      ?.filterNot { it.path == project.path }
+      ?.map { "${it.path}:$taskName" }
   }
-
-  private fun projectPath(projectDependency: ProjectDependency): String = projectDependency.path
 
   /**
    * Adds a dependency on `com.autonomousapps:gradle-testkit-support` with version [DEFAULT_SUPPORT_VERSION] unless
