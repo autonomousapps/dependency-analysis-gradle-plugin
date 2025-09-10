@@ -1,5 +1,8 @@
 Graph-Support Changelog
 
+# Version 0.8.1
+* [Fix] Downgrade Kotlin to 2.0.21 for Gradle 8.11 support.
+
 # Version 0.8
 * [Fix] set apiVersion and languageVersion to 2.0 for Gradle 8.11 support.
 
