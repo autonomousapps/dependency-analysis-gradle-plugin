@@ -1,5 +1,14 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.0.2
+* [Fix] Downgrade Kotlin to 2.0.21 for Gradle 8.11 support.
+* [Fix]: min AGP version is 8.4.2.
+* [Fix]: Remove kotlin-dsl plugin usage.
+* [Fix]: correctly react to new/deleted/renamed files in Android projects.
+* [Fix]: resource ref problem (#1525).
+* [Chore]: update to AGP 8.13 stable.
+* [Chore]: use gradle plugin publishing plugin 2.0.0.
+
 # Version 3.0.1
 * [Fix] set apiVersion and languageVersion to 2.0 for Gradle 8.11 support.
 
