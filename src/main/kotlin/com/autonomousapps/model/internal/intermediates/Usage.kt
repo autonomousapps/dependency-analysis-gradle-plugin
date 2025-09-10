@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates
 
+import com.autonomousapps.internal.utils.VersionNumber
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ModuleCoordinates
@@ -85,6 +86,13 @@ internal class UsageBuilder(
     }
   }
 
+  /**
+   * This merging logic works by hardcoding the assumption that "higher version better," which is generally true, but
+   * may run into issues in unforeseen circumstances. I'm writing this doc mostly as a reminder to myself for the next
+   * time I break something.
+   *
+   * `ConflictingAdviceSpec` was used to make the most recent fix.
+   */
   private fun MutableMap<Coordinates, MutableSet<Usage>>.merge(
     report: DependencyTraceReport,
     trace: DependencyTraceReport.Trace
@@ -106,7 +114,7 @@ internal class UsageBuilder(
         val usages = get(other)!!.apply { add(usage) }
 
         // If the new coordinates are "greater than" the other coordinates, add the new and remove the old
-        if (thisVersion > otherVersion) {
+        if (VersionNumber.parse(thisVersion) > VersionNumber.parse(otherVersion)) {
           put(trace.coordinates, usages)
           remove(other)
         }
