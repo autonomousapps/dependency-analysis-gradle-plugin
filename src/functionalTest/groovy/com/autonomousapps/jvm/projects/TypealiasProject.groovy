@@ -5,6 +5,7 @@ package com.autonomousapps.jvm.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.gradle.dependencies.Dependencies
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -28,6 +29,15 @@ final class TypealiasProject extends AbstractProject {
           bs.plugins = kotlin
           bs.dependencies = [
             project('implementation', ':consumer'),
+          ]
+        }
+      }
+      .withSubproject('external-alias-consumer') { c ->
+        c.sources = externalAliasConsumerSources
+        c.withBuildScript { bs ->
+          bs.plugins = kotlin
+          bs.dependencies = [
+            Dependencies.kotlinxCoroutinesCore("implementation"),
           ]
         }
       }
@@ -78,6 +88,24 @@ final class TypealiasProject extends AbstractProject {
       .build()
   ]
 
+  private externalAliasConsumerSources = [
+    Source.kotlin(
+      """\
+      package com.example.external.alias.consumer
+      
+      import kotlinx.coroutines.CancellationException
+      
+      private class ExternalAliasConsumer {
+        private fun throwCancellationException() {
+          throw CancellationException()
+        }
+      }
+      """
+    )
+      .withPath('com.example.external.alias.consumer', 'ExternalAliasConsumer')
+      .build()
+  ]
+
   private consumerSources = [
     Source.kotlin(
       """\
@@ -125,5 +153,6 @@ final class TypealiasProject extends AbstractProject {
     emptyProjectAdviceFor(':producer'),
     emptyProjectAdviceFor(':alias'),
     emptyProjectAdviceFor(':uber-consumer'),
+    emptyProjectAdviceFor(':external-alias-consumer'),
   ]
 }
