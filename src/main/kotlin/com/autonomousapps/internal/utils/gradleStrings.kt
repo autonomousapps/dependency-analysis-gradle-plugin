@@ -9,6 +9,7 @@ import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.artifacts.capability.CapabilitySelector
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentSelector
@@ -21,6 +22,8 @@ import org.gradle.api.capabilities.Capability
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.internal.artifacts.DefaultProjectComponentIdentifier
+import org.gradle.api.internal.artifacts.capability.FeatureCapabilitySelector
+import org.gradle.api.internal.artifacts.capability.SpecificCapabilitySelector
 import org.gradle.api.internal.artifacts.dependencies.SelfResolvingDependencyInternal
 import org.gradle.api.provider.Provider
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
@@ -276,10 +279,12 @@ internal fun Dependency.resolvedVersion(): String? = when (this) {
  * - Test Fixtures: https://docs.gradle.org/current/userguide/java_testing.html#sec:java_test_fixtures
  *   'testFixtures' is a Feature Variant added and configured by the 'java-test-fixtures' plugin.
  */
-internal fun Dependency.targetGradleVariantIdentification() = when (this) {
+internal fun Dependency.targetGradleVariantIdentification(): GradleVariantIdentification = when (this) {
   is ModuleDependency -> GradleVariantIdentification(
+    // TODO(tsr) cleanup
     requestedCapabilities.map { it.toGA() }.toSet(),
-    attributes.keySet().associate { it.name to attributes.getAttribute(it).toString() }
+//    capabilitySelectors.mapToOrderedSet { it.toName() },
+    attributes.keySet().associate { it.name to attributes.getAttribute(it)!!.toString() }
   )
 
   else -> GradleVariantIdentification.EMPTY
@@ -297,8 +302,39 @@ internal fun ResolvedVariantResult?.toGradleVariantIdentification(): GradleVaria
   if (this == null) return GradleVariantIdentification.EMPTY
 
   return GradleVariantIdentification(
-    capabilities.map { it.toGA() }.toSet(), emptyMap()
+    capabilities.map { it.toGA() }.toSet(),
+    emptyMap(),
   )
 }
 
-private fun Capability.toGA() = "$group:$name".intern()
+// TODO(tsr) cleanup
+private fun Capability.toGA(): String {
+  return name
+//  return "$group:$name".intern()
+}
+
+private fun CapabilitySelector.toName(): String {
+  return when (this) {
+    is SpecificCapabilitySelector -> "$group:$name".intern()
+    is FeatureCapabilitySelector -> featureName
+    else -> error("Unknown CapabilitySelector. Was '${javaClass.canonicalName}'")
+  }
+}
+
+/*
+ * NOTES TO SELF:
+ * 1. Capability has an internal implementation, ProjectDerivedCapability.
+ * 2. ProjectDerivedCapability has getGroup() and getName() functions.
+ * 3. getGroup() uses project.getGroup(), which violates IP. (This is the problem I'm trying to resolve at time of
+ *    writing.)
+ * 4. getName() returns the _feature name_ of the capability (not the project's name!). Does this include the module
+ *    name?
+ *
+ * FeatureCapabilitySelector has a getFeatureName() function, which return's the feature name. Does this include the
+ * module name?
+ *
+ * Contrariwise, SpecificCapabilitySelector's getName() function ultimately derives from ModuleVersionIdentifier's
+ * getName(), which is just the module's name (not clear if this includes the feature name).
+ *
+ * What if I don't need the group and can just make do with the name?
+ */
