@@ -309,7 +309,7 @@ internal fun ResolvedVariantResult?.toGradleVariantIdentification(): GradleVaria
 
 // TODO(tsr) cleanup
 private fun Capability.toGA(): String {
-  return name
+  return ":$name".intern()
 //  return "$group:$name".intern()
 }
 
