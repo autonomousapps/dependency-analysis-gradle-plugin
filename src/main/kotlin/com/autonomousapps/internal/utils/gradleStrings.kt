@@ -26,6 +26,7 @@ import org.gradle.api.internal.artifacts.capability.FeatureCapabilitySelector
 import org.gradle.api.internal.artifacts.capability.SpecificCapabilitySelector
 import org.gradle.api.internal.artifacts.dependencies.SelfResolvingDependencyInternal
 import org.gradle.api.provider.Provider
+import org.gradle.internal.component.external.model.ProjectDerivedCapability
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import java.io.File
@@ -309,7 +310,12 @@ internal fun ResolvedVariantResult?.toGradleVariantIdentification(): GradleVaria
 
 // TODO(tsr) cleanup
 private fun Capability.toGA(): String {
-  return ":$name".intern()
+  return when (this) {
+    is ProjectDerivedCapability -> name
+    else -> "$group:$name".intern()
+  }
+
+//  return ":$name".intern()
 //  return "$group:$name".intern()
 }
 
