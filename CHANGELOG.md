@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.0.3
+* [Fix]: compare versions via `VersionNumber`, not raw strings.
+* [Fix] Forcibly downgrade kotlin-stdlib to 2.0.21 for Gradle 8.11 support.
+
 # Version 3.0.2
 * [Fix] Downgrade Kotlin to 2.0.21 for Gradle 8.11 support.
 * [Fix]: min AGP version is 8.4.2.
