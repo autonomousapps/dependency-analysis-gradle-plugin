@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.convention
 
-import com.autonomousapps.convention.internal.kotlin.configureDokka
-import com.autonomousapps.convention.internal.kotlin.configureKotlin
+import com.autonomousapps.convention.internal.kotlin.KotlinConfigurer
 import com.gradle.publish.PublishTask
 import com.vanniktech.maven.publish.GradlePublishPlugin
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
@@ -27,9 +26,8 @@ public abstract class PluginConventionPlugin : Plugin<Project> {
 
     val versionCatalog = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
 
-    configureDokka(versionCatalog)
     configureGroovy(versionCatalog)
-    configureKotlin(versionCatalog)
+    configureKotlin()
     configurePlugins()
     configurePublishing()
     disableConfigurationCache()
@@ -43,6 +41,10 @@ public abstract class PluginConventionPlugin : Plugin<Project> {
       t.sourceCompatibility = javaTarget
       t.targetCompatibility = javaTarget
     }
+  }
+
+  private fun Project.configureKotlin() {
+    KotlinConfigurer(this).configure()
   }
 
   /**
