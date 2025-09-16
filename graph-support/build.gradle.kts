@@ -21,6 +21,8 @@ dependencies {
     because("Graphs")
   }
 
+  implementation(libs.kotlin.stdlib.core)
+
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.junit.api)
   testImplementation(libs.moshi.core)
