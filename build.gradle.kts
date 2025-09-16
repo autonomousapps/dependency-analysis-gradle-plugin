@@ -107,12 +107,11 @@ gradleTestKitSupport {
 }
 
 dependencies {
-  implementation(platform(libs.okio.bom))
-
   api(libs.javax.inject)
   api(libs.moshi.core)
   api(libs.moshix.sealed.runtime)
 
+  implementation(platform(libs.okio.bom))
   implementation(project(":graph-support"))
   implementation(project(":variant-artifacts"))
   implementation(libs.guava)
@@ -144,6 +143,8 @@ dependencies {
   compileOnly(libs.kotlin.gradle) {
     because("Auto-wiring into Kotlin projects")
   }
+
+  "commonTestImplementation"(libs.kotlin.stdlib.core)
 
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.groovy)

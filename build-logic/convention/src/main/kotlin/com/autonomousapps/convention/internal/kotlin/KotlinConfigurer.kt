@@ -20,18 +20,22 @@ internal class KotlinConfigurer(private val project: Project) {
   // this function expects strings of the form 2.x, not 2.x.y
   private val kotlinVersion = KotlinVersion.fromVersion(kotlin.substringBeforeLast('.'))
 
-  private val kotlinJvmExtension = project.extensions.getByType(KotlinJvmProjectExtension::class.java)
-
   fun configure(): Unit = project.run {
-    kotlinJvmExtension.explicitApi()
-
     configureDokka()
+    configureKotlinExtension()
     configureKotlinTarget()
     configureKotlinVersion()
   }
 
   private fun Project.configureDokka() {
     dependencies.add("dokkaHtmlPlugin", dokka)
+  }
+
+  private fun Project.configureKotlinExtension() {
+    project.extensions.getByType(KotlinJvmProjectExtension::class.java).run {
+      explicitApi()
+      coreLibrariesVersion = kotlin
+    }
   }
 
   private fun Project.configureKotlinTarget() {

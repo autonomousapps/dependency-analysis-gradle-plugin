@@ -51,6 +51,8 @@ dependencies {
   api(platform(libs.kotlin.bom))
   api(gradleTestKit())
 
+  implementation(libs.kotlin.stdlib.core)
+
   functionalTestImplementation(platform(libs.junit.bom))
   functionalTestImplementation(project(":gradle-testkit-support"))
   functionalTestImplementation(project(":gradle-testkit-truth"))

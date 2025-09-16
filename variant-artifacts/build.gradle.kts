@@ -25,6 +25,8 @@ gradleTestKitSupport {
 dependencies {
   api(gradleApi())
 
+  implementation(libs.kotlin.stdlib.core)
+
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.junit.api)
   testImplementation(libs.junit.params)

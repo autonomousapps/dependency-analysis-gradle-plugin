@@ -64,7 +64,9 @@ dependencies {
   implementation(libs.gradle.publish.plugin) {
     because("For extending Gradle Plugin-Publish Plugin functionality")
   }
-  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$embeddedKotlinVersion") {
+
+  // Need to use embedded version for Gradle 9 compatibility.
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${embeddedKotlinVersion}") {
     because("For applying the kotlin-jvm plugin")
   }
   implementation(libs.kotlinDokkaGradlePlugin)

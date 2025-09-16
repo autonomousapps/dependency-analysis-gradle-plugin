@@ -20,6 +20,8 @@ dependencies {
   api(platform(libs.kotlin.bom))
   api(gradleTestKit())
 
+  implementation(libs.kotlin.stdlib.core)
+
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.junit.api)
   testImplementation(libs.truth)
