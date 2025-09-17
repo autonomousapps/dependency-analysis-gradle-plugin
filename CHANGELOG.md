@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.0.4
+* [Fix] Remove auto-applied kotlin-stdlib for Gradle 8.11 support.
+
 # Version 3.0.3
 * [Fix]: compare versions via `VersionNumber`, not raw strings.
 * [Fix] Forcibly downgrade kotlin-stdlib to 2.0.21 for Gradle 8.11 support.
