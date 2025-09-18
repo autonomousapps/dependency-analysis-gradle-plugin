@@ -558,14 +558,22 @@ private class GraphVisitor(
     typealiasCapability: TypealiasCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
+    val fqnTypealiases = typealiasCapability.typealiases.flatMapToSet { ta ->
+      ta.typealiases.map { "${ta.packageName}.${it.name}" }
+    }
+
     val usedClasses = context.project.usedClasses.asSequence().filter { usedClass ->
-      typealiasCapability.typealiases.any { ta ->
-        ta.typealiases.map { "${ta.packageName}.${it.name}" }.contains(usedClass)
-      }
+      fqnTypealiases.contains(usedClass)
     }.toSortedSet()
 
-    return if (usedClasses.isNotEmpty()) {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Typealias(usedClasses)
+    val imports = context.project.imports.asSequence().filter { import ->
+      fqnTypealiases.contains(import)
+    }.toSortedSet()
+
+    val used = usedClasses + imports
+
+    return if (used.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Typealias(used)
       true
     } else {
       false
