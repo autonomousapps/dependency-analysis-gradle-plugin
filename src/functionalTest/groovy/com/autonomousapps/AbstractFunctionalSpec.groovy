@@ -14,17 +14,13 @@ abstract class AbstractFunctionalSpec extends Specification {
   @SuppressWarnings('unused')
   protected static final String FLAG_LOG_BYTECODE = "-D${Flags.BYTECODE_LOGGING}=true"
 
-  protected static final GRADLE_9_0_0 = GradleVersion.version('9.0.0')
-  protected static final GRADLE_9_1_0 = GradleVersion.version('9.1.0-rc-2')
-
-  protected static final GRADLE_LATEST = GRADLE_9_0_0
-  protected static final GRADLE_MAX = GradleVersions.maxGradleVersion
+  protected static final GRADLE_LATEST = GradleVersions.maxGradleVersion
 
   // For faster CI times, we only test min + max. Testing all would be preferable, but we don't have till the heat death
   // of the universe.
   protected static final SUPPORTED_GRADLE_VERSIONS = [
     GradleVersions.minGradleVersion,
-    GRADLE_MAX,
+    GRADLE_LATEST,
   ]
 
   protected GradleProject gradleProject = null

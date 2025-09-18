@@ -8,17 +8,17 @@ import org.gradle.util.GradleVersion
 
 internal object GradleVersions {
 
-  private val gradle811: GradleVersion = GradleVersion.version(GRADLE_MIN_VERSION)
-  private val gradle900: GradleVersion = GradleVersion.version("9.0.0")
-
   /** Minimum supported version of Gradle. */
-  @JvmField val minGradleVersion: GradleVersion = gradle811
+  @JvmField val minGradleVersion: GradleVersion = GradleVersion.version(GRADLE_MIN_VERSION)
 
   /** Max supported version of Gradle. */
   @JvmField val maxGradleVersion: GradleVersion = GradleVersion.version(GRADLE_MAX_VERSION)
 
   /** Version of Gradle we're building against. */
   @JvmField val current: GradleVersion = GradleVersion.current()
+
+  private val gradle811: GradleVersion = GradleVersion.version("8.11.1")
+  private val gradle900: GradleVersion = GradleVersion.version("9.0.0")
 
   val isAtLeastMinimum: Boolean = current >= minGradleVersion
 
