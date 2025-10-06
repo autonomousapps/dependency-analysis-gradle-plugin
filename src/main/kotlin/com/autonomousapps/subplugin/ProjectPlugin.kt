@@ -592,38 +592,30 @@ internal class ProjectPlugin(private val project: Project) {
       return
     }
 
+    if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
+      logger.warn(
+        "(dependency analysis) You have both java-library and org.springframework.boot applied. You probably " +
+                "want java, not java-library."
+      )
+    }
+
     j.sourceSets.forEach { sourceSet ->
       try {
         val sourceKind = JvmSourceKind.of(sourceSet.name)
         val hasAbi = hasAbi(sourceSet)
-
-        // Regardless of the fact that this is a "java-library" project, the presence of Spring
-        // Boot indicates an app project.
-        val dependencyAnalyzer = if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
-          logger.warn(
-            "(dependency analysis) You have both java-library and org.springframework.boot applied. You probably " +
-              "want java, not java-library."
+        val dependencyAnalyzer = if (hasAbi) {
+          JavaWithAbiAnalyzer(
+            project = this,
+            sourceSet = sourceSet,
+            sourceKind = sourceKind,
+            hasAbi = true,
           )
+        } else {
           JavaWithoutAbiAnalyzer(
             project = this,
             sourceSet = sourceSet,
             sourceKind = sourceKind,
           )
-        } else {
-          if (hasAbi) {
-            JavaWithAbiAnalyzer(
-              project = this,
-              sourceSet = sourceSet,
-              sourceKind = sourceKind,
-              hasAbi = true,
-            )
-          } else {
-            JavaWithoutAbiAnalyzer(
-              project = this,
-              sourceSet = sourceSet,
-              sourceKind = sourceKind,
-            )
-          }
         }
         analyzeDependencies(dependencyAnalyzer)
       } catch (_: UnknownTaskException) {
