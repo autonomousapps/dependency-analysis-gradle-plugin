@@ -78,6 +78,21 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
+  def "dependencies to test fixtures in spring boot project (#gradleVersion)"() {
+    given:
+    def project = new TestFixturesTestProject(false, true)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
   def "dependencies to main and test fixtures of another project are analysed correctly (#gradleVersion nestedProjects=#withNestedProjects)"() {
     given:
     def project = new TestFixturesTestProject2(withNestedProjects)
