@@ -18,11 +18,13 @@ import static com.autonomousapps.kit.gradle.dependencies.Dependencies.commonsCol
 final class TestFixturesTestProject extends AbstractProject {
 
   private final boolean ignoreSourceTestFixturesSet
+  private final boolean applySpringBootPlugin
 
   final GradleProject gradleProject
 
-  TestFixturesTestProject(boolean ignoreSourceTestFixturesSet = false) {
+  TestFixturesTestProject(boolean ignoreSourceTestFixturesSet = false, boolean applySpringBootPlugin = false) {
     this.ignoreSourceTestFixturesSet = ignoreSourceTestFixturesSet
+    this.applySpringBootPlugin = applySpringBootPlugin
     this.gradleProject = build()
   }
 
@@ -47,9 +49,12 @@ final class TestFixturesTestProject extends AbstractProject {
     builder.withSubproject('producer') { s ->
       s.sources = sources
       s.withBuildScript { bs ->
-        bs.plugins = [Plugin.javaLibrary, Plugin.javaTestFixtures, Plugins.dependencyAnalysisNoVersion]
+        bs.plugins = applySpringBootPlugin
+                ? [Plugin.java, Plugin.javaTestFixtures, Plugins.dependencyAnalysisNoVersion, Plugins.springBoot]
+                : [Plugin.javaLibrary, Plugin.javaTestFixtures, Plugins.dependencyAnalysisNoVersion]
         bs.dependencies = [
-          commonsCollections('api'),
+          // A 'app' project never has an API for the 'main' - see ProjectPlugin.isAppProject()
+          commonsCollections(applySpringBootPlugin ? 'implementation' : 'api'),
           commonsCollections('testFixturesApi')
         ]
       }
