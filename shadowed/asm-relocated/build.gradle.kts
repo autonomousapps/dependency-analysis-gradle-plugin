@@ -4,8 +4,8 @@ plugins {
   id("build-logic.lib.java")
 }
 
-version = "9.7.1.0"
-val versionAsm = "9.7.1"
+version = "9.9.0"
+val versionAsm = "9.9"
 
 dagp {
   version(version)

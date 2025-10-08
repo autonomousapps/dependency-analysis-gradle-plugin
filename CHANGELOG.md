@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Unreleased
+* [Fix] Updated asm to 9.9 for Java 25 support.
+
 # Version 3.0.4
 * [Fix] Remove auto-applied kotlin-stdlib for Gradle 8.11 support.
 
