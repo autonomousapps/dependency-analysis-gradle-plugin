@@ -106,16 +106,19 @@ public abstract class FindDeclaredProcsTask : DefaultTask() {
   ): List<AnnotationProcessorDependency> {
     if (artifacts == null) return emptyList()
 
-    return artifacts.mapNotNull { artifact ->
-      val procs = findProcs(artifact.file)
-      if (procs != null) artifact to procs else null
-    }.flatMap { (artifact, procs) ->
-      procs.mapNotNull { procName ->
-        inMemoryCache.proc(procName) ?: procFor(artifact, procName, classLoader!!).also { proc ->
-          proc?.let { inMemoryCache.procs(procName, it) }
-        }
+    return artifacts
+      .mapNotNull { artifact ->
+        val procs = findProcs(artifact.file)
+        if (procs != null) artifact to procs else null
       }
-    }
+      .flatMap { (artifact, procs) ->
+        procs
+          .mapNotNull { procName ->
+            inMemoryCache.proc(procName) ?: procFor(artifact, procName, classLoader!!).also { proc ->
+              proc?.let { inMemoryCache.procs(procName, it) }
+            }
+          }
+      }
   }
 
   @Suppress("UNCHECKED_CAST")
