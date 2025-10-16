@@ -81,11 +81,14 @@ val VERSION: String by extra.properties
 
 develocity {
   buildScan {
-    publishing.onlyIf { true }
+    val isCI = providers.environmentVariable("CI").isPresent
+    val isEnabled = providers.gradleProperty("dependency.analysis.scans.publish").getOrElse("false").toBoolean()
+
+    publishing.onlyIf { isCI || isEnabled }
     termsOfUseUrl = "https://gradle.com/terms-of-service"
     termsOfUseAgree = "yes"
 
-    tag(if (System.getenv("CI").isNullOrBlank()) "Local" else "CI")
+    tag(if (isCI) "CI" else "Local")
     tag(VERSION)
   }
 }
