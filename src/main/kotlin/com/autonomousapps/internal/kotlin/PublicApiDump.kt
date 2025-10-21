@@ -15,8 +15,13 @@ import java.io.File
 import java.io.InputStream
 import java.io.PrintStream
 import java.util.jar.JarFile
+import kotlin.metadata.KmClassifier
+import kotlin.metadata.KmType
+import kotlin.metadata.isSuspend
 import kotlin.metadata.jvm.JvmFieldSignature
 import kotlin.metadata.jvm.JvmMethodSignature
+import kotlin.metadata.jvm.KotlinClassMetadata
+import kotlin.metadata.jvm.signature
 
 internal fun main(args: Array<String>) {
   val src = args[0]
@@ -60,6 +65,15 @@ internal fun getBinaryAPI(
     .map { clazz ->
       with(clazz) {
         val metadata = kotlinMetadata
+
+        val kmFunctions = when (val md = metadata) {
+          is KotlinClassMetadata.Class -> md.kmClass.functions
+          is KotlinClassMetadata.FileFacade -> md.kmPackage.functions
+          is KotlinClassMetadata.MultiFileClassPart -> md.kmPackage.functions
+          else -> null
+        }.orEmpty()
+        val jvmFunctionMap = kmFunctions.filter { it.signature != null }.associateBy { it.signature!! }
+
         val mVisibility = visibilityMapNew[name]
         val classAccess = AccessFlags(effectiveAccess and Opcodes.ACC_STATIC.inv())
 
@@ -114,12 +128,20 @@ internal fun getBinaryAPI(
           // Strip out JDK classes
           .filterNotToSet { it.startsWith("Ljava/lang") }
 
+        val suspendReturnTypes = methods.mapNotNull { methodNode ->
+          jvmFunctionMap[JvmMethodSignature(methodNode.name, methodNode.desc)]
+        }.filter { kmFunction ->
+          kmFunction.isSuspend
+        }.flatMap { kmFunction ->
+          extractClassesAsDescriptors(kmFunction.returnType)
+        }.toSet()
+
         ClassBinarySignature(
           name = name,
           superName = superName,
           outerName = outerClassName,
           supertypes = supertypes,
-          genericTypes = genericTypes,
+          genericTypes = genericTypes + suspendReturnTypes,
           memberSignatures = memberSignatures,
           access = classAccess,
           isEffectivelyPublic = isEffectivelyPublic(mVisibility),
@@ -212,4 +234,25 @@ internal fun <T : Appendable> List<ClassBinarySignature>.dump(to: T): T = to.app
     }
     appendReproducibleNewLine("}\n")
   }
+}
+
+private fun extractClassesAsDescriptors(type: KmType): Set<String> {
+  val classes = mutableSetOf<String>()
+
+  when (val classifier = type.classifier) {
+    is KmClassifier.Class -> classes.add("L${classifier.name};")
+    is KmClassifier.TypeAlias -> classes.add("L${classifier.name};")
+
+    // Type parameters are not concrete types, so we don't add them directly.
+    // Their bounds might be relevant, but the requirement is to extract constituent types.
+    is KmClassifier.TypeParameter -> Unit
+  }
+
+  type.arguments.forEach { projection ->
+    projection.type?.let { argumentType ->
+      classes.addAll(extractClassesAsDescriptors(argumentType))
+    }
+  }
+
+  return classes
 }
