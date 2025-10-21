@@ -1,5 +1,8 @@
 Graph-Support Changelog
 
+# Version 0.9.0
+* [Feat]: add `Graphs.reversed()`.
+
 # Version 0.8.3
 * [Fix] Remove auto-applied kotlin-stdlib for Gradle 8.11 support.
 
