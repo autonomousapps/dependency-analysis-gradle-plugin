@@ -119,7 +119,7 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
               it.isAdd() -> undeclaredDependencies++
               it.isChange() -> misDeclaredDependencies++
               it.isCompileOnly() -> compileOnlyDependencies++
-              it.isRuntimeOnly() -> runtimeOnlyDependencies++
+              it.isChangeToRuntimeOnly() -> runtimeOnlyDependencies++
               it.isProcessor() -> processorDependencies++
             }
           }

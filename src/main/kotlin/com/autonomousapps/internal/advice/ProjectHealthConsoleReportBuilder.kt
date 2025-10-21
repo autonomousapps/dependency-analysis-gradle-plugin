@@ -35,7 +35,7 @@ internal class ProjectHealthConsoleReportBuilder(
       if (advice.isRemove()) removeAdvice += advice
       if (advice.isAdd()) addAdvice += advice
       if (advice.isChange()) changeAdvice += advice
-      if (advice.isRuntimeOnly()) runtimeOnlyAdvice += advice
+      if (advice.isChangeToRuntimeOnly()) runtimeOnlyAdvice += advice
       if (advice.isCompileOnly()) compileOnlyAdvice += advice
       if (advice.isProcessor()) processorAdvice += advice
     }

@@ -83,6 +83,7 @@ internal class ProjectPlugin(private val project: Project) {
   private val aggregatorsRegistered = AtomicBoolean(false)
 
   private lateinit var computeAdviceTask: TaskProvider<ComputeAdviceTask>
+  private lateinit var filterAdviceTask: TaskProvider<FilterAdviceTask>
   private lateinit var computeResolvedDependenciesTask: TaskProvider<ComputeResolvedDependenciesTask>
   private lateinit var findDeclarationsTask: TaskProvider<FindDeclarationsTask>
   private lateinit var mergeProjectGraphsTask: TaskProvider<MergeProjectGraphsTask>
@@ -921,6 +922,8 @@ internal class ProjectPlugin(private val project: Project) {
 
     // A report of service loaders.
     val findServiceLoadersTask = tasks.register("serviceLoader$taskNameSuffix", FindServiceLoadersTask::class.java) {
+      // TODO(tsr): consider this. Wouldn't the runtime classpath be more appropriate for this task? Separate PR to test.
+      //  it.setCompileClasspath(configurations.getByName(dependencyAnalyzer.runtimeConfigurationName).artifactsFor(dependencyAnalyzer.attributeValueJar))
       it.setCompileClasspath(
         configurations.getByName(dependencyAnalyzer.compileConfigurationName).artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
@@ -1066,12 +1069,17 @@ internal class ProjectPlugin(private val project: Project) {
       synthesizeDependenciesTask, synthesizeProjectViewTask
     )
 
-    computeAdviceTask.configure {
-      it.buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
-      it.dependencyGraphViews.add(graphViewTask.flatMap { it.output })
-      it.dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
-      it.dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
-      androidScoreTask?.let { t -> it.androidScoreReports.add(t.flatMap { it.output }) }
+    computeAdviceTask.configure { t ->
+      t.buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
+      t.dependencyGraphViews.add(graphViewTask.flatMap { it.output })
+      t.dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
+      t.dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
+      androidScoreTask?.let { a -> t.androidScoreReports.add(a.flatMap { it.output }) }
+    }
+    filterAdviceTask.configure { t ->
+      t.buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
+      t.dependencyGraphViews.add(graphViewTask.flatMap { it.output })
+      t.dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
     }
   }
 
@@ -1105,31 +1113,31 @@ internal class ProjectPlugin(private val project: Project) {
       it.bundledTraces.set(paths.bundledTracesPath)
     }
 
-    val filterAdviceTask = tasks.register("filterAdvice", FilterAdviceTask::class.java) {
+    filterAdviceTask = tasks.register("filterAdvice", FilterAdviceTask::class.java) { t ->
       // This information...
-      it.projectAdvice.set(computeAdviceTask.flatMap { it.output })
+      t.projectAdvice.set(computeAdviceTask.flatMap { it.output })
 
       // ...is filtered by these preferences...
-      it.dataBindingEnabled.set(isDataBindingEnabled)
-      it.viewBindingEnabled.set(isViewBindingEnabled)
+      t.dataBindingEnabled.set(isDataBindingEnabled)
+      t.viewBindingEnabled.set(isViewBindingEnabled)
       with(dagpExtension.issueHandler) {
         // These all have sourceSet-specific behaviors
-        it.anyBehavior.addAll(anyIssueFor(theProjectPath))
-        it.unusedDependenciesBehavior.addAll(unusedDependenciesIssueFor(theProjectPath))
-        it.usedTransitiveDependenciesBehavior.addAll(usedTransitiveDependenciesIssueFor(theProjectPath))
-        it.incorrectConfigurationBehavior.addAll(incorrectConfigurationIssueFor(theProjectPath))
-        it.compileOnlyBehavior.addAll(compileOnlyIssueFor(theProjectPath))
-        it.runtimeOnlyBehavior.addAll(runtimeOnlyIssueFor(theProjectPath))
-        it.unusedProcsBehavior.addAll(unusedAnnotationProcessorsIssueFor(theProjectPath))
-        it.duplicateClassWarningsBehavior.addAll(onDuplicateClassWarnings(theProjectPath))
+        t.anyBehavior.addAll(anyIssueFor(theProjectPath))
+        t.unusedDependenciesBehavior.addAll(unusedDependenciesIssueFor(theProjectPath))
+        t.usedTransitiveDependenciesBehavior.addAll(usedTransitiveDependenciesIssueFor(theProjectPath))
+        t.incorrectConfigurationBehavior.addAll(incorrectConfigurationIssueFor(theProjectPath))
+        t.compileOnlyBehavior.addAll(compileOnlyIssueFor(theProjectPath))
+        t.runtimeOnlyBehavior.addAll(runtimeOnlyIssueFor(theProjectPath))
+        t.unusedProcsBehavior.addAll(unusedAnnotationProcessorsIssueFor(theProjectPath))
+        t.duplicateClassWarningsBehavior.addAll(onDuplicateClassWarnings(theProjectPath))
 
         // These don't have sourceSet-specific behaviors
-        it.redundantPluginsBehavior.set(redundantPluginsIssueFor(theProjectPath))
-        it.moduleStructureBehavior.set(moduleStructureIssueFor(theProjectPath))
+        t.redundantPluginsBehavior.set(redundantPluginsIssueFor(theProjectPath))
+        t.moduleStructureBehavior.set(moduleStructureIssueFor(theProjectPath))
       }
 
       // ...and produces this output.
-      it.output.set(paths.filteredAdvicePath)
+      t.output.set(paths.filteredAdvicePath)
     }
 
     val generateProjectHealthReport = tasks.register("generateConsoleReport", GenerateProjectHealthReportTask::class.java) {

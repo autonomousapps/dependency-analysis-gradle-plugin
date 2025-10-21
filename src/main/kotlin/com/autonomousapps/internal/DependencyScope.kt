@@ -16,7 +16,8 @@ internal enum class DependencyScope(val value: String) {
   COMPILE_ONLY("compileOnly"),
   API("api"),
   IMPLEMENTATION("implementation"),
-  RUNTIME_ONLY("runtimeOnly");
+  RUNTIME_ONLY("runtimeOnly"),
+  ;
 
   companion object {
     /**
@@ -26,7 +27,7 @@ internal enum class DependencyScope(val value: String) {
      */
     fun sourceSetName(configurationName: String): String? {
       val scope = getScope(configurationName) ?: return null
-      val sourceSet = configurationName.substring(0, configurationName.length - scope.value.length)
+      val sourceSet = configurationName.take(configurationName.length - scope.value.length)
       return sourceSet.ifEmpty { "main" }
     }
 
@@ -36,7 +37,7 @@ internal enum class DependencyScope(val value: String) {
     }
 
     private fun getScope(configurationName: String): DependencyScope? {
-      return values().firstOrNull { scope ->
+      return entries.firstOrNull { scope ->
         configurationName.lowercase().endsWith(scope.value.lowercase())
       }
     }

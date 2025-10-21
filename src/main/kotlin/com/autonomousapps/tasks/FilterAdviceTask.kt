@@ -7,12 +7,15 @@ import com.autonomousapps.extension.Ignore
 import com.autonomousapps.extension.Issue
 import com.autonomousapps.extension.anyMatches
 import com.autonomousapps.internal.DependencyScope
+import com.autonomousapps.internal.advice.RuntimeOnlyFilter
 import com.autonomousapps.internal.advice.SeverityHandler
 import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.*
+import com.autonomousapps.model.internal.DependencyGraphView
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -31,9 +34,16 @@ public abstract class FilterAdviceTask @Inject constructor(
     description = "Filter merged advice based on user preferences"
   }
 
+  @get:Input
+  public abstract val buildPath: Property<String>
+
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   public abstract val projectAdvice: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val dependencyGraphViews: ListProperty<RegularFile>
 
   @get:Input
   public abstract val dataBindingEnabled: Property<Boolean>
@@ -76,7 +86,9 @@ public abstract class FilterAdviceTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(FilterAdviceAction::class.java) {
+      it.buildPath.set(buildPath)
       it.projectAdvice.set(projectAdvice)
+      it.dependencyGraphViews.set(dependencyGraphViews)
       it.dataBindingEnabled.set(dataBindingEnabled)
       it.viewBindingEnabled.set(viewBindingEnabled)
       it.anyBehavior.set(anyBehavior)
@@ -94,7 +106,9 @@ public abstract class FilterAdviceTask @Inject constructor(
   }
 
   public interface FilterAdviceParameters : WorkParameters {
+    public val buildPath: Property<String>
     public val projectAdvice: RegularFileProperty
+    public val dependencyGraphViews: ListProperty<RegularFile>
     public val dataBindingEnabled: Property<Boolean>
     public val viewBindingEnabled: Property<Boolean>
     public val anyBehavior: ListProperty<Behavior>
@@ -111,6 +125,9 @@ public abstract class FilterAdviceTask @Inject constructor(
   }
 
   public abstract class FilterAdviceAction : WorkAction<FilterAdviceParameters> {
+
+    private val buildPath = parameters.buildPath.get()
+    private val dependencyGraph = DependencyGraphView.asMap(parameters.dependencyGraphViews)
 
     private val dataBindingEnabled = parameters.dataBindingEnabled.get()
     private val viewBindingEnabled = parameters.viewBindingEnabled.get()
@@ -146,10 +163,12 @@ public abstract class FilterAdviceTask @Inject constructor(
         .filterOf(usedTransitiveDependenciesBehavior) { it.isAdd() }
         .filterOf(incorrectConfigurationBehavior) { it.isChange() }
         .filterOf(compileOnlyBehavior) { it.isCompileOnly() }
-        .filterOf(runtimeOnlyBehavior) { it.isRuntimeOnly() }
+        .filterOf(runtimeOnlyBehavior) { it.isChangeToRuntimeOnly() }
         .filterOf(unusedProcsBehavior) { it.isProcessor() }
         .filterDataBinding()
         .filterViewBinding()
+        // This must be the final filter
+        .filterRedundantRuntimeOnlyAdvice()
         .toSortedSet()
 
       val pluginAdvice: Set<PluginAdvice> = projectAdvice.pluginAdvice.asSequence()
@@ -250,6 +269,10 @@ public abstract class FilterAdviceTask @Inject constructor(
         viewBindingDependencies.contains(it.coordinates.identifier)
       }
       else this
+    }
+
+    private fun Sequence<Advice>.filterRedundantRuntimeOnlyAdvice(): Sequence<Advice> {
+      return RuntimeOnlyFilter(dependencyGraph, buildPath).simplify(this)
     }
 
     private fun Sequence<DuplicateClass>.filterOf(
