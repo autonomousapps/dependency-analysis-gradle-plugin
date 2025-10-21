@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.graph
 
+import com.google.common.graph.ElementOrder
 import com.google.common.graph.Graph
+import com.google.common.graph.GraphBuilder
 import com.google.common.graph.Graphs as GuavaGraphs
 
 @Suppress("UnstableApiUsage") // Guava graphs
@@ -49,6 +51,20 @@ public object Graphs {
       .filter(predicate)
       .flatMap { node -> GuavaGraphs.reachableNodes(this, node) }
       .toSet()
+  }
+
+  /** Returns a reversed version of [this][Graph] graph. */
+  public fun <N : Any> Graph<N>.reversed(): Graph<N> {
+    val builder = GraphBuilder.directed()
+      .allowsSelfLoops(false)
+      .incidentEdgeOrder(ElementOrder.stable<N>())
+      .immutable<N>()
+
+    // Not all nodes have an edge
+    nodes().forEach { node -> builder.addNode(node) }
+    edges().forEach { edge -> builder.putEdge(edge.target(), edge.source()) }
+
+    return builder.build()
   }
 
   /**
