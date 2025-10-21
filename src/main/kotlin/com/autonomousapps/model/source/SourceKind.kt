@@ -35,6 +35,12 @@ public sealed class SourceKind : Comparable<SourceKind>, Serializable {
    */
   internal abstract fun runtimeMatches(classpaths: Collection<String>): Boolean
 
+  /**
+   * Returns true if [sourceSetName] matches [name], accounting for complexities in Android source sets that don't
+   * permit straightforward equality checks.
+   */
+  internal abstract fun sourceSetMatches(sourceSetName: String): Boolean
+
   internal companion object {
     const val MAIN_NAME = "main"
     const val TEST_NAME = "test"
@@ -96,6 +102,11 @@ public data class AndroidSourceKind(
     }
   }
 
+  override fun sourceSetMatches(sourceSetName: String): Boolean {
+    // debugRuntimeClasspath, debugUnitTestRuntimeClasspath
+    return sourceSetName == name || sourceSetName == base().name
+  }
+
   override fun compareTo(other: SourceKind): Int {
     if (other is JvmSourceKind) return -1
 
@@ -112,7 +123,12 @@ public data class AndroidSourceKind(
     val ANDROID_TEST = androidTest(ANDROID_TEST_NAME)
     val ANDROID_TEST_FIXTURES = testFixtures(TEST_FIXTURES_NAME)
 
-    val VIRTUAL_CLASSPATHS = listOf("runtimeClasspath", "unitTestRuntimeClasspath", "androidTestRuntimeClasspath", "testFixturesRuntimeClasspath")
+    val VIRTUAL_CLASSPATHS = listOf(
+      "runtimeClasspath",
+      "unitTestRuntimeClasspath",
+      "androidTestRuntimeClasspath",
+      "testFixturesRuntimeClasspath",
+    )
 
     fun main(variantName: String): AndroidSourceKind {
       return AndroidSourceKind(
@@ -197,6 +213,10 @@ public data class JvmSourceKind(
 
   override fun runtimeMatches(classpaths: Collection<String>): Boolean {
     return runtimeClasspathName in classpaths
+  }
+
+  override fun sourceSetMatches(sourceSetName: String): Boolean {
+    return sourceSetName == name
   }
 
   override fun compareTo(other: SourceKind): Int {

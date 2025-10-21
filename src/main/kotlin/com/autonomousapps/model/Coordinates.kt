@@ -111,6 +111,24 @@ public sealed class Coordinates(
     }
   }
 
+  /**
+   * Returns the coordinates of the [resolvedProject][IncludedBuildCoordinates.resolvedProject] if `this` is an
+   * [IncludedBuildCoordinates], otherwise returns `this`.
+   */
+  internal fun normalized(buildPath: String): Coordinates {
+    return if (this is IncludedBuildCoordinates && resolvedProject.buildPath == buildPath)
+      resolvedProject
+    else {
+      this
+    }
+  }
+
+  /**
+   * Returns the [identifier] of the [resolvedProject][IncludedBuildCoordinates.resolvedProject] if `this` is an
+   * [IncludedBuildCoordinates], otherwise returns `this.identifier`.
+   */
+  internal fun normalizedIdentifier(buildPath: String): String = normalized(buildPath).identifier
+
   private fun isDefaultCapability(capability: String, identifier: String) =
     when (this) {
       // For projects, we don't know the 'group' here. We only match the 'name' part and assume that the group fits.

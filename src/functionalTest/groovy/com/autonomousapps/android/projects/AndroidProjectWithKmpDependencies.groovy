@@ -93,9 +93,10 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
   @SuppressWarnings("GrMethodMayBeStatic")
   Set<Advice> expectedAdvice() {
     return [
-      addComposeRuntime(),
       removeComposeFoundation(),
+      addComposeRuntime(),
       addKotlinxCoroutinesCore(),
+      addKotlinxCoroutinesAndroid(),
       changeKotlinxCoroutinesTest(),
       // TODO need to make a new advice to replace KMP targets with canonical ones
       //  See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/919#issuecomment-1620684615
@@ -114,6 +115,10 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
 
   private static Advice addKotlinxCoroutinesCore() {
     return Advice.ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-coroutines-core', '1.6.0'), 'implementation')
+  }
+
+  private static Advice addKotlinxCoroutinesAndroid() {
+    return Advice.ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-coroutines-android', '1.6.0'), 'runtimeOnly')
   }
 
   // In practice we don't actually want to keep this, but because it has a serviceloader DAGP will

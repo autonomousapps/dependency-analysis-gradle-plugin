@@ -31,6 +31,32 @@ public data class GradleVariantIdentification(
   private fun toSingleString() =
     capabilities.sorted().joinToString() + attributes.map { (k, v) -> "$k=$v" }.sorted().joinToString()
 
+  // This class is too verbose when debugging
+  override fun toString(): String {
+    if (capabilities.isEmpty() && attributes.isEmpty()) {
+      return "()"
+    }
+
+    return buildString {
+      append("GradleVariantIdentification(")
+
+      var appendComma = false
+      if (capabilities.isNotEmpty()) {
+        append("capabilities=")
+        append(capabilities)
+        appendComma = true
+      }
+      if (attributes.isNotEmpty()) {
+        if (appendComma) {
+          append(", ")
+        }
+        append("attributes=")
+        append(attributes)
+      }
+      append(")")
+    }
+  }
+
   /**
    * Check that all the requested capabilities are declared in the 'target'. Otherwise, the target can't be a target
    * of the given declarations. The requested capabilities ALWAYS have to exist in a target to be selected.

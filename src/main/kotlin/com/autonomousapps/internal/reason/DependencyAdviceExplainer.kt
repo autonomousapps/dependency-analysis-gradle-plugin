@@ -109,7 +109,7 @@ internal class DependencyAdviceExplainer(
           "You have been advised to remove this dependency from '${a.fromConfiguration!!.colorize(Colors.RED)}'."
         }
 
-        a.isChange() || a.isRuntimeOnly() || a.isCompileOnly() -> {
+        a.isChange() || a.isChangeToRuntimeOnly() || a.isCompileOnly() -> {
           "You have been advised to change this dependency to '${a.toConfiguration!!.colorize(Colors.GREEN)}' " +
             "from '${a.fromConfiguration!!.colorize(Colors.YELLOW)}'."
         }

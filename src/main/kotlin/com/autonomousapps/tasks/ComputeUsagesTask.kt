@@ -236,9 +236,6 @@ private class GraphVisitor(
             isImplCandidate = true
             isUnusedCandidate = false
           }
-
-          // for exhaustive when
-          Unit
         }
 
         is ServiceLoaderCapability -> {

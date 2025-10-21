@@ -3,7 +3,6 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.PomRelocationProject
-import spock.lang.PendingFeature
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -16,7 +15,8 @@ import static com.google.common.truth.Truth.assertThat
  */
 final class PomRelocationSpec extends AbstractJvmSpec {
 
-  @PendingFeature(reason = "Gradle transparently processes the relocation, offering no way for end users to know that it's happened")
+  // nb: this now works thanks to a new feature to ensure we don't drop transitive runtimeOnly deps. It does NOT work
+  // thanks to anything to do with a POM's `relocation` feature.
   def "handles POM distributionManagement.relocation (#gradleVersion)"() {
     given:
     def project = new PomRelocationProject()

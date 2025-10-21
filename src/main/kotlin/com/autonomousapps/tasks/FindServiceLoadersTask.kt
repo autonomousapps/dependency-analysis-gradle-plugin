@@ -50,6 +50,9 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
   @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
+    // TODO(tsr): there's a bug here. If a service loader is coming from another subproject in the same build, then
+    //  compileClasspath contains a directory that includes only class files. It doesn't not contain any resources
+    //  files, which is where the service loader definition would be.
     val serviceLoaders = compileClasspath
       .filterNonGradle()
       .filter { it.file.name.endsWith(".jar") }

@@ -74,7 +74,24 @@ public data class Advice(
 
   public fun isRemoveCompileOnly(): Boolean = isRemove() && fromConfiguration?.endsWith("compileOnly", ignoreCase = true) == true
 
-  public fun isRuntimeOnly(): Boolean = toConfiguration?.endsWith("runtimeOnly", ignoreCase = true) == true
+  /**
+   * Advice is advice to _change_ some declaration from whatever it is to a runtimeOnly-like configuration. It is _not_
+   * advice to _add_ a new runtimeOnly-like declaration.
+   */
+  @Deprecated("Use isChangeToRuntimeOnly() instead.", replaceWith = ReplaceWith("isChangeToRuntimeOnly"))
+  public fun isRuntimeOnly(): Boolean = isChangeToRuntimeOnly()
+
+  /**
+   * Advice is advice to _change_ some declaration from whatever it is to a runtimeOnly-like configuration. It is _not_
+   * advice to _add_ a new runtimeOnly-like declaration.
+   */
+  public fun isChangeToRuntimeOnly(): Boolean = !isAnyAdd() && toConfiguration?.endsWith("runtimeOnly", ignoreCase = true) == true
+
+  /**
+   * Advice is advice to _add_ some declaration to a runtimeOnly-like configuration. This would be for a dependency that
+   * was previously only available transitively (it is undeclared).
+   */
+  public fun isAddToRuntimeOnly(): Boolean = isAnyAdd() && toConfiguration?.endsWith("runtimeOnly", ignoreCase = true) == true
 
   /**
    * An advice is "add-advice" if it is undeclared and used, AND is not `compileOnly`.
@@ -95,7 +112,7 @@ public data class Advice(
    * An advice is "change-advice" if it is declared and used (but is on the wrong configuration),
    * AND is not `compileOnly`, AND is not `runtimeOnly`.
    */
-  public fun isChange(): Boolean = isAnyChange() && !isCompileOnly() && !isRuntimeOnly()
+  public fun isChange(): Boolean = isAnyChange() && !isCompileOnly() && !isChangeToRuntimeOnly()
 
   /**
    * An advice is "change-advice" if it is declared and used (but is on the wrong configuration).
@@ -111,7 +128,7 @@ public data class Advice(
   }.isTrue()
 
   /** If this is advice to remove or downgrade a dependency. */
-  public fun isDowngrade(): Boolean = (isRemove() || isCompileOnly() || isRuntimeOnly())
+  public fun isDowngrade(): Boolean = isRemove() || (!isAnyAdd() && (isCompileOnly() || isChangeToRuntimeOnly()))
 
   /** If this is advice to add a dependency, or change an existing dependency to make it api-like. */
   public fun isUpgrade(): Boolean = isAnyAdd() || (isAnyChange() && isToApiLike())

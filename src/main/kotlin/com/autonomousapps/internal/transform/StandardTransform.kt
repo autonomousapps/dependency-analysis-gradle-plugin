@@ -3,10 +3,14 @@
 package com.autonomousapps.internal.transform
 
 import com.autonomousapps.extension.DependenciesHandler
+import com.autonomousapps.graph.Graphs.children
+import com.autonomousapps.graph.Graphs.root
 import com.autonomousapps.internal.DependencyScope
+import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.Coordinates.Companion.copy
+import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.Reason
@@ -16,15 +20,14 @@ import com.google.common.collect.SetMultimap
 import org.gradle.api.attributes.Category
 
 /**
- * Given [coordinates] and zero or more [declarations] for a given dependency, and the [usages][Usage] of that
- * dependency, emit a set of transforms, or advice, that a user can follow to produce simple and correct dependency
+ * Given the [coordinates] of a dependency, zero or more [declarations] for that dependency, and the [usages][Usage] of
+ * that dependency: emit a set of transforms, or advice, that a user can follow to produce simple and correct dependency
  * declarations in a build script.
  */
 internal class StandardTransform(
   private val coordinates: Coordinates,
   private val declarations: Set<Declaration>,
-  private val directDependencies: SetMultimap<String, SourceKind>,
-  private val dependenciesToClasspaths: SetMultimap<String, String>,
+  private val dependencyGraph: Map<String, DependencyGraphView>,
   private val supportedSourceSets: Set<String>,
   private val buildPath: String,
   private val explicitSourceSets: Set<String> = emptySet(),
@@ -36,6 +39,43 @@ internal class StandardTransform(
     isKaptApplied = isKaptApplied,
     isAndroidProject = isAndroidProject,
   )
+
+  /**
+   * Returns the set of direct (non-transitive) dependencies from [dependencyGraph], associated with the source sets
+   * ([Variant.variant][SourceKind]) they're related to.
+   *
+   * These are _direct_ dependencies that are not _declared_ because they're coming from associated classpaths. For
+   * example, the `test` source set extends from the `main` source set (and also the compile and runtime classpaths).
+   */
+  private val directDependencies: SetMultimap<String, SourceKind> by unsafeLazy {
+    newSetMultimap<String, SourceKind>().apply {
+      dependencyGraph.values.map { graphView ->
+        val root = graphView.graph.root()
+        graphView.graph.children(root).forEach { directDependency ->
+          val identifier = directDependency.normalizedIdentifier(buildPath)
+          put(identifier, graphView.sourceKind)
+        }
+      }
+    }
+  }
+
+  /**
+   * This results in a map like:
+   * * "group:name:1.0" -> (compileClasspath, runtimeClasspath)
+   * * ":project" -> (compileClasspath)
+   *
+   * etc.
+   */
+  private val dependenciesToClasspaths: SetMultimap<String, String> by unsafeLazy {
+    newSetMultimap<String, String>().apply {
+      dependencyGraph.values.map { graphView ->
+        graphView.graph.nodes().forEach { node ->
+          val identifier = node.normalizedIdentifier(buildPath)
+          put(identifier, graphView.configurationName)
+        }
+      }
+    }
+  }
 
   override fun reduce(usages: Set<Usage>): Set<Advice> {
     val advice = mutableSetOf<Advice>()
@@ -60,13 +100,25 @@ internal class StandardTransform(
         { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.CUSTOM_JVM_KIND },
       )
 
+    // Notes on "visibility":
+    // 1. We care about _usage_ because usage is what matters for final state of dependency declarations.
+    // 2. Unfortunately, usage isn't good enough. Something might have a bucket=IMPL usage but declaration=compileOnly,
+    //    and because we don't change compileOnly declarations, the dependency won't be visible on downstream runtime
+    //    classpaths.
+    // 3. I know all the classpaths something is CURRENTLY visible on via `dependenciesToClasspaths`, but that's based
+    //    on current declarations that may change. We need to know USAGE, DECLARATION (because of special handling)
+    // 4. Declarations aren't good enough, because I know something _will be_ declared on runtimeOnly, even if it isn't
+    //    currently. I suppose I can say that the runtime classpath has special handling. Our advice specifically trims
+    //    the compile classpath based on detected usage in the bytecode. We also already suggest moving things to
+    //    runtimeOnly if there's no detected compile-time usage, but the thing has runtime capabilities. Now we want to
+    //    say, _add_ this thing to runtimeOnly, if it has runtime capabilities.
+    val visibility = Bucket.determineVisibility(mainUsages, mainDeclarations)
+
     /*
      * Main usages.
      */
 
     val singleVariant = mainUsages.size == 1
-    val isMainVisibleDownstream = Bucket.isVisibleToTestSource(mainUsages, mainDeclarations)
-
     mainUsages = reduceUsages(mainUsages)
     computeAdvice(advice, mainUsages, mainDeclarations, singleVariant)
 
@@ -75,11 +127,7 @@ internal class StandardTransform(
      */
 
     // If main usages are visible downstream, then we don't need a test declaration
-    testUsages = if (isMainVisibleDownstream && !explicitFor("test")) {
-      mutableSetOf()
-    } else {
-      reduceUsages(testUsages)
-    }
+    testUsages = testUsages.simplify(visibility, SourceKind.TEST_NAME)
     computeAdvice(advice, testUsages, testDeclarations, testUsages.size == 1)
 
     /*
@@ -97,11 +145,7 @@ internal class StandardTransform(
      * Android test usages.
      */
 
-    androidTestUsages = if (isMainVisibleDownstream && !explicitFor("androidTest")) {
-      mutableSetOf()
-    } else {
-      reduceUsages(androidTestUsages)
-    }
+    androidTestUsages = androidTestUsages.simplify(visibility, SourceKind.ANDROID_TEST_NAME)
     computeAdvice(advice, androidTestUsages, androidTestDeclarations, androidTestUsages.size == 1)
 
     /*
@@ -147,6 +191,20 @@ internal class StandardTransform(
         bucket = usage.bucket,
         reasons = usages.flatMapToSet { it.reasons },
       ).intoMutableSet()
+    }
+  }
+
+  private fun MutableSet<Usage>.simplify(visibility: Bucket.Visibility, sourceSetName: String): MutableSet<Usage> {
+    return if (visibility.forCompile && !explicitFor(sourceSetName)) {
+      asSequence()
+        .filterNot { usage -> usage.bucket != Bucket.RUNTIME_ONLY }
+        .toMutableSet()
+    } else if (visibility.forRuntime && !explicitFor(sourceSetName)) {
+      asSequence()
+        .filterNot { usage -> usage.bucket == Bucket.RUNTIME_ONLY }
+        .toMutableSet()
+    } else {
+      reduceUsages(this)
     }
   }
 
@@ -237,7 +295,6 @@ internal class StandardTransform(
     // matter of laziness. If the single declaration is both wrong _and_ on a variant, then we transform it to the
     // correct usage on that same variant. E.g., debugImplementation => debugRuntimeOnly. Without this block, the
     // algorithm would instead advise: debugImplementation => runtimeOnly.
-    // See `should be debugRuntimeOnly` in StandardTransformTest.
     if (usages.size == 1 && declarations.size == 1) {
       val lastUsage = usages.first()
       if (lastUsage.bucket != Bucket.NONE) {
@@ -266,13 +323,9 @@ internal class StandardTransform(
       // this line would lead to "super strict" declarations that are, perhaps, more bazel-like (every classpath
       // consists only of positively-declared dependencies).
       .filterNot { usage -> usage.bucket == Bucket.COMPILE_ONLY }
-      // TODO(tsr): reconsider this. Craft a scenario where we'd remove one dep even though a transitive supplies a
-      //  runtime capability and see what happens. We may want to add runtimeOnly declarations.
-      .filterNot { usage -> usage.bucket == Bucket.RUNTIME_ONLY }
       // Don't add something that is only present on the compileClasspath as that will change the runtimeClasspath,
       // which we do not want to do.
       .filterNot { usage ->
-        // coordinate with `ComputeAdviceTask::flattenDependencies`
         val identifier = if (coordinates is IncludedBuildCoordinates) {
           coordinates.resolvedProject.identifier
         } else {
@@ -280,10 +333,10 @@ internal class StandardTransform(
         }
 
         val currentClasspaths = dependenciesToClasspaths.get(identifier)
-        val isRuntimeUsage = usage.bucket == Bucket.API || usage.bucket == Bucket.IMPL
+        val isRuntimeUsage =
+          usage.bucket == Bucket.API || usage.bucket == Bucket.IMPL || usage.bucket == Bucket.RUNTIME_ONLY
 
-        // if it would be a runtime usage and this dep isn't currently in the matching runtime classpath, don't add it
-        // there.
+        // if it is a runtime usage and this dep isn't currently in the matching runtime classpath, don't add it there.
         isRuntimeUsage && !usage.runtimeMatches(currentClasspaths)
       }
       .mapTo(advice) { usage ->
