@@ -23,7 +23,7 @@ jdkVersion = "17"
 jspecify = "1.0.0"
 junit = "5.13.4"
 kotlin = "2.0.21"
-kotlinForAndroidtests = '2.2.10'
+kotlinForAndroidtests = "2.2.10"
 kotlinMetadata = "2.2.20"
 # TODO is this going to cause a problem?
 kotlinDokka = "2.0.0"
