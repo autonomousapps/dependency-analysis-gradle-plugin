@@ -1,5 +1,8 @@
 Gradle TestKit Support Changelog
 
+# Version 0.21
+* [Feat] add android.buildTypes support.
+
 # Version 0.20
 * [Fix] set apiVersion and languageVersion to 2.0 for Gradle 8.11 support.
 
