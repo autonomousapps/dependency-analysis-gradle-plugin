@@ -4,6 +4,7 @@
 
 package com.autonomousapps.graph
 
+import com.autonomousapps.graph.Graphs.reversed
 import com.google.common.graph.ElementOrder
 import com.google.common.graph.GraphBuilder
 import com.google.common.graph.ImmutableGraph
@@ -127,6 +128,51 @@ internal class GraphsTest {
         "androidx.lifecycle:lifecycle-runtime:2.0.0" to "androidx.arch.core:core-common:2.0.0",
       )
       assertThat(tree.dominanceGraph.edges()).containsExactlyElementsIn(expected.edges())
+    }
+  }
+
+  @Nested inner class ReversedGraph {
+    @Test fun `can reverse a graph`() {
+      // Given a real dependency graph
+      val graph = graphOf(
+        ":app" to ":lib",
+        ":app" to "androidx.core:core:1.1.0",
+        "androidx.core:core:1.1.0" to "androidx.versionedparcelable:versionedparcelable:1.1.0",
+        "androidx.core:core:1.1.0" to "androidx.collection:collection:1.0.0",
+        "androidx.core:core:1.1.0" to "androidx.annotation:annotation:1.1.0",
+        "androidx.core:core:1.1.0" to "androidx.lifecycle:lifecycle-runtime:2.0.0",
+        "androidx.lifecycle:lifecycle-runtime:2.0.0" to "androidx.lifecycle:lifecycle-common:2.0.0",
+        "androidx.lifecycle:lifecycle-runtime:2.0.0" to "androidx.arch.core:core-common:2.0.0",
+        "androidx.lifecycle:lifecycle-runtime:2.0.0" to "androidx.annotation:annotation:1.1.0",
+        "androidx.arch.core:core-common:2.0.0" to "androidx.annotation:annotation:1.1.0",
+        "androidx.lifecycle:lifecycle-common:2.0.0" to "androidx.annotation:annotation:1.1.0",
+        "androidx.versionedparcelable:versionedparcelable:1.1.0" to "androidx.annotation:annotation:1.1.0",
+        "androidx.versionedparcelable:versionedparcelable:1.1.0" to "androidx.collection:collection:1.0.0",
+        "androidx.collection:collection:1.0.0" to "androidx.annotation:annotation:1.1.0",
+      )
+
+      // When we reverse it
+      val reversed = graph.reversed()
+
+      // Then it is reversed
+      val expected = graphOf(
+        ":lib" to ":app",
+        "androidx.core:core:1.1.0" to ":app",
+        "androidx.versionedparcelable:versionedparcelable:1.1.0" to "androidx.core:core:1.1.0",
+        "androidx.collection:collection:1.0.0" to "androidx.core:core:1.1.0",
+        "androidx.annotation:annotation:1.1.0" to "androidx.core:core:1.1.0",
+        "androidx.lifecycle:lifecycle-runtime:2.0.0" to "androidx.core:core:1.1.0",
+        "androidx.lifecycle:lifecycle-common:2.0.0" to "androidx.lifecycle:lifecycle-runtime:2.0.0",
+        "androidx.arch.core:core-common:2.0.0" to "androidx.lifecycle:lifecycle-runtime:2.0.0",
+        "androidx.annotation:annotation:1.1.0" to "androidx.lifecycle:lifecycle-runtime:2.0.0",
+        "androidx.annotation:annotation:1.1.0" to "androidx.arch.core:core-common:2.0.0",
+        "androidx.annotation:annotation:1.1.0" to "androidx.lifecycle:lifecycle-common:2.0.0",
+        "androidx.annotation:annotation:1.1.0" to "androidx.versionedparcelable:versionedparcelable:1.1.0",
+        "androidx.collection:collection:1.0.0" to "androidx.versionedparcelable:versionedparcelable:1.1.0",
+        "androidx.annotation:annotation:1.1.0" to "androidx.collection:collection:1.0.0",
+      )
+      assertThat(reversed.nodes()).containsExactlyElementsIn(expected.nodes())
+      assertThat(reversed.edges()).containsExactlyElementsIn(expected.edges())
     }
   }
 }
