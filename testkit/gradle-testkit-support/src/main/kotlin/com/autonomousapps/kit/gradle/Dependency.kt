@@ -191,8 +191,26 @@ public data class Dependency @JvmOverloads constructor(
 
     @JvmOverloads
     @JvmStatic
+    public fun debugImplementation(dependency: String, capability: String? = null): Dependency {
+      return Dependency("debugImplementation", dependency, capability = capability)
+    }
+
+    @JvmOverloads
+    @JvmStatic
+    public fun debugTestImplementation(dependency: String, capability: String? = null): Dependency {
+      return Dependency("debugTestImplementation", dependency, capability = capability)
+    }
+
+    @JvmOverloads
+    @JvmStatic
     public fun implementation(dependency: String, capability: String? = null): Dependency {
       return Dependency("implementation", dependency, capability = capability)
+    }
+
+    @JvmOverloads
+    @JvmStatic
+    public fun releaseTestImplementation(dependency: String, capability: String? = null): Dependency {
+      return Dependency("releaseTestImplementation", dependency, capability = capability)
     }
 
     @JvmOverloads

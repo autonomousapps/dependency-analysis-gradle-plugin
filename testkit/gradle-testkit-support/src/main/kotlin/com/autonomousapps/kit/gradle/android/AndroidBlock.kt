@@ -20,6 +20,7 @@ public class AndroidBlock @JvmOverloads constructor(
   public var namespace: String? = null,
   public var compileSdkVersion: Int = 34,
   public var defaultConfig: DefaultConfig = DefaultConfig.DEFAULT_APP,
+  public var buildTypes: BuildTypes? = null,
   public var compileOptions: CompileOptions = CompileOptions.DEFAULT,
   public var testFixturesOptions: TestFixturesOptions? = null,
   public var kotlinOptions: KotlinOptions? = null,
@@ -57,6 +58,7 @@ public class AndroidBlock @JvmOverloads constructor(
       it.append(compileSdkVersion)
     }
     defaultConfig.render(s)
+    buildTypes?.render(s)
     compileOptions.render(s)
     kotlinOptions?.render(s)
     testFixturesOptions?.render(s)
@@ -89,6 +91,7 @@ public class AndroidBlock @JvmOverloads constructor(
       it.append(compileSdkVersion)
     }
     defaultConfig.render(s)
+    buildTypes?.render(s)
     compileOptions.render(s)
     kotlinOptions?.render(s)
 
@@ -104,6 +107,7 @@ public class AndroidBlock @JvmOverloads constructor(
     public var namespace: String? = null
     public var compileSdkVersion: Int = 34
     public var defaultConfig: DefaultConfig = DefaultConfig.DEFAULT_APP
+    public var buildTypes: BuildTypes? = null
     public var compileOptions: CompileOptions = CompileOptions.DEFAULT
     public var kotlinOptions: KotlinOptions? = null
 
@@ -126,6 +130,7 @@ public class AndroidBlock @JvmOverloads constructor(
         namespace = namespace,
         compileSdkVersion = compileSdkVersion,
         defaultConfig = defaultConfig,
+        buildTypes = buildTypes,
         compileOptions = compileOptions,
         kotlinOptions = kotlinOptions,
         additions = additions,
