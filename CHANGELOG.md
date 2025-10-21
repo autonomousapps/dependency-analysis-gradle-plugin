@@ -1,5 +1,21 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.2.0
+* [Feat]: don't drop transitive runtime dependencies when removing 'unused' dependencies.
+  See the [PR description](https://github.com/autonomousapps/dependency-analysis-gradle-plugin/pull/1573) for more 
+  information.
+* [Fix]: consider suspend function return types with type parameters.
+* [Fix]: consider imports when computing usage of typealiases.
+* [Fix]: annotation processors are not blank strings.
+* [Fix]: update Kotlin metadata to 2.2.20 for Kotlin 2.3 support.
+* [Chore]: always publish build scans on CI. Optionally publish them locally.
+
+To publish build scans, add the following, as indicated:
+```
+# ~/.gradle/gradle.properties
+dependency.analysis.scans.publish=true
+```
+
 # Version 3.1.0
 * [Fix] Updated asm to 9.9 (and use latest asm-relocated) for Java 25 support.
 * [Fix]: Test fixtures in a Spring Boot project are allowed to have testFixturesApi dependencies.
