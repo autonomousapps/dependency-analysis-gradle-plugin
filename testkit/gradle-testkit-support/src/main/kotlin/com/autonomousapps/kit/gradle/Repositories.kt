@@ -23,7 +23,7 @@ import com.autonomousapps.kit.render.Scribe
  * ```
  */
 public class Repositories @JvmOverloads constructor(
-  private val repositories: MutableList<Repository> = mutableListOf(),
+  public val repositories: MutableList<Repository> = mutableListOf(),
 ) : Element.Block {
 
   public constructor(vararg repositories: Repository) : this(repositories.toMutableList())
