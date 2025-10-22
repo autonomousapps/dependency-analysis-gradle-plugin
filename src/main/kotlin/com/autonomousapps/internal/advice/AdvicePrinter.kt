@@ -28,8 +28,8 @@ internal class AdvicePrinter(
   fun line(configuration: String, printableIdentifier: String, was: String = ""): String =
     "  $configuration$printableIdentifier$was"
 
-  fun toDeclaration(advice: Advice): String =
-    "  ${advice.toConfiguration}${gav(advice.coordinates)}"
+  fun toDeclaration(advice: Advice, prefix: String = "  "): String =
+    "$prefix${advice.toConfiguration}${gav(advice.coordinates)}"
 
   fun gav(coordinates: Coordinates): String {
     val quotedDep = coordinates.mapped()
