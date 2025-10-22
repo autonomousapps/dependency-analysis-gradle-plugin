@@ -6,7 +6,7 @@ import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
 public class PluginManagement(
-  private val repositories: Repositories,
+  public val repositories: Repositories,
 ) : Element.Block {
 
   override val name: String = "pluginManagement"
