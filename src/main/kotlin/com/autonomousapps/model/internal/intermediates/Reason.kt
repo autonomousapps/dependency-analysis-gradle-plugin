@@ -8,6 +8,8 @@ import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import com.autonomousapps.model.internal.intermediates.producer.Constant
 import com.autonomousapps.model.internal.intermediates.producer.Member
+import com.autonomousapps.model.internal.intermediates.producer.ReflectingDependency
+import com.autonomousapps.model.internal.intermediates.producer.ReflectingDependency.ReflectiveAccess
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -251,6 +253,16 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String = "runtimeOnly"
   }
 
+  @TypeLabel("reflection")
+  @JsonClass(generateAdapter = false)
+  data class Reflection(override val reason: String) : Reason(reason) {
+    constructor(reflectiveAccesses: Set<ReflectiveAccess>) : this(
+      buildReason(reflectiveAccesses.mapIndexed { i, r -> "(${i + 1}) ${r.asReason()}" }, "Accessed", Kind.Reflection)
+    )
+
+    override val configurationName: String = "runtimeOnly"
+  }
+
   @TypeLabel("res_by_src")
   @JsonClass(generateAdapter = false)
   data class ResBySrc(override val reason: String) : Reason(reason) {
@@ -408,6 +420,7 @@ private enum class Kind(
   InlineMember("inline member", "inline members"),
   LintRegistry("lint registry", "lint registries"),
   NativeBinary("native binary", "native binaries"),
+  Reflection("time by reflection", "times by reflection"),
   AndroidReceiver("Android Receiver", "Android Receivers"),
   SecurityProvider("security provider", "security providers"),
   ServiceLoader("service loader", "service loaders"),

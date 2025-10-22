@@ -10,6 +10,7 @@ import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import com.autonomousapps.model.internal.intermediates.producer.Constant
+import com.autonomousapps.model.internal.intermediates.producer.ReflectingDependency
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -293,14 +294,18 @@ internal data class ConstantCapability(
 @TypeLabel("inferred")
 @JsonClass(generateAdapter = false)
 internal data class InferredCapability(
-  /**
-   * True if this dependency contains only annotations. False otherwise.
-   */
-  val isAnnotations: Boolean,
+  /** True if this dependency contains only annotations. False otherwise. */
+  val isAnnotations: Boolean = false,
+  /** All reflective accesses _of_ this dependency. May be empty. */
+  val reflectiveAccesses: Set<ReflectingDependency.ReflectiveAccess> = emptySet(),
 ) : Capability() {
 
   override fun merge(other: Capability): Capability {
-    return InferredCapability(isAnnotations && (other as InferredCapability).isAnnotations)
+    val accesses = reflectiveAccesses + (other as InferredCapability).reflectiveAccesses.toSortedSet().efficient()
+    return InferredCapability(
+      isAnnotations = isAnnotations && other.isAnnotations,
+      reflectiveAccesses = accesses,
+    )
   }
 }
 

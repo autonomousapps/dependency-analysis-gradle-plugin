@@ -46,6 +46,7 @@ internal data class AnalyzedClass(
   val methods: Set<Method>,
   val innerClasses: Set<String>,
   val constants: Set<Constant>,
+  val reflectiveAccesses: Set<String>,
   val binaryClass: BinaryClass,
 ) : Comparable<AnalyzedClass> {
   constructor(
@@ -60,6 +61,7 @@ internal data class AnalyzedClass(
     methods: Set<Method>,
     innerClasses: Set<String>,
     constants: Set<Constant>,
+    reflectiveAccesses: Set<String>,
     effectivelyPublicFields: Set<Member.Field>,
     effectivelyPublicMethods: Set<Member.Method>,
   ) : this(
@@ -72,6 +74,7 @@ internal data class AnalyzedClass(
     methods = methods,
     innerClasses = innerClasses,
     constants = constants,
+    reflectiveAccesses = reflectiveAccesses,
     binaryClass = BinaryClass(
       className = className.intern(),
       superClassName = superClassName?.intern(),

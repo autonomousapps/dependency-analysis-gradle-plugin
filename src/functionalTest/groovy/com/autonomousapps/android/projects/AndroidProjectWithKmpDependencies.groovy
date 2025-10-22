@@ -105,12 +105,12 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
     ] as Set<Advice>
   }
 
-  private static Advice addComposeRuntime() {
-    return Advice.ofAdd(moduleCoordinates('androidx.compose.runtime:runtime', '1.1.0-beta04'), 'implementation')
-  }
-
   private static Advice removeComposeFoundation() {
     return Advice.ofRemove(moduleCoordinates('org.jetbrains.compose.foundation:foundation', '1.0.1'), 'implementation')
+  }
+
+  private static Advice addComposeRuntime() {
+    return Advice.ofAdd(moduleCoordinates('androidx.compose.runtime:runtime', '1.1.0-beta04'), 'implementation')
   }
 
   private static Advice addKotlinxCoroutinesCore() {

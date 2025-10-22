@@ -147,6 +147,7 @@ private class GraphVisitor(
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
     val dependencyCoordinates = dependency.coordinates
 
+    var isAccessedByReflection = false
     var isAnnotationProcessor = false
     var isAnnotationProcessorCandidate = false
     var isApiCandidate = false
@@ -227,6 +228,12 @@ private class GraphVisitor(
             reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.Annotations()
           }
           isCompileOnlyCandidate = capability.isAnnotations
+
+          if (capability.reflectiveAccesses.isNotEmpty()) {
+            reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.Reflection(capability.reflectiveAccesses)
+            isUnusedCandidate = false
+            isAccessedByReflection = true
+          }
         }
 
         is InlineMemberCapability -> usesInlineMember = usesInlineMember(dependencyCoordinates, capability, context)
@@ -294,6 +301,8 @@ private class GraphVisitor(
     } else if (isAnnotationCandidate) {
       isUnusedCandidate = false
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
+    } else if (isAccessedByReflection) {
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
     } else if (noRealCapabilities(dependency)) {
       isUnusedCandidate = true
     }

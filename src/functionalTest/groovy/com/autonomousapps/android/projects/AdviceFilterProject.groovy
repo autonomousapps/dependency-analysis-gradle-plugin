@@ -213,7 +213,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
   List<Advice> expectedLibAndroidAdvice(Advice... ignored = []) {
     def advice = [
       removeCoreKtxAndroidLib, removeNavUiKtx,
-      addAndroidxCore,
+      addAndroidxCore, addAndroidxTransition,
       changeAppcompat
     ]
     advice.removeAll(ignored)
@@ -254,6 +254,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
     moduleCoordinates('androidx.core:core-ktx', '1.1.0'), 'implementation'
   )
   final addAndroidxCore = Advice.ofAdd(moduleCoordinates('androidx.core:core', '1.1.0'), 'api')
+  final addAndroidxTransition = Advice.ofAdd(moduleCoordinates('androidx.transition:transition', '1.0.1'), 'runtimeOnly')
   final changeAppcompat = Advice.ofChange(
     moduleCoordinates('androidx.appcompat:appcompat', '1.1.0'), 'api', 'implementation'
   )

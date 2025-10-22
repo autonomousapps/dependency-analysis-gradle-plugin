@@ -57,7 +57,6 @@ public abstract class ExplodeJarTask @Inject constructor(
       it.inMemoryCache.set(inMemoryCache)
       it.physicalArtifacts.set(physicalArtifacts)
       it.androidLinters.set(androidLinters)
-
       it.output.set(output)
     }
   }
@@ -75,7 +74,7 @@ public abstract class ExplodeJarTask @Inject constructor(
   public abstract class ExplodeJarWorkAction : WorkAction<ExplodeJarParameters> {
 
     override fun execute() {
-      val outputFile = parameters.output.getAndDelete()
+      val output = parameters.output.getAndDelete()
 
       val explodedJars = JarExploder(
         artifacts = parameters.physicalArtifacts.fromJsonList(),
@@ -83,7 +82,7 @@ public abstract class ExplodeJarTask @Inject constructor(
         inMemoryCache = parameters.inMemoryCache.get()
       ).explodedJars()
 
-      outputFile.bufferWriteJsonSet(explodedJars, compress = true)
+      output.bufferWriteJsonSet(explodedJars, compress = true)
     }
   }
 }

@@ -56,13 +56,19 @@ internal class ExplodingJar(
     .toSortedSet()
     .efficient()
 
-  /**
-   * Map of class names to the public constants they declare. May be empty.
-   */
+  /** Map of class names to the public constants they declare. May be empty. */
   val constants: Map<String, Set<Constant>> = analyzedClasses.asSequence()
     .filterNot { it.constants.isEmpty() }
     // normalize class names to only contain '.' characters (in case of inner classes)
     .associate { it.className.replace('$', '.') to it.constants }
+    .efficient()
+
+  /** Map of class names to the reflective accesses they make. May be empty. */
+  val reflectiveAccesses: Map<String, Set<String>> = analyzedClasses.asSequence()
+    .filterNot { it.reflectiveAccesses.isEmpty() }
+    .map { it.className to it.reflectiveAccesses }
+    .toMap()
+    .toSortedMap()
     .efficient()
 
   /**
