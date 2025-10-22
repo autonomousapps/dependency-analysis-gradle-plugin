@@ -16,7 +16,6 @@ import java.io.File
  */
 @JsonClass(generateAdapter = false)
 internal data class ExplodedJar(
-
   override val coordinates: Coordinates,
   val jarFile: File,
 
@@ -47,6 +46,8 @@ internal data class ExplodedJar(
    * be empty for any given declared class.
    */
   val constants: Map<String, Set<Constant>>,
+  /** Map of class names to the reflective accesses they make (using [Class.forName]). May be empty. */
+  val reflectiveAccesses: Map<String, Set<String>>,
   /**
    * All the "Kt" files within this component.
    */
@@ -65,6 +66,7 @@ internal data class ExplodedJar(
     isLintJar = exploding.isLintJar,
     binaryClasses = exploding.binaryClasses,
     constants = exploding.constants,
+    reflectiveAccesses = exploding.reflectiveAccesses,
     ktFiles = exploding.ktFiles
   )
 

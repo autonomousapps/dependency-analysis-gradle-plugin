@@ -3,6 +3,7 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.ImplRuntimeTestImplConfusionProject
+import com.autonomousapps.jvm.projects.ReflectionProject
 import com.autonomousapps.jvm.projects.TransitiveRuntimeProject
 import com.autonomousapps.utils.Colors
 
@@ -50,6 +51,27 @@ final class RuntimeOnlySpec extends AbstractJvmSpec {
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  def "detects Class forName (#gradleVersion)"() {
+    given:
+    def project = new ReflectionProject()
+    gradleProject = project.gradleProject
+
+    when:
+    def result = build(
+      gradleVersion,
+      gradleProject.rootDir,
+      'buildHealth',
+      ':consumer:reason', '--id', ':direct'
+    )
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertThat(Colors.decolorize(result.output)).contains('* Accessed 3 times by reflection: (1) the-project:uses-reflection in class com.example.reflection.UsesReflection: com.example.direct.Direct, (2) the-project:uses-reflection in class com.example.reflection.UsesReflection: com.example.direct.Direct$Inner, (3) the-project:uses-reflection in class com.example.reflection.UsesReflection: com.example.direct.Direct$StaticInner (implies runtimeOnly).')
 
     where:
     gradleVersion << gradleVersions()

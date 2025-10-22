@@ -11,6 +11,8 @@ import com.autonomousapps.model.internal.*
 import com.squareup.moshi.JsonClass
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 
+// TODO(tsr): move this file into the producers package
+
 internal interface DependencyView<T> : Comparable<T> where T : DependencyView<T> {
   val coordinates: Coordinates
   fun toCapabilities(): List<Capability>

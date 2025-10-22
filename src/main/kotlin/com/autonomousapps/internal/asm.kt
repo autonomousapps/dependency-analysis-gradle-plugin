@@ -22,7 +22,10 @@ import kotlin.metadata.jvm.Metadata
 private val logDebug: Boolean = Flags.logBytecodeDebug()
 private const val ASM_VERSION = Opcodes.ASM9
 
-/** This will collect the class name and information about annotations. */
+/**
+ * This collects the class name and information about annotations, as well as information about accesses of other
+ * classes by reflection ([Class.forName]).
+ */
 internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : ClassVisitor(ASM_VERSION) {
 
   private lateinit var className: String
@@ -44,6 +47,10 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   // From old ConstantVisitor
   private val constants = sortedSetOf<Constant>()
 
+  private val ldcConstants = mutableListOf<LdcConstant>()
+  private val reflectiveAccesses = mutableSetOf<String>()
+  private val methodAnalyzer = MethodAnalyzer(logger, ldcConstants, reflectiveAccesses)
+
   internal fun getAnalyzedClass(): AnalyzedClass {
     val className = this.className
     val access = this.access
@@ -61,6 +68,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       methods = methods.efficient(),
       innerClasses = innerClasses.efficient(),
       constants = constants.efficient(),
+      reflectiveAccesses = reflectiveAccesses.efficient(),
       effectivelyPublicFields = effectivelyPublicFields.efficient(),
       effectivelyPublicMethods = effectivelyPublicMethods.efficient(),
     )
@@ -105,7 +113,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
 
   override fun visitMethod(
     access: Int, name: String, descriptor: String, signature: String?, exceptions: Array<out String>?
-  ): MethodVisitor? {
+  ): MethodVisitor {
     log { "- visitMethod: ${AccessFlags(access).getModifierString()} descriptor=$descriptor name=$name signature=$signature" }
 
     if (!("()V" == descriptor && ("<init>" == name || "<clinit>" == name))) {
@@ -125,7 +133,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     //   )
     // }
 
-    return null
+    return methodAnalyzer
   }
 
   override fun visitField(
@@ -203,6 +211,40 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       if ("Ljava/lang/annotation/RetentionPolicy;" == descriptor) {
         log { "  - RetentionPolicyAnnotationVisitor#visitEnum ($className): $value" }
         retentionPolicyHolder.set(value)
+      }
+    }
+  }
+
+  private class MethodAnalyzer(
+    private val logger: Logger,
+    private val ldcConstants: MutableList<LdcConstant>,
+    private val reflectiveAccesses: MutableSet<String>,
+  ) : MethodVisitor(ASM_VERSION) {
+
+    private fun log(msgProvider: () -> String) {
+      if (!logDebug) {
+        logger.quiet(msgProvider())
+      }
+    }
+
+    override fun visitLdcInsn(value: Any?) {
+      log { "  - MethodAnalyzer#visitLdcInsn: $value${value?.javaClass?.canonicalName?.let { " (type=$it)" }}" }
+      ldcConstants.add(LdcConstant.of(value))
+    }
+
+    override fun visitMethodInsn(
+      opcode: Int,
+      owner: String,
+      name: String,
+      descriptor: String,
+      isInterface: Boolean
+    ) {
+      log { "  - MethodAnalyzer#visitMethodInsn: $owner.$name $descriptor" }
+
+      // This will be a fully-qualified class name like `com.foo.Bar` or `com.foo.Bar$Inner`.
+      val lastConstant = ldcConstants.lastOrNull()
+      if ("$owner.$name" == "java/lang/Class.forName" && lastConstant?.descriptor == LdcConstant.STRING) {
+        reflectiveAccesses += lastConstant.value
       }
     }
   }

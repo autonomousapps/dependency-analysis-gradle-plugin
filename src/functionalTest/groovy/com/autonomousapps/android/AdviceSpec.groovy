@@ -130,7 +130,11 @@ final class AdviceSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    def result = buildAndFail(
+      gradleVersion, gradleProject.rootDir,
+      'buildHealth',
+      'lib_android:reason', '--id', 'androidx.transition:transition:1.0.1',
+    )
 
     then: 'core tasks ran and were successful'
     assertThatResult(result).with {
@@ -147,6 +151,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
     def libAndroidAdvice = buildHealth.find { it.projectPath == ':lib_android' }.dependencyAdvice
     assertThat(libAndroidAdvice)
       .containsExactlyElementsIn(project.expectedLibAndroidAdvice(project.changeAppcompat))
+    assertThat(result.output).contains('* Accessed 1 time by reflection: (1) androidx.fragment:fragment:1.1.0 in class androidx.fragment.app.FragmentTransition: androidx.transition.FragmentTransitionSupport (implies runtimeOnly).')
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

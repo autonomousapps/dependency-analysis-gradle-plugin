@@ -70,8 +70,10 @@ internal class RuntimeOnlyFilter(
           // Now, see if any of those direct nodes are being removed
           val matches = removes.filterToSet { remove -> directs.anyMatch(remove) }
 
+          // TODO(tsr): androidTest... doesn't extend from main or test source. Double-check various assumptions about this.
           // If ALL the direct nodes are being removed, then we can keep the runtimeOnly advice. Otherwise, remove it.
-          if (matches.size != directs.size) {
+          val bothEmpty = matches.isEmpty() && directs.isEmpty()
+          if (bothEmpty || matches.size != directs.size) {
             simplifiedAdvice.remove(runtimeOnly)
           }
         }

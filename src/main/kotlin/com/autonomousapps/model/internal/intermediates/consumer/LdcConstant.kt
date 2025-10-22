@@ -25,6 +25,12 @@ internal data class LdcConstant(
   }
 
   companion object {
+    const val INT = "I"
+    const val LONG = "J"
+    const val FLOAT = "F"
+    const val DOUBLE = "D"
+    const val STRING = "Ljava/lang/String;"
+
     fun of(value: Any?): LdcConstant {
       return LdcConstant(
         descriptor = asDescriptor(value),
@@ -39,13 +45,12 @@ internal data class LdcConstant(
     private fun asDescriptor(value: Any?): String {
       requireNotNull(value)
 
-      val canonicalName = value.javaClass.canonicalName
-      return when (canonicalName) {
-        "java.lang.Integer" -> "I"
-        "java.lang.Long" -> "J"
-        "java.lang.Float" -> "F"
-        "java.lang.Double" -> "D"
-        "java.lang.String" -> "Ljava/lang/String;"
+      return when (val canonicalName = value.javaClass.canonicalName) {
+        "java.lang.Integer" -> INT
+        "java.lang.Long" -> LONG
+        "java.lang.Float" -> FLOAT
+        "java.lang.Double" -> DOUBLE
+        "java.lang.String" -> STRING
 
         // Identical to the String case, but semantically different. Just need a default.
         else -> "L$canonicalName;"

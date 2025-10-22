@@ -7,6 +7,7 @@ import com.autonomousapps.model.*
 import com.autonomousapps.model.internal.*
 import com.autonomousapps.model.internal.intermediates.*
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
+import com.autonomousapps.model.internal.intermediates.producer.ReflectingDependency
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
@@ -136,6 +137,7 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
       val dependencies = parameters.compileDependencies.fromJson<CoordinatesContainer>().coordinates
       val physicalArtifacts = parameters.physicalArtifacts.fromJsonSet<PhysicalArtifact>()
       val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>(compressed = true)
+      val reflectiveAccesses = findReflectiveAccesses(explodedJars)
       val inlineMembers = parameters.inlineMembers.fromJsonSet<InlineMemberDependency>()
       val typealiases = parameters.typealiases.fromJsonSet<TypealiasDependency>()
       val serviceLoaders = parameters.serviceLoaders.fromJsonSet<ServiceLoaderDependency>()
@@ -189,6 +191,7 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
       merge(manifestComponents)
       merge(androidRes)
       merge(androidAssets)
+      merge(reflectiveAccesses)
 
       // Write every dependency to its own file in the output directory
       builders.values.asSequence()
@@ -200,13 +203,43 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
     }
 
     private fun <T : DependencyView<T>> merge(dependencies: Set<T>) {
-      dependencies.forEach {
+      dependencies.forEach { dep ->
         builders.merge(
-          it.coordinates,
-          DependencyBuilder(it.coordinates).apply { capabilities.addAll(it.toCapabilities()) },
+          dep.coordinates,
+          DependencyBuilder(dep.coordinates).apply { capabilities.addAll(dep.toCapabilities()) },
           DependencyBuilder::concat
         )
       }
+    }
+
+    private fun findReflectiveAccesses(explodedJars: Set<ExplodedJar>): Set<ReflectingDependency> {
+      return explodedJars.asSequence()
+        .filterNot { explodedJar -> explodedJar.reflectiveAccesses.isEmpty() }
+        .flatMap { accessingJar ->
+          val reflectiveAccesses = accessingJar.reflectiveAccesses
+          explodedJars.asSequence()
+            // We don't care if a jar reflectively accesses itself. That's just weird (looking at you, guava)
+            .filterNot { accessedJar -> accessedJar === accessingJar }
+            .flatMap { accessedJar ->
+              accessedJar.binaryClasses
+                .mapNotNull { bin ->
+                  // These are accesses of a class (`bin.className`) in `explodedJar`.
+                  val realAccesses = reflectiveAccesses.filterValues { accesses -> bin.className in accesses }
+
+                  if (realAccesses.isNotEmpty()) {
+                    ReflectingDependency(
+                      coordinates = accessedJar.coordinates,
+                      accessor = accessingJar.coordinates,
+                      accessingClasses = realAccesses.keys,
+                      accessedClass = bin.className,
+                    )
+                  } else {
+                    null
+                  }
+                }
+            }
+        }
+        .toSortedSet()
     }
   }
 
