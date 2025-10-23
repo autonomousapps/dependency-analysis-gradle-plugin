@@ -1,5 +1,8 @@
 Gradle TestKit Support Changelog
 
+# Version 0.22
+* [Feat]: expose `pluginManagement.repositories.repositories`.
+
 # Version 0.21
 * [Feat] add android.buildTypes support.
 

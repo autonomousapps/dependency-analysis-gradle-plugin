@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.3.0
+* [Feat]: detect reflective access using Class.forName().
+
 # Version 3.2.0
 * [Feat]: don't drop transitive runtime dependencies when removing 'unused' dependencies.
   See the [PR description](https://github.com/autonomousapps/dependency-analysis-gradle-plugin/pull/1573) for more 
