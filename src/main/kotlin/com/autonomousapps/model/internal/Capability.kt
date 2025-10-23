@@ -303,7 +303,7 @@ internal data class InferredCapability(
   override fun merge(other: Capability): Capability {
     val accesses = reflectiveAccesses + (other as InferredCapability).reflectiveAccesses.toSortedSet().efficient()
     return InferredCapability(
-      isAnnotations = isAnnotations && other.isAnnotations,
+      isAnnotations = isAnnotations || other.isAnnotations,
       reflectiveAccesses = accesses,
     )
   }
