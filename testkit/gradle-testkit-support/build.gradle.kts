@@ -4,7 +4,7 @@ plugins {
   id("build-logic.lib.kotlin")
 }
 
-version = "0.22"
+version = "0.23-SNAPSHOT"
 
 dagp {
   version(version)
