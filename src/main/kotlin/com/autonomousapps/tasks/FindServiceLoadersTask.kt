@@ -9,7 +9,7 @@ import com.autonomousapps.internal.utils.filterNonGradle
 import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.model.internal.intermediates.ServiceLoaderDependency
+import com.autonomousapps.model.internal.intermediates.producer.ServiceLoaderDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult

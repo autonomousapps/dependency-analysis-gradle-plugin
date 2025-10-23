@@ -6,7 +6,7 @@ package com.autonomousapps.services
 
 import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.Flags.cacheSize
-import com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency
+import com.autonomousapps.model.internal.intermediates.producer.AnnotationProcessorDependency
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
 import com.autonomousapps.tasks.KotlinCapabilities
 import com.github.benmanes.caffeine.cache.Cache

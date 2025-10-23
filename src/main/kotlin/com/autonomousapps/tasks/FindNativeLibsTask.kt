@@ -6,7 +6,7 @@ import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapNotNullToOrderedSet
 import com.autonomousapps.internal.utils.toCoordinates
-import com.autonomousapps.model.internal.intermediates.NativeLibDependency
+import com.autonomousapps.model.internal.intermediates.producer.NativeLibDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection

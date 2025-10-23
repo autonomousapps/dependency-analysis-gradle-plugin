@@ -12,8 +12,8 @@ import com.autonomousapps.model.internal.KtFile
 import com.autonomousapps.model.internal.PhysicalArtifact
 import com.autonomousapps.model.internal.PhysicalArtifact.Mode
 import com.autonomousapps.model.internal.TypealiasCapability
-import com.autonomousapps.model.internal.intermediates.InlineMemberDependency
-import com.autonomousapps.model.internal.intermediates.TypealiasDependency
+import com.autonomousapps.model.internal.intermediates.producer.InlineMemberDependency
+import com.autonomousapps.model.internal.intermediates.producer.TypealiasDependency
 import com.autonomousapps.services.InMemoryCache
 import kotlin.metadata.*
 import kotlin.metadata.jvm.KotlinClassMetadata

@@ -8,7 +8,7 @@ import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.model.internal.KtFile
 import com.autonomousapps.model.internal.PhysicalArtifact
 import com.autonomousapps.model.internal.PhysicalArtifact.Mode
-import com.autonomousapps.model.internal.intermediates.AndroidLinterDependency
+import com.autonomousapps.model.internal.intermediates.producer.AndroidLinterDependency
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import com.autonomousapps.services.InMemoryCache
