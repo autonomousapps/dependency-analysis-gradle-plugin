@@ -145,7 +145,7 @@ internal class StandardTransform(
      * Android test usages.
      */
 
-    androidTestUsages = androidTestUsages.simplify(visibility, SourceKind.ANDROID_TEST_NAME)
+    androidTestUsages = reduceUsages(androidTestUsages)
     computeAdvice(advice, androidTestUsages, androidTestDeclarations, androidTestUsages.size == 1)
 
     /*
