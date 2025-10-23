@@ -6,7 +6,6 @@ import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.Capability
 import com.autonomousapps.model.internal.InferredCapability
-import com.autonomousapps.model.internal.intermediates.DependencyView
 
 /**
  * [accessor] has classes [accessingClasses] (1+) that uses [Class.forName] to reflectively access [accessedClass],

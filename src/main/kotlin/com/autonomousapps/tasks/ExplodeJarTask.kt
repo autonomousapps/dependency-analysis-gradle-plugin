@@ -9,7 +9,7 @@ import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.model.internal.intermediates.AndroidLinterDependency
+import com.autonomousapps.model.internal.intermediates.producer.AndroidLinterDependency
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -42,7 +42,7 @@ public abstract class ExplodeJarTask @Inject constructor(
   @get:InputFile
   public abstract val physicalArtifacts: RegularFileProperty
 
-  /** [`Set<AndroidLinterDependency>?`][com.autonomousapps.model.internal.intermediates.AndroidLinterDependency] */
+  /** [`Set<AndroidLinterDependency>?`][AndroidLinterDependency] */
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile

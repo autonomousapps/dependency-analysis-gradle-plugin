@@ -1,6 +1,6 @@
 // Copyright (c) 2025. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-package com.autonomousapps.model.internal.intermediates
+package com.autonomousapps.model.internal.intermediates.producer
 
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.MapSetComparator
@@ -10,8 +10,6 @@ import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.*
 import com.squareup.moshi.JsonClass
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-
-// TODO(tsr): move this file into the producers package
 
 internal interface DependencyView<T> : Comparable<T> where T : DependencyView<T> {
   val coordinates: Coordinates
@@ -24,7 +22,7 @@ internal interface DependencyView<T> : Comparable<T> where T : DependencyView<T>
  * Example registry: `nl.littlerobots.rxlint.RxIssueRegistry`.
  *
  * nb: Deliberately does not implement [DependencyView]. For various reasons, this information gets embedded in
- * [ExplodedJar][com.autonomousapps.model.internal.intermediates.producer.ExplodedJar], which is the preferred access
+ * [ExplodedJar], which is the preferred access
  * point for deeper analysis.
  */
 @JsonClass(generateAdapter = false)

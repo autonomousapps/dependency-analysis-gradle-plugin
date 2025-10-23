@@ -5,7 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.ANNOTATION_PROCESSOR_PATH
 import com.autonomousapps.internal.utils.bufferWriteJsonList
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency
+import com.autonomousapps.model.internal.intermediates.producer.AnnotationProcessorDependency
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ArtifactCollection

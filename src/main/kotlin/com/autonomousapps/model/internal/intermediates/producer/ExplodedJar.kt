@@ -5,7 +5,6 @@ package com.autonomousapps.model.internal.intermediates.producer
 import com.autonomousapps.internal.utils.ifNotEmpty
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.*
-import com.autonomousapps.model.internal.intermediates.DependencyView
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
 import com.squareup.moshi.JsonClass
 import java.io.File

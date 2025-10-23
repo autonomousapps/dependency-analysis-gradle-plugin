@@ -8,7 +8,7 @@ import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.IncludedBuildCoordinates
 import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.internal.*
-import com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency
+import com.autonomousapps.model.internal.intermediates.producer.AnnotationProcessorDependency
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingAbi
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingSourceCode
@@ -58,7 +58,7 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
   @get:InputFile
   public abstract val graph: RegularFileProperty
 
-  /** [`Set<AnnotationProcessorDependency>`][com.autonomousapps.model.internal.intermediates.AnnotationProcessorDependency] */
+  /** [`Set<AnnotationProcessorDependency>`][AnnotationProcessorDependency] */
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   public abstract val annotationProcessors: RegularFileProperty

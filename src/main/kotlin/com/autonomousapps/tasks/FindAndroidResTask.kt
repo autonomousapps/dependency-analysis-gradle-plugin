@@ -7,7 +7,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.internal.AndroidResCapability
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.internal.intermediates.AndroidResDependency
+import com.autonomousapps.model.internal.intermediates.producer.AndroidResDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
