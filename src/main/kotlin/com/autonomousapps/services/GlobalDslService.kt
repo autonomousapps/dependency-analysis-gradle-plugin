@@ -16,6 +16,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 /**
@@ -24,7 +25,7 @@ import javax.inject.Inject
  * terms) configure the entire build, globally, without any subproject touching mutable properties of any other project.
  */
 public abstract class GlobalDslService @Inject constructor(
-  objects: ObjectFactory,
+  private val objects: ObjectFactory,
 ) : BuildService<BuildServiceParameters.None> {
 
   // Used for validity check. The plugin must be registered on the root project.
@@ -193,21 +194,29 @@ public abstract class GlobalDslService @Inject constructor(
   private val defaultBehavior = objects.property(Behavior::class.java).convention(Warn())
 
   private val all = objects.newInstance(ProjectIssueHandler::class.java, "__all")
-  private val projects = objects.domainObjectContainer(ProjectIssueHandler::class.java)
+  private val projects = ConcurrentHashMap<String, ProjectIssueHandler>()
 
   internal fun all(action: Action<ProjectIssueHandler>) {
-    action.execute(all)
+    synchronized(all) {
+      action.execute(all)
+    }
   }
 
   internal fun project(projectPath: String, action: Action<ProjectIssueHandler>) {
-    projects.maybeCreate(projectPath).apply {
-      action.execute(this)
+    projects.compute(projectPath) { _, existing ->
+      val entry = existing ?: objects.newInstance(ProjectIssueHandler::class.java, projectPath)
+      action.execute(entry)
+      entry
     }
   }
 
   internal fun shouldAnalyzeSourceSet(sourceSetName: String, projectPath: String): Boolean {
-    val a = sourceSetName !in all.ignoreSourceSets.get()
-    val b = sourceSetName !in projects.findByName(projectPath)?.ignoreSourceSets?.get().orEmpty()
+    val a = synchronized(all) {
+      sourceSetName !in all.ignoreSourceSets.get()
+    }
+    val b = getForProject(projectPath) { p ->
+      sourceSetName !in p.ignoreSourceSets.get()
+    } ?: true
 
     return a && b
   }
@@ -245,18 +254,25 @@ public abstract class GlobalDslService @Inject constructor(
   }
 
   internal fun redundantPluginsIssueFor(projectPath: String): Provider<Behavior> {
-    return overlay(all.redundantPluginsIssue, projects.findByName(projectPath)?.redundantPluginsIssue)
+    return overlay(all.redundantPluginsIssue, getForProject(projectPath) { it.redundantPluginsIssue })
   }
 
   internal fun moduleStructureIssueFor(projectPath: String): Provider<Behavior> {
-    return overlay(all.moduleStructureIssue, projects.findByName(projectPath)?.moduleStructureIssue)
+    return overlay(all.moduleStructureIssue, getForProject(projectPath) { it.moduleStructureIssue })
   }
 
   private fun issuesFor(projectPath: String, mapper: (ProjectIssueHandler) -> Issue): List<Provider<Behavior>> {
-    val projectHandler = projects.findByName(projectPath)
+    val (allIssuesBySourceSet, mappedAll) = synchronized(all) {
+      val issuesBySourceSet = all.issuesBySourceSet(mapper)
+      val mappedAll = mapper(all)
+      issuesBySourceSet to mappedAll
+    }
+    val (projectIssuesBySourceSet, mappedProject) = getForProject(projectPath) {
+      val issuesBySourceSet = it.issuesBySourceSet(mapper)
+      val mappedProject = mapper(it)
+      issuesBySourceSet to mappedProject
+    } ?: (mutableListOf<Issue>() to null)
 
-    val allIssuesBySourceSet = all.issuesBySourceSet(mapper)
-    val projectIssuesBySourceSet = projectHandler.issuesBySourceSet(mapper)
     val globalProjectMatches = mutableListOf<Pair<Issue, Issue?>>()
 
     // Iterate through the global/all list first
@@ -286,7 +302,7 @@ public abstract class GlobalDslService @Inject constructor(
       }
     }
 
-    val primaryBehavior = overlay(mapper(all), projectHandler?.let(mapper))
+    val primaryBehavior = overlay(mappedAll, mappedProject)
     val result = mutableListOf(primaryBehavior)
     globalProjectMatches.mapTo(result) { (global, project) ->
       overlay(global, project, primaryBehavior)
@@ -343,6 +359,16 @@ public abstract class GlobalDslService @Inject constructor(
         }
       }
     }
+  }
+
+  /** Computes the result of applying action to the [ProjectIssueHandler] for [projectPath], if any. */
+  private fun <T> getForProject(projectPath: String, action: (ProjectIssueHandler) -> T): T? {
+    var result: T? = null
+    projects.compute(projectPath) { _, existing ->
+      result = existing?.let { action(it) }
+      existing
+    }
+    return result
   }
 
   internal companion object {
