@@ -1,5 +1,11 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.4.0
+* [Fix]: `InferredCapability` merging logic should use 'or', not 'and'.
+* [Fix]: Improve IP safety of `GlobalDslService`.
+* [Fix]: for builds with Gradle 9.1.0+, get the `buildPath` from the `Gradle` instance.
+* [Chore]: update to Gradle 9.1.0 (from 9.0.0).
+
 # Version 3.3.0
 * [Feat]: detect reflective access using Class.forName().
 
