@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.source
 
+import com.autonomousapps.internal.utils.capitalizeSafely
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 import org.gradle.api.tasks.SourceSet
@@ -103,8 +104,11 @@ public data class AndroidSourceKind(
   }
 
   override fun sourceSetMatches(sourceSetName: String): Boolean {
-    // debugRuntimeClasspath, debugUnitTestRuntimeClasspath
-    return sourceSetName == name || sourceSetName == base().name
+    // debugRuntimeClasspath, debugUnitTestRuntimeClasspath, debugAndroidTest
+    return sourceSetName == name
+      || sourceSetName == base().name
+      // sourceSetName=debugAndroidTest, name=debug, kind=ANDROID_TEST; base().name=androidTest. Therefore debugAndroidTest
+      || sourceSetName == "$name${base().name.capitalizeSafely()}"
   }
 
   override fun compareTo(other: SourceKind): Int {
