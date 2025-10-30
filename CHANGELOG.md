@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.4.1
+* [Fix]: find runtime graph for `debugAndroidTest` sources.
+
 # Version 3.4.0
 * [Fix]: `InferredCapability` merging logic should use 'or', not 'and'.
 * [Fix]: Improve IP safety of `GlobalDslService`.
