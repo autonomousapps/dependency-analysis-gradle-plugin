@@ -86,7 +86,7 @@ final class ReasonSpec extends AbstractJvmSpec {
 
     then:
     assertThat(result.output).contains(
-      "> Coordinates 'com.squareup.okio:oki' matches more than 1 dependency [com.squareup.okio:okio-jvm:3.0.0, com.squareup.okio:okio:3.0.0]")
+      "> Coordinates 'com.squareup.okio:oki' matches more than 1 dependency: [com.squareup.okio:okio-jvm:3.0.0, com.squareup.okio:okio:3.0.0]")
 
     where:
     gradleVersion << gradleVersions()

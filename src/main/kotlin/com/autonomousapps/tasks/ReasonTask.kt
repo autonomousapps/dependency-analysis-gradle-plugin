@@ -4,16 +4,11 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
 import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
+import com.autonomousapps.internal.UsageContainer
 import com.autonomousapps.internal.reason.DependencyAdviceExplainer
 import com.autonomousapps.internal.reason.ModuleAdviceExplainer
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.CoordinatesString.Companion.equalsKey
-import com.autonomousapps.internal.utils.CoordinatesString.Companion.firstCoordinatesKeySegment
-import com.autonomousapps.internal.utils.CoordinatesString.Companion.matchesKey
-import com.autonomousapps.internal.utils.CoordinatesString.Companion.secondCoordinatesKeySegment
-import com.autonomousapps.internal.utils.strings.replaceExceptLast
 import com.autonomousapps.model.*
-import com.autonomousapps.model.Coordinates.Companion.copy
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.intermediates.BundleTrace
 import com.autonomousapps.model.internal.intermediates.Usage
@@ -41,9 +36,6 @@ public abstract class ReasonTask @Inject constructor(
     group = TASK_GROUP_DEP
     description = "Explain how a dependency is used"
   }
-
-  @get:Input
-  public abstract val rootProjectName: Property<String>
 
   @get:Input
   public abstract val projectPath: Property<String>
@@ -127,7 +119,6 @@ public abstract class ReasonTask @Inject constructor(
       workerExecutor.noIsolation().submit(ExplainDependencyAdviceAction::class.java) {
         it.id.set(dependency)
         it.capability.set(options.capability ?: "")
-        it.rootProjectName.set(rootProjectName)
         it.projectPath.set(projectPath)
         it.buildPath.set(buildPath)
         it.dependencyMap.set(dependencyMap)
@@ -197,7 +188,6 @@ public abstract class ReasonTask @Inject constructor(
   public interface ExplainDependencyAdviceParams : WorkParameters {
     public val id: Property<String>
     public val capability: Property<String>
-    public val rootProjectName: Property<String>
     public val projectPath: Property<String>
     public val buildPath: Property<String>
     public val dependencyMap: MapProperty<String, String>
@@ -214,7 +204,7 @@ public abstract class ReasonTask @Inject constructor(
     private val logger = getLogger<ReasonTask>()
 
     private val capability = parameters.capability.get()
-    private val rootProjectName = parameters.rootProjectName.get()
+    private val buildPath = parameters.buildPath.get()
     private val projectPath = parameters.projectPath.get()
     private val dependencyGraph = parameters.dependencyGraphViews.get()
       .map { it.fromJson<DependencyGraphView>() }
@@ -223,15 +213,14 @@ public abstract class ReasonTask @Inject constructor(
     private val finalProjectAdvice = parameters.finalAdviceReport.fromJson<ProjectAdvice>()
     private val dependencyMap = parameters.dependencyMap.get().toLambda()
 
-    private val dependencyUsages = parameters.dependencyUsageReport.fromJsonMapSet<String, Usage>()
-    private val annotationProcessorUsages = parameters.annotationProcessorUsageReport.fromJsonMapSet<String, Usage>()
+    private val dependencyUsages = parameters.dependencyUsageReport.fromJson<UsageContainer>().toMap()
+    private val annotationProcessorUsages = parameters.annotationProcessorUsageReport.fromJson<UsageContainer>().toMap()
 
     // Derived from the above
-    private val targetCoord = getRequestedCoordinates(true)
-    private val requestedCoord = getRequestedCoordinates(false)
+    private val requestedCoord = getRequestedCoordinates()
     private val finalAdvice = findAdviceIn(finalProjectAdvice)
     private val unfilteredAdvice = findAdviceIn(unfilteredProjectAdvice)
-    private val usages = getUsageFor(targetCoord)
+    private val usages = getUsageFor(requestedCoord)
 
     override fun execute() {
       val project = ProjectCoordinates(
@@ -240,13 +229,13 @@ public abstract class ReasonTask @Inject constructor(
           capabilities = setOf("ROOT"),
           attributes = emptyMap(),
         ),
-        buildPath = parameters.buildPath.get(),
+        buildPath = buildPath,
       )
 
       val reason = DependencyAdviceExplainer(
         project = project,
+        buildPath = buildPath,
         requested = requestedCoord,
-        target = targetCoord,
         requestedCapability = capability,
         usages = usages,
         advice = finalAdvice,
@@ -264,12 +253,11 @@ public abstract class ReasonTask @Inject constructor(
      *
      * `normalized == true` to return 'group:coordinate' notation even if the user requested :project-path notation.
      */
-    private fun getRequestedCoordinates(normalize: Boolean): Coordinates {
+    private fun getRequestedCoordinates(): Coordinates {
       val requestedId = parameters.id.get()
       val requestedCapability = capability
-      val requestedViaProjectPath = requestedId.startsWith(":")
 
-      fun findInGraph(): String? = dependencyGraph.values.asSequence()
+      fun findInGraph(): Coordinates? = dependencyGraph.values.asSequence()
         .flatMap { it.nodes }
         .find { coordinates ->
           val gav = coordinates.gav()
@@ -277,79 +265,23 @@ public abstract class ReasonTask @Inject constructor(
             || gav.startsWith("$requestedId:")
             || dependencyMap(gav) == requestedId
             || dependencyMap(coordinates.identifier) == requestedId
-        }?.gav()
-
-      // Guaranteed to find full GAV or throw
-      val gavKey = findFilteredDependencyKey(dependencyUsages.entries, requestedId)
-        ?: findFilteredDependencyKey(annotationProcessorUsages.entries, requestedId)
-        ?: findInGraph()
-        ?: throw InvalidUserDataException("There is no dependency with coordinates '$requestedId' in this project.")
-
-      val gav = if (requestedViaProjectPath && !normalize) {
-        secondCoordinatesKeySegment(gavKey) ?: gavKey
-      } else {
-        firstCoordinatesKeySegment(gavKey)
-      }
-
-      val capabilitySuffix = if (requestedCapability.isEmpty()) {
-        ""
-      } else if (requestedCapability == "testFixtures") {
-        GradleVariantIdentification.TEST_FIXTURES
-      } else {
-        "-$requestedCapability"
-      }
-
-      val baseCapability = CoordinatesString.of(gavKey).capabilities?.singleOrNull() ?: ""
-      val syntheticCapability = "$baseCapability$capabilitySuffix"
-
-      val includedBuildId = if (requestedId.count { it == ':' } == 1) {
-        "$rootProjectName$requestedId"
-      } else {
-        "$rootProjectName${requestedId.replaceExceptLast(":", ".")}"
-      }
-
-      // In this first case, we have a synthetic IncludedBuildCoordinates that really points to a local project in the
-      // same (main) build.
-      return if (gav == includedBuildId) {
-        val gradleVariantIdentification = GradleVariantIdentification(
-          capabilities = setOf(syntheticCapability),
-          attributes = emptyMap(),
-        )
-
-        IncludedBuildCoordinates(
-          identifier = includedBuildId,
-          resolvedProject = ProjectCoordinates(
-            identifier = requestedId,
-            gradleVariantIdentification = gradleVariantIdentification,
-            buildPath = ":",
-          ),
-          gradleVariantIdentification = gradleVariantIdentification,
-        )
-      } else {
-        val capabilities = if (syntheticCapability.isNotEmpty()) {
-          setOf(syntheticCapability)
-        } else {
-          emptySet()
         }
 
-        val coord = Coordinates.of(gav)
-        coord.copy(
-          gradleVariantIdentification = GradleVariantIdentification(
-            capabilities = capabilities.ifEmpty { setOf(coord.identifier) },
-            attributes = emptyMap(),
-          )
-        )
-      }
+      // Guaranteed to find full GAV or throw
+      return findDependency(dependencyUsages.entries, requestedId, requestedCapability, buildPath)
+        ?: findDependency(annotationProcessorUsages.entries, requestedId, requestedCapability, buildPath)
+        ?: findInGraph()
+        ?: throw InvalidUserDataException("There is no dependency with coordinates '$requestedId' in this project.")
     }
 
-    private fun getUsageFor(coordinates: Coordinates): Set<Usage> {
+    private fun getUsageFor(request: Coordinates): Set<Usage> {
       // First check regular dependencies
       return dependencyUsages.entries.find { entry ->
-        CoordinatesString.of(entry.key).matches(coordinates)
+        request == entry.key.normalized(buildPath)
       }?.value?.softSortedSet(Usage.BY_VARIANT)
       // Then check annotation processors
         ?: annotationProcessorUsages.entries.find { entry ->
-          CoordinatesString.of(entry.key).matches(coordinates)
+          request == entry.key.normalized(buildPath)
         }?.value?.softSortedSet(Usage.BY_VARIANT)
         // Will be empty for runtimeOnly dependencies (no detected usages)
         ?: emptySet()
@@ -359,9 +291,9 @@ public abstract class ReasonTask @Inject constructor(
     private fun findAdviceIn(projectAdvice: ProjectAdvice): Set<Advice> {
       return projectAdvice.dependencyAdvice.filterToSet { advice ->
         val adviceGav = advice.coordinates.gav()
-        val byGav = adviceGav == targetCoord.gav() || adviceGav == requestedCoord.gav()
+        val byGav = adviceGav == requestedCoord.gav() || adviceGav == requestedCoord.gav()
 
-        byGav || matchesByIdentifier(advice, targetCoord) || matchesByIdentifier(advice, requestedCoord)
+        byGav || matchesByIdentifier(advice, requestedCoord) || matchesByIdentifier(advice, requestedCoord)
       }
     }
 
@@ -371,10 +303,10 @@ public abstract class ReasonTask @Inject constructor(
     }
 
     // TODO: I think for any target, there's only 0 or 1 trace?
-    /** Find all bundle traces where the [BundleTrace.top] or [BundleTrace.bottom] is [targetCoord]. */
+    /** Find all bundle traces where the [BundleTrace.top] or [BundleTrace.bottom] is [requestedCoord]. */
     private fun bundleTraces(): Set<BundleTrace> {
       return parameters.bundleTracesReport.fromJsonSet<BundleTrace>().filterToSet {
-        it.top.gav() == targetCoord.gav() || it.bottom.gav() == targetCoord.gav()
+        it.top.gav() == requestedCoord.gav() || it.bottom.gav() == requestedCoord.gav()
       }
     }
 
@@ -385,15 +317,27 @@ public abstract class ReasonTask @Inject constructor(
     }
 
     internal companion object {
-      internal fun findFilteredDependencyKey(dependencies: Set<Map.Entry<String, Any>>, requestedId: String): String? {
-        val filteredKeys = LinkedHashSet<String>()
+      internal fun findDependency(
+        dependencies: Set<Map.Entry<Coordinates, Set<Usage>>>,
+        requestedId: String,
+        requestedCapability: String,
+        buildPath: String,
+      ): Coordinates? {
+        val filteredKeys = LinkedHashSet<Coordinates>()
         for (entry in dependencies) {
-          if (equalsKey(requestedId, entry)) {
+          val coordinates = entry.key
+          val normalizedCoordinates = coordinates.normalized(buildPath)
+
+          val byGav = requestedId == normalizedCoordinates.gav()
+          val byCapability = (requestedCapability.isBlank() && coordinates.hasDefaultCapability())
+            || coordinates.gradleVariantIdentification.capabilities.any { it.endsWith(requestedCapability) }
+
+          if (byGav && byCapability) {
             // for exact equal - return immediately
-            return entry.key
+            return normalizedCoordinates
           }
-          if (matchesKey(requestedId, entry)) {
-            filteredKeys.add(CoordinatesString.of(entry.key).fullGav())
+          if (requestedId == normalizedCoordinates.identifier || normalizedCoordinates.gav().startsWith(requestedId)) {
+            filteredKeys.add(normalizedCoordinates)
           }
         }
 
@@ -403,8 +347,7 @@ public abstract class ReasonTask @Inject constructor(
           filteredKeys.iterator().next()
         } else {
           throw InvalidUserDataException(
-            "Coordinates '$requestedId' matches more than 1 dependency " +
-              "${filteredKeys.map { secondCoordinatesKeySegment(it) ?: it }}"
+            "Coordinates '$requestedId' matches more than 1 dependency: ${filteredKeys.map(Coordinates::gav)}"
           )
         }
       }

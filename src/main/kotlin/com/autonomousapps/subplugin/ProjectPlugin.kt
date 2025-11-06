@@ -1156,7 +1156,6 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     reasonTask = tasks.register("reason", ReasonTask::class.java) {
-      it.rootProjectName.set(rootProject.name)
       it.projectPath.set(theProjectPath)
       it.buildPath.set(buildPath(buildscript.configurations.named("classpath")))
       it.dependencyMap.set(dagpExtension.dependenciesHandler.map)
