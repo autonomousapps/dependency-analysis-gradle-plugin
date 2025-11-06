@@ -21,8 +21,8 @@ import com.autonomousapps.tasks.ReasonTask
 @Suppress("UnstableApiUsage") // guava
 internal class DependencyAdviceExplainer(
   private val project: ProjectCoordinates,
+  private val buildPath: String,
   private val requested: Coordinates,
-  private val target: Coordinates,
   private val requestedCapability: String,
   private val usages: Set<Usage>,
   private val advice: Set<Advice>,
@@ -129,22 +129,22 @@ internal class DependencyAdviceExplainer(
 
   // TODO(tsr): what are the valid scenarios? How many traces could there be for a single target?
   private fun findTrace(): BundleTrace? = bundleTraces.find { trace ->
-    trace.top.gav() == target.gav() || trace.bottom.gav() == target.gav()
+    trace.top.gav() == requested.gav() || trace.bottom.gav() == requested.gav()
   }
 
   private fun StringBuilder.printGraph(graphView: DependencyGraphView) {
     val name = graphView.configurationName
 
     // Find the complete Coordinates (including variant identification) in the graph (if available)
-    val targetInGraph = graphView.graph.nodes().firstOrNull { coordinates ->
-      coordinates.identifier == target.identifier && matchesTargetCapabilities(coordinates)
+    val targetInGraph = graphView.graph.nodes().firstOrNull { node ->
+      node.normalized(buildPath) == requested
     }
 
     if (targetInGraph == null) {
       appendReproducibleNewLine()
       append(Colors.BOLD)
       appendReproducibleNewLine(
-        "There is no path from ${project.printableName()} to ${printableIdentifier(target)} for $name"
+        "There is no path from ${project.printableName()} to ${printableIdentifier(requested)} for $name"
       )
       appendReproducibleNewLine(Colors.NORMAL)
       return
@@ -166,13 +166,6 @@ internal class DependencyAdviceExplainer(
       printCapabilities(node)
       appendReproducibleNewLine()
     }
-  }
-
-  private fun matchesTargetCapabilities(coordinates: Coordinates): Boolean {
-    // If their GVIs exactly match
-    return coordinates.gradleVariantIdentification == target.gradleVariantIdentification
-      // Or if the target isn't requesting on a capability and the coordinates have only the default capability.
-      || (target.gradleVariantIdentification.capabilities.isEmpty() && coordinates.hasDefaultCapability())
   }
 
   private fun StringBuilder.printCapabilities(node: Coordinates) {

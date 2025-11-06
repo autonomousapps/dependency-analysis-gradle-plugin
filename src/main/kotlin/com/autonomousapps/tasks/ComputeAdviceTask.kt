@@ -4,9 +4,9 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.Bundles
+import com.autonomousapps.internal.UsageContainer
 import com.autonomousapps.internal.transform.StandardTransform
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.internal.utils.CoordinatesString.Companion.toStringCoordinates
 import com.autonomousapps.model.*
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.declaration.Bucket
@@ -221,9 +221,8 @@ public abstract class ComputeAdviceTask @Inject constructor(
       )
 
       output.bufferWriteJson(projectAdvice)
-      // These must be transformed so that the Coordinates are Strings for serialization
-      dependencyUsagesOut.bufferWriteJsonMap(toStringCoordinates(dependencyUsages, buildPath))
-      annotationProcessorUsagesOut.bufferWriteJsonMap(toStringCoordinates(annotationProcessorUsages, buildPath))
+      dependencyUsagesOut.bufferWriteJson(UsageContainer.of(dependencyUsages))
+      annotationProcessorUsagesOut.bufferWriteJson(UsageContainer.of(annotationProcessorUsages))
       bundleTraces.bufferWriteJsonSet(dependencyAdviceBuilder.bundledTraces)
     }
 

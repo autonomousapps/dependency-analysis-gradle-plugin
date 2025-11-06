@@ -77,7 +77,7 @@ public sealed class Coordinates(
     }.sorted()
 
   internal fun hasDefaultCapability(): Boolean {
-    return gradleVariantIdentification.capabilities.singleOrNull { it == identifier } != null
+    return gradleVariantIdentification.capabilities.isEmpty() || gradleVariantIdentification.capabilities.singleOrNull { it == identifier } != null
   }
 
   /**

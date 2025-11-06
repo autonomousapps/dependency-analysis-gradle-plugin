@@ -405,9 +405,9 @@ class DependencyAdviceExplainerTest {
       wasFiltered: Boolean = false
     ) = DependencyAdviceExplainer(
       project = root,
+      buildPath = ":",
       requested = target,
       requestedCapability = "",
-      target = target,
       usages = usages,
       advice = advice?.let { setOf(it) }.orEmpty(),
       dependencyGraph = mapOf("main" to graphView),
