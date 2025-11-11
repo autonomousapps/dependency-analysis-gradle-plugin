@@ -15,6 +15,9 @@ import javax.naming.OperationNotSupportedException
  *
  * ```
  * dependencyAnalysis {
+ *   // Declare that this subproject is an "application"-type subproject.
+ *   app()
+ *
  *   // Configure ABI analysis.
  *   abi { ... }
  *

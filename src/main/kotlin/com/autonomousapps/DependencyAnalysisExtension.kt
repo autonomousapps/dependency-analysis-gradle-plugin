@@ -16,6 +16,9 @@ import javax.inject.Inject
  * // settings.gradle[.kts], or
  * // root build.gradle[.kts]
  * dependencyAnalysis {
+ *   // Declare that this subproject is an "application"-type subproject.
+ *   app()
+ *
  *   // Declare that the plugin should use typesafe project accessors. False by default.
  *   useTypesafeProjectAccessors(true)
  *
