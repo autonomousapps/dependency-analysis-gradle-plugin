@@ -45,6 +45,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 private const val APPLICATION_PLUGIN = "application"
 private const val JAVA_LIBRARY_PLUGIN = "java-library"
 private const val JAVA_PLUGIN = "java"
+private const val JIB_PLUGIN = "com.google.cloud.tools.jib"
 private const val SCALA_PLUGIN = "scala"
 
 private const val ANDROID_APP_PLUGIN = "com.android.application"
@@ -684,12 +685,14 @@ internal class ProjectPlugin(private val project: Project) {
     return hasApiConfiguration && isNotTest && isNotMainApp
   }
 
-  private fun Project.isAppProject() =
-    pluginManager.hasPlugin(APPLICATION_PLUGIN) ||
-      pluginManager.hasPlugin(SPRING_BOOT_PLUGIN) ||
-      pluginManager.hasPlugin(GRETTY_PLUGIN) ||
-      pluginManager.hasPlugin(ANDROID_APP_PLUGIN) ||
-      dagpExtension.forceAppProject
+  private fun Project.isAppProject(): Boolean {
+    return dagpExtension.forceAppProject
+      || pluginManager.hasPlugin(ANDROID_APP_PLUGIN)
+      || pluginManager.hasPlugin(APPLICATION_PLUGIN)
+      || pluginManager.hasPlugin(GRETTY_PLUGIN)
+      || pluginManager.hasPlugin(JIB_PLUGIN)
+      || pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)
+  }
 
   /* ===============================================
    * The main work of the plugin happens below here.
