@@ -32,14 +32,41 @@ Additionally, the plugin:
 
 == Compatibilities
 
-The plugin can be used to analyze JVM or Android projects, including multi-project builds including both JVM and
-Android. It supports Groovy, Java, Kotlin, and Scala on the JVM. For Android, it supports analysis of
-`com.android.application`, `com.android.library`, and `com.android.test` modules. It has special handling for
-"application" modules, which are those that apply the `application`, `org.gretty`, `com.google.cloud.tools.jib`, or
- `org.springframework.boot` plugins.
+*Supported languages:* Java and Kotlin on Android; and Groovy, Java, Kotlin, and Scala on the JVM.
 
-Please see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Compatibilities-&-Limitations[wiki]
-for comprehensive information.
+The plugin *only analyzes* modules with *these specific plugins* applied:
+
+.Android modules
+* `com.android.application`
+* `com.android.library`
+* `com.android.test`
+
+In the case of Android modules, the plugin also takes into account whether `org.jetbrains.kotlin.android` has been
+applied.
+
+.JVM modules
+* `java-library`
+* `org.jetbrains.kotlin.jvm`
+
+.Other JVM plugins
+
+This plugin supports these three plugins, but _only_ in the that they also have an "application" plugin applied (see
+below), or `java-library` in the case of `groovy` and `scala`.
+
+* `java`
+* `groovy`
+* `scala`
+
+In addition, the plugin distinguishes between "libraries" and "applications." The former have an API, while the latter
+do not. In practical terms, this means that "application" modules should not have any `api`-like dependencies.
+
+.JVM application modules
+Modules with the following plugins (in addition to those above) are considered to be applications.
+
+* `application`
+* `org.gretty`
+* `com.google.cloud.tools.jib`
+* `org.springframework.boot`
 
 == Add to your project and use
 
