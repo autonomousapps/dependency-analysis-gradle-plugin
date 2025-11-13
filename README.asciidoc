@@ -35,8 +35,8 @@ Additionally, the plugin:
 The plugin can be used to analyze JVM or Android projects, including multi-project builds including both JVM and
 Android. It supports Groovy, Java, Kotlin, and Scala on the JVM. For Android, it supports analysis of
 `com.android.application`, `com.android.library`, and `com.android.test` modules. It has special handling for
-"application" modules, which are those that apply the `application`, `org.gretty`, or `org.springframework.boot`
-plugins.
+"application" modules, which are those that apply the `application`, `org.gretty`, `com.google.cloud.tools.jib`, or
+ `org.springframework.boot` plugins.
 
 Please see the https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/wiki/Compatibilities-&-Limitations[wiki]
 for comprehensive information.
