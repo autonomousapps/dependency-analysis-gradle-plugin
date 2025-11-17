@@ -73,11 +73,14 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
       .filterNot { it.isDirectory }
       .mapNotNull { serviceFile ->
         val providerClasses = zip.getInputStream(serviceFile)
-          .bufferedReader().use(BufferedReader::readLines)
+          .bufferedReader().use(BufferedReader::readLines).asSequence()
           // remove whitespace
-          .map { it.trim() }
-          // Ignore comments
-          .filterToSet { !it.startsWith("#") }
+          .map(String::trim)
+          // remove blank lines
+          .filterNot(String::isBlank)
+          // ignore comments
+          .filter { !it.startsWith("#") }
+          .toSortedSet()
 
         // Unclear why this would ever be empty.
         // See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/780
