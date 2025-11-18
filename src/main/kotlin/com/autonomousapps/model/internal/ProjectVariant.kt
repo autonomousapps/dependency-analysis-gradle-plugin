@@ -8,6 +8,7 @@ import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.internal.CodeSource.Kind
 import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
+import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
 import org.gradle.api.file.Directory
@@ -115,15 +116,15 @@ internal data class ProjectVariant(
     codeSource.flatMapToOrderedSet { it.imports }
   }
 
-  // /**
-  //  * Every member access from this project to classes in another module. cf [usedClasses], which is a flat set of
-  //  * referenced class names.
-  //  */
-  // val memberAccesses: Set<MemberAccess> by unsafeLazy {
-  //   codeSource.flatMapToOrderedSet { src ->
-  //     src.binaryClassAccesses.entries.flatMap { entry -> entry.value }
-  //   }
-  // }
+   /**
+    * Every member access from this project to classes in another module. cf [usedClasses], which is a flat set of
+    * referenced class names.
+    */
+   val memberAccesses: Set<MemberAccess> by unsafeLazy {
+     codeSource.flatMapToOrderedSet { src ->
+       src.binaryClassAccesses.entries.flatMap { entry -> entry.value }
+     }
+   }
 
   val javaImports: Set<String> by unsafeLazy {
     codeSource.filter { it.kind == Kind.JAVA }

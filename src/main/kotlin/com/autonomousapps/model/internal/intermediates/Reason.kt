@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates
 
+import com.autonomousapps.internal.strings.slashy
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.internal.AndroidResSource
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
@@ -108,15 +109,17 @@ internal sealed class Reason(open val reason: String) {
           nonMatches.forEachIndexed { i, (access, incompatibleMembers) ->
             if (i > 0) appendLine()
 
+            // TODO(tsr): the fact I need to use `slashy()` means I converted with `dotty()` too soon.
+            //  or, the other part of this string should also just use dotty. Why is it still slashy?
             when (access) {
               is MemberAccess.Field -> {
                 append("  Expected FIELD ${access.descriptor} ${access.owner}.${access.name}, but was ")
-                append(incompatibleMembers.joinToString { "${it.className}.${it.memberName} ${it.descriptor}" })
+                append(incompatibleMembers.joinToString { "${it.className.slashy()}.${it.memberName} ${it.descriptor}" })
               }
 
               is MemberAccess.Method -> {
                 append("  Expected METHOD ${access.owner}.${access.name}${access.descriptor}, but was ")
-                append(incompatibleMembers.joinToString { "${it.className}.${it.memberName}${it.descriptor}" })
+                append(incompatibleMembers.joinToString { "${it.className.slashy()}.${it.memberName}${it.descriptor}" })
               }
             }
           }

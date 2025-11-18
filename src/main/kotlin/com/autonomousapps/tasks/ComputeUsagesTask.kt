@@ -4,6 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.graph.Graphs.parents
 import com.autonomousapps.graph.Graphs.root
+import com.autonomousapps.internal.binary.BinaryCompatibilityChecker
 import com.autonomousapps.internal.graph.supers.SuperNode
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
@@ -192,8 +193,7 @@ private class GraphVisitor(
         }
 
         is BinaryClassCapability -> {
-          // TODO(tsr) re-evaluate once we have minified intermediates
-          // checkBinaryCompatibility(dependencyCoordinates, capability, context)
+          checkBinaryCompatibility(dependencyCoordinates, capability, context)
 
           // We want to track this in addition to tracking one of the below, so it's not part of the same if/else-if
           // chain.
@@ -464,100 +464,19 @@ private class GraphVisitor(
     }
   }
 
-  // private fun checkBinaryCompatibility(
-  //   coordinates: Coordinates,
-  //   binaryClassCapability: BinaryClassCapability,
-  //   context: GraphViewVisitor.Context,
-  // ) {
-  //   // Can't be incompatible if the code compiles in the context of no duplication
-  //   if (context.duplicateClasses.isEmpty()) return
-  //
-  //   // TODO(tsr): special handling for @Composable
-  //   val memberAccessOwners = context.project.memberAccesses.mapToSet { it.owner }
-  //   val relevantDuplicates = context.duplicateClasses
-  //     .filter { duplicate -> coordinates in duplicate.dependencies && duplicate.className in memberAccessOwners }
-  //     .filter { duplicate -> duplicate.classpathName == DuplicateClass.COMPILE_CLASSPATH_NAME }
-  //
-  //   // Can't be incompatible if the code compiles in the context of no relevant duplication
-  //   if (relevantDuplicates.isEmpty()) return
-  //
-  //   val relevantDuplicateClassNames = relevantDuplicates.mapToOrderedSet { it.className }
-  //   val relevantMemberAccesses = context.project.memberAccesses
-  //     .filterToOrderedSet { access -> access.owner in relevantDuplicateClassNames }
-  //
-  //   val partitionResult = relevantMemberAccesses.mapToSet { access ->
-  //     binaryClassCapability.findMatchingClasses(access)
-  //   }.reduce()
-  //   val matchingBinaryClasses = partitionResult.matchingClasses
-  //   val nonMatchingBinaryClasses = partitionResult.nonMatchingClasses
-  //
-  //   // There must be a compatible BinaryClass.<field|method> for each MemberAccess for the usage to be binary-compatible
-  //   val isBinaryCompatible = relevantMemberAccesses.all { access ->
-  //     when (access) {
-  //       is MemberAccess.Field -> {
-  //         matchingBinaryClasses.any { bin ->
-  //           bin.effectivelyPublicFields.any { field ->
-  //             field.matches(access)
-  //           }
-  //         }
-  //       }
-  //
-  //       is MemberAccess.Method -> {
-  //         matchingBinaryClasses.any { bin ->
-  //           bin.effectivelyPublicMethods.any { method ->
-  //             method.matches(access)
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  //
-  //   if (!isBinaryCompatible) {
-  //     reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.BinaryIncompatible(
-  //       relevantMemberAccesses, nonMatchingBinaryClasses
-  //     )
-  //   }
-  // }
-  //
-  // // TODO: I think this could be more efficient
-  // private fun Set<BinaryClassCapability.PartitionResult>.reduce(): BinaryClassCapability.PartitionResult {
-  //   val matches = sortedSetOf<BinaryClass>()
-  //   val nonMatches = sortedSetOf<BinaryClass>()
-  //
-  //   forEach { result ->
-  //     matches.addAll(result.matchingClasses)
-  //     nonMatches.addAll(result.nonMatchingClasses)
-  //   }
-  //
-  //   return BinaryClassCapability.PartitionResult(
-  //     matchingClasses = matches.reduce(),
-  //     nonMatchingClasses = nonMatches.reduce(),
-  //   )
-  // }
-  //
-  // private fun Set<BinaryClass>.reduce(): Set<BinaryClass> {
-  //   val builders = mutableMapOf<String, BinaryClass.Builder>()
-  //
-  //   forEach { bin ->
-  //     builders.merge(
-  //       bin.className,
-  //       BinaryClass.Builder(
-  //         className = bin.className,
-  //         superClassName = bin.superClassName,
-  //         interfaces = bin.interfaces.toSortedSet(),
-  //         effectivelyPublicFields = bin.effectivelyPublicFields.toSortedSet(),
-  //         effectivelyPublicMethods = bin.effectivelyPublicMethods.toSortedSet(),
-  //       )
-  //     ) { acc, inc ->
-  //       acc.apply {
-  //         effectivelyPublicFields.addAll(inc.effectivelyPublicFields)
-  //         effectivelyPublicMethods.addAll(inc.effectivelyPublicMethods)
-  //       }
-  //     }
-  //   }
-  //
-  //   return builders.values.mapToOrderedSet { it.build() }
-  // }
+  private fun checkBinaryCompatibility(
+    coordinates: Coordinates,
+    binaryClassCapability: BinaryClassCapability,
+    context: GraphViewVisitor.Context,
+  ) {
+    val result = BinaryCompatibilityChecker(coordinates, binaryClassCapability, context).result ?: return
+
+    if (!result.isBinaryCompatible) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.BinaryIncompatible(
+        result.relevantMemberAccesses, result.nonMatchingBinaryClasses
+      )
+    }
+  }
 
   private fun isImplementation(
     coordinates: Coordinates,
