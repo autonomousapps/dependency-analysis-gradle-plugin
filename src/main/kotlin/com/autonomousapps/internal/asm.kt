@@ -122,16 +122,15 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       methods.add(Method(descriptor))
     }
 
-    // TODO(tsr): uncomment once intermediate artifact shrinking is complete
-    // if (isEffectivelyPublic(access)) {
-    //   effectivelyPublicMethods.add(
-    //     Member.Method(
-    //       access = access,
-    //       name = name,
-    //       descriptor = descriptor,
-    //     )
-    //   )
-    // }
+     if (isEffectivelyPublic(access)) {
+       effectivelyPublicMethods.add(
+         Member.Method(
+           access = access,
+           name = name,
+           descriptor = descriptor,
+         )
+       )
+     }
 
     return methodAnalyzer
   }
@@ -155,16 +154,15 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       )
     }
 
-    // TODO(tsr): uncomment once intermediate artifact shrinking is complete
-    // if (isEffectivelyPublic(access)) {
-    //   effectivelyPublicFields.add(
-    //     Member.Field(
-    //       access = access,
-    //       name = name,
-    //       descriptor = descriptor,
-    //     )
-    //   )
-    // }
+     if (isEffectivelyPublic(access)) {
+       effectivelyPublicFields.add(
+         Member.Field(
+           access = access,
+           name = name,
+           descriptor = descriptor,
+         )
+       )
+     }
 
     return null
   }
@@ -763,6 +761,12 @@ internal class KotlinMetadataVisitor(
       return KotlinAnnotationVisitor(logger, builder, level + 1, name)
     }
   }
+}
+
+// TODO(tsr): look at asmUtils' `ClassNode.isEffectivelyPublic()` method, which is substantially different.
+private fun isEffectivelyPublic(access: Int): Boolean {
+  val flags = AccessFlags(access)
+  return !flags.isSynthetic && (flags.isPublic || flags.isProtected)
 }
 
 private fun stringValueOfArrayElement(value: Any?): String {

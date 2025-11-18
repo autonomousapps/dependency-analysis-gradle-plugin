@@ -13,6 +13,7 @@ import com.autonomousapps.model.internal.intermediates.consumer.ExplodingAbi
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingSourceCode
 import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
+import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.source.SourceKind
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
@@ -193,13 +194,13 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
             nonAnnotationClassesWithinVisibleAnnotation.putAll(bytecode.nonAnnotationClassesWithinVisibleAnnotation)
             annotationClasses.addAll(bytecode.annotationClasses)
             inferredConstants.addAll(bytecode.inferredConstants)
-            //   // TODO(tsr): flatten into a single set? Do we need the map?
-            //   // Merge the two maps
-            //   bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
-            //     binaryClassAccesses.merge(className, memberAccesses.toMutableSet()) { acc, inc ->
-            //       acc.apply { addAll(inc) }
-            //     }
-            //   }
+            // TODO(tsr): flatten into a single set? Do we need the map?
+            // Merge the two maps
+            bytecode.binaryClassAccesses.forEach { (className, memberAccesses) ->
+              binaryClassAccesses.merge(className, memberAccesses.toMutableSet()) { acc, inc ->
+                acc.apply { addAll(inc) }
+              }
+            }
           },
           CodeSourceBuilder::concat
         )
@@ -297,7 +298,7 @@ private class CodeSourceBuilder(val className: String) {
   val exposedClasses = sortedSetOf<String>()
   val imports = sortedSetOf<String>()
   val inferredConstants = sortedSetOf<LdcConstant>()
-  // val binaryClassAccesses = mutableMapOf<String, MutableSet<MemberAccess>>()
+  val binaryClassAccesses = mutableMapOf<String, MutableSet<MemberAccess>>()
 
   fun concat(other: CodeSourceBuilder): CodeSourceBuilder {
     other.relativePath?.let { relativePath = it }
@@ -326,7 +327,7 @@ private class CodeSourceBuilder(val className: String) {
       exposedClasses = exposedClasses.efficient(),
       imports = imports.efficient(),
       inferredConstants = inferredConstants.efficient(),
-      // binaryClassAccesses = binaryClassAccesses,
+      binaryClassAccesses = binaryClassAccesses,
     )
   }
 }

@@ -178,9 +178,6 @@ final class DuplicateClasspathProject extends AbstractProject {
 
   private final Set<Advice> consumerAdvice = [
     Advice.ofRemove(projectCoordinates(':unused'), 'implementation'),
-    // This is actually bad advice, but we can't detect it without re-reverting the change to detect binary
-    // incompatibilities.
-    Advice.ofAdd(projectCoordinates(':producer-1'), 'implementation')
   ]
 
   Set<ProjectAdvice> expectedProjectAdvice() {

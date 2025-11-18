@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal
 
+import com.autonomousapps.internal.strings.dotty
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.efficient
@@ -175,7 +176,7 @@ internal data class BinaryClassCapability(
 
   override fun merge(other: Capability): Capability {
     return newInstance(
-      binaryClasses = (binaryClasses + (other as BinaryClassCapability).binaryClasses),
+      binaryClasses = (binaryClasses + (other as BinaryClassCapability).binaryClasses).efficient(),
     )
   }
 
@@ -207,7 +208,7 @@ internal data class BinaryClassCapability(
   private fun findRelevantBinaryClasses(memberAccess: MemberAccess): Set<BinaryClass> {
     // direct references
     val relevant = binaryClasses.filterTo(mutableSetOf()) { bin ->
-      bin.className == memberAccess.owner
+      bin.className == memberAccess.owner.dotty()
     }
 
     // Walk up the class hierarchy
@@ -230,13 +231,13 @@ internal data class BinaryClassCapability(
 
   /**
    * Partitions and returns artificial pair of [BinaryClasses][BinaryClass]. Non-null elements indicate relevant (to
-   * [memberAccess] matching and non-matching members of this `BinaryClass`. Matching members are binary-compatible; and
-   * non-matching members have the same [name][com.autonomousapps.model.internal.intermediates.producer.Member.name] but
-   * incompatible [descriptors][com.autonomousapps.model.internal.intermediates.producer.Member.descriptor], and are
+   * [memberAccess]) matching and non-matching members of this `BinaryClass`. Matching members are binary-compatible;
+   * and non-matching members have the same [name][com.autonomousapps.model.internal.intermediates.producer.Member.name]
+   * but incompatible [descriptors][com.autonomousapps.model.internal.intermediates.producer.Member.descriptor], and are
    * therefore binary-incompatible.
    *
    * nb: We don't want this as a method directly in BinaryClass because it can't safely assert the prerequisite that
-   * it's only called on "relevant" classes. THIS class, however, can, via findRelevantBinaryClasses.
+   * it's only called on "relevant" classes. THIS class, however, can, via [findRelevantBinaryClasses].
    */
   private fun BinaryClass.partition(memberAccess: MemberAccess): Pair<BinaryClass?, BinaryClass?> {
     // There can be only one match

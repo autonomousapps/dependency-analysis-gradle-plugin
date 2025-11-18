@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.strings.binaryToHuman
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.filterNotToSet
 import com.autonomousapps.internal.utils.mapToSet
@@ -132,12 +133,10 @@ internal data class AbiExclusions(
   @Transient
   private val pathRegexes = pathExclusions.mapToSet(String::toRegex)
 
-  fun excludesAnnotation(fqcn: String): Boolean = annotationRegexes.any { it.containsMatchIn(fqcn.dotty()) }
-  fun excludesClass(fqcn: String) = classRegexes.any { it.containsMatchIn(fqcn.dotty()) }
+  fun excludesAnnotation(fqcn: String): Boolean = annotationRegexes.any { it.containsMatchIn(fqcn.binaryToHuman()) }
+  fun excludesClass(fqcn: String) = classRegexes.any { it.containsMatchIn(fqcn.binaryToHuman()) }
   fun excludesPath(path: String) = pathRegexes.any { it.containsMatchIn(path) }
 
-  // The user-facing regex expects FQCNs to be delimited with dots, not slashes
-  private fun String.dotty() = replace('/', '.').removeSurrounding("L", ";")
 
   companion object {
     val NONE = AbiExclusions()
@@ -152,7 +151,7 @@ internal data class UsagesExclusions(
   @Transient
   private val classRegexes = classExclusions.mapToSet(String::toRegex)
 
-  private fun excludesClass(fqcn: String) = classRegexes.any { it.containsMatchIn(fqcn.dotty()) }
+  private fun excludesClass(fqcn: String) = classRegexes.any { it.containsMatchIn(fqcn.binaryToHuman()) }
 
   fun excludeClassesFromSet(fqcn: Set<String>): Set<String> {
     return fqcn.filterNotToSet { excludesClass(it) }
@@ -161,9 +160,6 @@ internal data class UsagesExclusions(
   fun excludeClassesFromMap(fqcn: Map<String, String>): Map<String, String> {
     return fqcn.filterNot { excludesClass(it.key) }
   }
-
-  // The user-facing regex expects FQCNs to be delimited with dots, not slashes
-  private fun String.dotty() = replace('/', '.').removeSurrounding("L", ";")
 
   companion object {
     val NONE = UsagesExclusions()

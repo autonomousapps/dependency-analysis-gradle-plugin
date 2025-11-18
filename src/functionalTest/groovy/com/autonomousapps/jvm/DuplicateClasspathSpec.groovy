@@ -5,8 +5,6 @@ package com.autonomousapps.jvm
 import com.autonomousapps.jvm.projects.BinaryIncompatibilityProject
 import com.autonomousapps.jvm.projects.DuplicateClasspathProject
 import com.autonomousapps.utils.Colors
-import org.gradle.testkit.runner.TaskOutcome
-import spock.lang.PendingFeature
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
@@ -16,7 +14,7 @@ import static com.google.common.truth.Truth.assertThat
 
 final class DuplicateClasspathSpec extends AbstractJvmSpec {
 
-  def "duplicates on the classpath can lead to build failures (#gradleVersion)"() {
+  def "duplicates on the classpath can be fixed (#gradleVersion)"() {
     given:
     def project = new DuplicateClasspathProject()
     gradleProject = project.gradleProject
@@ -24,17 +22,16 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
     when:
     // This first invocation fixes the dependency declarations
     build(gradleVersion, gradleProject.rootDir, ':consumer:fixDependencies')
-    // This fails because of classpath duplication and the wrong dep getting loaded first
-    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    // This succeeds because we detect the binary incompatibility and remove it
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(result.task(':consumer:compileJava').outcome).isEqualTo(TaskOutcome.FAILED)
-    //    assertThat(gradleProject.rootDir.toPath().resolve('consumer/build.gradle').text).contains(
-    //      '''\
-    //        dependencies {
-    //          implementation project(':producer-2')
-    //        }'''.stripIndent()
-    //    )
+    assertThat(gradleProject.rootDir.toPath().resolve('consumer/build.gradle').text).contains(
+      '''\
+        dependencies {
+          implementation project(':producer-2')
+        }'''.stripIndent()
+    )
 
     where:
     gradleVersion << [GRADLE_LATEST]
@@ -147,7 +144,6 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
     gradleVersion << [GRADLE_LATEST]
   }
 
-  @PendingFeature(reason = "This feature was reverted")
   def "can report on which of the duplicates is needed for binary compatibility (#gradleVersion)"() {
     given:
     def project = new BinaryIncompatibilityProject()
@@ -157,7 +153,6 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
     def result = build(
       gradleVersion, gradleProject.rootDir,
       ':consumer:reason', '--id', ':producer-1',
-      //FLAG_LOG_BYTECODE,
     )
 
     then:
@@ -202,7 +197,6 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
     gradleVersion << [GRADLE_LATEST]
   }
 
-  @PendingFeature(reason = "This feature was reverted")
   def "suggests removing a binary-incompatible duplicate (#gradleVersion)"() {
     given:
     def project = new BinaryIncompatibilityProject(true)
@@ -212,7 +206,6 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
     def result = build(
       gradleVersion, gradleProject.rootDir,
       ':consumer:reason', '--id', ':producer-1',
-      //FLAG_LOG_BYTECODE,
     )
 
     then:

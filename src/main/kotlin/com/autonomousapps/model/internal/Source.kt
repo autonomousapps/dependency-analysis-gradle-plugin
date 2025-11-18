@@ -6,6 +6,7 @@ import com.autonomousapps.internal.parse.AndroidResParser
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
+import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -54,8 +55,12 @@ internal data class CodeSource(
    */
   val inferredConstants: Set<LdcConstant>,
 
-  // /** Every [MemberAccess] to another class from [this class][className]. */
-  // val binaryClassAccesses: Map<String, Set<MemberAccess>>,
+  /**
+   * Every [MemberAccess] to another class from [this class][className].
+   *
+   * TODO(tsr): fold in inferredConstants.
+   */
+   val binaryClassAccesses: Map<String, Set<MemberAccess>>,
 ) : Source(relativePath) {
 
   override fun compareTo(other: Source): Int {
