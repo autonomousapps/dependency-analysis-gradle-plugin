@@ -29,6 +29,7 @@ import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
+import kotlin.time.measureTime
 
 @CacheableTask
 public abstract class ComputeUsagesTask @Inject constructor(
@@ -38,6 +39,12 @@ public abstract class ComputeUsagesTask @Inject constructor(
   init {
     description = "Computes actual dependency usage"
   }
+
+  @get:Input
+  public abstract val checkSuperClasses: Property<Boolean>
+
+  @get:Input
+  public abstract val checkBinaryCompat: Property<Boolean>
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -58,9 +65,6 @@ public abstract class ComputeUsagesTask @Inject constructor(
   @get:Input
   public abstract val kapt: Property<Boolean>
 
-  @get:Input
-  public abstract val checkSuperClasses: Property<Boolean>
-
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   public abstract val duplicateClassesReports: ListProperty<RegularFile>
@@ -70,24 +74,28 @@ public abstract class ComputeUsagesTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ComputeUsagesAction::class.java) {
+      it.checkSuperClasses.set(checkSuperClasses)
+      it.checkBinaryCompat.set(checkBinaryCompat)
+
       it.graph.set(graph)
       it.declarations.set(declarations)
       it.dependencies.set(dependencies)
       it.syntheticProject.set(syntheticProject)
       it.kapt.set(kapt)
-      it.checkSuperClasses.set(checkSuperClasses)
       it.duplicateClassesReports.set(duplicateClassesReports)
       it.output.set(output)
     }
   }
 
   public interface ComputeUsagesParameters : WorkParameters {
+    public val checkSuperClasses: Property<Boolean>
+    public val checkBinaryCompat: Property<Boolean>
+
     public val graph: RegularFileProperty
     public val declarations: RegularFileProperty
     public val dependencies: DirectoryProperty
     public val syntheticProject: RegularFileProperty
     public val kapt: Property<Boolean>
-    public val checkSuperClasses: Property<Boolean>
     public val duplicateClassesReports: ListProperty<RegularFile>
     public val output: RegularFileProperty
   }
@@ -117,6 +125,7 @@ public abstract class ComputeUsagesTask @Inject constructor(
         project = project,
         kapt = parameters.kapt.get(),
         checkSuperClasses = parameters.checkSuperClasses.get(),
+        checkBinaryCompat = parameters.checkBinaryCompat.get(),
       )
       reader.accept(visitor)
 
@@ -129,7 +138,12 @@ private class GraphVisitor(
   project: ProjectVariant,
   private val kapt: Boolean,
   private val checkSuperClasses: Boolean,
+  private val checkBinaryCompat: Boolean,
 ) : GraphViewVisitor {
+
+  companion object {
+    val logger = getLogger<ComputeUsagesTask>()
+  }
 
   val report: DependencyTraceReport get() = reportBuilder.build()
 
@@ -193,7 +207,14 @@ private class GraphVisitor(
         }
 
         is BinaryClassCapability -> {
-          checkBinaryCompatibility(dependencyCoordinates, capability, context)
+          // In case this turns out to be expensive, we want an opt-out.
+          if (checkBinaryCompat) {
+            val duration = measureTime {
+              checkBinaryCompatibility(dependencyCoordinates, capability, context)
+            }
+            // TODO(tsr): tear out if determined this isn't a problem. Don't over-engineer.
+            logger.info("Binary compatibility check duration: $duration")
+          }
 
           // We want to track this in addition to tracking one of the below, so it's not part of the same if/else-if
           // chain.

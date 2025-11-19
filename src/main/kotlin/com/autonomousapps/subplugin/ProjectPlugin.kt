@@ -9,6 +9,7 @@ import com.autonomousapps.AbstractExtension
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.DependencyAnalysisSubExtension
 import com.autonomousapps.Flags.androidIgnoredVariants
+import com.autonomousapps.Flags.checkBinaryCompat
 import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
@@ -1055,16 +1056,19 @@ internal class ProjectPlugin(private val project: Project) {
      ****************************************/
 
     // Computes how this project really uses its dependencies, without consideration for user reporting preferences.
-    val computeUsagesTask = tasks.register("computeActualUsage$taskNameSuffix", ComputeUsagesTask::class.java) {
-      it.graph.set(graphViewTask.flatMap { it.output })
-      it.declarations.set(findDeclarationsTask.flatMap { it.output })
-      it.dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
-      it.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
-      it.kapt.set(isKaptApplied())
-      it.checkSuperClasses.set(dagpExtension.usageHandler.analysisHandler.checkSuperClasses)
-      it.duplicateClassesReports.add(duplicateClassesCompile.flatMap { it.output })
-      it.duplicateClassesReports.add(duplicateClassesRuntime.flatMap { it.output })
-      it.output.set(outputPaths.dependencyTraceReportPath)
+    val computeUsagesTask = tasks.register("computeActualUsage$taskNameSuffix", ComputeUsagesTask::class.java) { t ->
+      t.checkSuperClasses.set(dagpExtension.usageHandler.analysisHandler.checkSuperClasses)
+      // Currently only modeling this via Gradle property. May hoist it to the DSL if it's necessary.
+      t.checkBinaryCompat.set(checkBinaryCompat())
+      
+      t.graph.set(graphViewTask.flatMap { it.output })
+      t.declarations.set(findDeclarationsTask.flatMap { it.output })
+      t.dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
+      t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
+      t.kapt.set(isKaptApplied())
+      t.duplicateClassesReports.add(duplicateClassesCompile.flatMap { it.output })
+      t.duplicateClassesReports.add(duplicateClassesRuntime.flatMap { it.output })
+      t.output.set(outputPaths.dependencyTraceReportPath)
     }
 
     // Null for JVM projects
