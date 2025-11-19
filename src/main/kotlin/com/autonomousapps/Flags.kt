@@ -18,6 +18,8 @@ public object Flags {
   private const val PRINT_BUILD_HEALTH = "dependency.analysis.print.build.health"
   private const val PROJECT_INCLUDES = "dependency.analysis.project.includes"
 
+  private const val CHECK_BINARY_COMPAT = "dependency.analysis.check-binary-compat"
+
   // Used in tests
   internal const val BYTECODE_LOGGING = "dependency.analysis.bytecode.logging"
 
@@ -81,6 +83,10 @@ public object Flags {
         "Unrecognized value '$it' for 'dependency.analysis.compatibility' property. Allowed values are ${Compatibility.entries.toTypedArray()}"
       )
     }
+  }
+
+  internal fun Project.checkBinaryCompat(): Boolean {
+    return getGradlePropForConfiguration(CHECK_BINARY_COMPAT, true)
   }
 
   private fun Project.getGradleOrSysProp(name: String, default: Boolean): Boolean {
