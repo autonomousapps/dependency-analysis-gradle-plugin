@@ -25,14 +25,18 @@ public abstract class BuildHealthPlugin : Plugin<Settings> {
     DependencyAnalysisExtension.of(this)
 
     // Register service
-    GlobalDslService.of(target.gradle).apply {
-      get().apply {
-        setRegisteredOnSettings()
-      }
+    GlobalDslService.of(target.gradle).get().setRegisteredOnSettings()
+
+    gradle.lifecycle.beforeProject { p ->
+      p.pluginManager.apply(DependencyAnalysisPlugin.ID)
     }
 
-    gradle.lifecycle.beforeProject { project ->
-      project.pluginManager.apply(DependencyAnalysisPlugin.ID)
+    // The version catalog extension won't be available until AFTER this plugin has configured itself, so register a
+    // callback for after the project configuration has run.
+    // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1441
+    // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1603
+    gradle.lifecycle.afterProject { p ->
+      GlobalDslService.of(p).get().withVersionCatalogs(p)
     }
   }
 }
