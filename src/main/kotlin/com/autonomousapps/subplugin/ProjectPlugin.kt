@@ -182,33 +182,33 @@ internal class ProjectPlugin(private val project: Project) {
 
     // If it's a Kotlin project, users have limited ability to make changes to the stdlib.
     pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
-      dagpExtension.issueHandler.project(path) {
-        it.onAny {
-          it.exclude("org.jetbrains.kotlin:kotlin-stdlib")
+      dagpExtension.issueHandler.project(path) { handler ->
+        handler.onAny { issue ->
+          issue.exclude("org.jetbrains.kotlin:kotlin-stdlib")
         }
-        it.onRuntimeOnly {
+        handler.onRuntimeOnly { issue ->
           // kotlin-reflect must be on the compile classpath: https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1384
-          it.exclude("org.jetbrains.kotlin:kotlin-reflect")
+          issue.exclude("org.jetbrains.kotlin:kotlin-reflect")
         }
       }
     }
     pluginManager.withPlugin(KOTLIN_ANDROID_PLUGIN) {
-      dagpExtension.issueHandler.project(path) {
-        it.onAny {
-          it.exclude("org.jetbrains.kotlin:kotlin-stdlib")
+      dagpExtension.issueHandler.project(path) { handler ->
+        handler.onAny { issue ->
+          issue.exclude("org.jetbrains.kotlin:kotlin-stdlib")
         }
-        it.onRuntimeOnly {
+        handler.onRuntimeOnly { issue ->
           // kotlin-reflect must be on the compile classpath: https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1384
-          it.exclude("org.jetbrains.kotlin:kotlin-reflect")
+          issue.exclude("org.jetbrains.kotlin:kotlin-reflect")
         }
       }
     }
 
     // If it's a Scala project, it needs the scala-library dependency.
     pluginManager.withPlugin(SCALA_PLUGIN) {
-      dagpExtension.issueHandler.project(path) {
-        it.onUnusedDependencies {
-          it.exclude("org.scala-lang:scala-library")
+      dagpExtension.issueHandler.project(path) { handler ->
+        handler.onUnusedDependencies { issue ->
+          issue.exclude("org.scala-lang:scala-library")
         }
       }
     }

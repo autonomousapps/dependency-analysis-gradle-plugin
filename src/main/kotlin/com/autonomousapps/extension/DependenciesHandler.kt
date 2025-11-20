@@ -145,13 +145,12 @@ public abstract class DependenciesHandler @Inject constructor(objects: ObjectFac
 
   private val includesVersionCatalogEntries = AtomicBoolean(false)
 
-  /**
-   * Hydrate dependencies map with version catalog entries.
-   */
+  /** Hydrate dependencies map with version catalog entries. */
   internal fun withVersionCatalogs(project: Project) {
-    if (includesVersionCatalogEntries.getAndSet(true)) return
-
     val catalogs = project.extensions.findByType(VersionCatalogsExtension::class.java) ?: return
+
+    // Only update the version mapping once.
+    if (includesVersionCatalogEntries.getAndSet(true)) return
 
     catalogs.catalogNames.forEach { catalogName ->
       val catalog = catalogs.named(catalogName)
