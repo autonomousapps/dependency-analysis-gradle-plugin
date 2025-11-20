@@ -54,6 +54,7 @@ private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
 private const val ANDROID_TEST_PLUGIN = "com.android.test"
 private const val KOTLIN_ANDROID_PLUGIN = "org.jetbrains.kotlin.android"
 private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
+private const val KOTLIN_MULTIPLATFORM_PLUGIN = "org.jetbrains.kotlin.multiplatform"
 
 private const val GRETTY_PLUGIN = "org.gretty"
 private const val SPRING_BOOT_PLUGIN = "org.springframework.boot"
@@ -159,6 +160,11 @@ internal class ProjectPlugin(private val project: Project) {
       }
       pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
         logger.log("Adding Kotlin-JVM tasks to ${project.path}")
+        checkKgpOnClasspath()
+        configureKotlinJvmProject()
+      }
+      pluginManager.withPlugin(KOTLIN_MULTIPLATFORM_PLUGIN) {
+        logger.log("Adding Kotlin Multiplatform tasks to ${project.path}")
         checkKgpOnClasspath()
         configureKotlinJvmProject()
       }
