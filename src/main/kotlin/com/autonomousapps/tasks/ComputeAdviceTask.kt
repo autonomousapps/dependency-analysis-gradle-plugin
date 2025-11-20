@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.autonomousapps.ProjectType
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.UsageContainer
@@ -10,7 +11,7 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.declaration.Bucket
-import com.autonomousapps.model.internal.declaration.Configurations
+import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.*
 import org.gradle.api.DefaultTask
@@ -73,9 +74,8 @@ public abstract class ComputeAdviceTask @Inject constructor(
   @get:Input
   public abstract val explicitSourceSets: SetProperty<String>
 
-  /** Android (true) or JVM (false). */
   @get:Input
-  public abstract val android: Property<Boolean>
+  public abstract val projectType: Property<ProjectType>
 
   @get:Input
   public abstract val kapt: Property<Boolean>
@@ -117,7 +117,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
       it.supportedSourceSets.set(supportedSourceSets)
       it.ignoreKtx.set(ignoreKtx)
       it.explicitSourceSets.set(explicitSourceSets)
-      it.android.set(android)
+      it.projectType.set(projectType)
       it.kapt.set(kapt)
       it.redundantPluginReport.set(redundantJvmPluginReport)
       it.duplicateClassesReports.set(duplicateClassesReports)
@@ -140,7 +140,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
     public val supportedSourceSets: SetProperty<String>
     public val ignoreKtx: Property<Boolean>
     public val explicitSourceSets: SetProperty<String>
-    public val android: Property<Boolean>
+    public val projectType: Property<ProjectType>
     public val kapt: Property<Boolean>
     public val redundantPluginReport: RegularFileProperty
     public val duplicateClassesReports: ListProperty<RegularFile>
@@ -161,7 +161,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
 
       val projectPath = parameters.projectPath.get()
       val buildPath = parameters.buildPath.get()
-      val declarations = parameters.declarations.fromJsonSet<Declaration>()
+      val declarations = parameters.declarations.fromJsonSet<Declaration>().toSortedSet()
       val dependencyGraph = DependencyGraphView.asMap(parameters.dependencyGraphViews)
       val androidScore = parameters.androidScoreReports.get()
         .map { it.fromJson<AndroidScoreVariant>() }
@@ -179,16 +179,18 @@ public abstract class ComputeAdviceTask @Inject constructor(
       val annotationProcessorUsages = usageBuilder.annotationProcessingUsages
       val supportedSourceSets = parameters.supportedSourceSets.get()
       val explicitSourceSets = parameters.explicitSourceSets.get()
-      val isAndroidProject = parameters.android.get()
+      val projectType = parameters.projectType.get()
       val isKaptApplied = parameters.kapt.get()
-
       val ignoreKtx = parameters.ignoreKtx.get()
+      val configurationNames = ConfigurationNames(projectType, supportedSourceSets)
 
       val bundles = Bundles.of(
         projectPath = projectPath,
         dependencyGraph = dependencyGraph,
         bundleRules = bundleRules,
         dependencyUsages = dependencyUsages,
+        declarations = declarations,
+        configurationNames = configurationNames,
         ignoreKtx = ignoreKtx,
       )
 
@@ -202,7 +204,8 @@ public abstract class ComputeAdviceTask @Inject constructor(
         dependencyGraph = dependencyGraph,
         supportedSourceSets = supportedSourceSets,
         explicitSourceSets = explicitSourceSets,
-        isAndroidProject = isAndroidProject,
+        projectType = projectType,
+        configurationNames = configurationNames,
         isKaptApplied = isKaptApplied,
       )
 
@@ -274,7 +277,8 @@ internal class DependencyAdviceBuilder(
   private val dependencyGraph: Map<String, DependencyGraphView>,
   private val supportedSourceSets: Set<String>,
   private val explicitSourceSets: Set<String>,
-  private val isAndroidProject: Boolean,
+  private val projectType: ProjectType,
+  private val configurationNames: ConfigurationNames,
   private val isKaptApplied: Boolean,
 ) {
 
@@ -291,7 +295,8 @@ internal class DependencyAdviceBuilder(
   }
 
   private fun computeDependencyAdvice(projectPath: String): Sequence<Advice> {
-    val declarations = declarations.filterToSet { Configurations.isForRegularDependency(it.configurationName) }
+    val declarations =
+      declarations.filterToOrderedSet { configurationNames.isForRegularDependency(it.configurationName) }
 
     fun Advice.isRemoveTestDependencyOnSelf(): Boolean {
       return coordinates.identifier == projectPath
@@ -312,10 +317,10 @@ internal class DependencyAdviceBuilder(
           coordinates = coordinates,
           declarations = declarations,
           dependencyGraph = dependencyGraph,
-          supportedSourceSets = supportedSourceSets,
+          configurationNames = configurationNames,
           buildPath = buildPath,
           explicitSourceSets = explicitSourceSets,
-          isAndroidProject = isAndroidProject,
+          projectType = projectType,
         )
           .reduce(usages)
           .map { advice -> advice to coordinates }
@@ -331,10 +336,20 @@ internal class DependencyAdviceBuilder(
           // The user should not have to add a test dependency on self
           advice.isAddTestDependencyOnSelf() -> null
 
+          // TODO(tsr): Update bundledTraces and Reason? The current output is OK, but lacks specificity in the non-null
+          //  `parentAdvice` case.
+          // This can transform add-advice to change-advice. Currently only for KMP projects where the "parent" KMP dep
+          // is declared on a commonX configuration, and the "child" -jvm or -android dep needs to be upgraded.
           advice.isAdd() && bundles.hasParentInBundle(originalCoordinates) -> {
             val parent = bundles.findParentInBundle(originalCoordinates)!!
             bundledTraces.add(BundleTrace.DeclaredParent(parent = parent, child = originalCoordinates))
-            null
+
+            val parentAdvice = bundles.maybeParent(advice, originalCoordinates)
+            if (parentAdvice != advice) {
+              parentAdvice
+            } else {
+              null
+            }
           }
 
           // Optionally map given advice to "primary" advice, if bundle has a primary
@@ -359,6 +374,27 @@ internal class DependencyAdviceBuilder(
             null
           }
 
+          // TODO(tsr): extract this into something unit-testable.
+          // For KMP projects, if the advice is to move the dependency from a commonX source set to a specific target,
+          // ignore it for now. If the advice is to move and upgrade, then just upgrade but keep in the same source set.
+          projectType == ProjectType.KMP && advice.isAnyChange() -> {
+            val fromConfiguration = advice.fromConfiguration!!
+            val toConfiguration = advice.toConfiguration!!
+            val fromCommon = fromConfiguration.startsWith("commonTest") || fromConfiguration.startsWith("commonMain")
+            val toCommon = toConfiguration.startsWith("commonTest") || fromConfiguration.startsWith("commonMain")
+
+            if (fromCommon && !toCommon) {
+              if (fromConfiguration.endsWith("Implementation") && toConfiguration.endsWith("Api")) {
+                val newConfiguration = fromConfiguration.substringBeforeLast("Implementation") + "Api"
+                advice.copy(toConfiguration = newConfiguration)
+              } else {
+                null
+              }
+            } else {
+              advice
+            }
+          }
+
           else -> advice
         }
       }
@@ -366,17 +402,18 @@ internal class DependencyAdviceBuilder(
 
   // nb: no bundle support for annotation processors
   private fun computeAnnotationProcessorAdvice(): Sequence<Advice> {
-    val declarations = declarations.filterToSet { Configurations.isForAnnotationProcessor(it.configurationName) }
+    val declarations = declarations
+      .filterToOrderedSet { configurationNames.isForAnnotationProcessor(it.configurationName) }
     return annotationProcessorUsages.asSequence()
       .flatMap { (coordinates, usages) ->
         StandardTransform(
           coordinates = coordinates,
           declarations = declarations,
           dependencyGraph = emptyMap(),
-          supportedSourceSets = supportedSourceSets,
           buildPath = buildPath,
           explicitSourceSets = explicitSourceSets,
-          isAndroidProject = isAndroidProject,
+          projectType = projectType,
+          configurationNames = configurationNames,
           isKaptApplied = isKaptApplied,
         ).reduce(usages)
       }

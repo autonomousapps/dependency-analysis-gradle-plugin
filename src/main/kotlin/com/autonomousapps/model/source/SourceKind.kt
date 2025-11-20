@@ -6,6 +6,7 @@ import com.autonomousapps.internal.utils.capitalizeSafely
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 import org.gradle.api.tasks.SourceSet
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import java.io.Serializable
 
 /**
@@ -18,15 +19,19 @@ import java.io.Serializable
  */
 @JsonClass(generateAdapter = false, generator = "sealed:type")
 public sealed class SourceKind : Comparable<SourceKind>, Serializable {
-  /** Variant name for Android, or source set name for JVM. */
+  /** Variant name for Android, or source set name for JVM or KMP. */
   public abstract val name: String
 
   /** MAIN, TEST, ANDROID_TEST, CUSTOM_JVM */
   public abstract val kind: String
 
+  /** TODO(tsr): add kdoc. */
   public abstract val compileClasspathName: String
+
+  /** TODO(tsr): add kdoc. */
   public abstract val runtimeClasspathName: String
 
+  /** TODO(tsr): add kdoc. */
   internal abstract fun base(): SourceKind
 
   /**
@@ -112,7 +117,7 @@ public data class AndroidSourceKind(
   }
 
   override fun compareTo(other: SourceKind): Int {
-    if (other is JvmSourceKind) return -1
+    if (other !is AndroidSourceKind) return 1
 
     return compareBy(SourceKind::name)
       .thenBy(SourceKind::kind)
@@ -224,7 +229,8 @@ public data class JvmSourceKind(
   }
 
   override fun compareTo(other: SourceKind): Int {
-    if (other is AndroidSourceKind) return 1
+    if (other is AndroidSourceKind) return -1
+    if (other is KmpSourceKind) return 1
 
     return compareBy(SourceKind::name)
       .thenBy(SourceKind::kind)
@@ -259,3 +265,271 @@ public data class JvmSourceKind(
     }
   }
 }
+
+// Notes:
+// kotlin source set: commonMain
+// - api            : commonMainApi
+// - implementation : commonMainImplementation
+// - compile-only   : commonMainCompileOnly
+// - runtime-only   : commonMainRuntimeOnly
+// kotlin source set: commonTest
+// - (and so on)
+// kotlin source set: iosArm64Main
+// kotlin source set: iosArm64Test
+// kotlin source set: iosSimulatorArm64Main
+// kotlin source set: iosSimulatorArm64Test
+// kotlin source set: jvmMain
+// kotlin source set: jvmTest
+//
+// source set: jvmMain
+// source set: jvmTest
+//
+// classpaths:
+// - jvmRuntimeClasspath
+// - jvmMainRuntimeClasspath
+// - jvmTestRuntimeClasspath
+// - jvmCompileClasspath
+// - jvmMainCompileClasspath
+// - jvmTestCompileClasspath
+//
+// - kotlinBuildToolsApiClasspath
+// - kotlinCompilerClasspath
+// - kotlinCompilerPluginClasspath
+// - kotlinCompilerPluginClasspathIosArm64Main
+// - (etc)
+@TypeLabel("kmp")
+@JsonClass(generateAdapter = false)
+public data class KmpSourceKind(
+  override val name: String,
+  override val kind: String,
+  override val compileClasspathName: String,
+  override val runtimeClasspathName: String,
+) : SourceKind(), Serializable {
+
+  override fun base(): KmpSourceKind {
+    // TODO(tsr): double-check this is correct.
+    return this
+  }
+
+  override fun runtimeMatches(classpaths: Collection<String>): Boolean {
+    // TODO(tsr): double-check this is correct.
+    return runtimeClasspathName in classpaths
+  }
+
+  override fun sourceSetMatches(sourceSetName: String): Boolean {
+    // TODO(tsr): double-check this is correct.
+    return sourceSetName == name
+  }
+
+  // TODO(tsr): need comprehensive unit tests for Comparable
+  override fun compareTo(other: SourceKind): Int {
+    if (other !is KmpSourceKind) return -1
+
+    return compareBy(SourceKind::name)
+      .thenBy(SourceKind::kind)
+      .thenBy(SourceKind::compileClasspathName)
+      .thenBy(SourceKind::runtimeClasspathName)
+      .compare(this, other)
+  }
+
+  // TODO(tsr): double-check this is correct.
+  internal companion object {
+    const val COMMON_MAIN_NAME = "commonMain"
+    const val COMMON_TEST_NAME = "commonTest"
+    const val JVM_MAIN_NAME = "jvmMain"
+    const val JVM_TEST_NAME = "jvmTest"
+
+    val JVM_MAIN = of(JVM_MAIN_NAME)
+    val JVM_TEST = of(JVM_TEST_NAME)
+
+    fun of(compilation: KotlinCompilation<*>): KmpSourceKind {
+      val runtimeClasspathName = compilation.runtimeDependencyConfigurationName
+        ?: error("Kotlin compilation ${compilation.name} has null 'runtimeDependencyConfigurationName'")
+
+      return KmpSourceKind(
+        name = compilation.defaultSourceSet.name,
+        // Always custom
+        kind = CUSTOM_JVM_KIND,
+        compileClasspathName = compilation.compileDependencyConfigurationName,
+        runtimeClasspathName = runtimeClasspathName,
+      )
+    }
+
+    fun of(sourceSetName: String): KmpSourceKind {
+      return KmpSourceKind(
+        name = sourceSetName,
+        // Always custom
+        kind = CUSTOM_JVM_KIND,
+//        when (sourceSetName) {
+//          SourceSet.MAIN_SOURCE_SET_NAME -> MAIN_KIND
+//          SourceSet.TEST_SOURCE_SET_NAME -> TEST_KIND
+//          else -> CUSTOM_JVM_KIND
+//        },
+        compileClasspathName = if (sourceSetName == JVM_MAIN_NAME) {
+          "jvmCompileClasspath"
+        } else {
+          "${sourceSetName}CompileClasspath"
+        },
+        runtimeClasspathName = if (sourceSetName == JVM_MAIN_NAME) {
+          "jvmRuntimeClasspath"
+        } else {
+          "${sourceSetName}RuntimeClasspath"
+        },
+      )
+    }
+  }
+}
+
+//configuration: archives
+//configuration: combinedGraphElements
+//configuration: commonMainApi
+//configuration: commonMainApiDependenciesMetadata
+//configuration: commonMainCompileOnly
+//configuration: commonMainCompileOnlyDependenciesMetadata
+//configuration: commonMainImplementation
+//configuration: commonMainImplementationDependenciesMetadata
+//configuration: commonMainIntransitiveDependenciesMetadata
+//configuration: commonMainRuntimeOnly
+//configuration: commonTestApi
+//configuration: commonTestApiDependenciesMetadata
+//configuration: commonTestCompileOnly
+//configuration: commonTestCompileOnlyDependenciesMetadata
+//configuration: commonTestImplementation
+//configuration: commonTestImplementationDependenciesMetadata
+//configuration: commonTestIntransitiveDependenciesMetadata
+//configuration: commonTestRuntimeOnly
+//configuration: default
+//configuration: iosArm64ApiElements
+//configuration: iosArm64CInterop
+//configuration: iosArm64CInteropApiElements
+//configuration: iosArm64CompilationApi
+//configuration: iosArm64CompilationCompileOnly
+//configuration: iosArm64CompilationDependenciesMetadata
+//configuration: iosArm64CompilationImplementation
+//configuration: iosArm64CompilationRuntimeOnly
+//configuration: iosArm64CompileKlibraries
+//configuration: iosArm64MainApi
+//configuration: iosArm64MainApiDependenciesMetadata
+//configuration: iosArm64MainCompileOnly
+//configuration: iosArm64MainCompileOnlyDependenciesMetadata
+//configuration: iosArm64MainImplementation
+//configuration: iosArm64MainImplementationDependenciesMetadata
+//configuration: iosArm64MainIntransitiveDependenciesMetadata
+//configuration: iosArm64MainRuntimeOnly
+//configuration: iosArm64MetadataElements
+//configuration: iosArm64SourcesElements
+//configuration: iosArm64TestApi
+//configuration: iosArm64TestApiDependenciesMetadata
+//configuration: iosArm64TestCInterop
+//configuration: iosArm64TestCompilationApi
+//configuration: iosArm64TestCompilationCompileOnly
+//configuration: iosArm64TestCompilationDependenciesMetadata
+//configuration: iosArm64TestCompilationImplementation
+//configuration: iosArm64TestCompilationRuntimeOnly
+//configuration: iosArm64TestCompileKlibraries
+//configuration: iosArm64TestCompileOnly
+//configuration: iosArm64TestCompileOnlyDependenciesMetadata
+//configuration: iosArm64TestImplementation
+//configuration: iosArm64TestImplementationDependenciesMetadata
+//configuration: iosArm64TestIntransitiveDependenciesMetadata
+//configuration: iosArm64TestRuntimeOnly
+//configuration: iosSimulatorArm64ApiElements
+//configuration: iosSimulatorArm64CInterop
+//configuration: iosSimulatorArm64CInteropApiElements
+//configuration: iosSimulatorArm64CompilationApi
+//configuration: iosSimulatorArm64CompilationCompileOnly
+//configuration: iosSimulatorArm64CompilationDependenciesMetadata
+//configuration: iosSimulatorArm64CompilationImplementation
+//configuration: iosSimulatorArm64CompilationRuntimeOnly
+//configuration: iosSimulatorArm64CompileKlibraries
+//configuration: iosSimulatorArm64MainApi
+//configuration: iosSimulatorArm64MainApiDependenciesMetadata
+//configuration: iosSimulatorArm64MainCompileOnly
+//configuration: iosSimulatorArm64MainCompileOnlyDependenciesMetadata
+//configuration: iosSimulatorArm64MainImplementation
+//configuration: iosSimulatorArm64MainImplementationDependenciesMetadata
+//configuration: iosSimulatorArm64MainIntransitiveDependenciesMetadata
+//configuration: iosSimulatorArm64MainRuntimeOnly
+//configuration: iosSimulatorArm64MetadataElements
+//configuration: iosSimulatorArm64SourcesElements
+//configuration: iosSimulatorArm64TestApi
+//configuration: iosSimulatorArm64TestApiDependenciesMetadata
+//configuration: iosSimulatorArm64TestCInterop
+//configuration: iosSimulatorArm64TestCompilationApi
+//configuration: iosSimulatorArm64TestCompilationCompileOnly
+//configuration: iosSimulatorArm64TestCompilationDependenciesMetadata
+//configuration: iosSimulatorArm64TestCompilationImplementation
+//configuration: iosSimulatorArm64TestCompilationRuntimeOnly
+//configuration: iosSimulatorArm64TestCompileKlibraries
+//configuration: iosSimulatorArm64TestCompileOnly
+//configuration: iosSimulatorArm64TestCompileOnlyDependenciesMetadata
+//configuration: iosSimulatorArm64TestImplementation
+//configuration: iosSimulatorArm64TestImplementationDependenciesMetadata
+//configuration: iosSimulatorArm64TestIntransitiveDependenciesMetadata
+//configuration: iosSimulatorArm64TestRuntimeOnly
+//configuration: jvmApiElements
+//configuration: jvmCompilationApi
+//configuration: jvmCompilationCompileOnly
+//configuration: jvmCompilationImplementation
+//configuration: jvmCompilationRuntimeOnly
+//configuration: jvmCompileClasspath
+//configuration: jvmMainAnnotationProcessor
+//configuration: jvmMainApi
+//configuration: jvmMainApiDependenciesMetadata
+//configuration: jvmMainCompileClasspath
+//configuration: jvmMainCompileOnly
+//configuration: jvmMainCompileOnlyDependenciesMetadata
+//configuration: jvmMainImplementation
+//configuration: jvmMainImplementationDependenciesMetadata
+//configuration: jvmMainIntransitiveDependenciesMetadata
+//configuration: jvmMainRuntimeClasspath
+//configuration: jvmMainRuntimeOnly
+//configuration: jvmRuntimeClasspath
+//configuration: jvmRuntimeElements
+//configuration: jvmSourcesElements
+//configuration: jvmTestAnnotationProcessor
+//configuration: jvmTestApi
+//configuration: jvmTestApiDependenciesMetadata
+//configuration: jvmTestCompilationApi
+//configuration: jvmTestCompilationCompileOnly
+//configuration: jvmTestCompilationImplementation
+//configuration: jvmTestCompilationRuntimeOnly
+//configuration: jvmTestCompileClasspath
+//configuration: jvmTestCompileOnly
+//configuration: jvmTestCompileOnlyDependenciesMetadata
+//configuration: jvmTestImplementation
+//configuration: jvmTestImplementationDependenciesMetadata
+//configuration: jvmTestIntransitiveDependenciesMetadata
+//configuration: jvmTestRuntimeClasspath
+//configuration: jvmTestRuntimeOnly
+//configuration: kapt
+//configuration: kaptTest
+//configuration: kotlinBuildToolsApiClasspath
+//configuration: kotlinCompilerClasspath
+//configuration: kotlinCompilerPluginClasspath
+//configuration: kotlinCompilerPluginClasspathIosArm64Main
+//configuration: kotlinCompilerPluginClasspathIosArm64Test
+//configuration: kotlinCompilerPluginClasspathIosSimulatorArm64Main
+//configuration: kotlinCompilerPluginClasspathIosSimulatorArm64Test
+//configuration: kotlinCompilerPluginClasspathJvmMain
+//configuration: kotlinCompilerPluginClasspathJvmTest
+//configuration: kotlinCompilerPluginClasspathMetadataMain
+//configuration: kotlinKlibCommonizerClasspath
+//configuration: kotlinNativeCompilerPluginClasspath
+//configuration: kotlinScriptDef
+//configuration: kotlinScriptDefExtensions
+//configuration: metadataApiElements
+//configuration: metadataCompilationApi
+//configuration: metadataCompilationCompileOnly
+//configuration: metadataCompilationImplementation
+//configuration: metadataCompilationRuntimeOnly
+//configuration: metadataCompileClasspath
+//configuration: metadataSourcesElements
+//configuration: projectHealthElements
+//configuration: resolvableIosArm64CompilationApi
+//configuration: resolvableIosArm64TestCompilationApi
+//configuration: resolvableIosSimulatorArm64CompilationApi
+//configuration: resolvableIosSimulatorArm64TestCompilationApi
+//configuration: resolvedDepsElements
+//configuration: testKotlinScriptDef
+//configuration: testKotlinScriptDefExtensions

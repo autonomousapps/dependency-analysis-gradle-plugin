@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.declaration
 
-import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
@@ -27,26 +26,30 @@ internal data class Declaration(
 ) : Comparable<Declaration> {
 
   override fun compareTo(other: Declaration): Int {
-    return compareBy(Declaration::identifier)
+    return compareBy(Declaration::configurationName)
+      .thenComparing(compareBy(Declaration::identifier))
       .thenComparing(compareBy<Declaration, String?>(nullsFirst()) { it.version })
-      .thenComparing(compareBy(Declaration::configurationName))
       .thenComparing(compareBy(Declaration::gradleVariantIdentification))
       .compare(this, other)
   }
 
-  val bucket: Bucket by unsafeLazy { Bucket.of(configurationName) }
+  private lateinit var _bucket: Bucket
+
+  fun bucket(configurationNames: ConfigurationNames): Bucket {
+    if (!::_bucket.isInitialized) {
+      _bucket = Bucket.of(configurationName, configurationNames)
+    }
+    return _bucket
+  }
 
   fun gav(): String = if (version != null) "$identifier:$version" else identifier
 
   fun sourceSetKind(
-    supportedSourceSets: Set<String>,
-    isAndroidProject: Boolean,
     hasCustomSourceSets: Boolean,
+    configurationNames: ConfigurationNames,
   ): SourceKind? {
-    return Configurations.sourceKindFrom(
-      configurationName,
-      supportedSourceSets,
-      isAndroidProject = isAndroidProject,
+    return configurationNames.sourceKindFrom(
+      configurationName = configurationName,
       hasCustomSourceSets = hasCustomSourceSets,
     )
   }

@@ -14,7 +14,7 @@ internal fun Project.buildPath(configurationName: String): Provider<String> {
   return if (GradleVersions.isAtLeastGradle910) {
     provider { gradle.buildPath }
   } else {
-    return buildPath(configurations.named(configurationName))
+    buildPath(configurations.named(configurationName))
   }
 }
 

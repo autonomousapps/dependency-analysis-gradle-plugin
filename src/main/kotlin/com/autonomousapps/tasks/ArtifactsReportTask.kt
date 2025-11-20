@@ -80,7 +80,7 @@ public abstract class ArtifactsReportTask : DefaultTask() {
     val output = output.getAndDelete()
     val excludedIdentifiersOutput = excludedIdentifiersOutput.getAndDelete()
 
-    val allArtifacts = toPhysicalArtifacts(artifacts.get())//artifacts)
+    val allArtifacts = toPhysicalArtifacts(artifacts.get())
     val excludedIdentifiers = getExcludedIdentifiers()
 
     output.bufferWriteJsonSet(allArtifacts)

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.transform
 
+import com.autonomousapps.ProjectType
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.model.source.SourceKind
@@ -9,7 +10,7 @@ import com.autonomousapps.model.source.SourceKind
 // TODO: add unit tests?
 internal class UsageToConfigurationMapper(
   private val isKaptApplied: Boolean,
-  private val isAndroidProject: Boolean,
+  private val projectType: ProjectType,
 ) {
 
   /** e.g., "debug" + "implementation" -> "debugImplementation" */
@@ -74,7 +75,7 @@ internal class UsageToConfigurationMapper(
   }
 
   private fun SourceKind.variantName(sourceKindName: String): String {
-    return if (isAndroidProject && name != sourceKindName) {
+    return if (projectType == ProjectType.ANDROID && name != sourceKindName) { // TODO(projectType)
       "$name${sourceKindName.replaceFirstChar(Char::uppercase)}"
     } else {
       sourceKindName

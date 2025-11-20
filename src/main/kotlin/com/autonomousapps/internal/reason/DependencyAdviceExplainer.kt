@@ -203,7 +203,7 @@ internal class DependencyAdviceExplainer(
         append("""* """)
         val prefix = when (variant.kind) {
           SourceKind.MAIN_KIND -> ""
-          SourceKind.CUSTOM_JVM_KIND -> variant.kind
+          SourceKind.CUSTOM_JVM_KIND -> variant.name
           else -> "test"
         }
         appendReproducibleNewLine(reason.reason(prefix, isCompileOnly))
