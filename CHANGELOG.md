@@ -1,5 +1,13 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.5.0
+* [Feat]: check binary compatibility between consumer and producer code.
+* [Feat]: support the com.google.cloud.tools.jib plugin as an application-type plugin.
+* [Fix]: 'reason' works for project dependencies.
+* [Fix]: strip empty lines from service loaders.
+* [Docs]: clarify compatibilities with other plugins.
+* [Docs]: document the existence of dependencyAnalysis.app().
+
 # Version 3.4.1
 * [Fix]: find runtime graph for `debugAndroidTest` sources.
 
