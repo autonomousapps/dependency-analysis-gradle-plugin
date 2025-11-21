@@ -12,7 +12,6 @@ import com.autonomousapps.model.internal.BinaryClassCapability
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import com.autonomousapps.visitor.GraphViewVisitor
-import kotlin.collections.forEach
 
 internal class BinaryCompatibilityChecker(
   private val coordinates: Coordinates,
@@ -46,11 +45,9 @@ internal class BinaryCompatibilityChecker(
     val relevantMemberAccesses = context.project.memberAccesses
       .filterToOrderedSet { access -> access.owner in relevantDuplicateClassNames }
 
-    val partitionResult = relevantMemberAccesses.mapToSet { access ->
+    val (matchingBinaryClasses, nonMatchingBinaryClasses) = relevantMemberAccesses.mapToSet { access ->
       binaryClassCapability.findMatchingClasses(access)
     }.reduce()
-    val matchingBinaryClasses = partitionResult.matchingClasses
-    val nonMatchingBinaryClasses = partitionResult.nonMatchingClasses
 
     // There must be a compatible BinaryClass.<field|method> for each MemberAccess for the usage to be binary-compatible
     val isBinaryCompatible = relevantMemberAccesses.all { access ->

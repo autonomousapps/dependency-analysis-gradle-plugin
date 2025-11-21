@@ -30,7 +30,6 @@ internal data class BinaryClass(
       .compare(this, other)
   }
 
-  // TODO(tsr): currently unused. Delete?
   internal class Builder(
     val className: String,
     val superClassName: String?,
