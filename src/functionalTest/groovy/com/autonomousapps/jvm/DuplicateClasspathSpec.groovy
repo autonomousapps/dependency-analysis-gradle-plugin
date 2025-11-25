@@ -14,6 +14,8 @@ import static com.google.common.truth.Truth.assertThat
 
 final class DuplicateClasspathSpec extends AbstractJvmSpec {
 
+  // TODO(tsr): missing test for when there's duplication and all accesses are in fact compatible.
+
   def "duplicates on the classpath can be fixed (#gradleVersion)"() {
     given:
     def project = new DuplicateClasspathProject()

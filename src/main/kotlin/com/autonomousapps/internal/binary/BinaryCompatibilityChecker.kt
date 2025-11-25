@@ -73,9 +73,13 @@ internal class BinaryCompatibilityChecker(
     val relevantMemberAccesses = context.project.memberAccesses
       .filterToOrderedSet { access -> access.owner in relevantDuplicateClassNames }
 
+    if (relevantMemberAccesses.isEmpty()) return null
+
     val (matchingBinaryClasses, nonMatchingBinaryClasses) = relevantMemberAccesses.mapToSet { access ->
       binaryClassCapability.findMatchingClasses(access)
     }.reduce()
+
+    if (nonMatchingBinaryClasses.isEmpty()) return null
 
     // There must be a compatible BinaryClass.<field|method> for each MemberAccess for the usage to be binary-compatible
     val isBinaryCompatible = relevantMemberAccesses.all { access ->
@@ -204,11 +208,11 @@ internal class BinaryCompatibilityChecker(
    * it's only called on "relevant" classes. THIS class, however, can, via [findRelevantBinaryClasses].
    */
   private fun BinaryClass.partition(memberAccess: MemberAccess): Pair<BinaryClass?, BinaryClass?> {
-    // There can be only one match
+    // There can be only one match: [0, 1]
     val matchingFields = effectivelyPublicFields.firstOrNull { it.matches(memberAccess) }
     val matchingMethods = effectivelyPublicMethods.firstOrNull { it.matches(memberAccess) }
 
-    // There can be many non-matches
+    // There can be many non-matches: [0, ∞]
     val nonMatchingFields = effectivelyPublicFields.filterToOrderedSet { it.doesNotMatch(memberAccess) }
     val nonMatchingMethods = effectivelyPublicMethods.filterToOrderedSet { it.doesNotMatch(memberAccess) }
 
