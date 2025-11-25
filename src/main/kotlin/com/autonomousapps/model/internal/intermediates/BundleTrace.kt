@@ -11,7 +11,48 @@ import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 internal sealed class BundleTrace(
   val top: Coordinates,
   val bottom: Coordinates
-) {
+) : Comparable<BundleTrace> {
+
+  override fun compareTo(other: BundleTrace): Int {
+    return when (this) {
+      is DeclaredParent -> {
+        when (other) {
+          is DeclaredParent -> {
+            compareBy(DeclaredParent::parent)
+              .thenBy(DeclaredParent::child)
+              .compare(this, other)
+          }
+
+          else -> 1
+        }
+      }
+
+      is UsedChild -> {
+        when (other) {
+          is UsedChild -> {
+            compareBy(UsedChild::parent)
+              .thenBy(UsedChild::child)
+              .compare(this, other)
+          }
+
+          is DeclaredParent -> -1
+          else -> 1
+        }
+      }
+
+      is PrimaryMap -> {
+        when (other) {
+          is PrimaryMap -> {
+            compareBy(PrimaryMap::primary)
+              .thenBy(PrimaryMap::subordinate)
+              .compare(this, other)
+          }
+
+          else -> -1
+        }
+      }
+    }
+  }
 
   @TypeLabel("parent")
   @JsonClass(generateAdapter = false)
@@ -34,4 +75,3 @@ internal sealed class BundleTrace(
     val subordinate: Coordinates
   ) : BundleTrace(primary, subordinate)
 }
-

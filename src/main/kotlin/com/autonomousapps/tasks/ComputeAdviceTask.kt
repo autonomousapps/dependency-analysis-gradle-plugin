@@ -282,7 +282,7 @@ internal class DependencyAdviceBuilder(
   val advice: Set<Advice>
 
   /** Dependencies that are removed from [advice] because they match a bundle rule. Used by **Reason**. */
-  val bundledTraces = mutableSetOf<BundleTrace>()
+  val bundledTraces: MutableSet<BundleTrace> = sortedSetOf()
 
   init {
     advice = computeDependencyAdvice(projectPath)
@@ -333,7 +333,7 @@ internal class DependencyAdviceBuilder(
 
           advice.isAdd() && bundles.hasParentInBundle(originalCoordinates) -> {
             val parent = bundles.findParentInBundle(originalCoordinates)!!
-            bundledTraces += BundleTrace.DeclaredParent(parent = parent, child = originalCoordinates)
+            bundledTraces.add(BundleTrace.DeclaredParent(parent = parent, child = originalCoordinates))
             null
           }
 
@@ -341,21 +341,21 @@ internal class DependencyAdviceBuilder(
           advice.isAdd() -> {
             val p = bundles.maybePrimary(advice, originalCoordinates)
             if (p != advice) {
-              bundledTraces += BundleTrace.PrimaryMap(primary = p.coordinates, subordinate = originalCoordinates)
+              bundledTraces.add(BundleTrace.PrimaryMap(primary = p.coordinates, subordinate = originalCoordinates))
             }
             p
           }
 
           advice.isRemove() && bundles.hasUsedChild(originalCoordinates) -> {
             val child = bundles.findUsedChild(originalCoordinates)!!
-            bundledTraces += BundleTrace.UsedChild(parent = originalCoordinates, child = child)
+            bundledTraces.add(BundleTrace.UsedChild(parent = originalCoordinates, child = child))
             null
           }
 
           // If the advice has a used child, don't change it
           advice.isAnyChange() && bundles.hasUsedChild(originalCoordinates) -> {
             val child = bundles.findUsedChild(originalCoordinates)!!
-            bundledTraces += BundleTrace.UsedChild(parent = originalCoordinates, child = child)
+            bundledTraces.add(BundleTrace.UsedChild(parent = originalCoordinates, child = child))
             null
           }
 
