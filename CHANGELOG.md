@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.5.1
+* [Fix]: don't try to process a non-match as a binary incompatibility.
+* [Fix]: use version catalog when applying the build-health plugin.
+* [Fix]: bundleTraces is a sortedSet and BundleTrace is Comparable.
+
 # Version 3.5.0
 * [Feat]: check binary compatibility between consumer and producer code.
 * [Feat]: support the com.google.cloud.tools.jib plugin as an application-type plugin.
