@@ -18,6 +18,8 @@ import javax.inject.Inject
  *     exclusions {
  *       excludeSourceSets(/* source sets to exclude from ABI analysis */)
  *
+ *       includeClasses(".*\\api\\..*")
+ *       includeAnnotations(".*\\.PublicApi")
  *       ignoreSubPackage("internal")
  *       ignoreInternalPackages()
  *       ignoreGeneratedCode()
@@ -40,10 +42,28 @@ public abstract class AbiHandler @Inject constructor(objects: ObjectFactory) {
 /** @see [AbiHandler]. */
 public abstract class ExclusionsHandler @Inject constructor(objects: ObjectFactory) {
 
+  internal val classInclusions = objects.setProperty(String::class.java).convention(emptySet())
+  internal val annotationInclusions = objects.setProperty(String::class.java).convention(emptySet())
   internal val classExclusions = objects.setProperty(String::class.java).convention(emptySet())
   internal val annotationExclusions = objects.setProperty(String::class.java).convention(emptySet())
   internal val pathExclusions = objects.setProperty(String::class.java).convention(emptySet())
   internal val excludedSourceSets = objects.setProperty(String::class.java).convention(emptySet())
+
+  /**
+   * Include given classes into ABI analysis, which means that any class that does not match the given [classRegexes] regex
+   * will not be considered as part of the module's ABI.
+   */
+  public fun includeClasses(@Language("RegExp") vararg classRegexes: String) {
+    classInclusions.addAll(*classRegexes)
+  }
+
+  /**
+   * Include all classes into ABI analysis that are annotated with annotations matching the given [annotationRegexes] regex. 
+   * Any class without matching annotations will be excluded from ABI analysis.
+   */
+  public fun includeAnnotations(@Language("RegExp") vararg annotationRegexes: String) {
+    annotationInclusions.addAll(*annotationRegexes)
+  }
 
   /**
    * Exclude the given [sourceSets] from ABI analysis, which means that regardless of the level of exposure of any given

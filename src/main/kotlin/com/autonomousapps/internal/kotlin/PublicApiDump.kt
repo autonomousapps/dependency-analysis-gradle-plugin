@@ -161,6 +161,14 @@ internal fun List<ClassBinarySignature>.filterOutNonPublic(
 ): List<ClassBinarySignature> {
   val classByName = associateBy { it.name }
 
+  fun ClassBinarySignature.isIncluded(): Boolean {
+    return exclusions.includeAll() ||
+      exclusions.includesClass(canonicalName) ||
+      annotations.any(exclusions::includesAnnotation) ||
+      invisibleAnnotations.any(exclusions::includesAnnotation) ||
+      memberSignatures.any { it.annotations.any(exclusions::includesAnnotation) }
+  }
+
   // Library note - this function (plus the exclusions parameter above) are modified from the original
   // Kotlin sources this was borrowed from.
   fun ClassBinarySignature.isExcluded(): Boolean {
@@ -196,7 +204,7 @@ internal fun List<ClassBinarySignature>.filterOutNonPublic(
   }
 
   return filter {
-    !it.isExcluded() && it.isPublicAndAccessible()
+    it.isIncluded() && !it.isExcluded() && it.isPublicAndAccessible()
   }.map {
     it.flattenNonPublicBases()
   }.filterNot {
