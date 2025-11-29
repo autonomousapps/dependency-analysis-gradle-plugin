@@ -4,7 +4,6 @@ package com.autonomousapps.kit.truth.artifact
 
 import com.autonomousapps.kit.truth.AbstractSubject
 import com.google.common.truth.*
-import com.google.common.truth.Subject.Factory
 import com.google.errorprone.annotations.CanIgnoreReturnValue
 import java.nio.charset.Charset
 import java.nio.file.Path
