@@ -5,7 +5,6 @@ package com.autonomousapps.kit.truth.artifact
 import com.autonomousapps.kit.truth.AbstractSubject
 import com.google.common.truth.Fact
 import com.google.common.truth.FailureMetadata
-import com.google.common.truth.Subject.Factory
 import com.google.common.truth.Truth
 import java.nio.file.FileSystems
 import java.nio.file.Files

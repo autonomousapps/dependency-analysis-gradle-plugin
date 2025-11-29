@@ -9,7 +9,6 @@ import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import com.autonomousapps.model.internal.intermediates.producer.Constant
 import com.autonomousapps.model.internal.intermediates.producer.Member
-import com.autonomousapps.model.internal.intermediates.producer.ReflectingDependency
 import com.autonomousapps.model.internal.intermediates.producer.ReflectingDependency.ReflectiveAccess
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
