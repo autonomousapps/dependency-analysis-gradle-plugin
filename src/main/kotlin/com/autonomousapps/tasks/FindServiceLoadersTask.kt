@@ -6,7 +6,6 @@ import com.autonomousapps.internal.ANNOTATION_PROCESSOR_PATH
 import com.autonomousapps.internal.SERVICE_LOADER_PATH
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.filterNonGradle
-import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.internal.intermediates.producer.ServiceLoaderDependency

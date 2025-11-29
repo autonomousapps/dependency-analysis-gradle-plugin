@@ -4,7 +4,6 @@ package com.autonomousapps.kit.truth
 
 import com.google.common.collect.Iterables
 import com.google.common.truth.FailureMetadata
-import com.google.common.truth.Subject.Factory
 import com.google.common.truth.Truth.assertAbout
 import com.google.errorprone.annotations.CanIgnoreReturnValue
 import org.gradle.testkit.runner.BuildTask

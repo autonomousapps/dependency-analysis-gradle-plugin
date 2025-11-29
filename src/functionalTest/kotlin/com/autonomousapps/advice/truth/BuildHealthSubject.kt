@@ -8,7 +8,6 @@ import com.autonomousapps.model.ModuleAdvice
 import com.autonomousapps.model.ProjectAdvice
 import com.google.common.truth.*
 import com.google.common.truth.Fact.simpleFact
-import com.google.common.truth.Subject.Factory
 import com.google.common.truth.Truth.assertAbout
 
 class BuildHealthSubject private constructor(
@@ -77,7 +76,7 @@ class BuildHealthSubject private constructor(
       .comparingElementsUsing(DEPENDENCY_EQUIVALENCE)
       .containsExactlyElementsIn(pairs(expected))
   }
-  
+
   fun isEquivalentIgnoringModuleAdviceAndWarnings(expected: Iterable<ProjectAdvice>) {
     if (actual == null) failWithActual(simpleFact("build health was null"))
     assertThat(actual)
