@@ -985,6 +985,8 @@ internal class ProjectPlugin(private val project: Project) {
       // lazy ABI JSON
       with(dagpExtension.abiHandler.exclusionsHandler) {
         AbiExclusions(
+          annotationInclusions = annotationInclusions.get(),
+          classInclusions = classInclusions.get(),
           annotationExclusions = annotationExclusions.get(),
           classExclusions = classExclusions.get(),
           pathExclusions = pathExclusions.get()

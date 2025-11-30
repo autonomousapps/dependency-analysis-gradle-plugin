@@ -119,10 +119,18 @@ internal data class Method(val types: Set<String>) {
 
 @JsonClass(generateAdapter = false)
 internal data class AbiExclusions(
+  val annotationInclusions: Set<String> = emptySet(),
+  val classInclusions: Set<String> = emptySet(),
   val annotationExclusions: Set<String> = emptySet(),
   val classExclusions: Set<String> = emptySet(),
   val pathExclusions: Set<String> = emptySet(),
 ) {
+
+  @Transient
+  private val includeAnnotationRegexes = annotationInclusions.mapToSet(String::toRegex)
+
+  @Transient
+  private val includeClassRegexes = classInclusions.mapToSet(String::toRegex)
 
   @Transient
   private val annotationRegexes = annotationExclusions.mapToSet(String::toRegex)
@@ -133,6 +141,9 @@ internal data class AbiExclusions(
   @Transient
   private val pathRegexes = pathExclusions.mapToSet(String::toRegex)
 
+  fun includeAll() = includeAnnotationRegexes.isEmpty() && includeClassRegexes.isEmpty()
+  fun includesAnnotation(fqcn: String): Boolean = includeAnnotationRegexes.any { it.containsMatchIn(fqcn.binaryToHuman()) }
+  fun includesClass(fqcn: String) = includeClassRegexes.any { it.containsMatchIn(fqcn.binaryToHuman()) }
   fun excludesAnnotation(fqcn: String): Boolean = annotationRegexes.any { it.containsMatchIn(fqcn.binaryToHuman()) }
   fun excludesClass(fqcn: String) = classRegexes.any { it.containsMatchIn(fqcn.binaryToHuman()) }
   fun excludesPath(path: String) = pathRegexes.any { it.containsMatchIn(path) }
