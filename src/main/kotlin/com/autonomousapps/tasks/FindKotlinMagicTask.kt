@@ -221,9 +221,7 @@ internal class KotlinMagicFinder(
           return KotlinCapabilities.EMPTY
         }
 
-        artifact.file.walkBottomUp()
-          .filter { it.isFile }
-          .filterToClassFiles()
+        artifact.file.asSequenceOfClassFiles()
           .mapNotNull { classFile ->
             val kotlinMagic = readClass(
               classFile.inputStream().use { ClassReader(it.readBytes()) },

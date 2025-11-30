@@ -4,7 +4,6 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.asSequenceOfClassFiles
-import com.autonomousapps.internal.utils.filterToClassFiles
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.model.internal.KtFile
 import com.autonomousapps.model.internal.PhysicalArtifact
@@ -78,9 +77,7 @@ internal class JarExploder(
       Mode.CLASSES -> {
         ktFiles = KtFile.fromDirectory(artifact.file)
 
-        artifact.file.walkBottomUp()
-          .filter { it.isFile }
-          .filterToClassFiles()
+        artifact.file.asSequenceOfClassFiles()
           .map { classFile ->
             ClassNameAndAnnotationsVisitor(logger).apply {
               val reader = classFile.inputStream().use { ClassReader(it.readBytes()) }
