@@ -58,8 +58,13 @@ internal fun Iterable<ZipEntry>.asSequenceOfClassFiles(): Sequence<ZipEntry> {
 
 // Can't use Iterable<File> because of signature clash with Iterable<ZipEntry> above.
 internal fun Collection<File>.asSequenceOfClassFiles(): Sequence<File> {
-  return asSequence().filter { it.extension == "class" && !it.name.endsWith("module-info.class") }
+  return asSequence().filterToClassFiles()
 }
+
+internal fun Sequence<File>.filterToClassFiles(): Sequence<File> {
+  return filter { it.extension == "class" && !it.name.endsWith("module-info.class") }
+}
+
 
 internal fun Iterable<File>.filterToClassFiles(): List<File> {
   return filter { it.extension == "class" && !it.name.endsWith("module-info.class") }
