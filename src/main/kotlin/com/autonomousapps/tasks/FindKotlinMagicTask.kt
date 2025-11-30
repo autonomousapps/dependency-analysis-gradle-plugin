@@ -150,34 +150,6 @@ internal class KotlinMagicFinder(
     typealiases = typealiasesMut
   }
 
-  // private fun analyzeDependencies(): Set<InlineMemberDependency> {
-  //   val inlineMembers = mutableSetOf<InlineMemberDependency>()
-  //   val typealiases = mutableSetOf<TypealiasDependency>()
-  //
-  //   artifacts.asSequence()
-  //     .filter {
-  //       it.isJar() || it.containsClassFiles()
-  //     }.map { artifact ->
-  //       artifact to findKotlinMagic(artifact, artifact.mode)
-  //     }.forEach { (artifact, capabilities) ->
-  //       if (capabilities.inlineMembers.isNotEmpty()) {
-  //         inlineMembers += InlineMemberDependency(artifact.coordinates, capabilities.inlineMembers)
-  //       }
-  //       if (capabilities.typealiases.isNotEmpty()) {
-  //         typealiases += TypealiasDependency(artifact.coordinates, capabilities.typealiases)
-  //       }
-  //     }
-  //
-  //   // return artifacts.asSequence()
-  //   //   .filter {
-  //   //     it.isJar() || it.containsClassFiles()
-  //   //   }.map { artifact ->
-  //   //     artifact to findKotlinMagic(artifact, artifact.mode)
-  //   //   }.map { (artifact, capabilities) ->
-  //   //     InlineMemberDependency(artifact.coordinates, inlineMembers)
-  //   //   }.toSortedSet()
-  // }
-
   /**
    * Returns either an empty set, if there are no inline members, or a set of [InlineMemberCapability.InlineMember]s
    * (import candidates). E.g.:
