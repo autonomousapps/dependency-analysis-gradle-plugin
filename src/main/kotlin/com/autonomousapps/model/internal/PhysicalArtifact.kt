@@ -5,6 +5,9 @@ package com.autonomousapps.model.internal
 import com.autonomousapps.PROJECT_LOGGER
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
+import com.autonomousapps.internal.artifacts.processing.Artifact
+import com.autonomousapps.internal.artifacts.processing.DirectoryArtifact
+import com.autonomousapps.internal.artifacts.processing.ZipArtifact
 import com.squareup.moshi.JsonClass
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import java.io.File
@@ -16,18 +19,18 @@ internal data class PhysicalArtifact(
   val file: File,
 ) : Comparable<PhysicalArtifact> {
 
-  enum class Mode {
-    ZIP,
-    CLASSES
-  }
-
   init {
     check(isJar() || containsClassFiles()) {
       "'file' must either be a jar or a directory that contains class files. Was '$file'"
     }
   }
 
-  val mode: Mode = if (isJar()) Mode.ZIP else Mode.CLASSES
+  fun <R> withContent(action: (Artifact) -> R): R =
+    if (isJar()) {
+      ZipArtifact(file).use { action(it) }
+    } else {
+      action(DirectoryArtifact(file))
+    }
 
   fun isJar(): Boolean = isJar(file)
   fun containsClassFiles(): Boolean = containsClassFiles(file)

@@ -3,17 +3,14 @@
 package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.ClassReader
-import com.autonomousapps.internal.utils.asSequenceOfClassFiles
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.model.internal.KtFile
 import com.autonomousapps.model.internal.PhysicalArtifact
-import com.autonomousapps.model.internal.PhysicalArtifact.Mode
 import com.autonomousapps.model.internal.intermediates.producer.AndroidLinterDependency
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.ExplodeJarTask
-import java.util.zip.ZipFile
 
 internal class JarExploder(
   private val artifacts: List<PhysicalArtifact>,
@@ -34,15 +31,9 @@ internal class JarExploder(
 
   private fun Sequence<PhysicalArtifact>.toExplodedJars(): Set<ExplodedJar> =
     map { artifact ->
-      val explodedJar = if (artifact.isJar()) {
-        explode(artifact, Mode.ZIP)
-      } else {
-        explode(artifact, Mode.CLASSES)
-      }
-
       ExplodedJar(
         artifact = artifact,
-        exploding = explodedJar
+        exploding = explode(artifact)
       )
     }.toSortedSet()
 
@@ -54,52 +45,34 @@ internal class JarExploder(
    * jars. It seems that the behavior when requesting the "android-classes" artifact view has changed (previously we'd
    * get jars, but now we get class files).
    */
-  private fun explode(artifact: PhysicalArtifact, mode: Mode): ExplodingJar {
+  private fun explode(artifact: PhysicalArtifact): ExplodingJar {
     val entry = findInCache(artifact)
     if (entry != null) return entry
 
-    val ktFiles: Set<KtFile>
+    return artifact.withContent { content ->
 
-    val visitors = when (mode) {
-      Mode.ZIP -> {
-        ZipFile(artifact.file).use { zip ->
-          ktFiles = KtFile.fromZip(zip)
+      val ktFiles: Set<KtFile> = content.ktFiles()
 
-          zip.asSequenceOfClassFiles()
-            .map { classEntry ->
-              ClassNameAndAnnotationsVisitor(logger).apply {
-                val reader = zip.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
-                reader.accept(this, 0)
-              }
-            }.toList()
+      val visitors = content.asSequenceOfClassFiles().map { classFile ->
+        ClassNameAndAnnotationsVisitor(logger).apply {
+          val reader = ClassReader(classFile.readBytes())
+          reader.accept(this, 0)
         }
       }
 
-      Mode.CLASSES -> {
-        ktFiles = KtFile.fromDirectory(artifact.file)
+      val analyzedClasses = visitors.map { it.getAnalyzedClass() }
+        .filterNot {
+          // Filter out `java` packages, but not `javax`
+          it.className.startsWith("java.")
+        }
+        .toSortedSet()
 
-        artifact.file.asSequenceOfClassFiles()
-          .map { classFile ->
-            ClassNameAndAnnotationsVisitor(logger).apply {
-              val reader = classFile.inputStream().use { ClassReader(it.readBytes()) }
-              reader.accept(this, 0)
-            }
-          }.toList()
-      }
+      ExplodingJar(
+        analyzedClasses = analyzedClasses,
+        ktFiles = ktFiles,
+        androidLintRegistry = findAndroidLinter(artifact)
+      ).also { putInCache(artifact, it) }
     }
-
-    val analyzedClasses = visitors.map { it.getAnalyzedClass() }
-      .filterNot {
-        // Filter out `java` packages, but not `javax`
-        it.className.startsWith("java.")
-      }
-      .toSortedSet()
-
-    return ExplodingJar(
-      analyzedClasses = analyzedClasses,
-      ktFiles = ktFiles,
-      androidLintRegistry = findAndroidLinter(artifact)
-    ).also { putInCache(artifact, it) }
   }
 
   private fun findInCache(artifact: PhysicalArtifact): ExplodingJar? {
