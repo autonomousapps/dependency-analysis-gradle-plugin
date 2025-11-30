@@ -56,6 +56,11 @@ internal fun Iterable<ZipEntry>.asSequenceOfClassFiles(): Sequence<ZipEntry> {
   }
 }
 
+internal fun File.asSequenceOfClassFiles(): Sequence<File> {
+  check(isDirectory) { "Expected directory. Was '${absolutePath}'" }
+  return walkBottomUp().filter { it.isFile }.filterToClassFiles()
+}
+
 // Can't use Iterable<File> because of signature clash with Iterable<ZipEntry> above.
 internal fun Collection<File>.asSequenceOfClassFiles(): Sequence<File> {
   return asSequence().filterToClassFiles()
