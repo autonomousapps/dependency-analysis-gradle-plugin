@@ -193,7 +193,7 @@ internal class KotlinMagicFinder(
               // TODO an entry with `META-INF/proguard/androidx-annotations.pro`
               val kotlinMagic = readClass(
                 zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) },
-                entry.toString()
+                entry.name
               ) ?: return@mapNotNull null
 
               entry to kotlinMagic
@@ -226,7 +226,7 @@ internal class KotlinMagicFinder(
           .mapNotNull { classFile ->
             val kotlinMagic = readClass(
               classFile.inputStream().use { ClassReader(it.readBytes()) },
-              classFile.toString()
+              Files.asPackagePath(classFile)
             ) ?: return@mapNotNull null
 
             classFile to kotlinMagic
@@ -267,7 +267,7 @@ internal class KotlinMagicFinder(
   }
 
   /** Returned set is either null or non-empty. */
-  private fun readClass(classReader: ClassReader, classFile: String): KotlinMagic? {
+  private fun readClass(classReader: ClassReader, packagePath: String): KotlinMagic? {
     val metadataVisitor = KotlinMetadataVisitor(logger)
     classReader.accept(metadataVisitor, 0)
 
@@ -283,8 +283,8 @@ internal class KotlinMagicFinder(
       val metadata = try {
         KotlinClassMetadata.readLenient(header.build())
       } catch (_: IllegalArgumentException) {
-        logger.debug("Can't read class file '$classFile'")
-        errorsReport.appendText("Can't read class file '$classFile'\n")
+        logger.debug("Can't read class file '$packagePath'")
+        errorsReport.appendText("Can't read class file '$packagePath'\n")
         didWriteErrors = true
         return null
       }
@@ -305,9 +305,9 @@ internal class KotlinMagicFinder(
           typealiases = typealiases(metadata.kmPackage)
         }
 
-        is KotlinClassMetadata.SyntheticClass -> logger.debug("Ignoring SyntheticClass $classFile")
-        is KotlinClassMetadata.MultiFileClassFacade -> logger.debug("Ignoring MultiFileClassFacade $classFile")
-        is KotlinClassMetadata.Unknown -> logger.debug("Ignoring Unknown $classFile")
+        is KotlinClassMetadata.SyntheticClass -> logger.debug("Ignoring SyntheticClass $packagePath")
+        is KotlinClassMetadata.MultiFileClassFacade -> logger.debug("Ignoring MultiFileClassFacade $packagePath")
+        is KotlinClassMetadata.Unknown -> logger.debug("Ignoring Unknown $packagePath")
       }
     } ?: return null
 
