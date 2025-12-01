@@ -4,6 +4,7 @@ package com.autonomousapps
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.model.*
+import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdLib
 
@@ -167,5 +168,9 @@ final class AdviceHelper {
 
   static List<String> resolvedDependenciesReport(GradleProject gradleProject, String projectPath) {
     return STRATEGY.getResolvedDependenciesReport(gradleProject, projectPath)
+  }
+
+  static Set<ExplodedJar> explodedJarsForProjectAndVariant(GradleProject gradleProject, String projectPath, String variantName) {
+    return STRATEGY.getExplodedJarsForProjectAndVariant(gradleProject, projectPath, variantName)
   }
 }
