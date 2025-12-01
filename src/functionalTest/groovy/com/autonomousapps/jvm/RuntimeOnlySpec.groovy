@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm
 
+import com.autonomousapps.jvm.projects.AdvancedReflectionProject
 import com.autonomousapps.jvm.projects.ImplRuntimeTestImplConfusionProject
 import com.autonomousapps.jvm.projects.ReflectionProject
 import com.autonomousapps.jvm.projects.TransitiveRuntimeProject
 import com.autonomousapps.utils.Colors
+import spock.lang.Ignore
+import spock.lang.PendingFeature
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -72,6 +75,22 @@ final class RuntimeOnlySpec extends AbstractJvmSpec {
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
     assertThat(Colors.decolorize(result.output)).contains('* Accessed 3 times by reflection: (1) the-project:uses-reflection in class com.example.reflection.UsesReflection: com.example.direct.Direct, (2) the-project:uses-reflection in class com.example.reflection.UsesReflection: com.example.direct.Direct$Inner, (3) the-project:uses-reflection in class com.example.reflection.UsesReflection: com.example.direct.Direct$StaticInner (implies runtimeOnly).')
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  @PendingFeature(reason = "https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1613")
+  def "detects advanced uses of Class forName (#gradleVersion)"() {
+    given:
+    def project = new AdvancedReflectionProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     gradleVersion << gradleVersions()
