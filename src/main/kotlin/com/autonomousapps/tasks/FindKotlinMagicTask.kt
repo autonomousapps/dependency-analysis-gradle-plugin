@@ -181,39 +181,40 @@ internal class KotlinMagicFinder(
 
     when (mode) {
       Mode.ZIP -> {
-        val zipFile = ZipFile(artifact.file)
-        val entries = zipFile.entries().toList()
-        // Only look at jars that have actual Kotlin classes in them
-        if (entries.none { it.name.endsWith(".kotlin_module") }) {
-          return KotlinCapabilities.EMPTY
+        ZipFile(artifact.file).use { zipFile ->
+          val entries = zipFile.entries().toList()
+          // Only look at jars that have actual Kotlin classes in them
+          if (entries.none { it.name.endsWith(".kotlin_module") }) {
+            return KotlinCapabilities.EMPTY
+          }
+
+          entries.asSequenceOfClassFiles()
+            .mapNotNull { entry ->
+              // TODO an entry with `META-INF/proguard/androidx-annotations.pro`
+              val kotlinMagic = readClass(
+                zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) },
+                entry.toString()
+              ) ?: return@mapNotNull null
+
+              entry to kotlinMagic
+            }
+            .forEach { (entry, kotlinMagic) ->
+              if (kotlinMagic.inlineMembers != null) {
+                inlineMembers += InlineMemberCapability.InlineMember.newInstance(
+                  packageName = packageName(entry.name),
+                  // Guaranteed to be non-empty
+                  inlineMembers = kotlinMagic.inlineMembers
+                )
+              }
+
+              if (kotlinMagic.typealiases != null) {
+                typealiases += TypealiasCapability.Typealias.newInstance(
+                  packageName = packageName(entry.name),
+                  typealiases = kotlinMagic.typealiases
+                )
+              }
+            }
         }
-
-        entries.asSequenceOfClassFiles()
-          .mapNotNull { entry ->
-            // TODO an entry with `META-INF/proguard/androidx-annotations.pro`
-            val kotlinMagic = readClass(
-              zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) },
-              entry.toString()
-            ) ?: return@mapNotNull null
-
-            entry to kotlinMagic
-          }
-          .forEach { (entry, kotlinMagic) ->
-            if (kotlinMagic.inlineMembers != null) {
-              inlineMembers += InlineMemberCapability.InlineMember.newInstance(
-                packageName = packageName(entry.name),
-                // Guaranteed to be non-empty
-                inlineMembers = kotlinMagic.inlineMembers
-              )
-            }
-
-            if (kotlinMagic.typealiases != null) {
-              typealiases += TypealiasCapability.Typealias.newInstance(
-                packageName = packageName(entry.name),
-                typealiases = kotlinMagic.typealiases
-              )
-            }
-          }
       }
 
       Mode.CLASSES -> {

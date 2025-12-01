@@ -62,16 +62,17 @@ internal class JarExploder(
 
     val visitors = when (mode) {
       Mode.ZIP -> {
-        val zip = ZipFile(artifact.file)
-        ktFiles = KtFile.fromZip(zip)
+        ZipFile(artifact.file).use { zip ->
+          ktFiles = KtFile.fromZip(zip)
 
-        zip.asSequenceOfClassFiles()
-          .map { classEntry ->
-            ClassNameAndAnnotationsVisitor(logger).apply {
-              val reader = zip.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
-              reader.accept(this, 0)
-            }
-          }
+          zip.asSequenceOfClassFiles()
+            .map { classEntry ->
+              ClassNameAndAnnotationsVisitor(logger).apply {
+                val reader = zip.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
+                reader.accept(this, 0)
+              }
+            }.toList()
+        }
       }
 
       Mode.CLASSES -> {
@@ -83,7 +84,7 @@ internal class JarExploder(
               val reader = classFile.inputStream().use { ClassReader(it.readBytes()) }
               reader.accept(this, 0)
             }
-          }
+          }.toList()
       }
     }
 
