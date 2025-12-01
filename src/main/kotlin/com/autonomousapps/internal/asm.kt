@@ -122,15 +122,15 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       methods.add(Method(descriptor))
     }
 
-     if (isEffectivelyPublic(access)) {
-       effectivelyPublicMethods.add(
-         Member.Method(
-           access = access,
-           name = name,
-           descriptor = descriptor,
-         )
-       )
-     }
+    if (isEffectivelyPublic(access)) {
+      effectivelyPublicMethods.add(
+        Member.Method(
+          access = access,
+          name = name,
+          descriptor = descriptor,
+        )
+      )
+    }
 
     return methodAnalyzer
   }
@@ -154,15 +154,15 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       )
     }
 
-     if (isEffectivelyPublic(access)) {
-       effectivelyPublicFields.add(
-         Member.Field(
-           access = access,
-           name = name,
-           descriptor = descriptor,
-         )
-       )
-     }
+    if (isEffectivelyPublic(access)) {
+      effectivelyPublicFields.add(
+        Member.Field(
+          access = access,
+          name = name,
+          descriptor = descriptor,
+        )
+      )
+    }
 
     return null
   }
