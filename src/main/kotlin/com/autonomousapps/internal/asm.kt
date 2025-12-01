@@ -239,6 +239,10 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     ) {
       log { "  - MethodAnalyzer#visitMethodInsn: $owner.$name $descriptor" }
 
+      if (opcode != Opcodes.INVOKESTATIC) {
+        return
+      }
+
       // This will be a fully-qualified class name like `com.foo.Bar` or `com.foo.Bar$Inner`.
       val lastConstant = ldcConstants.lastOrNull()
       if ("$owner.$name" == "java/lang/Class.forName" && lastConstant?.descriptor == LdcConstant.STRING) {
