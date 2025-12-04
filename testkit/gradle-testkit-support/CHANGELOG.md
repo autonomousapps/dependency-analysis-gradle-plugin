@@ -12,6 +12,7 @@ Gradle TestKit Support Changelog
 # Version 0.19
 * [Feat]: Add `onPlatform()` and `onEnforcedPlatform()` convenience functions to `Dependency`.
 * [Feat]: Build with Gradle 9.0.0, change API to non-nullable.
+* [Feat]: infer package and classname when possible, when building `kit.Source`.
 
 # Version 0.18
 * [New]: support passing custom environments to testkit. Add docs.
