@@ -34,6 +34,7 @@ import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -90,6 +91,8 @@ internal class ProjectPlugin(private val project: Project) {
   private lateinit var findDeclarationsTask: TaskProvider<FindDeclarationsTask>
   private lateinit var mergeProjectGraphsTask: TaskProvider<MergeProjectGraphsTask>
   private lateinit var reasonTask: TaskProvider<ReasonTask>
+  private lateinit var resolveExternalDependenciesTask: TaskProvider<Task>
+
   private lateinit var redundantJvmPlugin: RedundantJvmPlugin
 
   private val isDataBindingEnabled = project.objects.property(Boolean::class.java).convention(false)
@@ -794,6 +797,11 @@ internal class ProjectPlugin(private val project: Project) {
         it.output.set(outputPaths.externalDependenciesPath)
       }
 
+    // Lifecycle tasks to resolve ALL external dependencies for ALL source sets.
+    resolveExternalDependenciesTask.configure { t ->
+      t.dependsOn(resolveExternalDependencies)
+    }
+
     computeResolvedDependenciesTask.configure {
       it.externalDependencies.add(resolveExternalDependencies.flatMap { it.output })
     }
@@ -1181,6 +1189,8 @@ internal class ProjectPlugin(private val project: Project) {
       it.dependencyMap.set(dagpExtension.dependenciesHandler.map)
       it.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
     }
+
+    resolveExternalDependenciesTask = tasks.register("resolveExternalDependencies")
 
     computeResolvedDependenciesTask = tasks.register("computeResolvedDependencies", ComputeResolvedDependenciesTask::class.java) {
       it.output.set(paths.resolvedDepsPath)
