@@ -8,9 +8,7 @@ import com.autonomousapps.internal.KotlinMetadataVisitor
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.internal.InlineMemberCapability
-import com.autonomousapps.model.internal.KtFile
 import com.autonomousapps.model.internal.PhysicalArtifact
-import com.autonomousapps.model.internal.PhysicalArtifact.Mode
 import com.autonomousapps.model.internal.TypealiasCapability
 import com.autonomousapps.model.internal.intermediates.producer.InlineMemberDependency
 import com.autonomousapps.model.internal.intermediates.producer.TypealiasDependency
@@ -26,7 +24,6 @@ import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.util.zip.ZipFile
 import javax.inject.Inject
 
 @CacheableTask
@@ -135,9 +132,9 @@ internal class KotlinMagicFinder(
     artifacts.asSequence()
       .filter {
         it.isJar() || it.containsClassFiles()
-      }.map { artifact ->
-        artifact to findKotlinMagic(artifact, artifact.mode)
-      }.forEach { (artifact, capabilities) ->
+      }
+      .associateWith(::findKotlinMagic)
+      .forEach { (artifact, capabilities) ->
         if (capabilities.inlineMembers.isNotEmpty()) {
           inlineMembersMut += InlineMemberDependency.newInstance(artifact.coordinates, capabilities.inlineMembers)
         }
@@ -162,9 +159,13 @@ internal class KotlinMagicFinder(
    * An import statement with either of those would import the `kotlin.jdk7.use()` inline function, contributed by the
    * "org.jetbrains.kotlin:kotlin-stdlib-jdk7" module.
    */
-  private fun findKotlinMagic(artifact: PhysicalArtifact, mode: Mode): KotlinCapabilities {
+  private fun findKotlinMagic(artifact: PhysicalArtifact): KotlinCapabilities {
     val cached = findInCache(artifact)
     if (cached != null) return cached
+
+    if (!artifact.withContent { it.hasKotlinClasses() }) {
+      return KotlinCapabilities.EMPTY
+    }
 
     fun packageName(fileLike: String): String {
       return if (fileLike.contains('/')) {
@@ -179,74 +180,32 @@ internal class KotlinMagicFinder(
     val inlineMembers = mutableSetOf<InlineMemberCapability.InlineMember>()
     val typealiases = mutableSetOf<TypealiasCapability.Typealias>()
 
-    when (mode) {
-      Mode.ZIP -> {
-        val zipFile = ZipFile(artifact.file)
-        val entries = zipFile.entries().toList()
-        // Only look at jars that have actual Kotlin classes in them
-        if (entries.none { it.name.endsWith(".kotlin_module") }) {
-          return KotlinCapabilities.EMPTY
-        }
+    artifact.withContent { content ->
+      content.asSequenceOfClassFiles().mapNotNull { classFile ->
+        // TODO an entry with `META-INF/proguard/androidx-annotations.pro`
+        val kotlinMagic = readClass(
+          ClassReader(classFile.readBytes()),
+          classFile.packagePath
+        ) ?: return@mapNotNull null
 
-        entries.asSequenceOfClassFiles()
-          .mapNotNull { entry ->
-            // TODO an entry with `META-INF/proguard/androidx-annotations.pro`
-            val kotlinMagic = readClass(
-              zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) },
-              entry.toString()
-            ) ?: return@mapNotNull null
-
-            entry to kotlinMagic
-          }
-          .forEach { (entry, kotlinMagic) ->
-            if (kotlinMagic.inlineMembers != null) {
-              inlineMembers += InlineMemberCapability.InlineMember.newInstance(
-                packageName = packageName(entry.name),
-                // Guaranteed to be non-empty
-                inlineMembers = kotlinMagic.inlineMembers
-              )
-            }
-
-            if (kotlinMagic.typealiases != null) {
-              typealiases += TypealiasCapability.Typealias.newInstance(
-                packageName = packageName(entry.name),
-                typealiases = kotlinMagic.typealiases
-              )
-            }
-          }
+        classFile.packagePath to kotlinMagic
       }
+        .forEach { (packagePath, kotlinMagic) ->
+          if (kotlinMagic.inlineMembers != null) {
+            inlineMembers += InlineMemberCapability.InlineMember.newInstance(
+              packageName = packageName(packagePath),
+              // Guaranteed to be non-empty
+              inlineMembers = kotlinMagic.inlineMembers
+            )
+          }
 
-      Mode.CLASSES -> {
-        if (KtFile.fromDirectory(artifact.file).isEmpty()) {
-          return KotlinCapabilities.EMPTY
+          if (kotlinMagic.typealiases != null) {
+            typealiases += TypealiasCapability.Typealias.newInstance(
+              packageName = packageName(packagePath),
+              typealiases = kotlinMagic.typealiases
+            )
+          }
         }
-
-        artifact.file.asSequenceOfClassFiles()
-          .mapNotNull { classFile ->
-            val kotlinMagic = readClass(
-              classFile.inputStream().use { ClassReader(it.readBytes()) },
-              classFile.toString()
-            ) ?: return@mapNotNull null
-
-            classFile to kotlinMagic
-          }
-          .forEach { (classFile, kotlinMagic) ->
-            if (kotlinMagic.inlineMembers != null) {
-              inlineMembers += InlineMemberCapability.InlineMember.newInstance(
-                packageName = packageName(Files.asPackagePath(classFile)),
-                // Guaranteed to be non-empty
-                inlineMembers = kotlinMagic.inlineMembers
-              )
-            }
-
-            if (kotlinMagic.typealiases != null) {
-              typealiases += TypealiasCapability.Typealias.newInstance(
-                packageName = packageName(Files.asPackagePath(classFile)),
-                typealiases = kotlinMagic.typealiases
-              )
-            }
-          }
-      }
     }
 
     val kotlinCapabilities = KotlinCapabilities(inlineMembers, typealiases)
@@ -266,7 +225,7 @@ internal class KotlinMagicFinder(
   }
 
   /** Returned set is either null or non-empty. */
-  private fun readClass(classReader: ClassReader, classFile: String): KotlinMagic? {
+  private fun readClass(classReader: ClassReader, packagePath: String): KotlinMagic? {
     val metadataVisitor = KotlinMetadataVisitor(logger)
     classReader.accept(metadataVisitor, 0)
 
@@ -282,8 +241,8 @@ internal class KotlinMagicFinder(
       val metadata = try {
         KotlinClassMetadata.readLenient(header.build())
       } catch (_: IllegalArgumentException) {
-        logger.debug("Can't read class file '$classFile'")
-        errorsReport.appendText("Can't read class file '$classFile'\n")
+        logger.debug("Can't read class file '$packagePath'")
+        errorsReport.appendText("Can't read class file '$packagePath'\n")
         didWriteErrors = true
         return null
       }
@@ -304,9 +263,9 @@ internal class KotlinMagicFinder(
           typealiases = typealiases(metadata.kmPackage)
         }
 
-        is KotlinClassMetadata.SyntheticClass -> logger.debug("Ignoring SyntheticClass $classFile")
-        is KotlinClassMetadata.MultiFileClassFacade -> logger.debug("Ignoring MultiFileClassFacade $classFile")
-        is KotlinClassMetadata.Unknown -> logger.debug("Ignoring Unknown $classFile")
+        is KotlinClassMetadata.SyntheticClass -> logger.debug("Ignoring SyntheticClass $packagePath")
+        is KotlinClassMetadata.MultiFileClassFacade -> logger.debug("Ignoring MultiFileClassFacade $packagePath")
+        is KotlinClassMetadata.Unknown -> logger.debug("Ignoring Unknown $packagePath")
       }
     } ?: return null
 

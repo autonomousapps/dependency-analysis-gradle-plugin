@@ -29,6 +29,8 @@ internal data class KtFile(
   internal companion object {
     private const val KOTLIN_MODULE = ".kotlin_module"
 
+    fun hasKotlinClasses(zipFile: ZipFile): Boolean = zipFile.entries().toList().any { it.name.endsWith(KOTLIN_MODULE) }
+
     fun fromDirectory(dir: File): Set<KtFile> {
       check(dir.isDirectory) { "Expected directory. Was '${dir.absolutePath}'" }
 
