@@ -340,11 +340,13 @@ major releases should be treated as non-events. For these users, the "API" is ju
 
 The following is a list of articles / blog posts that have been published discussing this plugin:
 
-1. https://dev.to/autonomousapps/the-proper-care-and-feeding-of-your-gradle-build-d8g[The proper care and feeding of your Gradle build]
-2. https://dev.to/autonomousapps/dependency-analysis-gradle-plugin-using-bytecode-analysis-to-find-unused-dependencies-509n[Dependency Analysis Gradle Plugin: Using bytecode analysis to find unused dependencies]
-3. https://dev.to/autonomousapps/dependency-analysis-gradle-plugin-what-s-an-abi-3l2h[Dependency Analysis Gradle Plugin: What's an ABI?]
-4. https://dev.to/autonomousapps/reducing-my-gradle-plugin-s-impact-on-configuration-time-a-journey-32h2[Reducing my Gradle plugin's impact on configuration time: A journey]
-5. https://dev.to/autonomousapps/one-click-dependencies-fix-191p[One-click dependencies fix]
+1. https://blog.gradle.org/detect-maven-hijack-risks-in-gradle-with-plugin[Detecting Maven-Hijack-style risks in Gradle builds with the Dependency Analysis Gradle Plugin
+]
+2. https://dev.to/autonomousapps/the-proper-care-and-feeding-of-your-gradle-build-d8g[The proper care and feeding of your Gradle build]
+3. https://dev.to/autonomousapps/dependency-analysis-gradle-plugin-using-bytecode-analysis-to-find-unused-dependencies-509n[Dependency Analysis Gradle Plugin: Using bytecode analysis to find unused dependencies]
+4. https://dev.to/autonomousapps/dependency-analysis-gradle-plugin-what-s-an-abi-3l2h[Dependency Analysis Gradle Plugin: What's an ABI?]
+5. https://dev.to/autonomousapps/reducing-my-gradle-plugin-s-impact-on-configuration-time-a-journey-32h2[Reducing my Gradle plugin's impact on configuration time: A journey]
+6. https://dev.to/autonomousapps/one-click-dependencies-fix-191p[One-click dependencies fix]
 
 This plugin has also been featured in these newsletters:
 
