@@ -3,6 +3,7 @@
 package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.BinaryIncompatibilityProject
+import com.autonomousapps.jvm.projects.DuplicateAnnotationClasspathProject
 import com.autonomousapps.jvm.projects.DuplicateClasspathProject
 import com.autonomousapps.utils.Colors
 
@@ -60,6 +61,40 @@ final class DuplicateClasspathSpec extends AbstractJvmSpec {
         \\--- runtime classpath
              +--- com/example/producer/Producer is provided by multiple dependencies: [:producer-1, :producer-2]
              \\--- com/example/producer/Producer$Inner is provided by multiple dependencies: [:producer-1, :producer-2]'''
+        .stripIndent()
+    )
+
+    and: 'Postscript is printed'
+    assertThat(result.output).contains('ERRORS-ONLY POSTSCRIPT')
+
+    and:
+    assertAbout(buildHealth())
+      .that(project.actualProjectAdvice())
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedProjectAdvice())
+
+    where:
+    gradleVersion << [GRADLE_LATEST]
+  }
+
+  def "buildHealth reports duplicates in annotations (#gradleVersion)"() {
+    given:
+    def project = new DuplicateAnnotationClasspathProject()
+    gradleProject = project.gradleProject
+
+    when:
+    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(result.output).contains(
+      '''\
+        Warnings
+        Some of your classpaths have duplicate classes, which means the compile and runtime behavior can be sensitive to the classpath order.
+        
+        Source set: main
+        \\--- compile classpath
+             \\--- com/example/annotation/Annotate is provided by multiple dependencies: [:annotation-1, :annotation-2]
+        \\--- runtime classpath
+             \\--- com/example/annotation/Annotate is provided by multiple dependencies: [:annotation-1, :annotation-2]'''
         .stripIndent()
     )
 
