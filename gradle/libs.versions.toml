@@ -69,6 +69,7 @@ kotlin-editor-core = { module = "app.cash.kotlin-editor:core", version.ref = "ko
 kotlin-editor-grammar = { module = "app.cash.kotlin-editor:grammar", version.ref = "kotlineditor-core" }
 kotlin-editor-relocated = { module = "com.autonomousapps:kotlin-editor-relocated", version.ref = "kotlineditor-relocated" }
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlin-multiplatform-gradle = { module = "org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlin-stdlib-core = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
