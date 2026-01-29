@@ -29,7 +29,7 @@ kotlinMetadata = "2.2.20"
 kotlinDokka = "2.0.0"
 # Cannot be called kotlin-editor as it causes `libs.versions.kotlin.get()` to fail
 kotlineditor-core = "0.20"
-kotlineditor-relocated = "0.18.0"
+kotlineditor-relocated = "0.20.0"
 mavenPublish = "0.35.0"
 metalava = "1.0.0-alpha12"
 moshi = "1.15.2"
