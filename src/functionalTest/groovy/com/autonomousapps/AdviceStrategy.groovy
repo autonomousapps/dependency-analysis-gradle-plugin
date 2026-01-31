@@ -7,7 +7,11 @@ import com.autonomousapps.internal.utils.MoshiUtils
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import com.squareup.moshi.Types
+import okio.Okio
+
+import java.util.zip.GZIPInputStream
 
 abstract class AdviceStrategy {
 
@@ -30,6 +34,14 @@ abstract class AdviceStrategy {
 
   protected static ProjectAdvice fromProjectAdvice(String json) {
     def adapter = MoshiUtils.MOSHI.adapter(ProjectAdvice)
+    return adapter.fromJson(json)
+  }
+
+  abstract Set<ExplodedJar> getExplodedJarsForProjectAndVariant(GradleProject gradleProject, String projectName, String variantName)
+
+  protected static Set<ExplodedJar> fromExplodedJars(String json) {
+    def set = Types.newParameterizedType(Set, ExplodedJar)
+    def adapter = MoshiUtils.MOSHI.<Set<ExplodedJar>> adapter(set)
     return adapter.fromJson(json)
   }
 
@@ -61,6 +73,20 @@ abstract class AdviceStrategy {
     def actualComprehensiveAdviceForProject(GradleProject gradleProject, String projectName) {
       def advice = gradleProject.singleArtifact(projectName, OutputPathsKt.getAggregateAdvicePathV2())
       return fromProjectAdvice(advice.asPath.text)
+    }
+
+    @Override
+    Set<ExplodedJar> getExplodedJarsForProjectAndVariant(GradleProject gradleProject, String projectName, String variantName) {
+      def explodedJarsGz = gradleProject.singleArtifact(projectName, OutputPathsKt.getExplodedJarsPathV2(variantName))
+      // TODO(pde): Extract to a better place
+      def json = new FileInputStream(explodedJarsGz.asFile).withStream { is ->
+        new GZIPInputStream(is).withStream { gzis ->
+          new InputStreamReader(gzis, "UTF-8").withReader { reader ->
+            return reader.text
+          }
+        }
+      }
+      return fromExplodedJars(json)
     }
   }
 }
