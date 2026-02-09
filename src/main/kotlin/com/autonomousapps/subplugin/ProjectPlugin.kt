@@ -1070,7 +1070,7 @@ internal class ProjectPlugin(private val project: Project) {
       t.checkSuperClasses.set(dagpExtension.usageHandler.analysisHandler.checkSuperClasses)
       // Currently only modeling this via Gradle property. May hoist it to the DSL if it's necessary.
       t.checkBinaryCompat.set(checkBinaryCompat())
-      
+
       t.graph.set(graphViewTask.flatMap { it.output })
       t.declarations.set(findDeclarationsTask.flatMap { it.output })
       t.dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
@@ -1080,6 +1080,21 @@ internal class ProjectPlugin(private val project: Project) {
       t.duplicateClassesReports.add(duplicateClassesRuntime.flatMap { it.output })
       t.output.set(outputPaths.dependencyTraceReportPath)
     }
+
+    // Computes type-level usage statistics for complexity analysis.
+    val computeTypeUsageTask = tasks.register("computeTypeUsage$taskNameSuffix", ComputeTypeUsageTask::class.java) { t ->
+      t.projectPath.set(thisProjectPath)
+      t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
+      t.explodedJars.set(explodeJarTask.flatMap { it.output })
+
+      // Configuration from extension
+      t.excludedPackages.set(dagpExtension.typeUsageHandler.excludedPackages)
+      t.excludedTypes.set(dagpExtension.typeUsageHandler.excludedTypes)
+      t.regexPatterns.set(dagpExtension.typeUsageHandler.regexPatterns)
+
+      t.output.set(outputPaths.typeUsagePath)
+    }
+    storeTypeUsageOutput(computeTypeUsageTask.flatMap { it.output })
 
     // Null for JVM projects
     val androidScoreTask = dependencyAnalyzer.registerAndroidScoreTask(
@@ -1249,6 +1264,11 @@ internal class ProjectPlugin(private val project: Project) {
   /** Stores advice output in either root extension or subproject extension. */
   private fun storeAdviceOutput(advice: Provider<RegularFile>) {
     dagpExtension.storeAdviceOutput(advice)
+  }
+
+  /** Stores type usage output in either root extension or subproject extension. */
+  private fun storeTypeUsageOutput(typeUsage: Provider<RegularFile>) {
+    dagpExtension.storeTypeUsageOutput(typeUsage)
   }
 
   private class JavaSources(project: Project, dagpExtension: AbstractExtension) {

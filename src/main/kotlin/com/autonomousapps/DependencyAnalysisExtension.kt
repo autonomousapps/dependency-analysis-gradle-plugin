@@ -36,6 +36,9 @@ import javax.inject.Inject
  *
  *   // Configure usage rules.
  *   usage { ... }
+ *
+ *   // Configure type usage analysis filtering.
+ *   typeUsage { ... }
  * }
  * ```
  */
@@ -79,6 +82,11 @@ public abstract class DependencyAnalysisExtension @Inject constructor(
   @Deprecated(message = "Use 'usage' instead", replaceWith = ReplaceWith("usage"))
   public fun usages(action: Action<UsageHandler>) {
     action.execute(usageHandler)
+  }
+
+  /** Customize type usage analysis filtering. See [TypeUsageHandler] for more information. */
+  public fun typeUsage(action: Action<TypeUsageHandler>) {
+    action.execute(typeUsageHandler)
   }
 
   internal companion object {

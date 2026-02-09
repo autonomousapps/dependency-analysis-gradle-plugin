@@ -4,6 +4,7 @@ package com.autonomousapps {
   public abstract class AbstractExtension {
     ctor @javax.inject.Inject public AbstractExtension(org.gradle.api.model.ObjectFactory objects, org.gradle.api.invocation.Gradle gradle);
     method public final org.gradle.api.file.RegularFileProperty adviceOutput();
+    method public final org.gradle.api.file.RegularFileProperty typeUsageOutput();
     method public final void app();
     method public final void registerPostProcessingTask(org.gradle.api.tasks.TaskProvider<? extends com.autonomousapps.AbstractPostProcessingTask> task);
     field public static final String NAME = "dependencyAnalysis";
@@ -28,6 +29,7 @@ package com.autonomousapps {
     method public final void issues(org.gradle.api.Action<com.autonomousapps.extension.IssueHandler> action);
     method public final void reporting(org.gradle.api.Action<com.autonomousapps.extension.ReportingHandler> action);
     method public final void structure(org.gradle.api.Action<com.autonomousapps.extension.DependenciesHandler> action);
+    method public final void typeUsage(org.gradle.api.Action<com.autonomousapps.extension.TypeUsageHandler> action);
     method public final void usage(org.gradle.api.Action<com.autonomousapps.extension.UsageHandler> action);
     method @Deprecated public final void usages(org.gradle.api.Action<com.autonomousapps.extension.UsageHandler> action);
     method public final void useTypesafeProjectAccessors(boolean enable);
@@ -44,6 +46,7 @@ package com.autonomousapps {
     method public final void abi(org.gradle.api.Action<com.autonomousapps.extension.AbiHandler> action);
     method public final void issues(org.gradle.api.Action<com.autonomousapps.extension.ProjectIssueHandler> action);
     method public final void structure(org.gradle.api.Action<com.autonomousapps.extension.DependenciesHandler> action);
+    method public final void typeUsage(org.gradle.api.Action<com.autonomousapps.extension.TypeUsageHandler> action);
   }
 
   public final class Flags {
@@ -205,6 +208,13 @@ package com.autonomousapps.extension {
     method @org.gradle.api.tasks.Input public org.gradle.api.provider.Property<java.lang.String> getPostscript();
     property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> onlyOnFailure;
     property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> postscript;
+  }
+
+  public abstract class TypeUsageHandler {
+    ctor @javax.inject.Inject public TypeUsageHandler(org.gradle.api.model.ObjectFactory objects);
+    method public final void excludePackages(java.lang.String... packages);
+    method public final void excludeRegex(@org.intellij.lang.annotations.Language("RegExp") java.lang.String... patterns);
+    method public final void excludeTypes(java.lang.String... types);
   }
 
   public abstract class SourceSetsHandler implements org.gradle.api.Named {
@@ -503,6 +513,48 @@ package com.autonomousapps.model {
     property public final String? buildPath;
     property public com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification;
     property public String identifier;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) public final class ProjectTypeUsage implements java.lang.Comparable<com.autonomousapps.model.ProjectTypeUsage> {
+    ctor public ProjectTypeUsage(String projectPath, com.autonomousapps.model.TypeUsageSummary summary, java.util.Map<java.lang.String,java.lang.Integer> internal, java.util.Map<java.lang.String,? extends java.util.Map<java.lang.String,java.lang.Integer>> projectDependencies, java.util.Map<java.lang.String,? extends java.util.Map<java.lang.String,java.lang.Integer>> libraryDependencies);
+    method public int compareTo(com.autonomousapps.model.ProjectTypeUsage other);
+    method public String component1();
+    method public com.autonomousapps.model.TypeUsageSummary component2();
+    method public java.util.Map<java.lang.String,java.lang.Integer> component3();
+    method public java.util.Map<java.lang.String,java.util.Map<java.lang.String,java.lang.Integer>> component4();
+    method public java.util.Map<java.lang.String,java.util.Map<java.lang.String,java.lang.Integer>> component5();
+    method public com.autonomousapps.model.ProjectTypeUsage copy(String projectPath, com.autonomousapps.model.TypeUsageSummary summary, java.util.Map<java.lang.String,java.lang.Integer> internal, java.util.Map<java.lang.String,? extends java.util.Map<java.lang.String,java.lang.Integer>> projectDependencies, java.util.Map<java.lang.String,? extends java.util.Map<java.lang.String,java.lang.Integer>> libraryDependencies);
+    method public java.util.Map<java.lang.String,java.lang.Integer> getInternal();
+    method public java.util.Map<java.lang.String,java.util.Map<java.lang.String,java.lang.Integer>> getLibraryDependencies();
+    method public java.util.Map<java.lang.String,java.util.Map<java.lang.String,java.lang.Integer>> getProjectDependencies();
+    method public String getProjectPath();
+    method public com.autonomousapps.model.TypeUsageSummary getSummary();
+    method public boolean isEmpty();
+    property public final java.util.Map<java.lang.String,java.lang.Integer> internal;
+    property public final java.util.Map<java.lang.String,java.util.Map<java.lang.String,java.lang.Integer>> libraryDependencies;
+    property public final java.util.Map<java.lang.String,java.util.Map<java.lang.String,java.lang.Integer>> projectDependencies;
+    property public final String projectPath;
+    property public final com.autonomousapps.model.TypeUsageSummary summary;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) public final class TypeUsageSummary {
+    ctor public TypeUsageSummary(int totalTypes, int totalFiles, int internalTypes, int projectDependencies, int libraryDependencies);
+    method public int component1();
+    method public int component2();
+    method public int component3();
+    method public int component4();
+    method public int component5();
+    method public com.autonomousapps.model.TypeUsageSummary copy(int totalTypes, int totalFiles, int internalTypes, int projectDependencies, int libraryDependencies);
+    method public int getInternalTypes();
+    method public int getLibraryDependencies();
+    method public int getProjectDependencies();
+    method public int getTotalFiles();
+    method public int getTotalTypes();
+    property public final int internalTypes;
+    property public final int libraryDependencies;
+    property public final int projectDependencies;
+    property public final int totalFiles;
+    property public final int totalTypes;
   }
 
   @com.squareup.moshi.JsonClass(generateAdapter=false) public final class Warning implements java.lang.Comparable<com.autonomousapps.model.Warning> {
