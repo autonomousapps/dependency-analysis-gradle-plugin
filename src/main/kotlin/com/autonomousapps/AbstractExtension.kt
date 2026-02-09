@@ -34,8 +34,10 @@ public abstract class AbstractExtension @Inject constructor(
   internal val dependenciesHandler: DependenciesHandler = dslService.get().dependenciesHandler
   internal val reportingHandler: ReportingHandler = dslService.get().reportingHandler
   internal val usageHandler: UsageHandler = dslService.get().usageHandler
+  internal val typeUsageHandler: TypeUsageHandler = objects.newInstance(TypeUsageHandler::class.java)
 
   private val adviceOutput = objects.fileProperty()
+  private val typeUsageOutput = objects.fileProperty()
   private var postProcessingTask: TaskProvider<out AbstractPostProcessingTask>? = null
 
   internal var forceAppProject = false
@@ -47,6 +49,13 @@ public abstract class AbstractExtension @Inject constructor(
     adviceOutput.set(output)
   }
 
+  internal fun storeTypeUsageOutput(provider: Provider<RegularFile>) {
+    val output = objects.fileProperty().also {
+      it.set(provider)
+    }
+    typeUsageOutput.set(output)
+  }
+
   /**
    * Returns the output from the project-level advice.
    *
@@ -54,6 +63,14 @@ public abstract class AbstractExtension @Inject constructor(
    */
   @Suppress("MemberVisibilityCanBePrivate") // explicit API
   public fun adviceOutput(): RegularFileProperty = adviceOutput
+
+  /**
+   * Returns the output from the project-level type usage analysis.
+   *
+   * Never null, but may _contain_ a null value. Use with [RegularFileProperty.getOrNull].
+   */
+  @Suppress("MemberVisibilityCanBePrivate") // explicit API
+  public fun typeUsageOutput(): RegularFileProperty = typeUsageOutput
 
   /**
    * Whether to force the project being treated as an app project even if only the `java` plugin is applied.
