@@ -1070,7 +1070,6 @@ internal class ProjectPlugin(private val project: Project) {
       t.checkSuperClasses.set(dagpExtension.usageHandler.analysisHandler.checkSuperClasses)
       // Currently only modeling this via Gradle property. May hoist it to the DSL if it's necessary.
       t.checkBinaryCompat.set(checkBinaryCompat())
-
       t.graph.set(graphViewTask.flatMap { it.output })
       t.declarations.set(findDeclarationsTask.flatMap { it.output })
       t.dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
@@ -1090,7 +1089,7 @@ internal class ProjectPlugin(private val project: Project) {
       // Configuration from extension
       t.excludedPackages.set(dagpExtension.typeUsageHandler.excludedPackages)
       t.excludedTypes.set(dagpExtension.typeUsageHandler.excludedTypes)
-      t.regexPatterns.set(dagpExtension.typeUsageHandler.regexPatterns)
+      t.excludedRegexPatterns.set(dagpExtension.typeUsageHandler.excludedRegexPatterns)
 
       t.output.set(outputPaths.typeUsagePath)
     }

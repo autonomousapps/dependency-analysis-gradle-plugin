@@ -45,7 +45,7 @@ public abstract class TypeUsageHandler @Inject constructor(
     ))
 
   // Regex patterns for flexible matching
-  internal val regexPatterns: ListProperty<String> = objects.listProperty(String::class.java)
+  internal val excludedRegexPatterns: ListProperty<String> = objects.listProperty(String::class.java)
     .convention(listOf(
       "^anvil\\.hint\\..*",
       ".*_Factory$",
@@ -89,6 +89,6 @@ public abstract class TypeUsageHandler @Inject constructor(
   public fun excludeRegex(
     @org.intellij.lang.annotations.Language("RegExp") vararg patterns: String
   ) {
-    regexPatterns.addAll(patterns.toList())
+    excludedRegexPatterns.addAll(patterns.toList())
   }
 }

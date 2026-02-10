@@ -52,7 +52,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
   public abstract val excludedTypes: SetProperty<String>
 
   @get:Input
-  public abstract val regexPatterns: ListProperty<String>
+  public abstract val excludedRegexPatterns: ListProperty<String>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
@@ -65,7 +65,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
       it.explodedJars.set(explodedJars)
       it.excludedPackages.set(excludedPackages)
       it.excludedTypes.set(excludedTypes)
-      it.regexPatterns.set(regexPatterns)
+      it.excludedRegexPatterns.set(excludedRegexPatterns)
       it.output.set(output)
     }
   }
@@ -76,7 +76,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
     public val explodedJars: RegularFileProperty
     public val excludedPackages: SetProperty<String>
     public val excludedTypes: SetProperty<String>
-    public val regexPatterns: ListProperty<String>
+    public val excludedRegexPatterns: ListProperty<String>
     public val output: RegularFileProperty
   }
 
@@ -93,7 +93,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
       val filter = TypeFilter(
         excludedPackages = parameters.excludedPackages.get(),
         excludedTypes = parameters.excludedTypes.get(),
-        regexPatterns = parameters.regexPatterns.get()
+        excludedRegexPatterns = parameters.excludedRegexPatterns.get()
       )
 
       // 3. Analyze usage
@@ -130,9 +130,9 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
 private class TypeFilter(
   val excludedPackages: Set<String>,
   val excludedTypes: Set<String>,
-  regexPatterns: List<String>
+  excludedRegexPatterns: List<String>
 ) {
-  private val compiledPatterns = regexPatterns.map { it.toRegex() }
+  private val compiledPatterns = excludedRegexPatterns.map { it.toRegex() }
 
   fun shouldExclude(className: String): Boolean {
     if (excludedTypes.contains(className)) return true
