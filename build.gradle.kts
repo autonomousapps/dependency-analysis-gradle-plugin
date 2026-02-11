@@ -107,7 +107,6 @@ gradleTestKitSupport {
 }
 
 dependencies {
-  api(libs.javax.inject)
   api(libs.moshi.core)
   api(libs.moshix.sealed.runtime)
 
