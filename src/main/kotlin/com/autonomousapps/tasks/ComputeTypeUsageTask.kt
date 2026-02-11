@@ -115,7 +115,8 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
         }
 
         explodedJars.forEach { jar ->
-          val identifier = jar.coordinates.identifier
+          // Normalize identifier to handle included builds (convert "build:project" to ":project")
+          val identifier = jar.coordinates.normalizedIdentifier(":")
           jar.binaryClasses.forEach { binaryClass ->
             map[binaryClass.className] = identifier
           }
