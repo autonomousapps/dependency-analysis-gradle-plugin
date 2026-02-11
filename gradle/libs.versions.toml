@@ -54,7 +54,6 @@ gradleTestKitPlugin = { module = "com.autonomousapps:gradle-testkit-plugin", ver
 grammar = { module = "com.autonomousapps:gradle-script-grammar", version.ref = "grammar" }
 groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
-javax-inject = "javax.inject:javax.inject:1"
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 junit-api = { module = "org.junit.jupiter:junit-jupiter-api" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }

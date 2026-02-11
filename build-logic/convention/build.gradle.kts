@@ -55,11 +55,13 @@ gradlePlugin {
 }
 
 dependencies {
-  api(libs.javax.inject)
   api(libs.mavenPublishPlugin)
 
   implementation(platform(libs.kotlin.bom))
-  implementation(libs.dependencyAnalysisPlugin)
+  implementation(libs.dependencyAnalysisPlugin) {
+    // TODO can be removed after plugin update to 3.5.2
+    exclude(group = "javax.inject")
+  }
   implementation(libs.gradleTestKitPlugin)
   implementation(libs.gradle.publish.plugin) {
     because("For extending Gradle Plugin-Publish Plugin functionality")
