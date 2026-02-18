@@ -695,36 +695,35 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-  // TODO: delete
-  @DisableCachingByDefault(because = "Temporary task")
-  abstract class FilesTask : DefaultTask() {
-    @get:Nested
-    abstract val files: ListProperty<FileCollectionMap>
-
-    @TaskAction fun action() {
-      files.get().forEach { (name, fileCollection) ->
-        val files = fileCollection.asFileTree.files.joinToString(System.lineSeparator()) { "- $it" }
-        logger.quiet("$name:\n$files")
-      }
-    }
-  }
+//  // TODO(tsr): delete
+//  @DisableCachingByDefault(because = "Temporary task")
+//  abstract class FilesTask : DefaultTask() {
+//    @get:Nested
+//    abstract val files: ListProperty<FileCollectionMap>
+//
+//    @TaskAction fun action() {
+//      files.get().forEach { (name, fileCollection) ->
+//        val files = fileCollection.asFileTree.files.joinToString(System.lineSeparator()) { "- $it" }
+//        logger.quiet("$name:\n$files")
+//      }
+//    }
+//  }
 
   /** Has the [KOTLIN_MULTIPLATFORM_PLUGIN] plugin applied. */
   private fun Project.configureKotlinMultiplatformProject() {
     val kotlin = extensions.getByType(KotlinMultiplatformExtension::class.java)
-    val commonSourceFiles = provider(KotlinCommonSources.all(kotlin))
 
-    // TODO: delete
-    tasks.register("files", FilesTask::class.java) { t ->
-      t.files.set(commonSourceFiles)
-    }
+//    val commonSourceFiles = provider(KotlinCommonSources.all(kotlin))
+//    // TODO(tsr): delete
+//    tasks.register("files", FilesTask::class.java) { t ->
+//      t.files.set(commonSourceFiles)
+//    }
 
     kotlin
       .targets
 //      .withType(KotlinJvmTarget::class.java) // TODO(tsr) delete? or only analyze jvm targets? what about android targets?
       .configureEach { target ->
-        val typeName = target.javaClass.simpleName
-        println("CONFIGURING KOTLIN TARGET ${target.name} ($typeName)") // TODO delete
+//        println("CONFIGURING KOTLIN TARGET ${target.name} (${target.javaClass.simpleName})") // TODO(tsr): delete
         target.compilations
           // TODO(tsr): requiring the `runtimeDependencyConfigurationName` to be non-null seems to be equivalent to only
           //  configuring the JVM targets. (Still haven't tested Android targets!)
@@ -733,8 +732,7 @@ internal class ProjectPlugin(private val project: Project) {
           //      collections.
           .matching { compilation -> compilation.runtimeDependencyConfigurationName != null }
           .configureEach { compilation ->
-            val typeName = compilation.javaClass.simpleName
-            println(" COMPILATION ${compilation.name} ($typeName)") // TODO delete
+//            println(" COMPILATION ${compilation.name} (${compilation.javaClass.simpleName})") // TODO(tsr): delete
             try {
               val hasAbi = hasAbi(compilation)
               val kmpSourceSet = KmpSourceSet(compilation)
@@ -774,8 +772,6 @@ internal class ProjectPlugin(private val project: Project) {
       return false
     }
 
-    // TODO(tsr): not sure about the equality checks against `KotlinSourceSet...`
-    //  what about this? `compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME`
     val hasApiConfiguration = configurations.named(compilation.apiConfigurationName) != null
     // 'xTest' sourceSets do not have an ABI (this is a heuristic)
     val isNotTest = !sourceSetName.endsWith("Test")
@@ -1009,7 +1005,8 @@ internal class ProjectPlugin(private val project: Project) {
       // TODO(tsr): consider this. Wouldn't the runtime classpath be more appropriate for this task? Separate PR to test.
       //  it.setCompileClasspath(configurations.getByName(dependencyAnalyzer.runtimeConfigurationName).artifactsFor(dependencyAnalyzer.attributeValueJar))
       it.setCompileClasspath(
-        configurations.getByName(dependencyAnalyzer.compileConfigurationName)
+        configurations
+          .getByName(dependencyAnalyzer.compileConfigurationName)
           .artifactsFor(dependencyAnalyzer.attributeValueJar)
       )
       it.output.set(outputPaths.serviceLoaderDependenciesPath)
@@ -1116,7 +1113,8 @@ internal class ProjectPlugin(private val project: Project) {
       tasks.register("discoverDuplicationForCompile$taskNameSuffix", DiscoverClasspathDuplicationTask::class.java) {
         it.withClasspathName(DuplicateClass.COMPILE_CLASSPATH_NAME)
         it.setClasspath(
-          configurations.getByName(dependencyAnalyzer.compileConfigurationName)
+          configurations
+            .getByName(dependencyAnalyzer.compileConfigurationName)
             .artifactsFor(dependencyAnalyzer.attributeValueJar)
         )
         it.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
@@ -1126,7 +1124,8 @@ internal class ProjectPlugin(private val project: Project) {
       tasks.register("discoverDuplicationForRuntime$taskNameSuffix", DiscoverClasspathDuplicationTask::class.java) {
         it.withClasspathName(DuplicateClass.RUNTIME_CLASSPATH_NAME)
         it.setClasspath(
-          configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
+          configurations
+            .getByName(dependencyAnalyzer.runtimeConfigurationName)
             .artifactsFor(dependencyAnalyzer.attributeValueJar)
         )
         it.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
