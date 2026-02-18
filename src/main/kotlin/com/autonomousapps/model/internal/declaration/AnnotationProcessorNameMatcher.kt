@@ -5,7 +5,6 @@ package com.autonomousapps.model.internal.declaration
 import com.autonomousapps.ProjectType
 import com.autonomousapps.internal.unsafeLazy
 
-// TODO(tsr): duplicated in `Configurations`.
 internal class AnnotationProcessorNameMatcher(
   val kind: AnnotationProcessor,
   private val projectType: ProjectType,

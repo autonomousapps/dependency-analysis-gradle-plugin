@@ -6,6 +6,7 @@ import com.autonomousapps.ProjectType
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.UsageContainer
+import com.autonomousapps.internal.advice.KmpCommonDependencies
 import com.autonomousapps.internal.transform.StandardTransform
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
@@ -374,25 +375,10 @@ internal class DependencyAdviceBuilder(
             null
           }
 
-          // TODO(tsr): extract this into something unit-testable.
           // For KMP projects, if the advice is to move the dependency from a commonX source set to a specific target,
           // ignore it for now. If the advice is to move and upgrade, then just upgrade but keep in the same source set.
           projectType == ProjectType.KMP && advice.isAnyChange() -> {
-            val fromConfiguration = advice.fromConfiguration!!
-            val toConfiguration = advice.toConfiguration!!
-            val fromCommon = fromConfiguration.startsWith("commonTest") || fromConfiguration.startsWith("commonMain")
-            val toCommon = toConfiguration.startsWith("commonTest") || fromConfiguration.startsWith("commonMain")
-
-            if (fromCommon && !toCommon) {
-              if (fromConfiguration.endsWith("Implementation") && toConfiguration.endsWith("Api")) {
-                val newConfiguration = fromConfiguration.substringBeforeLast("Implementation") + "Api"
-                advice.copy(toConfiguration = newConfiguration)
-              } else {
-                null
-              }
-            } else {
-              advice
-            }
+            KmpCommonDependencies.ensureUnbroken(advice)
           }
 
           else -> advice

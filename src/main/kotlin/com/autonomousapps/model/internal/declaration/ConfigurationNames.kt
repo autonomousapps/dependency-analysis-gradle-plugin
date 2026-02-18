@@ -89,10 +89,22 @@ internal class ConfigurationNames(
    * "Regular dependency" in contrast to "annotation processor," _not_ in contrast to "test" or other source sets.
    *
    * Android examples include:
-   * * TODO.
+   * * `api`
+   * * `implementation`
+   * * `compileOnly`
+   * * `runtimeOnly`
+   * * `testImplementation`
+   * * `debugImplementation`
+   * * `flavorReleaseApi`
+   * * etc.
    *
    * JVM examples include:
-   * * TODO.
+   * * `api`
+   * * `implementation`
+   * * `compileOnly`
+   * * `runtimeOnly`
+   * * `testImplementation`
+   * * etc.
    *
    * KMP examples include:
    * * `commonMainApi`

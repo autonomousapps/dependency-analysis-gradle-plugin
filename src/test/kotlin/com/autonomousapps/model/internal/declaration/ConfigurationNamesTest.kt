@@ -275,7 +275,7 @@ internal class ConfigurationNamesTest {
       "jvmMain",
       "jvmTest",
       "jvmIntegrationTest",
-      // TODO android stuff?
+      // TODO(tsr): android stuff?
     )
     private val configurationNames = ConfigurationNames(projectType, supportedSourceSets)
 
@@ -366,7 +366,8 @@ internal class ConfigurationNamesTest {
 
         // annotation processors
         "annotationProcessor, true",
-        // TODO(tsr): check what are the configuration names for these, if any
+        // TODO(tsr): check what are the configuration names for these, if any. I think these may just not be relevant
+        //  for KMP. For KMP projects, we expect folks to use ksp.
 //        "testAnnotationProcessor, true",
 //        "integrationTestAnnotationProcessor, true",
         "kapt, true",

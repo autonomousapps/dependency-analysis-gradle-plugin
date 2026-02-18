@@ -66,7 +66,7 @@ class BundlesTest {
         dependencyGraph = graph,
         bundleRules = dependenciesHandler.serializableBundles(),
         dependencyUsages = dependencyUsages,
-        declarations = emptySet(), // TODO(tsr)
+        declarations = emptySet(),
         configurationNames = jvmConfigurationNames,
         ignoreKtx = false
       )
@@ -125,7 +125,6 @@ class BundlesTest {
         ignoreKtx = false
       )
 
-      // TODO also test changeAdvice and removeAdvice?
       // Then it mutates the advice as expected
       val addAdvice = Advice.ofAdd(okioJvm, "jvmMainApi")
       val expectedAdvice = Advice.ofChange(okio, "commonMainImplementation", "commonMainApi")
@@ -182,7 +181,6 @@ class BundlesTest {
         ignoreKtx = false
       )
 
-      // TODO also test changeAdvice and removeAdvice?
       // Then it mutates the advice as expected
       val addAdvice = Advice.ofAdd(okioJvm, "jvmMainApi")
       val expectedAdvice = Advice.ofChange(okio, "jvmMainImplementation", "jvmMainApi")
@@ -242,7 +240,7 @@ class BundlesTest {
         dependencyGraph = graph,
         bundleRules = dependenciesHandler.serializableBundles(),
         dependencyUsages = dependencyUsages,
-        declarations = emptySet(), // TODO(tsr)
+        declarations = emptySet(), // TODO(tsr): tests pass with an empty set, so meh
         configurationNames = jvmConfigurationNames,
         ignoreKtx = false
       )

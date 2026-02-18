@@ -25,13 +25,13 @@ public sealed class SourceKind : Comparable<SourceKind>, Serializable {
   /** MAIN, TEST, ANDROID_TEST, CUSTOM_JVM */
   public abstract val kind: String
 
-  /** TODO(tsr): add kdoc. */
+  /** The name of the compile classpath configuration. */
   public abstract val compileClasspathName: String
 
-  /** TODO(tsr): add kdoc. */
+  /** The name of the runtime classpath configuration. */
   public abstract val runtimeClasspathName: String
 
-  /** TODO(tsr): add kdoc. */
+  /** Typically just `this` However, in the case of [AndroidSourceKind], strips the variant (flavor/buildType) away. */
   internal abstract fun base(): SourceKind
 
   /**
@@ -117,7 +117,7 @@ public data class AndroidSourceKind(
   }
 
   override fun compareTo(other: SourceKind): Int {
-    if (other !is AndroidSourceKind) return 1
+    if (other !is AndroidSourceKind) return -1
 
     return compareBy(SourceKind::name)
       .thenBy(SourceKind::kind)
@@ -219,18 +219,12 @@ public data class JvmSourceKind(
 ) : SourceKind(), Serializable {
 
   override fun base(): JvmSourceKind = this
-
-  override fun runtimeMatches(classpaths: Collection<String>): Boolean {
-    return runtimeClasspathName in classpaths
-  }
-
-  override fun sourceSetMatches(sourceSetName: String): Boolean {
-    return sourceSetName == name
-  }
+  override fun runtimeMatches(classpaths: Collection<String>): Boolean = runtimeClasspathName in classpaths
+  override fun sourceSetMatches(sourceSetName: String): Boolean = sourceSetName == name
 
   override fun compareTo(other: SourceKind): Int {
-    if (other is AndroidSourceKind) return -1
-    if (other is KmpSourceKind) return 1
+    if (other is AndroidSourceKind) return 1
+    if (other is KmpSourceKind) return -1
 
     return compareBy(SourceKind::name)
       .thenBy(SourceKind::kind)
@@ -275,24 +269,12 @@ public data class KmpSourceKind(
   override val runtimeClasspathName: String,
 ) : SourceKind(), Serializable {
 
-  override fun base(): KmpSourceKind {
-    // TODO(tsr): double-check this is correct.
-    return this
-  }
+  override fun base(): KmpSourceKind = this
+  override fun runtimeMatches(classpaths: Collection<String>): Boolean = runtimeClasspathName in classpaths
+  override fun sourceSetMatches(sourceSetName: String): Boolean = sourceSetName == name
 
-  override fun runtimeMatches(classpaths: Collection<String>): Boolean {
-    // TODO(tsr): double-check this is correct.
-    return runtimeClasspathName in classpaths
-  }
-
-  override fun sourceSetMatches(sourceSetName: String): Boolean {
-    // TODO(tsr): double-check this is correct.
-    return sourceSetName == name
-  }
-
-  // TODO(tsr): need comprehensive unit tests for Comparable
   override fun compareTo(other: SourceKind): Int {
-    if (other !is KmpSourceKind) return -1
+    if (other !is KmpSourceKind) return 1
 
     return compareBy(SourceKind::name)
       .thenBy(SourceKind::kind)
@@ -301,7 +283,6 @@ public data class KmpSourceKind(
       .compare(this, other)
   }
 
-  // TODO(tsr): double-check this is correct.
   internal companion object {
     const val COMMON_MAIN_NAME = "commonMain"
     const val COMMON_TEST_NAME = "commonTest"
@@ -330,13 +311,17 @@ public data class KmpSourceKind(
         // Always custom
         kind = CUSTOM_JVM_KIND,
         compileClasspathName = if (sourceSetName == JVM_MAIN_NAME) {
+          // jvmMain => jvmCompileClasspath (jvmMain is special)
           "jvmCompileClasspath"
         } else {
+          // jvmTest => jvmTestCompileClasspath
           "${sourceSetName}CompileClasspath"
         },
         runtimeClasspathName = if (sourceSetName == JVM_MAIN_NAME) {
+          // jvmMain => jvmRuntimeClasspath (jvmMain is special)
           "jvmRuntimeClasspath"
         } else {
+          // jvmTest => jvmTestRuntimeClasspath
           "${sourceSetName}RuntimeClasspath"
         },
       )

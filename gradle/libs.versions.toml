@@ -1,10 +1,8 @@
 # Copyright (c) 2024. Tony Robalik.
 # SPDX-License-Identifier: Apache-2.0
 [versions]
-#agp = "8.3.2"
 agp = "8.10.0"
 agp-common = "32.0.0"
-#agp-common = "31.13.1"
 antlr-base = "4.13.2"
 antlr-shadowed = "4.13.2.0"
 asm-relocated = "9.9.0"
