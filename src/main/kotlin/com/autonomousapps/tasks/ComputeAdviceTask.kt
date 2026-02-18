@@ -295,8 +295,8 @@ internal class DependencyAdviceBuilder(
   }
 
   private fun computeDependencyAdvice(projectPath: String): Sequence<Advice> {
-    val declarations =
-      declarations.filterToOrderedSet { configurationNames.isForRegularDependency(it.configurationName) }
+    val declarations = declarations
+      .filterToOrderedSet { configurationNames.isForRegularDependency(it.configurationName) }
 
     fun Advice.isRemoveTestDependencyOnSelf(): Boolean {
       return coordinates.identifier == projectPath
@@ -404,6 +404,7 @@ internal class DependencyAdviceBuilder(
   private fun computeAnnotationProcessorAdvice(): Sequence<Advice> {
     val declarations = declarations
       .filterToOrderedSet { configurationNames.isForAnnotationProcessor(it.configurationName) }
+
     return annotationProcessorUsages.asSequence()
       .flatMap { (coordinates, usages) ->
         StandardTransform(

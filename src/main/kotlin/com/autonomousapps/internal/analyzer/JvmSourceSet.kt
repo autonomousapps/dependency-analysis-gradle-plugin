@@ -70,17 +70,11 @@ internal class KmpSourceSet(
 ) : JvmSourceSet {
 
   override val name: String = compilation.name
-
   override val jarTaskName: String = compilation.target.artifactsTaskName
-
   override val sourceKind: SourceKind = KmpSourceKind.of(compilation)
-
   override val sourceCode: SourceDirectorySet = compilation.defaultSourceSet.kotlin
-
   override val compileClasspathConfigurationName: String = compilation.compileDependencyConfigurationName
-
   override val runtimeClasspathConfigurationName: String = compilation.runtimeDependencyConfigurationName!!
-
   override val classesDirs: Provider<FileCollection> = compilation.project.provider { compilation.output.classesDirs }
 }
 
