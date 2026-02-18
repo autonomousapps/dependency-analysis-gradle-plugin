@@ -15,7 +15,6 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
-// TODO: not certain about any of this
 internal class KmpProjectAnalyzer(
   project: Project,
   private val sourceSet: JvmSourceSet,

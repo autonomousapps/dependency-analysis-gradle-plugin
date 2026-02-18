@@ -164,10 +164,10 @@ internal class ConfigurationNames(
     return if (candidate == null) {
       null
     } else if (candidate.name == configurationName || candidate.name.isBlank()) {
-      if (projectType == ProjectType.ANDROID) { // TODO(projectType)
-        AndroidSourceKind.MAIN
-      } else {
-        JvmSourceKind.MAIN
+      when (projectType) {
+        ProjectType.ANDROID -> AndroidSourceKind.MAIN
+        ProjectType.JVM -> JvmSourceKind.MAIN
+        ProjectType.KMP -> KmpSourceKind.JVM_MAIN // TODO(projectType): what about when we have non-JVM targets?
       }
     } else {
       candidate
@@ -184,40 +184,39 @@ internal class ConfigurationNames(
 
     return if (variantSlug.isEmpty()) {
       // "" (empty string) always represents the 'main' source set
-      // TODO(projectType)
       when (projectType) {
         ProjectType.ANDROID -> AndroidSourceKind.MAIN
         ProjectType.JVM -> JvmSourceKind.MAIN
         ProjectType.KMP -> KmpSourceKind.JVM_MAIN
       }
     } else if (variantSlug == SourceKind.TEST_NAME) {
-      require(projectType != ProjectType.KMP) { "Expected non-KMP project" } // TODO(projectType)
+      require(projectType != ProjectType.KMP) { "Expected non-KMP project" }
       // testApi => (main variant, test source set)
       // kaptTest => (main variant, test source set)
-      if (projectType == ProjectType.ANDROID) { // TODO(projectType)
+      if (projectType == ProjectType.ANDROID) {
         AndroidSourceKind.TEST
       } else {
         JvmSourceKind.TEST
       }
     } else if (variantSlug == SourceKind.ANDROID_TEST_NAME) {
       // must be Android
-      require(projectType == ProjectType.ANDROID) { "Expected Android project" } // TODO(projectType)
+      require(projectType == ProjectType.ANDROID) { "Expected Android project" }
       // androidTestApi => (main variant, androidTest source set)
       // kaptAndroidTest => (main variant, androidTest source set)
       AndroidSourceKind.ANDROID_TEST
     } else if (hasCustomSourceSets) {
       // can't be Android
-      require(projectType != ProjectType.ANDROID) { "Expected JVM or KMP project" } // TODO(projectType)
+      require(projectType != ProjectType.ANDROID) { "Expected JVM or KMP project" }
       if (projectType == ProjectType.JVM) {
         JvmSourceKind.of(variantSlug)
       } else {
         KmpSourceKind.of(variantSlug)
       }
     } else if (variantSlug == SourceKind.TEST_FIXTURES_NAME) {
-      require(projectType == ProjectType.ANDROID) { "Expected Android project" } // TODO(projectType)
+      require(projectType == ProjectType.ANDROID) { "Expected Android project" }
       AndroidSourceKind.ANDROID_TEST_FIXTURES
     } else if (variantSlug.startsWith(SourceKind.TEST_FIXTURES_NAME)) {
-      require(projectType == ProjectType.ANDROID) { "Expected Android project" } // TODO(projectType)
+      require(projectType == ProjectType.ANDROID) { "Expected Android project" }
       val name = variantSlug
         .removePrefix(SourceKind.TEST_FIXTURES_NAME)
         .replaceFirstChar(Char::lowercase)
@@ -225,7 +224,7 @@ internal class ConfigurationNames(
       AndroidSourceKind.testFixtures(name)
     } else if (variantSlug.startsWith(SourceKind.TEST_NAME)) {
       // must be Android
-      require(projectType == ProjectType.ANDROID) { "Expected Android project" } // TODO(projectType)
+      require(projectType == ProjectType.ANDROID) { "Expected Android project" }
       val name = variantSlug
         .removePrefix(SourceKind.TEST_NAME)
         .replaceFirstChar(Char::lowercase)
@@ -233,7 +232,7 @@ internal class ConfigurationNames(
       AndroidSourceKind.test(name)
     } else if (variantSlug.startsWith(SourceKind.ANDROID_TEST_NAME)) {
       // must be Android
-      require(projectType == ProjectType.ANDROID) { "Expected Android project" } // TODO(projectType)
+      require(projectType == ProjectType.ANDROID) { "Expected Android project" }
       val name = variantSlug
         .removePrefix(SourceKind.ANDROID_TEST_NAME)
         .replaceFirstChar(Char::lowercase)
@@ -241,7 +240,7 @@ internal class ConfigurationNames(
       AndroidSourceKind.androidTest(name)
     } else {
       // TODO(tsr): when do we hit this case?
-      when (projectType) { // TODO(projectType)
+      when (projectType) {
         ProjectType.ANDROID -> AndroidSourceKind.main(variantSlug)
         ProjectType.JVM -> JvmSourceKind.of(variantSlug)
         ProjectType.KMP -> KmpSourceKind.of(variantSlug)
