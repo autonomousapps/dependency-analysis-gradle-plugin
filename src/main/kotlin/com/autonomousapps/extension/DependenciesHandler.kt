@@ -90,6 +90,11 @@ public abstract class DependenciesHandler @Inject constructor(objects: ObjectFac
     bundle("__kotlin-test") {
       it.includeDependency("org.jetbrains.kotlin:kotlin-test")
     }
+    // kotlin-test-junit provides junit, and Kotlin projects expect to declare the former.
+    bundle("__kotlin-test-junit") {
+      it.primary("org.jetbrains.kotlin:kotlin-test-junit")
+      it.includeDependency("junit:junit")
+    }
   }
 
   internal val explicitSourceSets = objects.setProperty(String::class.java).also {

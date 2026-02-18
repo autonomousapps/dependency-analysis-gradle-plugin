@@ -2,14 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.declaration.internal
 
+import com.autonomousapps.ProjectType
 import com.autonomousapps.model.internal.declaration.Bucket
+import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import spock.lang.Specification
 
 class BucketSpec extends Specification {
 
+  private Set<String> supportedSourceSetNames = ["main", "test", "debug", "release", "releaseFlavor", "debugFlavor"]
+  private ConfigurationNames configurationNames = new ConfigurationNames(ProjectType.JVM, supportedSourceSetNames)
+
   def "can compute bucket from configuration (#configurationName => #bucket)"() {
     expect:
-    Bucket.of(configurationName) == bucket
+    Bucket.of(configurationName, configurationNames) == bucket
 
     where:
     configurationName                  | bucket
@@ -27,7 +32,7 @@ class BucketSpec extends Specification {
 
     'runtimeOnly'                      | Bucket.RUNTIME_ONLY
     'releaseRuntimeOnly'               | Bucket.RUNTIME_ONLY
-    'debugFlavorRuntimeOnly'           | Bucket.RUNTIME_ONLY
+    'flavorDebugRuntimeOnly'           | Bucket.RUNTIME_ONLY
 
     'annotationProcessor'              | Bucket.ANNOTATION_PROCESSOR
     'debugAnnotationProcessor'         | Bucket.ANNOTATION_PROCESSOR
@@ -35,7 +40,7 @@ class BucketSpec extends Specification {
 
     'kapt'                             | Bucket.ANNOTATION_PROCESSOR
     'kaptRelease'                      | Bucket.ANNOTATION_PROCESSOR
-    'kaptFlavorDebug'                  | Bucket.ANNOTATION_PROCESSOR
+    'kaptDebugFlavor'                  | Bucket.ANNOTATION_PROCESSOR
 
     'testImplementation'               | Bucket.IMPL
     'testApi'                          | Bucket.API
@@ -45,7 +50,7 @@ class BucketSpec extends Specification {
 
   def "throws when no matching bucket found (#configurationName)"() {
     when:
-    Bucket.of(configurationName)
+    Bucket.of(configurationName, configurationNames)
 
     then:
     thrown(IllegalArgumentException)

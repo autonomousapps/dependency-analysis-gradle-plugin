@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.6.0 (unreleased)
+* [Breaking]: min version of Android Gradle Plugin (AGP) is now 8.10.0.
+
 # Version 3.5.1
 * [Fix]: don't try to process a non-match as a binary incompatibility.
 * [Fix]: use version catalog when applying the build-health plugin.

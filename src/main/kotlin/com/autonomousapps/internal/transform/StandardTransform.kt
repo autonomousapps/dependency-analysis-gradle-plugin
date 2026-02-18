@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.transform
 
+import com.autonomousapps.ProjectType
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.root
@@ -12,6 +13,7 @@ import com.autonomousapps.model.*
 import com.autonomousapps.model.Coordinates.Companion.copy
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.declaration.Bucket
+import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.model.internal.intermediates.Usage
@@ -28,16 +30,16 @@ internal class StandardTransform(
   private val coordinates: Coordinates,
   private val declarations: Set<Declaration>,
   private val dependencyGraph: Map<String, DependencyGraphView>,
-  private val supportedSourceSets: Set<String>,
   private val buildPath: String,
   private val explicitSourceSets: Set<String> = emptySet(),
-  private val isAndroidProject: Boolean,
+  private val projectType: ProjectType,
+  private val configurationNames: ConfigurationNames,
   private val isKaptApplied: Boolean = false,
 ) : Usage.Transform {
 
   private val mapper = UsageToConfigurationMapper(
     isKaptApplied = isKaptApplied,
-    isAndroidProject = isAndroidProject,
+    projectType = projectType,
   )
 
   /**
@@ -112,7 +114,7 @@ internal class StandardTransform(
     //    the compile classpath based on detected usage in the bytecode. We also already suggest moving things to
     //    runtimeOnly if there's no detected compile-time usage, but the thing has runtime capabilities. Now we want to
     //    say, _add_ this thing to runtimeOnly, if it has runtime capabilities.
-    val visibility = Bucket.determineVisibility(mainUsages, mainDeclarations)
+    val visibility = Bucket.determineVisibility(mainUsages, mainDeclarations, configurationNames)
 
     /*
      * Main usages.
@@ -236,9 +238,9 @@ internal class StandardTransform(
             // Don't remove an undeclared usage (this would make no sense)
             && Reason.Undeclared !in usage.reasons
             // Don't remove a declaration on compileOnly, compileOnlyApi, providedCompile
-            && decl.bucket != Bucket.COMPILE_ONLY
+            && decl.bucket(configurationNames) != Bucket.COMPILE_ONLY
             // Don't remove a declaration on runtimeOnly
-            && decl.bucket != Bucket.RUNTIME_ONLY
+            && decl.bucket(configurationNames) != Bucket.RUNTIME_ONLY
           ) {
             advice += Advice.ofRemove(
               coordinates = declarationCoordinates(decl),
@@ -247,11 +249,11 @@ internal class StandardTransform(
           } else if (
             usage.bucket != Bucket.NONE
             // Don't change a match, it's correct!
-            && !usage.bucket.matches(decl)
+            && !usage.bucket.matches(decl, configurationNames)
             // Don't change a declaration on compileOnly, compileOnlyApi, providedCompile
-            && decl.bucket != Bucket.COMPILE_ONLY
+            && decl.bucket(configurationNames) != Bucket.COMPILE_ONLY
             // Don't change a declaration on runtimeOnly
-            && decl.bucket != Bucket.RUNTIME_ONLY
+            && decl.bucket(configurationNames) != Bucket.RUNTIME_ONLY
           ) {
             advice += Advice.ofChange(
               coordinates = declarationCoordinates(decl),
@@ -273,14 +275,14 @@ internal class StandardTransform(
         // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/900
 
         declarations
-          .find { usage.bucket.matches(it) }
+          .find { usage.bucket.matches(it, configurationNames) }
           ?.let { theDecl ->
             // drain
             declarations.remove(theDecl)
             usageIter.remove()
 
             // Don't change a single-usage match, it's correct!
-            if (!(singleVariant && usage.bucket.matches(theDecl))) {
+            if (!(singleVariant && usage.bucket.matches(theDecl, configurationNames))) {
               advice += Advice.ofChange(
                 coordinates = declarationCoordinates(theDecl),
                 fromConfiguration = theDecl.configurationName,
@@ -352,18 +354,16 @@ internal class StandardTransform(
     // Any remaining declarations should be removed
     declarations.asSequence()
       // Don't remove runtimeOnly or compileOnly declarations
-      .filterNot { it.bucket == Bucket.COMPILE_ONLY || it.bucket == Bucket.RUNTIME_ONLY }
+      .filterNot { decl ->
+        decl.bucket(configurationNames) == Bucket.COMPILE_ONLY || decl.bucket(configurationNames) == Bucket.RUNTIME_ONLY
+      }
       .mapTo(advice) { declaration ->
         Advice.ofRemove(declarationCoordinates(declaration), declaration)
       }
   }
 
   private fun Declaration.findSourceKind(hasCustomSourceSets: Boolean): SourceKind? {
-    return sourceSetKind(
-      supportedSourceSets,
-      isAndroidProject = isAndroidProject,
-      hasCustomSourceSets = hasCustomSourceSets,
-    )
+    return sourceSetKind(hasCustomSourceSets, configurationNames)
   }
 
   /**

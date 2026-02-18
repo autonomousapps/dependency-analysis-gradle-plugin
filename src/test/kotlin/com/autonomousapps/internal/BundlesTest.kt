@@ -2,13 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
+import com.autonomousapps.ProjectType
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.*
-import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.internal.declaration.Bucket
+import com.autonomousapps.model.internal.declaration.ConfigurationNames
+import com.autonomousapps.model.internal.declaration.Declaration
+import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.model.source.JvmSourceKind
+import com.autonomousapps.model.source.KmpSourceKind
 import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.test.usage
 import com.google.common.truth.Truth.assertThat
@@ -20,12 +25,23 @@ import org.junit.jupiter.api.Test
 @Suppress("UnstableApiUsage")
 class BundlesTest {
 
+  private class RealDependenciesHandler(objects: ObjectFactory) : DependenciesHandler(objects)
+
   private val project = ProjectBuilder.builder().build()
   private val objects = project.objects
   private val dependenciesHandler = RealDependenciesHandler(objects)
   private val gvi = GradleVariantIdentification.EMPTY
 
-  private class RealDependenciesHandler(objects: ObjectFactory) : DependenciesHandler(objects)
+  private val jvmConfigurationNames = ConfigurationNames(ProjectType.JVM, setOf("main", "test"))
+  private val kmpConfigurationNames = ConfigurationNames(
+    projectType = ProjectType.KMP,
+    supportedSourceSetNames = setOf(
+      "commonMain",
+      "commonTest",
+      "jvmMain",
+      "jvmTest",
+    ),
+  )
 
   @Nested inner class DefaultBundles {
     @Test fun `kotlin stdlib is a default bundle`() {
@@ -50,11 +66,125 @@ class BundlesTest {
         dependencyGraph = graph,
         bundleRules = dependenciesHandler.serializableBundles(),
         dependencyUsages = dependencyUsages,
+        declarations = emptySet(),
+        configurationNames = jvmConfigurationNames,
         ignoreKtx = false
       )
 
       assertThat(bundles.hasParentInBundle(stdlib)).isTrue()
       assertThat(bundles.hasUsedChild(stdlibJdk8)).isTrue()
+    }
+
+    /**
+     * Because of implicit KMP bundles, will transform:
+     * ```
+     * add okio-jvm to jvmMainApi
+     * ```
+     * to
+     * ```
+     * change okio from commonMainImplementation to commonMainApi
+     * ```
+     * because okio is the implicit parent of okio-jvm, and in this case okio is declared on commonMainImplementation.
+     */
+    @Test fun `transforms add (jvmMainApi) to change (commonMainImplementation to commonMainApi) for kmp (implicit bundles)`() {
+      // Given a project that has a dependency graph with three nodes (itself, okio, and okio-jvm)
+      val consumer = ProjectCoordinates(":consumer", gvi)
+      val okio = ModuleCoordinates("com.squareup.okio:okio", "3.16.4", gvi)
+      val okioJvm = ModuleCoordinates("com.squareup.okio:okio-jvm", "3.16.4", gvi)
+      val graph = newGraphFrom(
+        // :consumer -> okio -> okioJvm
+        listOf(consumer to okio, okio to okioJvm),
+        sourceKind = KmpSourceKind.JVM_MAIN,
+        configurationName = "jvmCompileClasspath",
+        graphKey = "jvmMain,CUSTOM_JVM,jvmCompileClasspath",
+      )
+
+      // ...a single declaration: commonMainImplementation(libs.okio)
+      val declarations = Declaration(
+        identifier = "com.squareup.okio:okio",
+        version = "3.16.4",
+        configurationName = "commonMainImplementation",
+        gradleVariantIdentification = gvi,
+      ).intoSet()
+
+      // ...usages of project :consumer
+      val unused = Reason.Unused.intoSet()
+      val abi = Reason.Abi("Uses 1 class: okio.Buffer").intoSet()
+      val okioUsages = okio to usage(Bucket.NONE, KmpSourceKind.JVM_MAIN, reasons = unused).intoSet()
+      val okioJvmUsages = okioJvm to usage(Bucket.API, KmpSourceKind.JVM_MAIN, reasons = abi).intoSet()
+      val dependencyUsages = listOf(okioUsages, okioJvmUsages).toMap<Coordinates, Set<Usage>>()
+
+      // When we build the thing under test
+      val bundles = Bundles.of(
+        projectPath = ":consumer",
+        dependencyGraph = graph,
+        bundleRules = dependenciesHandler.serializableBundles(),
+        dependencyUsages = dependencyUsages,
+        declarations = declarations,
+        configurationNames = kmpConfigurationNames,
+        ignoreKtx = false
+      )
+
+      // Then it mutates the advice as expected
+      val addAdvice = Advice.ofAdd(okioJvm, "jvmMainApi")
+      val expectedAdvice = Advice.ofChange(okio, "commonMainImplementation", "commonMainApi")
+      assertThat(bundles.maybeParent(addAdvice, okioJvm)).isEqualTo(expectedAdvice)
+    }
+
+    /**
+     * Because of implicit KMP bundles, will transform:
+     * ```
+     * add okio-jvm to jvmMainApi
+     * ```
+     * to
+     * ```
+     * change okio from jvmMainImplementation to jvmMainApi
+     * ```
+     * because okio is the implicit parent of okio-jvm, and in this case okio is declared on jvmMainImplementation.
+     */
+    @Test fun `transforms change (jvmMainImplementation-jvmMainApi) for okio-jvm to okio for kmp (implicit bundles)`() {
+      // Given a project that has a dependency graph with three nodes (itself, okio, and okio-jvm)
+      val consumer = ProjectCoordinates(":consumer", gvi)
+      val okio = ModuleCoordinates("com.squareup.okio:okio", "3.16.4", gvi)
+      val okioJvm = ModuleCoordinates("com.squareup.okio:okio-jvm", "3.16.4", gvi)
+      val graph = newGraphFrom(
+        // :consumer -> okio -> okioJvm
+        listOf(consumer to okio, okio to okioJvm),
+        sourceKind = KmpSourceKind.JVM_MAIN,
+        configurationName = "jvmCompileClasspath",
+        graphKey = "jvmMain,CUSTOM_JVM,jvmCompileClasspath",
+      )
+
+      // ...a single declaration: jvmMainImplementation(libs.okio)
+      val declarations = Declaration(
+        identifier = "com.squareup.okio:okio",
+        version = "3.16.4",
+        configurationName = "jvmMainImplementation",
+        gradleVariantIdentification = gvi,
+      ).intoSet()
+
+      // ...usages of project :consumer
+      val unused = Reason.Unused.intoSet()
+      val abi = Reason.Abi("Uses 1 class: okio.Buffer").intoSet()
+      val okioUsages = okio to usage(Bucket.NONE, KmpSourceKind.JVM_MAIN, reasons = unused).intoSet()
+      val okioJvmUsages = okioJvm to usage(Bucket.API, KmpSourceKind.JVM_MAIN, reasons = abi).intoSet()
+      val dependencyUsages = listOf(okioUsages, okioJvmUsages).toMap<Coordinates, Set<Usage>>()
+
+      // When we build the thing under test
+      val bundles = Bundles.of(
+        projectPath = ":consumer",
+        dependencyGraph = graph,
+        bundleRules = dependenciesHandler.serializableBundles(),
+        dependencyUsages = dependencyUsages,
+        declarations = declarations,
+        configurationNames = kmpConfigurationNames,
+        ignoreKtx = false
+      )
+
+      // Then it mutates the advice as expected
+      val addAdvice = Advice.ofAdd(okioJvm, "jvmMainApi")
+      val expectedAdvice = Advice.ofChange(okio, "jvmMainImplementation", "jvmMainApi")
+      assertThat(bundles.maybeParent(addAdvice, okioJvm)).isEqualTo(expectedAdvice)
     }
   }
 
@@ -110,6 +240,8 @@ class BundlesTest {
         dependencyGraph = graph,
         bundleRules = dependenciesHandler.serializableBundles(),
         dependencyUsages = dependencyUsages,
+        declarations = emptySet(), // TODO(tsr): tests pass with an empty set, so meh
+        configurationNames = jvmConfigurationNames,
         ignoreKtx = false
       )
     }
@@ -118,14 +250,15 @@ class BundlesTest {
   private fun newGraphFrom(
     edges: List<Pair<Coordinates, Coordinates>>,
     sourceKind: SourceKind = JvmSourceKind.MAIN,
-    configurationName: String = "compileClasspath"
+    configurationName: String = "compileClasspath",
+    graphKey: String = "main,Main",
   ): Map<String, DependencyGraphView> {
     val graph = DependencyGraphView.newGraphBuilder().apply {
       edges.forEach { putEdge(it.first, it.second) }
     }.build()
 
     return mapOf(
-      "main,Main" to DependencyGraphView(
+      graphKey to DependencyGraphView(
         sourceKind = sourceKind,
         configurationName = configurationName,
         graph = graph

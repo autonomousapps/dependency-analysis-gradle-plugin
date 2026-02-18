@@ -37,7 +37,7 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
           bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
             kotlinTestJunit,
-            junit('androidTestImplementation'),
+//            junit('androidTestImplementation'),
             appcompat('implementation'),
           ]
         }
@@ -76,6 +76,8 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
+  // The advice changed when I added a default bundle in Dependencies handler named `__kotlin-test-junit`. Leaving this
+  // commented out, instead of deleting, in case I change my mind.
   private static Set<Advice> changeKotlinTestJunit() {
     return [Advice.ofChange(
       moduleCoordinates(kotlinTestJunit),
@@ -85,7 +87,8 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
   }
 
   private static ProjectAdvice app() {
-    projectAdviceForDependencies(':app', changeKotlinTestJunit())
+//    projectAdviceForDependencies(':app', changeKotlinTestJunit())
+    emptyProjectAdviceFor(':app')
   }
 
   Set<ProjectAdvice> expectedBuildHealth = [app()]

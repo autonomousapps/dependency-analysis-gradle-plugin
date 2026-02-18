@@ -1,8 +1,8 @@
 # Copyright (c) 2024. Tony Robalik.
 # SPDX-License-Identifier: Apache-2.0
 [versions]
-agp = "8.3.2"
-agp-common = "31.2.0"
+agp = "8.10.0"
+agp-common = "32.0.0"
 antlr-base = "4.13.2"
 antlr-shadowed = "4.13.2.0"
 asm-relocated = "9.9.0"
@@ -67,6 +67,7 @@ kotlin-editor-core = { module = "app.cash.kotlin-editor:core", version.ref = "ko
 kotlin-editor-grammar = { module = "app.cash.kotlin-editor:grammar", version.ref = "kotlineditor-core" }
 kotlin-editor-relocated = { module = "com.autonomousapps:kotlin-editor-relocated", version.ref = "kotlineditor-relocated" }
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlin-multiplatform-gradle = { module = "org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlin-stdlib-core = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }

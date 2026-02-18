@@ -2,12 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.analyzer
 
+import com.autonomousapps.model.source.KmpSourceKind
 import com.autonomousapps.model.source.SourceKind
+import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.SourceDirectorySet
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.GroovySourceDirectorySet
 import org.gradle.api.tasks.SourceSet
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet as JbKotlinSourceSet
 
 internal interface JvmSourceSet {
@@ -22,10 +26,11 @@ internal interface JvmSourceSet {
   /** E.g., `runtimeClasspath` or `testRuntimeClasspath` */
   val runtimeClasspathConfigurationName: String
 
-  val classesDirs: FileCollection
+  val classesDirs: Provider<FileCollection>
 }
 
 internal class JavaSourceSet(
+  project: Project,
   sourceSet: SourceSet,
   override val sourceKind: SourceKind,
 ) : JvmSourceSet {
@@ -36,10 +41,11 @@ internal class JavaSourceSet(
   override val compileClasspathConfigurationName: String = sourceSet.compileClasspathConfigurationName
   override val runtimeClasspathConfigurationName: String = sourceSet.runtimeClasspathConfigurationName
 
-  override val classesDirs: FileCollection = sourceSet.output.classesDirs
+  override val classesDirs: Provider<FileCollection> = project.provider { sourceSet.output.classesDirs }
 }
 
 internal class KotlinSourceSet(
+  project: Project,
   sourceSet: SourceSet,
   override val sourceKind: SourceKind,
 ) : JvmSourceSet {
@@ -56,7 +62,20 @@ internal class KotlinSourceSet(
     if (name != "main") "${name}RuntimeClasspath"
     else "runtimeClasspath"
 
-  override val classesDirs: FileCollection = sourceSet.output.classesDirs
+  override val classesDirs: Provider<FileCollection> = project.provider { sourceSet.output.classesDirs }
+}
+
+internal class KmpSourceSet(
+  private val compilation: KotlinCompilation<*>,
+) : JvmSourceSet {
+
+  override val name: String = compilation.name
+  override val jarTaskName: String = compilation.target.artifactsTaskName
+  override val sourceKind: SourceKind = KmpSourceKind.of(compilation)
+  override val sourceCode: SourceDirectorySet = compilation.defaultSourceSet.kotlin
+  override val compileClasspathConfigurationName: String = compilation.compileDependencyConfigurationName
+  override val runtimeClasspathConfigurationName: String = compilation.runtimeDependencyConfigurationName!!
+  override val classesDirs: Provider<FileCollection> = compilation.project.provider { compilation.output.classesDirs }
 }
 
 internal fun SourceSet.java(): FileTree {

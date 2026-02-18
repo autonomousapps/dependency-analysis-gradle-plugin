@@ -142,6 +142,9 @@ dependencies {
   compileOnly(libs.kotlin.gradle) {
     because("Auto-wiring into Kotlin projects")
   }
+  compileOnly(libs.kotlin.multiplatform.gradle) {
+    because("Auto-wiring into Kotlin Multiplatform projects")
+  }
 
   "commonTestImplementation"(libs.kotlin.stdlib.core)
 

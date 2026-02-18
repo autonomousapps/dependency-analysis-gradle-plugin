@@ -29,15 +29,15 @@ internal enum class Bucket(val value: String) {
   NONE("n/a"),
   ;
 
-  fun matches(declaration: Declaration): Boolean {
-    return this == declaration.bucket
+  fun matches(declaration: Declaration, configurationNames: ConfigurationNames): Boolean {
+    return this == declaration.bucket(configurationNames)
   }
 
   companion object {
     @JvmStatic
-    fun of(configurationName: String): Bucket {
-      if (Configurations.isForAnnotationProcessor(configurationName)) return ANNOTATION_PROCESSOR
-      if (Configurations.isForCompileOnly(configurationName)) return COMPILE_ONLY
+    fun of(configurationName: String, configurationNames: ConfigurationNames): Bucket {
+      if (configurationNames.isForAnnotationProcessor(configurationName)) return ANNOTATION_PROCESSOR
+      if (configurationNames.isForCompileOnly(configurationName)) return COMPILE_ONLY
 
       return entries.find { bucket ->
         configurationName.endsWith(bucket.value, true)
@@ -70,9 +70,13 @@ internal enum class Bucket(val value: String) {
      */
     private val VISIBLE_TO_TEST_RUNTIME = listOf(API, IMPL, RUNTIME_ONLY)
 
-    fun determineVisibility(usages: Set<Usage>, declarations: Set<Declaration>): Visibility {
-      val compileVisibility = isVisibleToTestCompileClasspath(usages, declarations)
-      val runtimeVisibility = isVisibleToTestRuntimeClasspath(usages, declarations)
+    fun determineVisibility(
+      usages: Set<Usage>,
+      declarations: Set<Declaration>,
+      configurationNames: ConfigurationNames,
+    ): Visibility {
+      val compileVisibility = isVisibleToTestCompileClasspath(usages, declarations, configurationNames)
+      val runtimeVisibility = isVisibleToTestRuntimeClasspath(usages, declarations, configurationNames)
 
       return Visibility(forCompile = compileVisibility, forRuntime = runtimeVisibility)
     }
@@ -85,8 +89,12 @@ internal enum class Bucket(val value: String) {
      *
      * @see <a href="https://docs.gradle.org/current/userguide/java_plugin.html#resolvable_configurations.">Java configurations</a>
      */
-    fun isVisibleToTestCompileClasspath(usages: Set<Usage>, declarations: Set<Declaration>): Boolean {
-      return isVisibleIn(VISIBLE_TO_TEST_COMPILE, usages, declarations)
+    fun isVisibleToTestCompileClasspath(
+      usages: Set<Usage>,
+      declarations: Set<Declaration>,
+      configurationNames: ConfigurationNames,
+    ): Boolean {
+      return isVisibleIn(VISIBLE_TO_TEST_COMPILE, usages, declarations, configurationNames)
     }
 
     /**
@@ -97,16 +105,26 @@ internal enum class Bucket(val value: String) {
      *
      * @see <a href="https://docs.gradle.org/current/userguide/java_plugin.html#resolvable_configurations.">Java configurations</a>
      */
-    fun isVisibleToTestRuntimeClasspath(usages: Set<Usage>, declarations: Set<Declaration>): Boolean {
+    fun isVisibleToTestRuntimeClasspath(
+      usages: Set<Usage>,
+      declarations: Set<Declaration>,
+      configurationNames: ConfigurationNames,
+    ): Boolean {
       // the runtimeOnly configuration is visible to the testRuntimeOnly configuration
       val isRuntimeOnly = usages.any { usage -> usage.bucket == RUNTIME_ONLY }
-      return isRuntimeOnly || isVisibleIn(VISIBLE_TO_TEST_RUNTIME, usages, declarations)
+      return isRuntimeOnly || isVisibleIn(VISIBLE_TO_TEST_RUNTIME, usages, declarations, configurationNames)
     }
 
-    private fun isVisibleIn(buckets: List<Bucket>, usages: Set<Usage>, declarations: Set<Declaration>): Boolean {
+    private fun isVisibleIn(
+      buckets: List<Bucket>,
+      usages: Set<Usage>,
+      declarations: Set<Declaration>,
+      configurationNames: ConfigurationNames,
+    ): Boolean {
       return usages.reallyAll { usage ->
-        buckets.any { it == usage.bucket }
-          && declarations.any { declaration -> buckets.any { it.matches(declaration) } }
+        buckets.any { bucket -> bucket == usage.bucket } && declarations.any { declaration ->
+          buckets.any { bucket -> bucket.matches(declaration, configurationNames) }
+        }
       }
     }
   }

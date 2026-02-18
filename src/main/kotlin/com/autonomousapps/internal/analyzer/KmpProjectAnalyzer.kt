@@ -1,7 +1,5 @@
 // Copyright (c) 2025. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-@file:Suppress("UnstableApiUsage")
-
 package com.autonomousapps.internal.analyzer
 
 import com.autonomousapps.internal.ArtifactAttributes
@@ -14,42 +12,41 @@ import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
-internal abstract class JvmAnalyzer(
+internal class KmpProjectAnalyzer(
   project: Project,
   private val sourceSet: JvmSourceSet,
   private val hasAbi: Boolean,
 ) : AbstractDependencyAnalyzer(project) {
 
-  final override val flavorName: String? = null
-  final override val buildType: String? = null
-  final override val sourceKind: SourceKind = sourceSet.sourceKind
-  final override val variantName: String = sourceSet.name
-  final override val taskNameSuffix: String = variantName.capitalizeSafely()
+  override val flavorName: String? = null
+  override val buildType: String? = null
+  override val sourceKind: SourceKind = sourceSet.sourceKind
+  override val variantName: String = sourceSet.name
+  override val taskNameSuffix: String = variantName.capitalizeSafely()
 
-  final override val compileConfigurationName = sourceSet.compileClasspathConfigurationName
-  final override val runtimeConfigurationName = sourceSet.runtimeClasspathConfigurationName
-  final override val kaptConfigurationName = "kapt"
-  final override val annotationProcessorConfigurationName = "annotationProcessor"
+  override val compileConfigurationName = sourceSet.compileClasspathConfigurationName
+  override val runtimeConfigurationName = sourceSet.runtimeClasspathConfigurationName
+  override val kaptConfigurationName = "kapt"
+  override val annotationProcessorConfigurationName = "annotationProcessor"
 
-  final override val attributeValueJar = "jar"
+  override val attributeValueJar = "jar"
 
-  final override val isDataBindingEnabled: Provider<Boolean> = project.provider { false }
-  final override val isViewBindingEnabled: Provider<Boolean> = project.provider { false }
+  override val isDataBindingEnabled: Provider<Boolean> = project.provider { false }
+  override val isViewBindingEnabled: Provider<Boolean> = project.provider { false }
 
   override val outputPaths = OutputPaths(project, variantName)
 
-  final override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
+  override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
     return project.tasks.register("explodeByteCodeSource$taskNameSuffix", ClassListExploderTask::class.java) {
       it.classes.setFrom(sourceSet.classesDirs)
       it.output.set(outputPaths.explodingBytecodePath)
     }
   }
 
-  final override fun registerCodeSourceExploderTask(): TaskProvider<out CodeSourceExploderTask> {
+  override fun registerCodeSourceExploderTask(): TaskProvider<out CodeSourceExploderTask> {
     return project.tasks.register("explodeCodeSource$taskNameSuffix", JvmCodeSourceExploderTask::class.java) {
       it.groovySource.setFrom(getGroovySources())
       it.javaSource.setFrom(getJavaSources())
@@ -59,7 +56,7 @@ internal abstract class JvmAnalyzer(
     }
   }
 
-  final override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? {
+  override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? {
     if (!hasAbi) return null
 
     return project.tasks.register("abiAnalysis$taskNameSuffix", AbiAnalysisTask::class.java) {
@@ -70,7 +67,7 @@ internal abstract class JvmAnalyzer(
     }
   }
 
-  final override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> {
+  override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> {
     return project.tasks.register("findDeclaredProcs$taskNameSuffix", FindDeclaredProcsTask::class.java) {
       it.inMemoryCacheProvider.set(InMemoryCache.register(project))
       kaptConf()?.let { configuration ->
@@ -86,7 +83,9 @@ internal abstract class JvmAnalyzer(
 
   override fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask> {
     return project.tasks.register("findNativeLibs$taskNameSuffix", FindNativeLibsTask::class.java) {
-      it.setMacNativeLibs(project.configurations.getByName(compileConfigurationName).artifactsFor(ArtifactAttributes.DYLIB))
+      it.setMacNativeLibs(
+        project.configurations.getByName(compileConfigurationName).artifactsFor(ArtifactAttributes.DYLIB)
+      )
       it.output.set(outputPaths.nativeDependenciesPath)
     }
   }
@@ -112,58 +111,3 @@ internal abstract class JvmAnalyzer(
     return project.files(allSource).asFileTree
   }
 }
-
-internal class JavaWithoutAbiAnalyzer(
-  project: Project,
-  sourceSet: SourceSet,
-  sourceKind: SourceKind,
-) : JvmAnalyzer(
-  project = project,
-  sourceSet = JavaSourceSet(project, sourceSet, sourceKind),
-  hasAbi = false
-)
-
-internal class JavaWithAbiAnalyzer(
-  project: Project,
-  sourceSet: SourceSet,
-  sourceKind: SourceKind,
-  hasAbi: Boolean,
-) : JvmAnalyzer(
-  project = project,
-  sourceSet = JavaSourceSet(project, sourceSet, sourceKind),
-  hasAbi = hasAbi
-)
-
-internal abstract class KotlinJvmAnalyzer(
-  project: Project,
-  sourceSet: SourceSet,
-  sourceKind: SourceKind,
-  hasAbi: Boolean,
-) : JvmAnalyzer(
-  project = project,
-  sourceSet = KotlinSourceSet(project, sourceSet, sourceKind),
-  hasAbi = hasAbi
-)
-
-internal class KotlinJvmAppAnalyzer(
-  project: Project,
-  sourceSet: SourceSet,
-  sourceKind: SourceKind,
-) : KotlinJvmAnalyzer(
-  project = project,
-  sourceSet = sourceSet,
-  sourceKind = sourceKind,
-  hasAbi = false
-)
-
-internal class KotlinJvmLibAnalyzer(
-  project: Project,
-  sourceSet: SourceSet,
-  sourceKind: SourceKind,
-  hasAbi: Boolean,
-) : KotlinJvmAnalyzer(
-  project = project,
-  sourceSet = sourceSet,
-  sourceKind = sourceKind,
-  hasAbi = hasAbi
-)
