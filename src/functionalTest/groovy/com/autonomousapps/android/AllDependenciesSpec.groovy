@@ -23,6 +23,6 @@ final class AllDependenciesSpec extends AbstractAndroidSpec {
     assertThat(report).isEqualTo(project.expectedAllDependencies)
 
     where:
-    [gradleVersion, agpVersion] << multivariableDataPipe([GRADLE_LATEST], [AGP_8_4.version])
+    [gradleVersion, agpVersion] << multivariableDataPipe([GRADLE_LATEST], [AGP_8_13.version])
   }
 }

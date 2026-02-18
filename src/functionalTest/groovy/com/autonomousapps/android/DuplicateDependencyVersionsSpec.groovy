@@ -52,6 +52,6 @@ final class DuplicateDependencyVersionsSpec extends AbstractAndroidSpec {
       .contains(project.expectedOutput)
 
     where:
-    [gradleVersion, agpVersion] << multivariableDataPipe([GRADLE_LATEST], [AGP_8_4.version])
+    [gradleVersion, agpVersion] << multivariableDataPipe([GRADLE_LATEST], [AGP_8_13.version])
   }
 }
