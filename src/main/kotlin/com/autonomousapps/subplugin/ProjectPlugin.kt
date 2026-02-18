@@ -21,31 +21,22 @@ import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.artifacts.DagpArtifacts
-import com.autonomousapps.internal.artifactsFor
-import com.autonomousapps.internal.kotlin.multiplatform.FileCollectionMap
-import com.autonomousapps.internal.kotlin.multiplatform.KotlinCommonSources
 import com.autonomousapps.internal.utils.addAll
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.internal.utils.toJson
-import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.model.source.AndroidSourceKind
 import com.autonomousapps.model.source.JvmSourceKind
 import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.services.GlobalDslService
-import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.*
 import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.AppliedPlugin
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.work.DisableCachingByDefault
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
@@ -816,30 +807,15 @@ internal class ProjectPlugin(private val project: Project) {
   private fun Project.analyzeDependencies(dependencyAnalyzer: DependencyAnalyzer) {
     configureAggregationTasks()
 
-    val theRootDir = rootDir
-    val thisProjectPath = path
-    val variantName = dependencyAnalyzer.variantName
-    val taskNameSuffix = dependencyAnalyzer.taskNameSuffix
-    val outputPaths = dependencyAnalyzer.outputPaths
-
     /*
      * Metadata about the dependency graph.
      */
 
     // Lists the dependencies declared for building the project, along with their physical artifacts (jars).
-    val artifactsReport = dependencyAnalyzer.registerArtifactsReportTask()
+    val artifactsReport = dependencyAnalyzer.registerArtifactsReportForCompileTask()
 
     // Lists the dependencies declared for running the project, along with their physical artifacts (jars).
-    val artifactsReportRuntime =
-      tasks.register("artifactsReportRuntime$taskNameSuffix", ArtifactsReportTask::class.java) { t ->
-        t.setConfiguration(configurations.named(dependencyAnalyzer.runtimeConfigurationName)) { c ->
-          c.artifactsFor(dependencyAnalyzer.attributeValueJar)
-        }
-        t.buildPath.set(buildPath(dependencyAnalyzer.runtimeConfigurationName))
-
-        t.output.set(outputPaths.runtimeArtifactsPath)
-        t.excludedIdentifiersOutput.set(outputPaths.excludedIdentifiersRuntimePath)
-      }
+    val artifactsReportRuntime = dependencyAnalyzer.registerArtifactsReportForRuntimeTask()
 
     // Produce a DAG of the compile and runtime classpaths rooted on this project.
     val graphViewTask = dependencyAnalyzer.registerGraphViewTask(findDeclarationsTask)
@@ -853,96 +829,24 @@ internal class ProjectPlugin(private val project: Project) {
      * Optional utility tasks (not part of buildHealth). Here because they can easily utilize DAGP's infrastructure.
      */
 
-    val resolveExternalDependencies =
-      tasks.register("resolveExternalDependencies$taskNameSuffix", ResolveExternalDependenciesTask::class.java) {
-        it.configureTask(
-          project = this@analyzeDependencies,
-          compileClasspath = configurations.getByName(dependencyAnalyzer.compileConfigurationName),
-          runtimeClasspath = configurations.getByName(dependencyAnalyzer.runtimeConfigurationName),
-          jarAttr = dependencyAnalyzer.attributeValueJar
-        )
-        it.output.set(outputPaths.externalDependenciesPath)
-      }
+    val resolveExternalDependencies = dependencyAnalyzer.registerResolveExternalDependenciesTask()
 
     // Lifecycle tasks to resolve ALL external dependencies for ALL source sets.
     resolveExternalDependenciesTask.configure { t ->
       t.dependsOn(resolveExternalDependencies)
     }
 
-    computeResolvedDependenciesTask.configure {
-      it.externalDependencies.add(resolveExternalDependencies.flatMap { it.output })
+    computeResolvedDependenciesTask.configure { t ->
+      t.externalDependencies.add(resolveExternalDependencies.flatMap { it.output })
     }
 
-    val computeDominatorCompile =
-      tasks.register("computeDominatorTreeCompile$taskNameSuffix", ComputeDominatorTreeTask::class.java) {
-        it.buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
-        it.projectPath.set(thisProjectPath)
-        it.physicalArtifacts.set(artifactsReport.flatMap { it.output })
-        it.graphView.set(graphViewTask.flatMap { it.output })
+    dependencyAnalyzer.registerDominatorTreeTasks(
+      artifactsReportCompile = artifactsReport,
+      artifactsReportRuntime = artifactsReportRuntime,
+      graphViewTask = graphViewTask,
+    )
 
-        it.outputTxt.set(outputPaths.compileDominatorConsolePath)
-        it.outputDot.set(outputPaths.compileDominatorGraphPath)
-        it.outputJson.set(outputPaths.compileDominatorJsonPath)
-      }
-
-    val computeDominatorRuntime =
-      tasks.register("computeDominatorTreeRuntime$taskNameSuffix", ComputeDominatorTreeTask::class.java) {
-        it.buildPath.set(buildPath(dependencyAnalyzer.runtimeConfigurationName))
-        it.projectPath.set(thisProjectPath)
-        it.physicalArtifacts.set(artifactsReportRuntime.flatMap { it.output })
-        it.graphView.set(graphViewTask.flatMap { it.outputRuntime })
-
-        it.outputTxt.set(outputPaths.runtimeDominatorConsolePath)
-        it.outputDot.set(outputPaths.runtimeDominatorGraphPath)
-        it.outputJson.set(outputPaths.runtimeDominatorJsonPath)
-      }
-
-    // a lifecycle task that computes the dominator tree for both compile and runtime classpaths
-    tasks.register("computeDominatorTree$taskNameSuffix") {
-      it.dependsOn(computeDominatorCompile, computeDominatorRuntime)
-    }
-
-    tasks.register("printDominatorTreeCompile$taskNameSuffix", PrintDominatorTreeTask::class.java) {
-      it.consoleText.set(computeDominatorCompile.flatMap { it.outputTxt })
-    }
-
-    tasks.register("printDominatorTreeRuntime$taskNameSuffix", PrintDominatorTreeTask::class.java) {
-      it.consoleText.set(computeDominatorRuntime.flatMap { it.outputTxt })
-    }
-
-    // Generates graph view of local (project) dependencies
-    val generateProjectGraphTask =
-      tasks.register("generateProjectGraph$taskNameSuffix", GenerateProjectGraphTask::class.java) {
-        it.buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
-
-        it.compileClasspath.set(
-          configurations.getByName(dependencyAnalyzer.compileConfigurationName)
-            .incoming
-            .resolutionResult
-            .rootComponent
-        )
-        it.runtimeClasspath.set(
-          configurations.getByName(dependencyAnalyzer.runtimeConfigurationName)
-            .incoming
-            .resolutionResult
-            .rootComponent
-        )
-        it.output.set(outputPaths.projectGraphDir)
-      }
-
-    // Prints some help text relating to generateProjectGraphTask. This is the "user-facing" task.
-    tasks.register("projectGraph$taskNameSuffix", ProjectGraphTask::class.java) {
-      it.rootDir.set(theRootDir)
-      it.projectPath.set(thisProjectPath)
-      it.graphsDir.set(generateProjectGraphTask.flatMap { it.output })
-    }
-
-    // Merges the graphs from generateProjectGraphTask into a single variant-agnostic output.
-    mergeProjectGraphsTask.configure {
-      it.projectGraphs.add(generateProjectGraphTask.flatMap {
-        it.output.file(GenerateProjectGraphTask.PROJECT_COMBINED_CLASSPATH_JSON)
-      })
-    }
+    dependencyAnalyzer.registerGenerateProjectGraphTasks(mergeProjectGraphsTask)
 
     /* ******************************
      * Producers. Find the capabilities of all the producers (dependencies). There are many capabilities, including:
@@ -962,34 +866,10 @@ internal class ProjectPlugin(private val project: Project) {
     val findAndroidAssetsTask = dependencyAnalyzer.registerFindAndroidAssetProvidersTask()
 
     // Explode jars to expose their secrets.
-    val explodeJarTask = tasks.register("explodeJar$taskNameSuffix", ExplodeJarTask::class.java) {
-      it.inMemoryCache.set(InMemoryCache.register(project))
-      it.compileClasspath.setFrom(
-        configurations.getByName(dependencyAnalyzer.compileConfigurationName)
-          .artifactsFor(dependencyAnalyzer.attributeValueJar)
-          .artifactFiles
-      )
-      it.physicalArtifacts.set(artifactsReport.flatMap { it.output })
-      androidLintTask?.let { task ->
-        it.androidLinters.set(task.flatMap { it.output })
-      }
-
-      it.output.set(outputPaths.explodedJarsPath)
-    }
+    val explodeJarTask = dependencyAnalyzer.registerExplodeJarTask(artifactsReport, androidLintTask)
 
     // Find the inline members of this project's dependencies.
-    val kotlinMagicTask = tasks.register("findKotlinMagic$taskNameSuffix", FindKotlinMagicTask::class.java) {
-      it.inMemoryCacheProvider.set(InMemoryCache.register(project))
-      it.compileClasspath.setFrom(
-        configurations.getByName(dependencyAnalyzer.compileConfigurationName)
-          .artifactsFor(dependencyAnalyzer.attributeValueJar)
-          .artifactFiles
-      )
-      it.artifacts.set(artifactsReport.flatMap { it.output })
-      it.outputInlineMembers.set(outputPaths.inlineUsagePath)
-      it.outputTypealiases.set(outputPaths.typealiasUsagePath)
-      it.outputErrors.set(outputPaths.inlineUsageErrorsPath)
-    }
+    val kotlinMagicTask = dependencyAnalyzer.registerFindKotlinMagicTask(artifactsReport)
 
     // Produces a report of packages from included manifests. Null for java-library projects.
     val androidManifestTask = dependencyAnalyzer.registerManifestComponentsExtractionTask()
@@ -1001,39 +881,24 @@ internal class ProjectPlugin(private val project: Project) {
     val findNativeLibsTask = dependencyAnalyzer.registerFindNativeLibsTask()
 
     // A report of service loaders.
-    val findServiceLoadersTask = tasks.register("serviceLoader$taskNameSuffix", FindServiceLoadersTask::class.java) {
-      // TODO(tsr): consider this. Wouldn't the runtime classpath be more appropriate for this task? Separate PR to test.
-      //  it.setCompileClasspath(configurations.getByName(dependencyAnalyzer.runtimeConfigurationName).artifactsFor(dependencyAnalyzer.attributeValueJar))
-      it.setCompileClasspath(
-        configurations
-          .getByName(dependencyAnalyzer.compileConfigurationName)
-          .artifactsFor(dependencyAnalyzer.attributeValueJar)
-      )
-      it.output.set(outputPaths.serviceLoaderDependenciesPath)
-    }
+    val findServiceLoadersTask = dependencyAnalyzer.registerFindServiceLoadersTask()
 
     // A report of declared annotation processors.
     val declaredProcsTask = dependencyAnalyzer.registerFindDeclaredProcsTask()
 
-    val synthesizeDependenciesTask =
-      tasks.register("synthesizeDependencies$taskNameSuffix", SynthesizeDependenciesTask::class.java) {
-        it.inMemoryCache.set(InMemoryCache.register(project))
-        it.projectPath.set(thisProjectPath)
-        it.compileDependencies.set(graphViewTask.flatMap { it.outputNodes })
-        it.physicalArtifacts.set(artifactsReport.flatMap { it.output })
-        it.explodedJars.set(explodeJarTask.flatMap { it.output })
-        it.inlineMembers.set(kotlinMagicTask.flatMap { it.outputInlineMembers })
-        it.typealiases.set(kotlinMagicTask.flatMap { it.outputTypealiases })
-        it.serviceLoaders.set(findServiceLoadersTask.flatMap { it.output })
-        it.annotationProcessors.set(declaredProcsTask.flatMap { it.output })
-        it.nativeLibs.set(findNativeLibsTask.flatMap { it.output })
-        // Optional Android-only inputs
-        androidManifestTask?.let { task -> it.manifestComponents.set(task.flatMap { it.output }) }
-        findAndroidResTask?.let { task -> it.androidRes.set(task.flatMap { it.output }) }
-        findAndroidAssetsTask?.let { task -> it.androidAssets.set(task.flatMap { it.output }) }
-
-        it.outputDir.set(outputPaths.dependenciesDir)
-      }
+    // Re-synthesize dependencies from analysis.
+    val synthesizeDependenciesTask = dependencyAnalyzer.registerSynthesizeDependenciesTask(
+      graphViewTask,
+      artifactsReport,
+      explodeJarTask,
+      kotlinMagicTask,
+      findServiceLoadersTask,
+      declaredProcsTask,
+      findNativeLibsTask,
+      androidManifestTask,
+      findAndroidResTask,
+      findAndroidAssetsTask,
+    )
 
     /* ******************************
      * Consumer. Start with introspection: what can we say about this project itself? There are several elements:
@@ -1081,59 +946,27 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     // Synthesizes the above into a single view of this project's usages.
-    val synthesizeProjectViewTask =
-      tasks.register("synthesizeProjectView$taskNameSuffix", SynthesizeProjectViewTask::class.java) {
-        it.projectPath.set(thisProjectPath)
-        it.buildType.set(dependencyAnalyzer.buildType)
-        it.flavor.set(dependencyAnalyzer.flavorName)
-        it.variant.set(variantName)
-        it.sourceKind.set(dependencyAnalyzer.sourceKind)
-        it.graph.set(graphViewTask.flatMap { it.output })
-        it.annotationProcessors.set(declaredProcsTask.flatMap { it.output })
-        it.explodedBytecode.set(explodeBytecodeTask.flatMap { it.output })
-        it.explodedSourceCode.set(explodeCodeSourceTask.flatMap { it.output })
-        it.usagesExclusions.set(usagesExclusionsProvider)
-        it.excludedIdentifiers.set(artifactsReport.flatMap { it.excludedIdentifiersOutput })
-        // Optional: only exists for libraries.
-        abiAnalysisTask?.let { t -> it.explodingAbi.set(t.flatMap { it.output }) }
-        // Optional: only exists for Android libraries.
-        explodeXmlSourceTask?.let { t ->
-          it.androidResSource.set(t.flatMap { it.output })
-          it.androidResSourceRuntime.set(t.flatMap { it.outputRuntime })
-        }
-        // Optional: only exists for Android libraries.
-        explodeAssetSourceTask?.let { t -> it.androidAssetsSource.set(t.flatMap { it.output }) }
-        // Optional: only exists for Android projects.
-        it.testInstrumentationRunner.set(dependencyAnalyzer.testInstrumentationRunner)
-        it.output.set(outputPaths.syntheticProjectPath)
-      }
+    val synthesizeProjectViewTask = dependencyAnalyzer.registerSynthesizeProjectViewTask(
+      graphViewTask,
+      declaredProcsTask,
+      explodeBytecodeTask,
+      explodeCodeSourceTask,
+      usagesExclusionsProvider,
+      artifactsReport,
+      abiAnalysisTask,
+      explodeXmlSourceTask,
+      explodeAssetSourceTask,
+    )
 
     // Discover duplicates on compile and runtime classpaths
     val duplicateClassesCompile =
-      tasks.register("discoverDuplicationForCompile$taskNameSuffix", DiscoverClasspathDuplicationTask::class.java) {
-        it.withClasspathName(DuplicateClass.COMPILE_CLASSPATH_NAME)
-        it.setClasspath(
-          configurations
-            .getByName(dependencyAnalyzer.compileConfigurationName)
-            .artifactsFor(dependencyAnalyzer.attributeValueJar)
-        )
-        it.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
-        it.output.set(outputPaths.duplicateCompileClasspathPath)
-      }
+      dependencyAnalyzer.registerDiscoverClasspathDuplicationForCompileTask(synthesizeProjectViewTask)
     val duplicateClassesRuntime =
-      tasks.register("discoverDuplicationForRuntime$taskNameSuffix", DiscoverClasspathDuplicationTask::class.java) {
-        it.withClasspathName(DuplicateClass.RUNTIME_CLASSPATH_NAME)
-        it.setClasspath(
-          configurations
-            .getByName(dependencyAnalyzer.runtimeConfigurationName)
-            .artifactsFor(dependencyAnalyzer.attributeValueJar)
-        )
-        it.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
-        it.output.set(outputPaths.duplicateCompileRuntimePath)
-      }
-    computeAdviceTask.configure {
-      it.duplicateClassesReports.add(duplicateClassesCompile.flatMap { it.output })
-      it.duplicateClassesReports.add(duplicateClassesRuntime.flatMap { it.output })
+      dependencyAnalyzer.registerDiscoverClasspathDuplicationForRuntimeTask(synthesizeProjectViewTask)
+
+    computeAdviceTask.configure { t ->
+      t.duplicateClassesReports.add(duplicateClassesCompile.flatMap { it.output })
+      t.duplicateClassesReports.add(duplicateClassesRuntime.flatMap { it.output })
     }
 
     /* **************************************
@@ -1141,24 +974,22 @@ internal class ProjectPlugin(private val project: Project) {
      ****************************************/
 
     // Computes how this project really uses its dependencies, without consideration for user reporting preferences.
-    val computeUsagesTask = tasks.register("computeActualUsage$taskNameSuffix", ComputeUsagesTask::class.java) { t ->
-      t.checkSuperClasses.set(dagpExtension.usageHandler.analysisHandler.checkSuperClasses)
-      // Currently only modeling this via Gradle property. May hoist it to the DSL if it's necessary.
-      t.checkBinaryCompat.set(checkBinaryCompat())
-
-      t.graph.set(graphViewTask.flatMap { it.output })
-      t.declarations.set(findDeclarationsTask.flatMap { it.output })
-      t.dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
-      t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
-      t.kapt.set(isKaptApplied())
-      t.duplicateClassesReports.add(duplicateClassesCompile.flatMap { it.output })
-      t.duplicateClassesReports.add(duplicateClassesRuntime.flatMap { it.output })
-      t.output.set(outputPaths.dependencyTraceReportPath)
-    }
+    val computeUsagesTask = dependencyAnalyzer.registerComputeUsagesTask(
+      checkSuperClasses = dagpExtension.usageHandler.analysisHandler.checkSuperClasses,
+      checkBinaryCompat = checkBinaryCompat(),
+      isKaptApplied = isKaptApplied(),
+      graphViewTask = graphViewTask,
+      findDeclarationsTask = findDeclarationsTask,
+      synthesizeProjectViewTask = synthesizeProjectViewTask,
+      synthesizeDependenciesTask = synthesizeDependenciesTask,
+      duplicateClassesCompile = duplicateClassesCompile,
+      duplicateClassesRuntime = duplicateClassesRuntime,
+    )
 
     // Null for JVM projects
     val androidScoreTask = dependencyAnalyzer.registerAndroidScoreTask(
-      synthesizeDependenciesTask, synthesizeProjectViewTask
+      synthesizeDependenciesTask,
+      synthesizeProjectViewTask,
     )
 
     computeAdviceTask.configure { t ->
@@ -1184,29 +1015,29 @@ internal class ProjectPlugin(private val project: Project) {
     val supportedSourceSetNames = supportedSourceSetNames()
     val paths = NoVariantOutputPaths(this)
 
-    findDeclarationsTask = tasks.register("findDeclarations", FindDeclarationsTask::class.java) {
+    findDeclarationsTask = tasks.register("findDeclarations", FindDeclarationsTask::class.java) { t ->
       FindDeclarationsTask.configureTask(
-        task = it,
+        task = t,
         project = project,
         projectType = projectType,
         supportedSourceSetNames = supportedSourceSetNames,
         outputPaths = paths
       )
     }
-    computeAdviceTask = tasks.register("computeAdvice", ComputeAdviceTask::class.java) {
-      it.projectPath.set(theProjectPath)
-      it.declarations.set(findDeclarationsTask.flatMap { it.output })
-      it.bundles.set(dagpExtension.dependenciesHandler.serializableBundles())
-      it.supportedSourceSets.set(supportedSourceSetNames)
-      it.ignoreKtx.set(dagpExtension.dependenciesHandler.ignoreKtx)
-      it.explicitSourceSets.set(dagpExtension.dependenciesHandler.explicitSourceSets)
-      it.projectType.set(projectType)
-      it.kapt.set(isKaptApplied())
+    computeAdviceTask = tasks.register("computeAdvice", ComputeAdviceTask::class.java) { t ->
+      t.projectPath.set(theProjectPath)
+      t.declarations.set(findDeclarationsTask.flatMap { it.output })
+      t.bundles.set(dagpExtension.dependenciesHandler.serializableBundles())
+      t.supportedSourceSets.set(supportedSourceSetNames)
+      t.ignoreKtx.set(dagpExtension.dependenciesHandler.ignoreKtx)
+      t.explicitSourceSets.set(dagpExtension.dependenciesHandler.explicitSourceSets)
+      t.projectType.set(projectType)
+      t.kapt.set(isKaptApplied())
 
-      it.output.set(paths.unfilteredAdvicePath)
-      it.dependencyUsages.set(paths.dependencyUsagesPath)
-      it.annotationProcessorUsages.set(paths.annotationProcessorUsagesPath)
-      it.bundledTraces.set(paths.bundledTracesPath)
+      t.output.set(paths.unfilteredAdvicePath)
+      t.dependencyUsages.set(paths.dependencyUsagesPath)
+      t.annotationProcessorUsages.set(paths.annotationProcessorUsagesPath)
+      t.bundledTraces.set(paths.bundledTracesPath)
     }
 
     filterAdviceTask = tasks.register("filterAdvice", FilterAdviceTask::class.java) { t ->
@@ -1246,40 +1077,40 @@ internal class ProjectPlugin(private val project: Project) {
         t.output.set(paths.consoleReportPath)
       }
 
-    tasks.register("projectHealth", ProjectHealthTask::class.java) {
-      it.buildFilePath.set(project.buildFile.path)
-      it.projectAdvice.set(filterAdviceTask.flatMap { it.output })
-      it.consoleReport.set(generateProjectHealthReport.flatMap { it.output })
+    tasks.register("projectHealth", ProjectHealthTask::class.java) { t ->
+      t.buildFilePath.set(project.buildFile.path)
+      t.projectAdvice.set(filterAdviceTask.flatMap { it.output })
+      t.consoleReport.set(generateProjectHealthReport.flatMap { it.output })
     }
 
-    reasonTask = tasks.register("reason", ReasonTask::class.java) {
-      it.projectPath.set(theProjectPath)
-      it.buildPath.set(buildPath(buildscript.configurations.named("classpath")))
-      it.dependencyMap.set(dagpExtension.dependenciesHandler.map)
-      it.dependencyUsageReport.set(computeAdviceTask.flatMap { it.dependencyUsages })
-      it.annotationProcessorUsageReport.set(computeAdviceTask.flatMap { it.annotationProcessorUsages })
-      it.unfilteredAdviceReport.set(computeAdviceTask.flatMap { it.output })
-      it.finalAdviceReport.set(filterAdviceTask.flatMap { it.output })
-      it.bundleTracesReport.set(computeAdviceTask.flatMap { it.bundledTraces })
+    reasonTask = tasks.register("reason", ReasonTask::class.java) { t ->
+      t.projectPath.set(theProjectPath)
+      t.buildPath.set(buildPath(buildscript.configurations.named("classpath")))
+      t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
+      t.dependencyUsageReport.set(computeAdviceTask.flatMap { it.dependencyUsages })
+      t.annotationProcessorUsageReport.set(computeAdviceTask.flatMap { it.annotationProcessorUsages })
+      t.unfilteredAdviceReport.set(computeAdviceTask.flatMap { it.output })
+      t.finalAdviceReport.set(filterAdviceTask.flatMap { it.output })
+      t.bundleTracesReport.set(computeAdviceTask.flatMap { it.bundledTraces })
     }
 
-    tasks.register("fixDependencies", RewriteTask::class.java) {
-      it.buildScript.set(buildFile)
-      it.projectAdvice.set(filterAdviceTask.flatMap { it.output })
-      it.dependencyMap.set(dagpExtension.dependenciesHandler.map)
-      it.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
+    tasks.register("fixDependencies", RewriteTask::class.java) { t ->
+      t.buildScript.set(buildFile)
+      t.projectAdvice.set(filterAdviceTask.flatMap { it.output })
+      t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
+      t.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
     }
 
     resolveExternalDependenciesTask = tasks.register("resolveExternalDependencies")
 
     computeResolvedDependenciesTask =
-      tasks.register("computeResolvedDependencies", ComputeResolvedDependenciesTask::class.java) {
-        it.output.set(paths.resolvedDepsPath)
-        it.outputToml.set(paths.resolvedAllLibsVersionsTomlPath)
+      tasks.register("computeResolvedDependencies", ComputeResolvedDependenciesTask::class.java) { t ->
+        t.output.set(paths.resolvedDepsPath)
+        t.outputToml.set(paths.resolvedAllLibsVersionsTomlPath)
       }
 
-    mergeProjectGraphsTask = tasks.register("generateMergedProjectGraph", MergeProjectGraphsTask::class.java) {
-      it.output.set(paths.mergedProjectGraphPath)
+    mergeProjectGraphsTask = tasks.register("generateMergedProjectGraph", MergeProjectGraphsTask::class.java) { t ->
+      t.output.set(paths.mergedProjectGraphPath)
     }
 
     /*
