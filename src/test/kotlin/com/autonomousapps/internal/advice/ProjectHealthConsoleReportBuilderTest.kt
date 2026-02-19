@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
+import com.autonomousapps.ProjectType
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.model.ProjectMetadata
 import com.autonomousapps.utils.Colors.decolorize
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
@@ -15,6 +17,8 @@ internal class ProjectHealthConsoleReportBuilderTest {
 
   private val gvi = GradleVariantIdentification.EMPTY
   private val postscript = "For help understanding this report, please ask in #my-cool-slack-channel"
+  private val projectPath = ":magic"
+  private val projectMetadata = ProjectMetadata(projectPath, ProjectType.JVM)
 
   @Test fun `remove advice should be sorted`() {
     val dependencyAdvice = setOf(
@@ -22,12 +26,13 @@ internal class ProjectHealthConsoleReportBuilderTest {
       Advice.ofRemove(ModuleCoordinates("com.project.c", "1.0", gvi), "api"),
       Advice.ofRemove(ModuleCoordinates("com.project.b", "1.0", gvi), "api"),
     )
-    val projectAdvice = ProjectAdvice("dummy", dependencyAdvice, emptySet())
+    val projectAdvice = ProjectAdvice(projectPath, dependencyAdvice, emptySet())
 
     val consoleText = ProjectHealthConsoleReportBuilder(
       projectAdvice = projectAdvice,
       postscript = postscript,
       dslKind = DslKind.KOTLIN,
+      projectMetadata = projectMetadata,
       useTypesafeProjectAccessors = false,
     ).text
 
@@ -55,6 +60,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       projectAdvice = projectAdvice,
       postscript = postscript,
       dslKind = DslKind.GROOVY,
+      projectMetadata = projectMetadata,
       useTypesafeProjectAccessors = true,
     ).text
 
@@ -83,6 +89,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       projectAdvice = projectAdvice,
       postscript = postscript,
       dslKind = DslKind.KOTLIN,
+      projectMetadata = projectMetadata,
       useTypesafeProjectAccessors = true,
     ).text
 
@@ -111,6 +118,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       projectAdvice = projectAdvice,
       postscript = postscript,
       dslKind = DslKind.KOTLIN,
+      projectMetadata = projectMetadata,
       useTypesafeProjectAccessors = false,
     ).text
 
@@ -138,6 +146,7 @@ internal class ProjectHealthConsoleReportBuilderTest {
       projectAdvice = projectAdvice,
       postscript = postscript,
       dslKind = DslKind.KOTLIN,
+      projectMetadata = projectMetadata,
       useTypesafeProjectAccessors = false,
     ).text
 

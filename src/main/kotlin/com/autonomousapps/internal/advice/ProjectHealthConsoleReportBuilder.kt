@@ -2,15 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
+import com.autonomousapps.ProjectType
+import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.utils.Colors
 import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.*
+import java.util.*
 
 internal class ProjectHealthConsoleReportBuilder(
   private val projectAdvice: ProjectAdvice,
   private val postscript: String,
+  projectMetadata: ProjectMetadata,
   dslKind: DslKind,
   /** Customize how dependencies are printed. */
   dependencyMap: ((String) -> String?)? = null,
@@ -19,7 +23,14 @@ internal class ProjectHealthConsoleReportBuilder(
 
   val text: String
 
-  private val advicePrinter = AdvicePrinter(dslKind, dependencyMap, useTypesafeProjectAccessors)
+  private val projectType = projectMetadata.projectType
+
+  private val advicePrinter = AdvicePrinter(
+    dslKind = dslKind,
+    projectType = projectMetadata.projectType,
+    dependencyMap = dependencyMap,
+    useTypesafeProjectAccessors = useTypesafeProjectAccessors,
+  )
   private var shouldPrintNewLine = false
 
   init {
@@ -46,9 +57,9 @@ internal class ProjectHealthConsoleReportBuilder(
         shouldPrintNewLine = true
         appendReproducibleNewLine("Unused dependencies which should be removed:")
 
-        val toPrint = removeAdvice.mapToOrderedSet {
-          line(it.fromConfiguration!!, printableIdentifier(it.coordinates))
-        }.joinToString(separator = "\n")
+        val toPrint = printAdvice(removeAdvice) { a ->
+          Triple(a.fromConfiguration!!, printableIdentifier(a.coordinates), "")
+        }
         append(toPrint)
       }
 
@@ -56,9 +67,9 @@ internal class ProjectHealthConsoleReportBuilder(
         maybeAppendTwoLines()
         appendReproducibleNewLine("These transitive dependencies should be declared directly:")
 
-        val toPrint = addAdvice.mapToOrderedSet {
-          line(it.toConfiguration!!, printableIdentifier(it.coordinates))
-        }.joinToString(separator = "\n")
+        val toPrint = printAdvice(addAdvice) { a ->
+          Triple(a.toConfiguration!!, printableIdentifier(a.coordinates), "")
+        }
         append(toPrint)
       }
 
@@ -66,9 +77,9 @@ internal class ProjectHealthConsoleReportBuilder(
         maybeAppendTwoLines()
         appendReproducibleNewLine("Existing dependencies which should be modified to be as indicated:")
 
-        val toPrint = changeAdvice.mapToOrderedSet {
-          line(it.toConfiguration!!, printableIdentifier(it.coordinates), " (was ${it.fromConfiguration})")
-        }.joinToString(separator = "\n")
+        val toPrint = printAdvice(changeAdvice) { a ->
+          Triple(a.toConfiguration!!, printableIdentifier(a.coordinates), " (was ${a.fromConfiguration})")
+        }
         append(toPrint)
       }
 
@@ -76,9 +87,9 @@ internal class ProjectHealthConsoleReportBuilder(
         maybeAppendTwoLines()
         appendReproducibleNewLine("Dependencies which should be removed or changed to runtime-only:")
 
-        val toPrint = runtimeOnlyAdvice.mapToOrderedSet {
-          line(it.toConfiguration!!, printableIdentifier(it.coordinates), " (was ${it.fromConfiguration})")
-        }.joinToString(separator = "\n")
+        val toPrint = printAdvice(runtimeOnlyAdvice) { a ->
+          Triple(a.toConfiguration!!, printableIdentifier(a.coordinates), " (was ${a.fromConfiguration})")
+        }
         append(toPrint)
       }
 
@@ -86,9 +97,9 @@ internal class ProjectHealthConsoleReportBuilder(
         maybeAppendTwoLines()
         appendReproducibleNewLine("Dependencies which could be compile-only:")
 
-        val toPrint = compileOnlyAdvice.mapToOrderedSet {
-          line(it.toConfiguration!!, printableIdentifier(it.coordinates), " (was ${it.fromConfiguration})")
-        }.joinToString(separator = "\n")
+        val toPrint = printAdvice(compileOnlyAdvice) { a ->
+          Triple(a.toConfiguration!!, printableIdentifier(a.coordinates), " (was ${a.fromConfiguration})")
+        }
         append(toPrint)
       }
 
@@ -96,9 +107,9 @@ internal class ProjectHealthConsoleReportBuilder(
         maybeAppendTwoLines()
         appendReproducibleNewLine("Unused annotation processors that should be removed:")
 
-        val toPrint = processorAdvice.mapToOrderedSet {
-          line(it.fromConfiguration!!, printableIdentifier(it.coordinates))
-        }.joinToString(separator = "\n")
+        val toPrint = printAdvice(processorAdvice) { a ->
+          Triple(a.fromConfiguration!!, printableIdentifier(a.coordinates), "")
+        }
         append(toPrint)
       }
 
@@ -214,6 +225,94 @@ internal class ProjectHealthConsoleReportBuilder(
       if (hasBuildConfig) appendReproducibleNewLine("* Includes BuildConfig.")
       if (hasAndroidDependencies) appendReproducibleNewLine("* Has Android library dependencies.")
     }
+  }
+
+  private fun printAdvice(advice: Set<Advice>, transform: (Advice) -> Triple<String, String, String>): String {
+    // non-KMP is much simpler. Every piece of advice gets a single line.
+    if (projectType != ProjectType.KMP) {
+      return advice.mapToOrderedSet { a ->
+        val data = transform(a)
+        line(data.first, data.second, data.third)
+      }.joinToString(separator = "\n")
+    }
+
+    /*
+     * KMP case. Each piece of advice is aggregated into source sets to make it a bit more compact.
+     */
+
+    val unknownKey = "__UNKNOWN"
+
+    // Put the advice into a map with the sourceSetName as the key
+    val adviceBySourceSetName = sortedMapOf<String, SortedSet<Advice>>()
+    advice
+      .forEach { a ->
+        val data = transform(a)
+        val key = DependencyScope.sourceSetName(data.first) ?: unknownKey
+
+        adviceBySourceSetName.merge(key, sortedSetOf(a)) { acc, inc ->
+          acc.apply { addAll(inc) }
+        }
+      }
+
+    val builder = StringBuilder()
+    var shouldPrintNewLine = false
+
+    // For well-known scopes
+    adviceBySourceSetName
+      .filterKeys { it != unknownKey }
+      .forEach { (sourceSetName, advice) ->
+        if (shouldPrintNewLine) {
+          builder.appendLine()
+        }
+
+        shouldPrintNewLine = true
+
+        builder
+          .append("  ")
+          .append(sourceSetName)
+          .appendLine(".dependencies {")
+
+        advice.forEach { a ->
+          val data = transform(a)
+          // "jvmMainImplementation"
+          val kmpConfigurationName = data.first
+            // => "Implementation"
+            .substringAfter(sourceSetName)
+            // => "implementation"
+            .replaceFirstChar(Char::lowercase)
+
+          val line = line(kmpConfigurationName, data.second, data.third)
+          builder
+            .append("  ")
+            .appendLine(line)
+        }
+
+        builder.append("  }")
+      }
+
+    val unknownScopes = adviceBySourceSetName.filterKeys { it == unknownKey }
+    if (unknownScopes.isNotEmpty()) {
+      builder.appendLine()
+    }
+
+    shouldPrintNewLine = false
+
+    // For unknown scopes
+    unknownScopes
+      .forEach { (_, advice) ->
+        advice.forEach { a ->
+          if (shouldPrintNewLine) {
+            builder.appendLine()
+          }
+          shouldPrintNewLine = true
+
+          val data = transform(a)
+          val line = line(data.first, data.second, data.third)
+          builder.append(line)
+        }
+      }
+
+    return builder.toString()
   }
 
   private fun line(configuration: String, printableIdentifier: String, was: String = ""): String {

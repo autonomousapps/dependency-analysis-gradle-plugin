@@ -96,6 +96,7 @@ internal class NoVariantOutputPaths(private val project: Project) {
   val annotationProcessorUsagesPath = file("$ROOT_DIR/usages-annotation-processors.json")
   val filteredAdvicePath = file("$ROOT_DIR/final-advice.json")
   val consoleReportPath = file("$ROOT_DIR/project-health-report.txt")
+  val projectMetadataPath = file("$ROOT_DIR/project-metadata.json")
 }
 
 /**

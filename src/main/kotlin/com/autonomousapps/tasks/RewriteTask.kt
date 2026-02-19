@@ -13,6 +13,7 @@ import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.reversed
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.model.ProjectMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
@@ -36,6 +37,10 @@ public abstract class RewriteTask : DefaultTask() {
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   public abstract val projectAdvice: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  public abstract val projectMetadata: RegularFileProperty
 
   @get:Input
   public abstract val dependencyMap: MapProperty<String, String>
@@ -63,6 +68,7 @@ public abstract class RewriteTask : DefaultTask() {
 
     val dslKind = DslKind.from(buildScript)
     val projectAdvice = projectAdvice.fromJson<ProjectAdvice>()
+    val projectMetadata = projectMetadata.fromJson<ProjectMetadata>()
 
     val map = dependencyMap.get()
 
@@ -71,6 +77,7 @@ public abstract class RewriteTask : DefaultTask() {
       advice = projectAdvice.dependencyAdvice.filtered(isUpgrade),
       advicePrinter = AdvicePrinter(
         dslKind = dslKind,
+        projectType = projectMetadata.projectType,
         dependencyMap = map.toLambda(),
         useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
       ),
