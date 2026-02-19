@@ -110,6 +110,10 @@ internal class ProjectPlugin(private val project: Project) {
     project = project,
     artifactDescription = DagpArtifacts.Kind.PROJECT_HEALTH,
   )
+  private val projectMetadataPublisher = interProjectPublisher(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.PROJECT_METADATA,
+  )
   private val resolvedDependenciesPublisher = interProjectPublisher(
     project = project,
     artifactDescription = DagpArtifacts.Kind.RESOLVED_DEPS,
@@ -1067,9 +1071,16 @@ internal class ProjectPlugin(private val project: Project) {
       t.output.set(paths.filteredAdvicePath)
     }
 
+    val writeProjectMetadata = tasks.register("writeProjectMetadata", WriteProjectMetadataTask::class.java) { t ->
+      t.projectPath.set(theProjectPath)
+      t.projectType.set(projectType)
+      t.output.set(paths.projectMetadataPath)
+    }
+
     val generateProjectHealthReport =
       tasks.register("generateConsoleReport", GenerateProjectHealthReportTask::class.java) { t ->
         t.projectAdvice.set(filterAdviceTask.flatMap { it.output })
+        t.projectMetadata.set(writeProjectMetadata.flatMap { it.output })
         t.reportingConfig.set(dagpExtension.reportingHandler.config())
         t.dslKind.set(DslKind.from(buildFile))
         t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
@@ -1097,6 +1108,7 @@ internal class ProjectPlugin(private val project: Project) {
     tasks.register("fixDependencies", RewriteTask::class.java) { t ->
       t.buildScript.set(buildFile)
       t.projectAdvice.set(filterAdviceTask.flatMap { it.output })
+      t.projectMetadata.set(writeProjectMetadata.flatMap { it.output })
       t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
       t.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
     }
@@ -1123,6 +1135,7 @@ internal class ProjectPlugin(private val project: Project) {
     // Publish our artifacts
     combinedGraphPublisher.publish(mergeProjectGraphsTask.flatMap { it.output })
     projectHealthPublisher.publish(filterAdviceTask.flatMap { it.output })
+    projectMetadataPublisher.publish(writeProjectMetadata.flatMap { it.output })
     resolvedDependenciesPublisher.publish(computeResolvedDependenciesTask.flatMap { it.output })
   }
 

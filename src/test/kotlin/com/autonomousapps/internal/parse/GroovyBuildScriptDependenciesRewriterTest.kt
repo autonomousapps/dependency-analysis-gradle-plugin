@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.parse
 
+import com.autonomousapps.ProjectType
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.model.Advice
@@ -16,6 +17,8 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
 
   @TempDir
   lateinit var dir: Path
+
+  private val projectType = ProjectType.JVM
 
   private fun Path.writeText(text: String): Path = Files.writeString(this, text)
 
@@ -65,7 +68,11 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
     val parser = GroovyBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = false),
+      AdvicePrinter(
+        dslKind = DslKind.GROOVY,
+        projectType = projectType,
+        useTypesafeProjectAccessors = false,
+      ),
     )
 
     // Then
@@ -147,6 +154,7 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
       advice,
       AdvicePrinter(
         dslKind = DslKind.GROOVY,
+        projectType = projectType,
         dependencyMap = {
           when (it) {
             ":sad-robot" -> "':depressed-robot'"
@@ -257,7 +265,11 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
     val parser = GroovyBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = false),
+      AdvicePrinter(
+        dslKind = DslKind.GROOVY,
+        projectType = projectType,
+        useTypesafeProjectAccessors = false,
+      ),
     )
 
     // Then
@@ -323,7 +335,11 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
     val parser = GroovyBuildScriptDependenciesRewriter.of(
       sourceFile,
       emptySet(),
-      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = false),
+      AdvicePrinter(
+        dslKind = DslKind.GROOVY,
+        projectType = projectType,
+        useTypesafeProjectAccessors = false,
+      ),
     )
 
     // Then
@@ -372,7 +388,11 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
     val parser = GroovyBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = false),
+      AdvicePrinter(
+        dslKind = DslKind.GROOVY,
+        projectType = projectType,
+        useTypesafeProjectAccessors = false,
+      ),
     )
 
     // Then
@@ -450,7 +470,11 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
     val parser = GroovyBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = false),
+      AdvicePrinter(
+        dslKind = DslKind.GROOVY,
+        projectType = projectType,
+        useTypesafeProjectAccessors = false,
+      ),
     )
 
     // Then
@@ -514,7 +538,12 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
     val parser = GroovyBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = true, useParenthesesForGroovy = false),
+      AdvicePrinter(
+        dslKind = DslKind.GROOVY,
+        projectType = projectType,
+        useTypesafeProjectAccessors = true,
+        useParenthesesForGroovy = false,
+      ),
       reversedDependencyMap = { identifier ->
         if (identifier.startsWith("projects.")) {
           val projectPath = identifier.removePrefix("projects.")
@@ -565,7 +594,12 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
     val parser = GroovyBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(dslKind = DslKind.GROOVY, useTypesafeProjectAccessors = true, useParenthesesForGroovy = true),
+      AdvicePrinter(
+        dslKind = DslKind.GROOVY,
+        projectType = projectType,
+        useTypesafeProjectAccessors = true,
+        useParenthesesForGroovy = true,
+      ),
       reversedDependencyMap = { identifier ->
         if (identifier.startsWith("projects.")) {
           val projectPath = identifier.removePrefix("projects.")

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.parse
 
+import com.autonomousapps.ProjectType
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.utils.intoSet
@@ -17,8 +18,11 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 internal class KotlinBuildScriptDependenciesRewriterTest {
+
   @TempDir
   lateinit var dir: Path
+
+  private val projectType = ProjectType.JVM
 
   @Test fun `can update dependencies`() {
     // Given
@@ -66,7 +70,11 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     val parser = KotlinBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = false)
+      AdvicePrinter(
+        dslKind = DslKind.KOTLIN,
+        projectType = projectType,
+        useTypesafeProjectAccessors = false,
+      )
     )
 
     // Then
@@ -149,7 +157,11 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     val parser = KotlinBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
+      AdvicePrinter(
+        dslKind = DslKind.KOTLIN,
+        projectType = projectType,
+        useTypesafeProjectAccessors = true,
+      )
     )
 
     // Then
@@ -246,6 +258,7 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
             else -> null
           }
         },
+        projectType = projectType,
         useTypesafeProjectAccessors = false,
       ),
       reversedDependencyMap = {
@@ -354,7 +367,11 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     val parser = KotlinBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = false),
+      AdvicePrinter(
+        dslKind = DslKind.KOTLIN,
+        projectType = projectType,
+        useTypesafeProjectAccessors = false,
+      ),
     )
 
     // Then
@@ -423,7 +440,11 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
       val parser = KotlinBuildScriptDependenciesRewriter.of(
         sourceFile,
         emptySet(),
-        AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = false),
+        AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        ),
       )
 
       // Then
@@ -458,7 +479,11 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
       val parser = KotlinBuildScriptDependenciesRewriter.of(
         file = sourceFile,
         advice = advice,
-        advicePrinter = AdvicePrinter(dslKind = DslKind.KOTLIN, useTypesafeProjectAccessors = false),
+        advicePrinter = AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        ),
       )
 
       // Then
@@ -507,7 +532,11 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
       val parser = KotlinBuildScriptDependenciesRewriter.of(
         file = sourceFile,
         advice = advice,
-        advicePrinter = AdvicePrinter(dslKind = DslKind.KOTLIN, useTypesafeProjectAccessors = false),
+        advicePrinter = AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        ),
       )
 
       // Then
@@ -556,7 +585,11 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     val parser = KotlinBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = false),
+      AdvicePrinter(
+        dslKind = DslKind.KOTLIN,
+        projectType = projectType,
+        useTypesafeProjectAccessors = false,
+      ),
     )
 
     // Then
@@ -630,7 +663,11 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     val parser = KotlinBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = false),
+      AdvicePrinter(
+        dslKind = DslKind.KOTLIN,
+        projectType = projectType,
+        useTypesafeProjectAccessors = false,
+      ),
     )
 
     // Then
@@ -689,7 +726,11 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     val parser = KotlinBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = false),
+      AdvicePrinter(
+        dslKind = DslKind.KOTLIN,
+        projectType = projectType,
+        useTypesafeProjectAccessors = false,
+      ),
     )
 
     // Then
@@ -723,7 +764,11 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     val parser = KotlinBuildScriptDependenciesRewriter.of(
       sourceFile,
       emptySet(),
-      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
+      AdvicePrinter(
+        dslKind = DslKind.KOTLIN,
+        projectType = projectType,
+        useTypesafeProjectAccessors = true,
+      )
     )
 
     // Then
@@ -754,7 +799,11 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     val parser = KotlinBuildScriptDependenciesRewriter.of(
       sourceFile,
       advice,
-      AdvicePrinter(DslKind.KOTLIN, useTypesafeProjectAccessors = true)
+      AdvicePrinter(
+        dslKind = DslKind.KOTLIN,
+        projectType = projectType,
+        useTypesafeProjectAccessors = true,
+      )
     )
 
     // Then - should successfully parse and modify

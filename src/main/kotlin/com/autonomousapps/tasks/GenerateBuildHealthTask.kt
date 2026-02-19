@@ -17,6 +17,7 @@ import com.autonomousapps.model.AndroidScore
 import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.BuildHealth.AndroidScoreMetrics
 import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.model.ProjectMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -34,6 +35,10 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   public abstract val projectHealthReports: ConfigurableFileCollection
+
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val projectMetadataReports: ConfigurableFileCollection
 
   // TODO(tsr): this shouldn't be a Property for Complicated Reasons
   @get:Nested
@@ -77,6 +82,9 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
     val androidMetricsBuilder = AndroidScoreMetrics.Builder()
 
     val advice = projectHealthReports.files.map { it.fromJson<ProjectAdvice>() }
+    val metadata = projectMetadataReports.files.asSequence()
+      .map { it.fromJson<ProjectMetadata>() }
+      .associateBy { it.projectPath }
 
     if (isFunctionallyEmpty(advice)) {
       logger.warn(
@@ -97,11 +105,15 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
             consoleOutput.appendText("\n\n")
           }
 
+          val projectMetadata = metadata[projectAdvice.projectPath]
+            ?: error("Missing metadata for '${projectAdvice.projectPath}'.")
+
           shouldFail = shouldFail || projectAdvice.shouldFail
 
           // console report
           val report = ProjectHealthConsoleReportBuilder(
             projectAdvice = projectAdvice,
+            projectMetadata = projectMetadata,
             // For buildHealth, we want to include the postscript only once.
             postscript = "",
             dslKind = dslKind.get(),

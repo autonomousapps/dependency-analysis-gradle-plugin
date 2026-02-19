@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
+import com.autonomousapps.ProjectType
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.GradleVariantIdentification
@@ -9,6 +10,7 @@ import com.autonomousapps.model.ProjectCoordinates
 
 internal class AdvicePrinter(
   private val dslKind: DslKind,
+  private val projectType: ProjectType,
   /** Customize how dependencies are printed. */
   private val dependencyMap: ((String) -> String?)? = null,
   private val useTypesafeProjectAccessors: Boolean,
@@ -25,11 +27,13 @@ internal class AdvicePrinter(
     }
   }
 
-  fun line(configuration: String, printableIdentifier: String, was: String = ""): String =
-    "  $configuration$printableIdentifier$was"
+  fun line(configuration: String, printableIdentifier: String, was: String = ""): String {
+    return "  $configuration$printableIdentifier$was"
+  }
 
-  fun toDeclaration(advice: Advice): String =
-    "  ${advice.toConfiguration}${gav(advice.coordinates)}"
+  fun toDeclaration(advice: Advice): String {
+    return "  ${advice.toConfiguration}${gav(advice.coordinates)}"
+  }
 
   fun gav(coordinates: Coordinates): String {
     val quotedDep = coordinates.mapped()
@@ -42,6 +46,7 @@ internal class AdvicePrinter(
           DslKind.GROOVY -> if (useParenthesesForGroovy) "($projectFormat)" else " $projectFormat"
         }
       }
+
       else -> quotedDep
     }.let { id ->
       if (coordinates.gradleVariantIdentification.capabilities.any { it.endsWith(GradleVariantIdentification.TEST_FIXTURES) }) {

@@ -43,6 +43,10 @@ internal class RootPlugin(private val project: Project) {
     project = project,
     artifactDescription = DagpArtifacts.Kind.PROJECT_HEALTH,
   )
+  private val projectMetadataResolver = interProjectResolver(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.PROJECT_METADATA,
+  )
   private val combinedGraphResolver = interProjectResolver(
     project = project,
     artifactDescription = DagpArtifacts.Kind.COMBINED_GRAPH,
@@ -104,17 +108,18 @@ internal class RootPlugin(private val project: Project) {
       it.output.set(paths.allLibsVersionsTomlPath)
     }
 
-    val generateBuildHealthTask = tasks.register("generateBuildHealth", GenerateBuildHealthTask::class.java) {
-      it.projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
-      it.reportingConfig.set(dagpExtension.reportingHandler.config())
-      it.projectCount.set(allprojects.size)
-      it.dslKind.set(DslKind.from(buildFile))
-      it.dependencyMap.set(dagpExtension.dependenciesHandler.map)
-      it.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
+    val generateBuildHealthTask = tasks.register("generateBuildHealth", GenerateBuildHealthTask::class.java) { t ->
+      t.projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      t.projectMetadataReports.setFrom(projectMetadataResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      t.reportingConfig.set(dagpExtension.reportingHandler.config())
+      t.projectCount.set(allprojects.size)
+      t.dslKind.set(DslKind.from(buildFile))
+      t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
+      t.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
 
-      it.output.set(paths.buildHealthPath)
-      it.consoleOutput.set(paths.consoleReportPath)
-      it.outputFail.set(paths.shouldFailPath)
+      t.output.set(paths.buildHealthPath)
+      t.consoleOutput.set(paths.consoleReportPath)
+      t.outputFail.set(paths.shouldFailPath)
     }
 
     tasks.register("buildHealth", BuildHealthTask::class.java) {
@@ -140,6 +145,10 @@ internal class RootPlugin(private val project: Project) {
       project = this,
       artifactDescription = DagpArtifacts.Kind.PROJECT_HEALTH,
     )
+    val projectMetadataPublisher = interProjectPublisher(
+      project = this,
+      artifactDescription = DagpArtifacts.Kind.PROJECT_METADATA,
+    )
     val resolvedDependenciesPublisher = interProjectPublisher(
       project = this,
       artifactDescription = DagpArtifacts.Kind.RESOLVED_DEPS,
@@ -149,6 +158,7 @@ internal class RootPlugin(private val project: Project) {
       dependencies.let { d ->
         d.add(combinedGraphPublisher.declarableName, d.project(mapOf("path" to p.path)))
         d.add(projectHealthPublisher.declarableName, d.project(mapOf("path" to p.path)))
+        d.add(projectMetadataPublisher.declarableName, d.project(mapOf("path" to p.path)))
         d.add(resolvedDependenciesPublisher.declarableName, d.project(mapOf("path" to p.path)))
       }
     }
