@@ -7,7 +7,6 @@ import com.autonomousapps.jvm.projects.ImplRuntimeTestImplConfusionProject
 import com.autonomousapps.jvm.projects.ReflectionProject
 import com.autonomousapps.jvm.projects.TransitiveRuntimeProject
 import com.autonomousapps.utils.Colors
-import spock.lang.PendingFeature
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -79,7 +78,6 @@ final class RuntimeOnlySpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  @PendingFeature(reason = "https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1613")
   def "detects advanced uses of Class forName (#gradleVersion)"() {
     given:
     def project = new AdvancedReflectionProject()
@@ -88,52 +86,23 @@ final class RuntimeOnlySpec extends AbstractJvmSpec {
     when:
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
-
     def variant = project.actualExplodedJarsForProjectAndVariant(":aggregator", "main")
     Map<String, Map<String, Set<String>>> reflectiveAccesses = variant.collectEntries { [it.coordinates.identifier, it.getReflectiveAccesses()] }
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
     assertThat(reflectiveAccesses).containsExactly(
-      "the-project:class-lookup", ["com.example.classlookup.ClassLookup": Set.of()],
-      "the-project:utils", Map.of(),
-      "the-project:framework-like-spring", [
-      "framework.like.spring.CheckForOptionalDependency"             : Set.of("optional.dependency.OptionalDependency"),
-      "framework.like.spring.CheckForOptionalDependencyUsingConstant": Set.of("optional.dependency.OptionalDependency")
-    ],
-      "the-project:optional-dependency", Map.of(),
+      "the-project:class-lookup", [:],
+      "the-project:utils", [:],
+      "the-project:framework-like-spring",
+      [
+        "framework.like.spring.CheckForOptionalDependency"             : ["optional.dependency.OptionalDependency"] as Set,
+        "framework.like.spring.CheckForOptionalDependencyUsingConstant": ["optional.dependency.OptionalDependency"] as Set
+      ],
+      "the-project:optional-dependency", [:],
     )
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     gradleVersion << gradleVersions()
-  }
-
-  def "show suboptimal explodedJar output (#gradleVersion)"() {
-    given:
-    def project = new AdvancedReflectionProject()
-    gradleProject = project.gradleProject
-
-    when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
-
-
-    def variant = project.actualExplodedJarsForProjectAndVariant(":aggregator", "main")
-    Map<String, Map<String, Set<String>>> reflectiveAccesses = variant.collectEntries { [it.coordinates.identifier, it.getReflectiveAccesses()] }
-
-    then:
-    assertThat(reflectiveAccesses).containsExactly(
-      // This should not be found since className is given by the caller of lookup
-      "the-project:class-lookup", ["com.example.classlookup.ClassLookup": Set.of("com.example.utils.Util")],
-      "the-project:utils", Map.of(),
-      "the-project:framework-like-spring", [
-      // This should find optional.dependency.OptionalDependency
-      "framework.like.spring.CheckForOptionalDependency"             : Set.of("Looking up class via reflection"),
-      "framework.like.spring.CheckForOptionalDependencyUsingConstant": Set.of("optional.dependency.OptionalDependency")
-    ],
-      "the-project:optional-dependency", Map.of(),
-    )
-
-    where:
-    gradleVersion << GRADLE_LATEST //gradleVersions()
   }
 }
