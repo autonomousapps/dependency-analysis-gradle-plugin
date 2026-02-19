@@ -131,6 +131,9 @@ internal class RedundantSubPluginOutputPaths(private val project: Project) {
 public fun getAdvicePathV2(): String = "$ROOT_DIR/final-advice.json"
 public fun getAggregateAdvicePathV2(): String = "$ROOT_DIR/final-advice.json"
 public fun getFinalAdvicePathV2(): String = "$ROOT_DIR/build-health-report.json"
+public fun getExplodedJarsPathV2(variantName: String): String =
+  "$ROOT_DIR/$variantName/intermediates/exploded-jars.json.gz"
+
 public fun getDuplicateDependenciesReport(): String = "$ROOT_DIR/duplicate-dependencies-report.json"
 public fun getAllLibsVersionsTomlPath(): String = "$ROOT_DIR/allLibs.versions.toml"
 public fun getResolvedDependenciesReport(): String = "$ROOT_DIR/resolved-dependencies-report.txt"

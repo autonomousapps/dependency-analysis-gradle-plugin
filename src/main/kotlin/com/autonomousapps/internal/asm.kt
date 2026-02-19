@@ -5,10 +5,7 @@ package com.autonomousapps.internal
 import com.autonomousapps.Flags
 import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.asm.*
-import com.autonomousapps.internal.utils.JAVA_FQCN_REGEX_ASM
-import com.autonomousapps.internal.utils.METHOD_DESCRIPTOR_REGEX
-import com.autonomousapps.internal.utils.efficient
-import com.autonomousapps.internal.utils.genericTypes
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.internal.AccessFlags
 import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
@@ -47,9 +44,9 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   // From old ConstantVisitor
   private val constants = sortedSetOf<Constant>()
 
-  private val ldcConstants = mutableListOf<LdcConstant>()
+  private val localVariableArray = LocalVariableArray()
   private val reflectiveAccesses = mutableSetOf<String>()
-  private val methodAnalyzer = MethodAnalyzer(logger, ldcConstants, reflectiveAccesses)
+  private val methodAnalyzer = MethodAnalyzer(logger, localVariableArray, reflectiveAccesses)
 
   internal fun getAnalyzedClass(): AnalyzedClass {
     val className = this.className
@@ -122,15 +119,15 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       methods.add(Method(descriptor))
     }
 
-     if (isEffectivelyPublic(access)) {
-       effectivelyPublicMethods.add(
-         Member.Method(
-           access = access,
-           name = name,
-           descriptor = descriptor,
-         )
-       )
-     }
+    if (isEffectivelyPublic(access)) {
+      effectivelyPublicMethods.add(
+        Member.Method(
+          access = access,
+          name = name,
+          descriptor = descriptor,
+        )
+      )
+    }
 
     return methodAnalyzer
   }
@@ -154,15 +151,15 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       )
     }
 
-     if (isEffectivelyPublic(access)) {
-       effectivelyPublicFields.add(
-         Member.Field(
-           access = access,
-           name = name,
-           descriptor = descriptor,
-         )
-       )
-     }
+    if (isEffectivelyPublic(access)) {
+      effectivelyPublicFields.add(
+        Member.Field(
+          access = access,
+          name = name,
+          descriptor = descriptor,
+        )
+      )
+    }
 
     return null
   }
@@ -215,7 +212,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
 
   private class MethodAnalyzer(
     private val logger: Logger,
-    private val ldcConstants: MutableList<LdcConstant>,
+    private val localVariableArray: LocalVariableArray,
     private val reflectiveAccesses: MutableSet<String>,
   ) : MethodVisitor(ASM_VERSION) {
 
@@ -227,7 +224,12 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
 
     override fun visitLdcInsn(value: Any?) {
       log { "  - MethodAnalyzer#visitLdcInsn: $value${value?.javaClass?.canonicalName?.let { " (type=$it)" }}" }
-      ldcConstants.add(LdcConstant.of(value))
+      localVariableArray.add(LdcConstant.of(value))
+    }
+
+    override fun visitVarInsn(opcode: Int, varIndex: Int) {
+      log { "  - MethodAnalyzer#visitVarInsn: opcode=$opcode, varIndex=$varIndex" }
+      localVariableArray.handleVarInsn(opcode, varIndex)
     }
 
     override fun visitMethodInsn(
@@ -240,8 +242,18 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       log { "  - MethodAnalyzer#visitMethodInsn: $owner.$name $descriptor" }
 
       // This will be a fully-qualified class name like `com.foo.Bar` or `com.foo.Bar$Inner`.
-      val lastConstant = ldcConstants.lastOrNull()
-      if ("$owner.$name" == "java/lang/Class.forName" && lastConstant?.descriptor == LdcConstant.STRING) {
+      // We call this method here, above the early return, because we want to consume the value. It might be used by an
+      // INVOKEVIRTUAL instruction, or some other instruction that doesn't match Class.forName().
+      val lastConstant = localVariableArray.getLastLdcConstant()
+
+      // Class.forName() is a static method invocation.
+      if (opcode != Opcodes.INVOKESTATIC) {
+        return
+      }
+
+      // This could be null if for instance we had a method that took a String parameter and called Class.forName() with
+      // that parameter.
+      if ("$owner.$name" == "java/lang/Class.forName" && lastConstant != null) {
         reflectiveAccesses += lastConstant.value
       }
     }
@@ -775,4 +787,72 @@ private fun stringValueOfArrayElement(value: Any?): String {
   } else {
     value.toString()
   }
+}
+
+/**
+ * An attempt to track the local variable array in a Java class file, for the very specific use-case of tracking
+ * references to Java class names when used by the `Class.forName()` static method call, with respect to bytecode
+ * instructions like `LDC`, `ASTORE`, `ALOAD`, `INVOKEVIRTUAL`, and `INVOKESTATIC`, among a few others. See usages.
+ *
+ * @see <a href="https://docs.oracle.com/javase/specs/jvms/se24/html/jvms-6.html">The Java Virtual Machine Instruction Set</a>
+ */
+internal class LocalVariableArray {
+
+  private val ldcConstants = mutableListOf<LdcConstant>()
+  private val array = mutableMapOf<Int, LdcConstant>()
+
+  private var lastLdcConstant: LdcConstant? = null
+
+  /** Teaches this instance about [ldcConstant] if that looks like a Java class. */
+  fun add(ldcConstant: LdcConstant) {
+    // ignore if it doesn't look like a Java class
+    if (looksLikeJavaClass(ldcConstant)) {
+      ldcConstants.add(ldcConstant)
+    }
+  }
+
+  /**
+   * It "looks like" a java class if it has the form `"foo.bar[.baz]*"`. It must be a String and have at least one `.`
+   * character. This will therefore erroneously return `false` in the case of classes without a package. Oh well.
+   */
+  private fun looksLikeJavaClass(ldcConstant: LdcConstant): Boolean {
+    return JAVA_FQCN_REGEX_DOTTY.matches(ldcConstant.value) && ldcConstant.descriptor == LdcConstant.STRING
+  }
+
+  /**
+   * Returns whatever was most recently popped, or the most recent [LdcConstant] added in case there was no
+   * `ASTORE`/`ALOAD` pair of operations.
+   */
+  fun getLastLdcConstant(): LdcConstant? {
+    val value = lastLdcConstant ?: lastOrNull()
+    // pop it
+    lastLdcConstant = null
+    return value
+  }
+
+  fun handleVarInsn(opcode: Int, varIndex: Int) {
+    if (opcode == Opcodes.ASTORE) {
+      push(varIndex)
+    } else if (opcode == Opcodes.ALOAD) {
+      pop(varIndex)
+    }
+  }
+
+  /** Pushes the most recent `LDC` call, if it's an [LdcConstant], onto the local tracking map. Use with `ASTORE`. */
+  private fun push(index: Int) {
+    val value = lastOrNull()
+    if (value is LdcConstant) {
+      array[index] = value
+    }
+  }
+
+  /**
+   * Pops the [LdcConstant] associated with [index], if there is one, from the local tracking map. Used with `ALOAD`.
+   */
+  private fun pop(index: Int) {
+    lastLdcConstant = array.remove(index)
+  }
+
+  /** Whenever we retrieve a value, we want to pop it. */
+  private fun lastOrNull(): LdcConstant? = ldcConstants.removeLastOrNull()
 }
