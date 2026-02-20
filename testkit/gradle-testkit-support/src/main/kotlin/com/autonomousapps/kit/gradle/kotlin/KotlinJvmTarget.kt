@@ -6,26 +6,34 @@ import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
 public class KotlinJvmTarget @JvmOverloads constructor(
+  private val artifactName: String? = null,
   private val compilations: KotlinCompilations? = null,
 ) : Element.Block {
 
   override val name: String = "jvm"
 
   override fun render(scribe: Scribe): String {
+    // e.g., `jvm("desktop")`
+    val artifactName = if (artifactName != null) "\"$artifactName\"" else ""
+
     return if (compilations == null) {
-      scribe.line { s -> s.append("$name()") }
+      scribe.line { s -> s.append("$name($artifactName)") }
     } else {
-      scribe.block(this) { s ->
+      // `jvm { ... }` or `jvm("desktop") { ... }`
+      val target = if (artifactName.isEmpty()) {
+        name
+      } else {
+        "$name($artifactName)"
+      }
+
+      scribe.block(target) { s ->
         compilations.render(s)
       }
     }
   }
 
   public companion object {
-    @JvmOverloads
     @JvmStatic
-    public fun of(compilations: KotlinCompilations? = null): KotlinJvmTarget {
-      return KotlinJvmTarget(compilations)
-    }
+    public fun default(): KotlinJvmTarget = KotlinJvmTarget()
   }
 }

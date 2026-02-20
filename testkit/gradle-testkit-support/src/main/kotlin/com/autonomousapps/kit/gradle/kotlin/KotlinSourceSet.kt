@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle.kotlin
 
-import com.autonomousapps.kit.gradle.Dependencies
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
@@ -37,15 +36,18 @@ public class KotlinSourceSet(
     }
   }
 
-  public companion object {
-    @JvmStatic
-    public fun of(name: String, dependencies: List<Dependency>): KotlinSourceSet {
-      return KotlinSourceSet(name, dependencies.toMutableList())
+  public class Builder(public val name: String) {
+    private val dependencies = mutableListOf<Dependency>()
+
+    public fun dependencies(vararg dependencies: Dependency) {
+      this.dependencies.addAll(dependencies)
     }
 
-    @JvmStatic
-    public fun of(name: String, vararg dependencies: Dependency): KotlinSourceSet {
-      return KotlinSourceSet(name, dependencies.toMutableList())
+    public fun build(): KotlinSourceSet {
+      return KotlinSourceSet(
+        name = name,
+        dependencies = dependencies,
+      )
     }
   }
 }

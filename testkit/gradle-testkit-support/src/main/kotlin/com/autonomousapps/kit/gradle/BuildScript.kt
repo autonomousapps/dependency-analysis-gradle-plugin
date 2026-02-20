@@ -7,21 +7,35 @@ import com.autonomousapps.kit.gradle.android.AndroidBlock
 import com.autonomousapps.kit.render.Scribe
 import org.intellij.lang.annotations.Language
 
-/** A build script. That is, a `build.gradle` or `build.gradle.kts` file. */
+/** A build script. That is, a `build.gradle` (Groovy DSL) or `build.gradle.kts` (Kotlin DSL) file. */
 public class BuildScript(
+  /** Any imports. If null, there are no imports. */
   public val imports: Imports? = null,
+  /** The `buildscript {}` block. */
   public val buildscript: BuildscriptBlock? = null,
+  /** The `plugins {}` block. */
   public val plugins: Plugins = Plugins.EMPTY,
+  /** `group = ...`. */
   public val group: String? = null,
+  /** `version = ...`. */
   public val version: String? = null,
+  /** The `repositories {}` block. */
   public val repositories: Repositories = Repositories.EMPTY,
+  /** The `android {}` block. */
   public val android: AndroidBlock? = null,
+  /** The `sourceSets {}` block. */
   public val sourceSets: SourceSets = SourceSets.EMPTY,
+  /** The `dependencies {}` block. */
   public val dependencies: Dependencies = Dependencies.EMPTY,
+  /** The `java {}` block. */
   public val java: Java? = null,
+  /** The `kotlin {}` block. */
   public val kotlin: Kotlin? = null,
+  /** Arbitrary content appended to the end of a build script, for non-modeled DSL constructs. */
   public val additions: String = "",
+  /** True if this is a Groovy DSL build script. It is an error if both this and [usesKotlin] is true. */
   private val usesGroovy: Boolean = false,
+  /** True if this is a Kotlin DSL build script. It is an error if both this and [usesGroovy] is true. */
   private val usesKotlin: Boolean = false,
 ) {
 
@@ -98,6 +112,8 @@ public class BuildScript(
     public var kotlin: Kotlin? = null
     public var additions: String = ""
 
+    private var kotlinBuilder: Kotlin.Builder? = null
+
     private var usesGroovy = false
     private var usesKotlin = false
 
@@ -109,6 +125,12 @@ public class BuildScript(
     public fun withKotlin(@Language("kt") script: String) {
       additions = script.trimIndent()
       usesKotlin = true
+    }
+
+    public fun kotlin(block: (Kotlin.Builder) -> Unit) {
+      val kotlinBuilder = kotlinBuilder ?: Kotlin.Builder()
+      block(kotlinBuilder)
+      this.kotlinBuilder = kotlinBuilder
     }
 
     public fun dependencies(vararg dependencies: Dependency) {
@@ -147,7 +169,7 @@ public class BuildScript(
         sourceSets = SourceSets.ofNames(sourceSets),
         dependencies = Dependencies(dependencies),
         java = java,
-        kotlin = kotlin,
+        kotlin = kotlin ?: kotlinBuilder?.build(),
         additions = additions,
         usesGroovy = usesGroovy,
         usesKotlin = usesKotlin,

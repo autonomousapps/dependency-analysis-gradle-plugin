@@ -5,17 +5,13 @@ package com.autonomousapps.kmp.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.gradle.Dependency
-import com.autonomousapps.kit.gradle.Kotlin
 import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
-import com.autonomousapps.kit.gradle.kotlin.KotlinSourceSet
-import com.autonomousapps.kit.gradle.kotlin.KotlinSourceSets
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.moduleCoordinates
-import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
+import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.gradle.Dependency.api
+import static com.autonomousapps.kit.gradle.Dependency.implementation
 
 final class SimpleKmpProject extends AbstractProject {
 
@@ -39,42 +35,36 @@ final class SimpleKmpProject extends AbstractProject {
         s.sources = consumerSources()
         s.withBuildScript { bs ->
           bs.plugins = kmpLibrary
-          bs.kotlin = Kotlin.of(
-            KotlinJvmTarget.of(),
-            KotlinSourceSets.of(
-              KotlinSourceSet.of(
-                'commonMain',
-                new Dependency(),
-              )
-            ),
-          )
-          bs.withKotlin(
-            '''\
-              kotlin {
-                jvm()
-                
-                sourceSets {
-                  commonMain.dependencies {
-                    api(project.dependencies.platform("com.squareup.okio:okio-bom:3.16.4"))
-                    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-                    implementation("com.squareup.okio:okio:3.16.4")
-                  }
-                  commonTest.dependencies {
-                    implementation(kotlin("test"))
-                    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
-                  }
-                  jvmMain.dependencies {
-                    api("com.github.ben-manes.caffeine:caffeine:3.2.3")
-                  }
-                  jvmTest.dependencies {
-                    implementation(kotlin("test-junit"))
-                    implementation("org.assertj:assertj-core:3.27.7")
-                    implementation("commons-io:commons-io:2.21.0")
-                  }
-                }
+          bs.kotlin { k ->
+            k.jvmTarget = KotlinJvmTarget.default()
+            k.sourceSets { sourceSets ->
+              sourceSets.commonMain { commonMain ->
+                commonMain.dependencies(
+                  api("com.squareup.okio:okio-bom:3.16.4").onKmpPlatform(),
+                  api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"),
+                  implementation("com.squareup.okio:okio:3.16.4"),
+                )
               }
-            '''
-          )
+              sourceSets.commonTest { commonTest ->
+                commonTest.dependencies(
+                  implementation("kotlin(\"test\")"),
+                  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2"),
+                )
+              }
+              sourceSets.jvmMain { jvmMain ->
+                jvmMain.dependencies(
+                  api("com.github.ben-manes.caffeine:caffeine:3.2.3"),
+                )
+              }
+              sourceSets.jvmTest { jvmTest ->
+                jvmTest.dependencies(
+                  implementation("kotlin(\"test-junit\")"),
+                  implementation("org.assertj:assertj-core:3.27.7"),
+                  implementation("commons-io:commons-io:2.21.0"),
+                )
+              }
+            }
+          }
         }
       }
       .write()

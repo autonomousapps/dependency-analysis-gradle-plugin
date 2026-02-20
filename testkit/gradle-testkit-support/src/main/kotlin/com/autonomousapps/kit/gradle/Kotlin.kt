@@ -23,36 +23,40 @@ public class Kotlin @JvmOverloads constructor(
     sourceSets?.render(s)
   }
 
+  public class Builder {
+    public var jvmToolchain: JvmToolchain? = null
+    public var jvmTarget: KotlinJvmTarget? = null
+
+    private var sourceSetsBuilder: KotlinSourceSets.Builder? = null
+
+    public fun sourceSets(block: (KotlinSourceSets.Builder) -> Unit) {
+      val sourceSetsBuilder = sourceSetsBuilder ?: KotlinSourceSets.Builder()
+      block(sourceSetsBuilder)
+      this.sourceSetsBuilder = sourceSetsBuilder
+    }
+
+    public fun build(): Kotlin {
+      return Kotlin(
+        jvmToolchain = jvmToolchain,
+        jvmTarget = jvmTarget,
+        sourceSets = sourceSetsBuilder?.build(),
+      )
+    }
+  }
+
   public companion object {
+    /** Deprecated. Use Kotlin.Builder instead. */
+    @Deprecated("Use Kotlin.Builder instead.")
     @JvmField
     public val DEFAULT: Kotlin = Kotlin()
 
+    /**
+     * This is the JDK target.
+     *
+     * Deprecated. Use Kotlin.Builder instead.
+     */
+    @Deprecated("Use Kotlin.Builder instead.")
     @JvmStatic
     public fun ofTarget(target: Int): Kotlin = Kotlin(JvmToolchain(target))
-
-    @JvmStatic
-    public fun of(
-      jvmTarget: KotlinJvmTarget,
-      sourceSets: KotlinSourceSets,
-    ): Kotlin {
-      return Kotlin(
-        jvmToolchain = null,
-        jvmTarget = jvmTarget,
-        sourceSets = sourceSets,
-      )
-    }
-
-    @JvmStatic
-    public fun of(
-      jvmToolchainTarget: Int,
-      jvmTarget: KotlinJvmTarget,
-      sourceSets: KotlinSourceSets,
-    ): Kotlin {
-      return Kotlin(
-        jvmToolchain = JvmToolchain(jvmToolchainTarget),
-        jvmTarget = jvmTarget,
-        sourceSets = sourceSets,
-      )
-    }
   }
 }
