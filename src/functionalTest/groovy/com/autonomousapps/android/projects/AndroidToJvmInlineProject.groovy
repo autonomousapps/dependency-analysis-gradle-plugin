@@ -4,7 +4,7 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.gradle.Kotlin
+import com.autonomousapps.kit.gradle.JvmToolchain
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
@@ -39,7 +39,9 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
       .withSubproject('producer') { l ->
         l.withBuildScript { bs ->
           bs.plugins = [Plugins.kotlinJvmNoVersion, Plugins.dependencyAnalysisNoVersion]
-          bs.kotlin = Kotlin.DEFAULT
+          bs.kotlin { k ->
+            k.jvmToolchain = JvmToolchain.DEFAULT
+          }
         }
         l.sources = producerSources
       }

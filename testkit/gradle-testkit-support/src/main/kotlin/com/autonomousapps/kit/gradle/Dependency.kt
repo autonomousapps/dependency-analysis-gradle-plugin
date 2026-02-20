@@ -30,12 +30,40 @@ public data class Dependency @JvmOverloads constructor(
     return copy(capability = CAPABILITY_TEST_FIXTURES)
   }
 
+  /**
+   * Wraps the dependency in `enforcedPlatform(...)`.
+   *
+   * @see [onKmpPlatform]
+   */
   public fun onEnforcedPlatform(): Dependency {
     return copy(capability = CAPABILITY_ENFORCED_PLATFORM)
   }
 
+  /**
+   * Wraps the dependency in `platform(...)`.
+   *
+   * @see [onKmpPlatform]
+   */
   public fun onPlatform(): Dependency {
     return copy(capability = CAPABILITY_PLATFORM)
+  }
+
+  /**
+   * Wraps the dependency in `project.dependencies.platform(...)`
+   *
+   * @see [onPlatform]
+   */
+  public fun onKmpPlatform(): Dependency {
+    return copy(capability = CAPABILITY_PLATFORM_KMP)
+  }
+
+  /**
+   * Wraps the dependency in `project.dependencies.enforcedPlatform(...)`
+   *
+   * @see [onEnforcedPlatform]
+   */
+  public fun onKmpEnforcedPlatform(): Dependency {
+    return copy(capability = CAPABILITY_ENFORCED_PLATFORM_KMP)
   }
 
   /**
@@ -84,11 +112,19 @@ public data class Dependency @JvmOverloads constructor(
         }
 
         capability == CAPABILITY_PLATFORM -> {
-          it.replace("$configuration ", "$configuration platform(") + ")"
+          it.replace("$configuration ", "$configuration $CAPABILITY_PLATFORM(") + ")"
         }
 
         capability == CAPABILITY_ENFORCED_PLATFORM -> {
-          it.replace("$configuration ", "$configuration enforcedPlatform(") + ")"
+          it.replace("$configuration ", "$configuration $CAPABILITY_ENFORCED_PLATFORM(") + ")"
+        }
+
+        capability == CAPABILITY_PLATFORM_KMP -> {
+          it.replace("$configuration ", "$configuration $CAPABILITY_PLATFORM_KMP(") + ")"
+        }
+
+        capability == CAPABILITY_ENFORCED_PLATFORM_KMP -> {
+          it.replace("$configuration ", "$configuration $CAPABILITY_ENFORCED_PLATFORM_KMP(") + ")"
         }
 
         capability != null -> {
@@ -128,16 +164,24 @@ public data class Dependency @JvmOverloads constructor(
     }.let {
       when {
         // Note: 'testFixtures("...")' is a shorthand for 'requireCapabilities("...-test-fixtures")'
-        capability == "test-fixtures" -> {
+        capability == CAPABILITY_TEST_FIXTURES -> {
           it.replace("$configuration(", "$configuration(testFixtures(") + ")"
         }
 
-        capability == "platform" -> {
-          it.replace("$configuration(", "$configuration(platform(") + ")"
+        capability == CAPABILITY_PLATFORM -> {
+          it.replace("$configuration(", "$configuration($CAPABILITY_PLATFORM(") + ")"
         }
 
-        capability == "enforcedPlatform" -> {
-          it.replace("$configuration(", "$configuration(enforcedPlatform(") + ")"
+        capability == CAPABILITY_ENFORCED_PLATFORM -> {
+          it.replace("$configuration(", "$configuration($CAPABILITY_ENFORCED_PLATFORM(") + ")"
+        }
+
+        capability == CAPABILITY_PLATFORM_KMP -> {
+          it.replace("$configuration(", "$configuration($CAPABILITY_PLATFORM_KMP(") + ")"
+        }
+
+        capability == CAPABILITY_ENFORCED_PLATFORM_KMP -> {
+          it.replace("$configuration(", "$configuration($CAPABILITY_ENFORCED_PLATFORM_KMP(") + ")"
         }
 
         capability != null -> "$it { capabilities { requireCapabilities(\"$capability\") } }"
@@ -157,6 +201,8 @@ public data class Dependency @JvmOverloads constructor(
 
     @JvmStatic public val CAPABILITY_ENFORCED_PLATFORM: String = "enforcedPlatform"
     @JvmStatic public val CAPABILITY_PLATFORM: String = "platform"
+    @JvmStatic public val CAPABILITY_ENFORCED_PLATFORM_KMP: String = "project.dependencies.enforcedPlatform"
+    @JvmStatic public val CAPABILITY_PLATFORM_KMP: String = "project.dependencies.platform"
     @JvmStatic public val CAPABILITY_TEST_FIXTURES: String = "test-fixtures"
 
     @JvmOverloads
