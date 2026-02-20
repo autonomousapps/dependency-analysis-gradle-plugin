@@ -12,7 +12,7 @@ import com.autonomousapps.Flags.androidIgnoredVariants
 import com.autonomousapps.Flags.checkBinaryCompat
 import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
-import com.autonomousapps.ProjectType
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
 import com.autonomousapps.internal.AbiExclusions
 import com.autonomousapps.internal.NoVariantOutputPaths

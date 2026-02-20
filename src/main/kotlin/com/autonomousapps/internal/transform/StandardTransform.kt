@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.transform
 
-import com.autonomousapps.ProjectType
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.root

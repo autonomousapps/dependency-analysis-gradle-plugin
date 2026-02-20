@@ -3,7 +3,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.Flags.shouldAnalyzeTests
-import com.autonomousapps.ProjectType
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.internal.NoVariantOutputPaths
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.parse
 
-import com.autonomousapps.ProjectType
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.model.Advice

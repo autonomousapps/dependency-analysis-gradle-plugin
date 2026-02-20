@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.declaration.internal
 
-import com.autonomousapps.ProjectType
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import spock.lang.Specification
