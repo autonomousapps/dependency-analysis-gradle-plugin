@@ -84,15 +84,13 @@ public abstract class CheckApiTask @Inject constructor(
       val output = parameters.output.get().asFile
 
       // A `:`-delimited list of directories containing source files, organized in a standard Java package hierarchy.
-      val sourcePath = parameters.sourceFiles.files
+      val sourcePath = parameters.sourceFiles.files.asSequence()
         .filter(File::exists)
         .joinToString(":") { it.absolutePath }
       val currentApi = parameters.tempDir.file("current-api.txt").get().asFile
 
       val jdkHome = parameters.jdkHome.get()
-      val classpath = parameters.classpath.files.asSequence()
-        .map { it.absolutePath }
-        .joinToString(":")
+      val classpath = parameters.classpath.files.joinToString(":") { it.absolutePath }
 
       // Re-generate API
       execOps.javaexec { spec ->
