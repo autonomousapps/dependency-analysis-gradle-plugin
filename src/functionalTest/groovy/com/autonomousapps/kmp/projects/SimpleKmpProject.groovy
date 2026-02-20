@@ -5,6 +5,11 @@ package com.autonomousapps.kmp.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.Kotlin
+import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
+import com.autonomousapps.kit.gradle.kotlin.KotlinSourceSet
+import com.autonomousapps.kit.gradle.kotlin.KotlinSourceSets
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -34,6 +39,15 @@ final class SimpleKmpProject extends AbstractProject {
         s.sources = consumerSources()
         s.withBuildScript { bs ->
           bs.plugins = kmpLibrary
+          bs.kotlin = Kotlin.of(
+            KotlinJvmTarget.of(),
+            KotlinSourceSets.of(
+              KotlinSourceSet.of(
+                'commonMain',
+                new Dependency(),
+              )
+            ),
+          )
           bs.withKotlin(
             '''\
               kotlin {

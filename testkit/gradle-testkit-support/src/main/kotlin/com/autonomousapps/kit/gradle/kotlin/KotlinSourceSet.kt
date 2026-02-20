@@ -10,22 +10,42 @@ import com.autonomousapps.kit.render.Scribe
 public class KotlinSourceSet(
   override val name: String,
   // TODO(tsr): add a "kotlin { srcDir(...) }" SourceDirectorySet
-  private val dependencies: Dependencies,
+  private val dependencies: MutableList<Dependency> = mutableListOf(),
 ) : Element.Block {
 
-  override fun render(scribe: Scribe): String = scribe.block(this) { s ->
-    dependencies.render(s)
+  /**
+   * KotlinSourceSets should be rendered like this:
+   * ```
+   * kotlin {
+   *   commonMain {
+   *     kotlin {
+   *       srcDir(...)
+   *     }
+   *   }
+   *
+   *   commonMain.dependencies {
+   *     api(...)
+   *   }
+   * }
+   * ```
+   */
+  override fun render(scribe: Scribe): String {
+    // TODO(tsr): add `kotlin { ... }` rendering
+
+    return scribe.block("${name}.dependencies") { s ->
+      dependencies.forEach { it.render(s) }
+    }
   }
 
   public companion object {
     @JvmStatic
     public fun of(name: String, dependencies: List<Dependency>): KotlinSourceSet {
-      return KotlinSourceSet(name, Dependencies(dependencies.toMutableList()))
+      return KotlinSourceSet(name, dependencies.toMutableList())
     }
 
     @JvmStatic
     public fun of(name: String, vararg dependencies: Dependency): KotlinSourceSet {
-      return KotlinSourceSet(name, Dependencies(*dependencies))
+      return KotlinSourceSet(name, dependencies.toMutableList())
     }
   }
 }

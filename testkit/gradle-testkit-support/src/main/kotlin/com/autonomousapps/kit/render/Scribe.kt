@@ -35,10 +35,15 @@ public class Scribe @JvmOverloads constructor(
   public fun block(
     element: Element.Block,
     block: (Scribe) -> Unit,
+  ): String = block(element.name, block)
+
+  public fun block(
+    name: String,
+    block: (Scribe) -> Unit,
   ): String {
     // e.g., "plugins {"
     indent()
-    buffer.append(element.name)
+    buffer.append(name)
     buffer.appendLine(" {")
 
     // increase the indent
