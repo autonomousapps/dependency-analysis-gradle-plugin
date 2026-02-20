@@ -146,6 +146,8 @@ package com.autonomousapps.extension {
     method public final void ignoreGeneratedCode();
     method public final void ignoreInternalPackages();
     method public final void ignoreSubPackage(String packageFragment);
+    method public final void includeAnnotations(@org.intellij.lang.annotations.Language("RegExp") java.lang.String... annotationRegexes);
+    method public final void includeClasses(@org.intellij.lang.annotations.Language("RegExp") java.lang.String... classRegexes);
   }
 
   public final class Fail extends com.autonomousapps.extension.Behavior {
@@ -253,16 +255,18 @@ package com.autonomousapps.model {
     method public String? getFromConfiguration();
     method public String? getToConfiguration();
     method public boolean isAdd();
+    method public boolean isAddToRuntimeOnly();
     method public boolean isAnyAdd();
     method public boolean isAnyChange();
     method public boolean isAnyRemove();
     method public boolean isChange();
+    method public boolean isChangeToRuntimeOnly();
     method public boolean isCompileOnly();
     method public boolean isDowngrade();
     method public boolean isProcessor();
     method public boolean isRemove();
     method public boolean isRemoveCompileOnly();
-    method public boolean isRuntimeOnly();
+    method @Deprecated public boolean isRuntimeOnly();
     method public boolean isToApiLike();
     method public boolean isUpgrade();
     method public static com.autonomousapps.model.Advice ofAdd(com.autonomousapps.model.Coordinates coordinates, String toConfiguration);
@@ -555,6 +559,28 @@ package com.autonomousapps.model.source {
     property public String kind;
     property public String name;
     property public String runtimeClasspathName;
+  }
+
+  @com.squareup.moshi.JsonClass(generateAdapter=false) @dev.zacsweers.moshix.sealed.annotations.TypeLabel(label="kmp") public final class KmpSourceKind extends com.autonomousapps.model.source.SourceKind implements java.io.Serializable {
+    ctor public KmpSourceKind(String name, String kind, String compileClasspathName, String runtimeClasspathName);
+    method public int compareTo(com.autonomousapps.model.source.SourceKind other);
+    method public String component1();
+    method public String component2();
+    method public String component3();
+    method public String component4();
+    method public com.autonomousapps.model.source.KmpSourceKind copy(String name, String kind, String compileClasspathName, String runtimeClasspathName);
+    method public String getCompileClasspathName();
+    method public String getKind();
+    method public String getName();
+    method public String getRuntimeClasspathName();
+    property public String compileClasspathName;
+    property public String kind;
+    property public String name;
+    property public String runtimeClasspathName;
+    field public static final String COMMON_MAIN_NAME = "commonMain";
+    field public static final String COMMON_TEST_NAME = "commonTest";
+    field public static final String JVM_MAIN_NAME = "jvmMain";
+    field public static final String JVM_TEST_NAME = "jvmTest";
   }
 
   @com.squareup.moshi.JsonClass(generateAdapter=false, generator="sealed:type") public abstract sealed class SourceKind implements java.lang.Comparable<com.autonomousapps.model.source.SourceKind> java.io.Serializable {
