@@ -17,7 +17,7 @@ import com.autonomousapps.model.AndroidScore
 import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.BuildHealth.AndroidScoreMetrics
 import com.autonomousapps.model.ProjectAdvice
-import com.autonomousapps.model.ProjectMetadata
+import com.autonomousapps.model.internal.ProjectMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty

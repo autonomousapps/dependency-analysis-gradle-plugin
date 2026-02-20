@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
-import com.autonomousapps.ProjectType
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectAdvice
-import com.autonomousapps.model.ProjectMetadata
+import com.autonomousapps.model.internal.ProjectMetadata
 import com.autonomousapps.utils.Colors.decolorize
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test

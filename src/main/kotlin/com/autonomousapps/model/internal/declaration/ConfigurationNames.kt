@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.declaration
 
-import com.autonomousapps.ProjectType
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.flatMapToOrderedSet
 import com.autonomousapps.model.source.AndroidSourceKind

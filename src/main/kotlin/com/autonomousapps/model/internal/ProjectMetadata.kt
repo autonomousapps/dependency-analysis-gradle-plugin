@@ -1,11 +1,14 @@
 // Copyright (c) 2025. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-package com.autonomousapps.model
+package com.autonomousapps.model.internal
 
-import com.autonomousapps.ProjectType
+import com.autonomousapps.model.internal.ProjectType
 import com.squareup.moshi.JsonClass
 
-/** Metadata about the project. */
+/**
+ * Metadata about the project. Public because it's a task input, but should be considered an internal implementation
+ * detail.
+ */
 @JsonClass(generateAdapter = false)
 public data class ProjectMetadata(
   public val projectPath: String,

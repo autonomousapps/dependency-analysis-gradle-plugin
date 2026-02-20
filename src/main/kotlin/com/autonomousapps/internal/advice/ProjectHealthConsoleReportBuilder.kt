@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
-import com.autonomousapps.ProjectType
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.utils.Colors
 import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.*
+import com.autonomousapps.model.internal.ProjectMetadata
 import java.util.*
 
 internal class ProjectHealthConsoleReportBuilder(

@@ -12,7 +12,7 @@ import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.ProjectAdvice
-import com.autonomousapps.model.ProjectMetadata
+import com.autonomousapps.model.internal.ProjectMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
