@@ -31,6 +31,9 @@ abstract class AbstractProject extends AbstractGradleProject {
 
   protected static final Plugin javaTestFixtures = Plugins.javaTestFixtures
 
+  /** Applies the 'org.jetbrains.kotlin.multiplatform' and 'com.autonomousapps.dependency-analysis' plugins. */
+  protected static final List<Plugin> kmpLibrary = [Plugins.kotlinMultiplatformNoVersion, Plugins.dependencyAnalysisNoVersion]
+
   protected final DependencyProvider dependencies
   protected final PluginProvider plugins
 
