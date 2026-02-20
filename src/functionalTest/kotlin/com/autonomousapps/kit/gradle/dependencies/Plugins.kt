@@ -32,6 +32,8 @@ object Plugins {
   @JvmStatic val kotlinAndroid: Plugin = provider.kotlinAndroid
   @JvmStatic val kotlinAndroidNoVersion: Plugin = provider.kotlinAndroidNoVersion
   @JvmStatic val kotlinJvmNoVersion: Plugin = provider.kotlinJvmNoVersion
+  @JvmStatic val kotlinMultiplatformNoApply: Plugin = provider.kotlinMultiplatformNoApply
+  @JvmStatic val kotlinMultiplatformNoVersion: Plugin = provider.kotlinMultiplatformNoVersion
   @JvmStatic val kotlinKaptNoVersion: Plugin = provider.kotlinKaptNoVersion
 
   @JvmStatic val springBoot: Plugin = provider.springBoot

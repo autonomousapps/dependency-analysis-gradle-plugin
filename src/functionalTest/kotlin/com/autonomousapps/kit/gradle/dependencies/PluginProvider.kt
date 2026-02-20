@@ -35,6 +35,12 @@ class PluginProvider(
   val kotlinAndroid: Plugin = Plugin("org.jetbrains.kotlin.android", kotlinVersion)
   val kotlinAndroidNoVersion: Plugin = Plugin("org.jetbrains.kotlin.android")
   val kotlinJvmNoVersion: Plugin = Plugin("org.jetbrains.kotlin.jvm")
+
+  /** Use this in the root project. */
+  val kotlinMultiplatformNoApply: Plugin = Plugin("org.jetbrains.kotlin.multiplatform", kotlinVersion, false)
+
+  /** Use this in subprojects. */
+  val kotlinMultiplatformNoVersion: Plugin = Plugin("org.jetbrains.kotlin.multiplatform")
   val kotlinKaptNoVersion: Plugin = Plugin("org.jetbrains.kotlin.kapt")
 
   val springBoot: Plugin = Plugin("org.springframework.boot", springBootVersion)
