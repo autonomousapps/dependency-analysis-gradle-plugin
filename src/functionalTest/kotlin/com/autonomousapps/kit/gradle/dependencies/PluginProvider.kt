@@ -30,6 +30,12 @@ class PluginProvider(
   val androidLibNoVersion: Plugin = Plugin(androidLibId)
   val androidTestNoVersion: Plugin = Plugin(androidTestId)
 
+  /** Use this in the root project. */
+  val androidKmpLibNoApply: Plugin = Plugin("com.android.kotlin.multiplatform.library", androidVersion, false)
+
+  /** Use this in subprojects. */
+  val androidKmpLibNoVersion: Plugin = Plugin("com.android.kotlin.multiplatform.library")
+
   val kotlinJvm: Plugin = Plugin("org.jetbrains.kotlin.jvm", kotlinVersion)
   val kotlinJvmNoApply: Plugin = Plugin("org.jetbrains.kotlin.jvm", kotlinVersion, false)
   val kotlinAndroid: Plugin = Plugin("org.jetbrains.kotlin.android", kotlinVersion)

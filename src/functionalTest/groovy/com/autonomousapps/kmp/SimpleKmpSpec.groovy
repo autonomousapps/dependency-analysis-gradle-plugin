@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kmp
 
-import com.autonomousapps.kmp.projects.SimpleKmpProject
+import com.autonomousapps.kmp.projects.AndroidTargetProject
+import com.autonomousapps.kmp.projects.JvmTargetProject
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -11,7 +12,7 @@ final class SimpleKmpSpec extends AbstractKmpSpec {
 
   def "can analyze a kmp project with jvm targets (#gradleVersion)"() {
     given:
-    def project = new SimpleKmpProject()
+    def project = new JvmTargetProject()
     gradleProject = project.gradleProject
 
     when:
@@ -22,20 +23,55 @@ final class SimpleKmpSpec extends AbstractKmpSpec {
 
     and:
     assertThat(result.output).contains(
-      '''\
+      """\
         Advice for :consumer
         Unused dependencies which should be removed:
           jvmMain.dependencies {
-            api("com.github.ben-manes.caffeine:caffeine:3.2.3")
+            api("${JvmTargetProject.CAFFEINE}")
           }
         
         Existing dependencies which should be modified to be as indicated:
           commonMain.dependencies {
-            api("com.squareup.okio:okio:3.16.4") (was commonMainImplementation)
-          }'''.stripIndent()
+            api("${JvmTargetProject.OKIO}") (was commonMainImplementation)
+          }""".stripIndent()
     )
 
     where:
     gradleVersion << gradleVersions()
+  }
+
+  def "can analyze a kmp project with android targets (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new AndroidTargetProject(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    def result = build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    and:
+    assertThat(result.output).contains(
+      """\
+        Advice for :consumer
+        Unused dependencies which should be removed:
+          androidMain.dependencies {
+            api("${AndroidTargetProject.CAFFEINE}")
+          }
+          
+        These transitive dependencies should be declared directly:
+          androidHostTest.dependencies {
+            implementation("${AndroidTargetProject.KOTLIN_TEST}")
+          }
+        
+        Existing dependencies which should be modified to be as indicated:
+          commonMain.dependencies {
+            api("${AndroidTargetProject.OKIO}") (was commonMainImplementation)
+          }""".stripIndent()
+    )
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 }
