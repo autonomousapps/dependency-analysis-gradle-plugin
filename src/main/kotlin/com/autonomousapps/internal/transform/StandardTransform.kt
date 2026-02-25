@@ -293,11 +293,12 @@ internal class StandardTransform(
       }
     }
 
+    // This is only relevant for non-KMP Android projects.
     // In the very common case that we have one single declaration and one single usage, we have special handling as a
     // matter of laziness. If the single declaration is both wrong _and_ on a variant, then we transform it to the
     // correct usage on that same variant. E.g., debugImplementation => debugRuntimeOnly. Without this block, the
     // algorithm would instead advise: debugImplementation => runtimeOnly.
-    if (usages.size == 1 && declarations.size == 1) {
+    if (projectType == ProjectType.ANDROID && usages.size == 1 && declarations.size == 1) {
       val lastUsage = usages.first()
       if (lastUsage.bucket != Bucket.NONE) {
         val lastDeclaration = declarations.first()
