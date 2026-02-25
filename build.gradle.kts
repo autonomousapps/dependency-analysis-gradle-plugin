@@ -226,6 +226,17 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
       "Run Android tests"
     }
 
+    "kmp" -> {
+      include("com/autonomousapps/kmp/**")
+
+      // Android requires JDK 17 from AGP 8.0.
+      javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(17))
+      })
+
+      "Run KMP tests"
+    }
+
     else -> {
       // Android requires JDK 17 from AGP 8.0.
       javaLauncher.set(javaToolchains.launcherFor {

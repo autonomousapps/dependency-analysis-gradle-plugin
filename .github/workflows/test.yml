@@ -82,6 +82,9 @@ jobs:
       - name: Execute Android functional tests
         run: './gradlew :functionalTest -DfuncTest.package=android -DfuncTest.quick'
 
+      - name: Execute KMP functional tests
+        run: './gradlew :functionalTest -DfuncTest.package=kmp -DfuncTest.quick'
+
       - name: Check API
         run: './gradlew :checkApi'
 
