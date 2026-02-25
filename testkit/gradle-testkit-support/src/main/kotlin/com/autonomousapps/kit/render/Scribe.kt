@@ -73,22 +73,25 @@ public class Scribe @JvmOverloads constructor(
     return buffer.toString()
   }
 
-  public fun append(obj: Any?) {
+  public fun append(obj: Any?): Scribe {
     buffer.append(obj.toString())
+    return this
   }
 
-  public fun appendLine() {
+  public fun appendQuoted(obj: Any?): Scribe {
+    append(quote())
+    append(obj.toString())
+    append(quote())
+    return this
+  }
+
+  public fun appendLine(): Scribe {
     buffer.appendLine()
+    return this
   }
 
   private fun indent() {
     buffer.append(" ".repeat(start))
-  }
-
-  public fun appendQuoted(obj: Any?) {
-    append(quote())
-    append(obj.toString())
-    append(quote())
   }
 
   private fun quote(): String = if (dslKind == GradleProject.DslKind.GROOVY) "'" else "\""

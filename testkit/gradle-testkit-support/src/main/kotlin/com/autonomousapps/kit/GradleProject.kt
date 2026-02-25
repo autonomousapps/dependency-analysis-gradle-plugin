@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit
 
-import com.autonomousapps.kit.android.AndroidColorRes
-import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.android.AndroidStyleRes
-import com.autonomousapps.kit.android.AndroidSubproject
+import com.autonomousapps.kit.android.*
 import com.autonomousapps.kit.artifacts.BuildArtifact
 import com.autonomousapps.kit.artifacts.FileCollector
 import com.autonomousapps.kit.artifacts.toBuildArtifact
@@ -217,6 +214,7 @@ public class GradleProject(
     private var includedProjectMap: MutableMap<String, Builder> = mutableMapOf()
     private val subprojectMap: MutableMap<String, Subproject.Builder> = mutableMapOf()
     private val androidSubprojectMap: MutableMap<String, AndroidSubproject.Builder> = mutableMapOf()
+    private val androidKmpLibSubprojectMap: MutableMap<String, AndroidKmpLibSubproject.Builder> = mutableMapOf()
 
     public fun withBuildSrc(block: Subproject.Builder.() -> Unit): Builder {
       val builder = Subproject.Builder()
@@ -301,6 +299,25 @@ public class GradleProject(
       return this
     }
 
+    // TODO(tsr): any defaults?
+    public fun withAndroidKmpLibProject(
+      name: String,
+      block: AndroidKmpLibSubproject.Builder.() -> Unit,
+    ): Builder {
+      // If a builder with this name already exists, returning it for building-upon
+      val builder = androidKmpLibSubprojectMap[name] ?: AndroidKmpLibSubproject.Builder(name)
+      builder.apply {
+//        this.manifest = AndroidManifest.defaultLib(packageName)
+//        this.styles = AndroidStyleRes.EMPTY
+//        this.colors = AndroidColorRes.EMPTY
+//        this.strings = null
+        block(this)
+      }
+      androidKmpLibSubprojectMap[name] = builder
+
+      return this
+    }
+
     private fun defaultRootProjectBuilder(): RootProject.Builder {
       return RootProject.Builder().apply {
         variant = ":"
@@ -312,14 +329,19 @@ public class GradleProject(
     }
 
     public fun build(): GradleProject {
-      val subprojectNames = subprojectMap.filter { it.value.includedBuild == null }.keys + androidSubprojectMap.keys
+      val subprojectNames = subprojectMap.filter { it.value.includedBuild == null }.keys
+        .plus(androidSubprojectMap.keys)
+        .plus(androidKmpLibSubprojectMap.keys)
+
       val rootProject = rootProjectBuilder.apply {
         settingsScript.subprojects = subprojectNames
       }.build()
 
       val includedBuilds = includedProjectMap.map { it.value.build() }
 
-      val subprojects = subprojectMap.map { it.value.build() } + androidSubprojectMap.map { it.value.build() }
+      val subprojects = subprojectMap.map { it.value.build() }
+        .plus(androidSubprojectMap.map { it.value.build() })
+        .plus(androidKmpLibSubprojectMap.map { it.value.build() })
 
       return GradleProject(
         rootDir = rootDir,

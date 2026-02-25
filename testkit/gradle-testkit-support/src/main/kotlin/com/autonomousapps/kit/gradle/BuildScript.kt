@@ -4,6 +4,7 @@ package com.autonomousapps.kit.gradle
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.gradle.android.AndroidComponents
 import com.autonomousapps.kit.render.Scribe
 import org.intellij.lang.annotations.Language
 
@@ -23,6 +24,8 @@ public class BuildScript(
   public val repositories: Repositories = Repositories.EMPTY,
   /** The `android {}` block. */
   public val android: AndroidBlock? = null,
+  /** The `androidComponents {}` block. */
+  public val androidComponents: AndroidComponents? = null,
   /** The `sourceSets {}` block. */
   public val sourceSets: SourceSets = SourceSets.EMPTY,
   /** The `dependencies {}` block. */
@@ -65,8 +68,11 @@ public class BuildScript(
       appendLine(scribe.use { s -> repositories.render(s) })
     }
 
-    android?.let {
-      appendLine(scribe.use { s -> it.render(s) })
+    android?.let { androidBlock ->
+      appendLine(scribe.use { s -> androidBlock.render(s) })
+    }
+    androidComponents?.let { androidComponents ->
+      appendLine(scribe.use { s -> androidComponents.render(s) })
     }
 
     // A feature variant is always a 'sourceSet' declaration AND a registerFeature

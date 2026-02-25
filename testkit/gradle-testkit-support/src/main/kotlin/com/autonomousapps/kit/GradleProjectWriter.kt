@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit
 
+import com.autonomousapps.kit.android.AndroidKmpLibSubproject
 import com.autonomousapps.kit.android.AndroidSubproject
 import com.autonomousapps.kit.internal.writeAny
 import com.autonomousapps.kit.render.Scribe
@@ -29,10 +30,18 @@ public class GradleProjectWriter(private val gradleProject: GradleProject) {
 
     // (Optional) Subprojects
     gradleProject.subprojects.forEach { subproject ->
-      if (subproject is AndroidSubproject) {
-        AndroidSubprojectWriter(rootPath, gradleProject.dslKind, subproject).write()
-      } else {
-        SubprojectWriter(rootPath, gradleProject.dslKind, subproject).write()
+      when (subproject) {
+        is AndroidSubproject -> {
+          AndroidSubprojectWriter(rootPath, gradleProject.dslKind, subproject).write()
+        }
+
+        is AndroidKmpLibSubproject -> {
+          AndroidKmpLibSubprojectWriter(rootPath, gradleProject.dslKind, subproject).write()
+        }
+
+        else -> {
+          SubprojectWriter(rootPath, gradleProject.dslKind, subproject).write()
+        }
       }
     }
   }
@@ -121,6 +130,18 @@ public class GradleProjectWriter(private val gradleProject: GradleProject) {
         filePath.parent.toFile().mkdirs()
         filePath.toFile().writeText(file.content)
       }
+    }
+  }
+
+  // TODO(tsr): does this require any customization? Not yet.
+  private class AndroidKmpLibSubprojectWriter(
+    rootPath: Path,
+    dslKind: GradleProject.DslKind,
+    private val subproject: AndroidKmpLibSubproject,
+  ) : SubprojectWriter(rootPath, dslKind, subproject) {
+
+    override fun write() {
+      super.write()
     }
   }
 
