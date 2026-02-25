@@ -31,6 +31,21 @@ public class KotlinSourceSets(
       named("commonTest", block)
     }
 
+    /** Configure the default "androidMain" source set. */
+    public fun androidMain(block: (KotlinSourceSet.Builder) -> Unit) {
+      named("androidMain", block)
+    }
+
+    /** Configure the default "androidDeviceTest" source set. */
+    public fun androidDeviceTest(block: (KotlinSourceSet.Builder) -> Unit) {
+      named("androidDeviceTest", true, block)
+    }
+
+    /** Configure the default "androidHostTest" source set. */
+    public fun androidHostTest(block: (KotlinSourceSet.Builder) -> Unit) {
+      named("androidHostTest", true, block)
+    }
+
     /** Configure the default "jvmMain" source set. */
     public fun jvmMain(block: (KotlinSourceSet.Builder) -> Unit) {
       named("jvmMain", block)
@@ -44,6 +59,12 @@ public class KotlinSourceSets(
     /** Create and configure a custom source set named [name]. */
     public fun named(name: String, block: (KotlinSourceSet.Builder) -> Unit) {
       val builder = sourceSetsBuilders.computeIfAbsent(name) { KotlinSourceSet.Builder(name) }
+      block(builder)
+    }
+
+    /** Create and configure a custom source set named [name], using `getByName()`. */
+    public fun named(name: String, get: Boolean, block: (KotlinSourceSet.Builder) -> Unit) {
+      val builder = sourceSetsBuilders.computeIfAbsent(name) { KotlinSourceSet.Builder(name, get) }
       block(builder)
     }
 

@@ -6,8 +6,9 @@ import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-public class KotlinSourceSet(
+public class KotlinSourceSet @JvmOverloads constructor(
   override val name: String,
+  private val get: Boolean = false,
   // TODO(tsr): add a "kotlin { srcDir(...) }" SourceDirectorySet
   private val dependencies: MutableList<Dependency> = mutableListOf(),
 ) : Element.Block {
@@ -25,18 +26,26 @@ public class KotlinSourceSet(
    *   commonMain.dependencies {
    *     api(...)
    *   }
+   *
+   *   androidMain.dependencies { ... }
+   *
+   *   getByName("androidHostTest").dependencies { ... }
    * }
    * ```
    */
   override fun render(scribe: Scribe): String {
     // TODO(tsr): add `kotlin { ... }` rendering
 
+    val name = if (get) "getByName(\"$name\")" else name
     return scribe.block("${name}.dependencies") { s ->
       dependencies.forEach { it.render(s) }
     }
   }
 
-  public class Builder(public val name: String) {
+  public class Builder(
+    private val name: String,
+    private val get: Boolean = false,
+  ) {
     private val dependencies = mutableListOf<Dependency>()
 
     public fun dependencies(vararg dependencies: Dependency) {
@@ -46,6 +55,7 @@ public class KotlinSourceSet(
     public fun build(): KotlinSourceSet {
       return KotlinSourceSet(
         name = name,
+        get = get,
         dependencies = dependencies,
       )
     }

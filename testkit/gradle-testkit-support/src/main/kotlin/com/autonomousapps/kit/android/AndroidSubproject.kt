@@ -24,7 +24,7 @@ public class AndroidSubproject(
   buildScript = buildScript,
   sources = sources,
   files = files,
-  variant = variant
+  variant = variant,
 ) {
 
   public class Builder {
@@ -81,7 +81,7 @@ public class AndroidSubproject(
         strings = strings,
         colors = colors,
         layouts = layouts,
-        files = files
+        files = files,
       )
     }
   }

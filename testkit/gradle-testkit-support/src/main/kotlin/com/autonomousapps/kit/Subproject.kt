@@ -16,11 +16,12 @@ import com.autonomousapps.kit.gradle.BuildScript
  */
 public open class Subproject(
   public val name: String,
+  @Deprecated("Unused")
+  public val variant: String? = null,
   public val includedBuild: String? = null,
   public val buildScript: BuildScript,
   public val sources: List<Source>,
   public val files: List<File>,
-  public val variant: String,
 ) {
 
   /** We only care about the subproject's name for equality comparisons and hashing. */
