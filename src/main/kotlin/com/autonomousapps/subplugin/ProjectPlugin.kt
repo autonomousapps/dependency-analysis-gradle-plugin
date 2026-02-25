@@ -12,7 +12,6 @@ import com.autonomousapps.Flags.androidIgnoredVariants
 import com.autonomousapps.Flags.checkBinaryCompat
 import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
-import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
 import com.autonomousapps.internal.AbiExclusions
 import com.autonomousapps.internal.NoVariantOutputPaths
@@ -25,6 +24,7 @@ import com.autonomousapps.internal.utils.addAll
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.source.AndroidSourceKind
 import com.autonomousapps.model.source.JvmSourceKind
 import com.autonomousapps.model.source.SourceKind
@@ -54,9 +54,9 @@ private const val ANDROID_LIBRARY_PLUGIN = "com.android.library"
 private const val ANDROID_TEST_PLUGIN = "com.android.test"
 
 /**
- * @see <a href="https://developer.android.com/kotlin/multiplatform/plugin"> Set up the Android Gradle Library Plugin for KMP</a>
+ * @see <a href="https://developer.android.com/kotlin/multiplatform/plugin">Set up the Android Gradle Library Plugin for KMP</a>
  */
-private const val ANDROID_LIBRARY_KMP_PLUGIN = "com.android.kotlin.multiplatform.library"
+private const val ANDROID_KMP_LIBRARY_PLUGIN = "com.android.kotlin.multiplatform.library"
 private const val KOTLIN_ANDROID_PLUGIN = "org.jetbrains.kotlin.android"
 private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 private const val KOTLIN_MULTIPLATFORM_PLUGIN = "org.jetbrains.kotlin.multiplatform"
@@ -158,12 +158,23 @@ internal class ProjectPlugin(private val project: Project) {
       checkAgpOnClasspath()
       configureAndroidTestProject()
     }
-    pluginManager.withPlugin(ANDROID_LIBRARY_KMP_PLUGIN) {
-      logger.log("Adding Android library KMP tasks to $path")
-      isAndroidProject = true // TODO(tsr): is this an AGP or KMP project?
-      checkAgpOnClasspath()
-      TODO("Not yet implemented")
-      //configureAndroidLibKmpProject()
+
+    // In general, we have to configure AGP modules OUTSIDE of an afterEvaluate. However, this plugin is not sufficient.
+    // The Android-KMP-LIB plugin also requires the KMP plugin to be applied.
+    pluginManager.withPlugin(ANDROID_KMP_LIBRARY_PLUGIN) {
+      pluginManager.withPlugin(KOTLIN_MULTIPLATFORM_PLUGIN) {
+        logger.log("Adding Android library KMP tasks to $path")
+
+        // Yes, even though this is an Android library. The KMP part is more critical from an analysis perspective. I
+        // think.
+        isKmpProject = true
+
+        checkAgpOnClasspath()
+        checkKgpOnClasspath()
+
+        // Apparently we can reuse the infrastructure for KMP analysis.
+        configureKotlinMultiplatformProject()
+      }
     }
 
     // Giving up. Wrap the whole thing in afterEvaluate for simplicity and for access to user configuration via
@@ -183,10 +194,14 @@ internal class ProjectPlugin(private val project: Project) {
         configureKotlinJvmProject()
       }
       pluginManager.withPlugin(KOTLIN_MULTIPLATFORM_PLUGIN) {
-        logger.log("Adding Kotlin Multiplatform tasks to ${project.path}")
-        isKmpProject = true
-        checkKgpOnClasspath()
-        configureKotlinMultiplatformProject()
+        // Since this is in an afterEvaluate, we hopefully can rely on all plugins being applied, so we check if the AGP
+        // plugin is applied. If it's not, proceed with KMP analysis.
+        if (!plugins.hasPlugin(ANDROID_KMP_LIBRARY_PLUGIN)) {
+          logger.log("Adding Kotlin Multiplatform tasks to ${project.path}")
+          isKmpProject = true
+          checkKgpOnClasspath()
+          configureKotlinMultiplatformProject()
+        }
       }
       pluginManager.withPlugin(JAVA_PLUGIN) {
         configureJavaAppProject(maybeAppProject = true)
@@ -263,12 +278,20 @@ internal class ProjectPlugin(private val project: Project) {
     androidComponents.onVariants { variant ->
       if (variant.name !in ignoredVariantNames) {
         val mainSourceSets = variant.sources
-        val unitTestSourceSets = if (shouldAnalyzeTests()) variant.unitTest?.sources else null
-        val androidTestSourceSets = if (shouldAnalyzeTests() && variant is HasAndroidTest) {
-          variant.androidTest?.sources
+
+        val unitTest = if (shouldAnalyzeTests() && variant is HasUnitTest) {
+          (variant as HasUnitTest).unitTest
         } else {
           null
         }
+        val unitTestSourceSets = unitTest?.sources
+
+        val androidTest = if (shouldAnalyzeTests() && variant is HasAndroidTest) {
+          variant.androidTest
+        } else {
+          null
+        }
+        val androidTestSourceSets = androidTest?.sources
 
         mainSourceSets.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
@@ -292,7 +315,7 @@ internal class ProjectPlugin(private val project: Project) {
           val variantSourceSet = newVariantSourceSet(
             sourceKind = AndroidSourceKind.test(variant.name),
             variant = variant,
-            agpArtifacts = variant.unitTest!!.artifacts,
+            agpArtifacts = unitTest.artifacts,
             sources = sourceSets,
           )
           val dependencyAnalyzer = AndroidAppAnalyzer(
@@ -328,7 +351,7 @@ internal class ProjectPlugin(private val project: Project) {
           val variantSourceSet = newVariantSourceSet(
             sourceKind = AndroidSourceKind.androidTest(variant.name),
             variant = variant,
-            agpArtifacts = (variant as HasAndroidTest).androidTest!!.artifacts,
+            agpArtifacts = androidTest.artifacts,
             sources = sourceSets,
           )
           val dependencyAnalyzer = AndroidAppAnalyzer(
@@ -357,12 +380,20 @@ internal class ProjectPlugin(private val project: Project) {
     androidComponents.onVariants { variant ->
       if (variant.name !in ignoredVariantNames) {
         val mainSourceSets = variant.sources
-        val unitTestSourceSets = if (shouldAnalyzeTests()) variant.unitTest?.sources else null
-        val androidTestSourceSets = if (shouldAnalyzeTests() && variant is HasAndroidTest) {
-          variant.androidTest?.sources
+
+        val unitTest = if (shouldAnalyzeTests() && variant is HasUnitTest) {
+          (variant as HasUnitTest).unitTest
         } else {
           null
         }
+        val unitTestSourceSets = unitTest?.sources
+
+        val androidTest = if (shouldAnalyzeTests() && variant is HasAndroidTest) {
+          variant.androidTest
+        } else {
+          null
+        }
+        val androidTestSourceSets = androidTest?.sources
 
         mainSourceSets.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
@@ -406,7 +437,7 @@ internal class ProjectPlugin(private val project: Project) {
           val variantSourceSet = newVariantSourceSet(
             sourceKind = AndroidSourceKind.test(variant.name),
             variant = variant,
-            agpArtifacts = variant.unitTest!!.artifacts,
+            agpArtifacts = unitTest.artifacts,
             sources = sourceSets,
           )
           val dependencyAnalyzer = AndroidLibAnalyzer(
@@ -425,7 +456,7 @@ internal class ProjectPlugin(private val project: Project) {
           val variantSourceSet = newVariantSourceSet(
             sourceKind = AndroidSourceKind.androidTest(variant.name),
             variant = variant,
-            agpArtifacts = (variant as HasAndroidTest).androidTest!!.artifacts,
+            agpArtifacts = androidTest.artifacts,
             sources = sourceSets,
           )
           val dependencyAnalyzer = AndroidLibAnalyzer(
@@ -690,44 +721,26 @@ internal class ProjectPlugin(private val project: Project) {
     }
   }
 
-//  // TODO(tsr): delete
-//  @DisableCachingByDefault(because = "Temporary task")
-//  abstract class FilesTask : DefaultTask() {
-//    @get:Nested
-//    abstract val files: ListProperty<FileCollectionMap>
-//
-//    @TaskAction fun action() {
-//      files.get().forEach { (name, fileCollection) ->
-//        val files = fileCollection.asFileTree.files.joinToString(System.lineSeparator()) { "- $it" }
-//        logger.quiet("$name:\n$files")
-//      }
-//    }
-//  }
-
-  /** Has the [KOTLIN_MULTIPLATFORM_PLUGIN] plugin applied. */
+  /**
+   * Has the [KOTLIN_MULTIPLATFORM_PLUGIN] plugin applied, and optionally the [ANDROID_KMP_LIBRARY_PLUGIN] plugin as
+   * well.
+   */
   private fun Project.configureKotlinMultiplatformProject() {
     val kotlin = extensions.getByType(KotlinMultiplatformExtension::class.java)
 
-//    val commonSourceFiles = provider(KotlinCommonSources.all(kotlin))
-//    // TODO(tsr): delete
-//    tasks.register("files", FilesTask::class.java) { t ->
-//      t.files.set(commonSourceFiles)
-//    }
-
     kotlin
       .targets
-//      .withType(KotlinJvmTarget::class.java) // TODO(tsr) delete? or only analyze jvm targets? what about android targets?
       .configureEach { target ->
-//        println("CONFIGURING KOTLIN TARGET ${target.name} (${target.javaClass.simpleName})") // TODO(tsr): delete
+//        println("CONFIGURING KOTLIN TARGET ${target.name} (${target.javaClass.simpleName})")
         target.compilations
           // TODO(tsr): requiring the `runtimeDependencyConfigurationName` to be non-null seems to be equivalent to only
-          //  configuring the JVM targets. (Still haven't tested Android targets!)
-          //  Do I want to configure non-JVM/Android targets? I think so?
+          //  configuring the JVM and Android targets.
+          //  Not sure yet how to handle non-JVM/Android targets.
           //  nb: there are no "common" targets. Those source sets must be incorporated into the actual targets as file
           //      collections.
           .matching { compilation -> compilation.runtimeDependencyConfigurationName != null }
           .configureEach { compilation ->
-//            println(" COMPILATION ${compilation.name} (${compilation.javaClass.simpleName})") // TODO(tsr): delete
+//            println(" COMPILATION ${compilation.name} (${compilation.javaClass.simpleName})")
             try {
               val hasAbi = hasAbi(compilation)
               val kmpSourceSet = KmpSourceSet(compilation)

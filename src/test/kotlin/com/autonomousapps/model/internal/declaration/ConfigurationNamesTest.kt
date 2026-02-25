@@ -275,7 +275,9 @@ internal class ConfigurationNamesTest {
       "jvmMain",
       "jvmTest",
       "jvmIntegrationTest",
-      // TODO(tsr): android stuff?
+      "androidMain",
+      "androidDeviceTest",
+      "androidHostTest",
     )
     private val configurationNames = ConfigurationNames(projectType, supportedSourceSets)
 
@@ -314,23 +316,33 @@ internal class ConfigurationNamesTest {
         "kapt, jvmMain",
         "kaptIntegrationTest, jvmIntegrationTest",
         "kaptTest, jvmTest",
+
+        "androidMainApi, androidMain",
+        "androidMainImplementation, androidMain",
+        "androidMainCompileOnly, androidMain",
+        "androidMainRuntimeOnly, androidMain",
+
+        "androidDeviceTestApi, androidDeviceTest",
+        "androidDeviceTestImplementation, androidDeviceTest",
+        "androidDeviceTestCompileOnly, androidDeviceTest",
+        "androidDeviceTestRuntimeOnly, androidDeviceTest",
+
+        "androidHostTestApi, androidHostTest",
+        "androidHostTestImplementation, androidHostTest",
+        "androidHostTestCompileOnly, androidHostTest",
+        "androidHostTestRuntimeOnly, androidHostTest",
       ]
     )
-    fun `can get sourceKind from configuration name`(configuration: String, variant: String) {
+    fun `can get sourceKind from configuration name`(configuration: String, sourceSetName: String) {
       val actual = configurationNames.sourceKindFrom(
         configurationName = configuration,
         hasCustomSourceSets = hasCustomSourceSets,
       )
-      val expected = KmpSourceKind.of(variant)
+      val expected = KmpSourceKind.of(sourceSetName)
 
       assertThat(actual).isEqualTo(expected)
     }
 
-    //"commonMain",
-    //"commonTest",
-    //"jvmMain",
-    //"jvmTest",
-    //"jvmIntegrationTest",
     @ParameterizedTest(name = "{0} => {1}")
     @CsvSource(
       value = [
