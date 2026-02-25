@@ -5,7 +5,6 @@ package com.autonomousapps.kmp.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -13,14 +12,18 @@ import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.Dependency.api
 import static com.autonomousapps.kit.gradle.Dependency.implementation
 
-final class SimpleKmpProject extends AbstractProject {
+final class AndroidTargetProject extends AbstractProject {
 
-  private static final KOTLIN_VERSION = '2.2.21'
+  private static final String KOTLIN_VERSION = '2.2.21'
+
+  static final String CAFFEINE = 'com.github.ben-manes.caffeine:caffeine:3.2.3'
+  static final String KOTLIN_TEST = "org.jetbrains.kotlin:kotlin-test:$KOTLIN_VERSION"
+  static final String OKIO = 'com.squareup.okio:okio:3.16.4'
 
   final GradleProject gradleProject
 
-  SimpleKmpProject() {
-    super(KOTLIN_VERSION)
+  AndroidTargetProject(agpVersion) {
+    super(KOTLIN_VERSION, agpVersion as String)
     this.gradleProject = build()
   }
 
@@ -28,39 +31,43 @@ final class SimpleKmpProject extends AbstractProject {
     return newGradleProjectBuilder(GradleProject.DslKind.KOTLIN)
       .withRootProject { r ->
         r.withBuildScript { bs ->
-          bs.plugins(plugins.dependencyAnalysis, plugins.kotlinMultiplatformNoApply)
+          bs.plugins(
+            plugins.dependencyAnalysis,
+            plugins.kotlinMultiplatformNoApply,
+            plugins.androidKmpLibNoApply,
+          )
         }
       }
-      .withSubproject('consumer') { s ->
+      .withAndroidKmpLibProject('consumer') { s ->
         s.sources = consumerSources()
         s.withBuildScript { bs ->
-          bs.plugins = kmpLibrary
+          bs.plugins = androidKmpLibrary
           bs.kotlin { k ->
-            k.jvmTarget = KotlinJvmTarget.default()
+            k.androidLibrary { a ->
+              a.namespace = 'dagp.test'
+              a.compileSdk = 33
+              a.minSdk = 24
+              a.withHostTest()
+            }
             k.sourceSets { sourceSets ->
               sourceSets.commonMain { commonMain ->
                 commonMain.dependencies(
-                  api("com.squareup.okio:okio-bom:3.16.4").onKmpPlatform(),
-                  api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"),
-                  implementation("com.squareup.okio:okio:3.16.4"),
+                  api('com.squareup.okio:okio-bom:3.16.4').onKmpPlatform(),
+                  api('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'),
+                  implementation(OKIO),
                 )
               }
-              sourceSets.commonTest { commonTest ->
-                commonTest.dependencies(
-                  implementation("kotlin(\"test\")"),
-                  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2"),
+              sourceSets.androidMain { androidMain ->
+                androidMain.dependencies(
+                  api(CAFFEINE),
                 )
               }
-              sourceSets.jvmMain { jvmMain ->
-                jvmMain.dependencies(
-                  api("com.github.ben-manes.caffeine:caffeine:3.2.3"),
-                )
-              }
-              sourceSets.jvmTest { jvmTest ->
-                jvmTest.dependencies(
-                  implementation("kotlin(\"test-junit\")"),
-                  implementation("org.assertj:assertj-core:3.27.7"),
-                  implementation("commons-io:commons-io:2.21.0"),
+              sourceSets.androidHostTest { androidHostTest ->
+                androidHostTest.dependencies(
+                  implementation('kotlin("test-junit")'),
+                  implementation('org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2'),
+                  implementation('org.assertj:assertj-core:3.27.7'),
+                  implementation('commons-io:commons-io:2.21.0'),
                 )
               }
             }
@@ -89,25 +96,7 @@ final class SimpleKmpProject extends AbstractProject {
       Source
         .kotlin(
           '''
-            package common.test
-            
-            import kotlinx.coroutines.test.runTest
-            import kotlin.test.Test
-            import kotlin.test.assertTrue
-            
-            class CommonTest {
-              @Test fun test() = runTest {
-                assertTrue(true)
-              }
-            }
-          '''
-        )
-        .withSourceSet('commonTest')
-        .build(),
-      Source
-        .kotlin(
-          '''
-            package jvm.main
+            package a.main
             
             import kotlinx.coroutines.CoroutineScope
             import kotlinx.coroutines.Dispatchers
@@ -117,7 +106,7 @@ final class SimpleKmpProject extends AbstractProject {
             import okio.source
             import java.io.File
             
-            abstract class JvmMain {
+            abstract class AndroidMain {
               fun usesCoroutines() {
                 CoroutineScope(Dispatchers.Main).launch {
                   println("Hi!")
@@ -130,19 +119,37 @@ final class SimpleKmpProject extends AbstractProject {
             }
           '''
         )
-        .withSourceSet('jvmMain')
+        .withSourceSet('androidMain')
         .build(),
       Source
         .kotlin(
           '''
-            package jvm.test
+            package a.host.test
+            
+            import kotlinx.coroutines.test.runTest
+            import kotlin.test.Test
+            import kotlin.test.assertTrue
+            
+            class HostTestCoroutines {
+              @Test fun test() = runTest {
+                assertTrue(true)
+              }
+            }
+          '''
+        )
+        .withSourceSet('androidHostTest')
+        .build(),
+      Source
+        .kotlin(
+          '''
+            package a.host.test
             
             import org.apache.commons.io.file.Counters
             import org.assertj.core.api.Assertions
             import org.junit.Assert
             import kotlin.test.Test
             
-            class JvmTest {
+            class HostTestCounters {
               fun test() {
                 // commons-io
                 val counter = Counters.longCounter()
@@ -156,7 +163,7 @@ final class SimpleKmpProject extends AbstractProject {
             }
           '''
         )
-        .withSourceSet('jvmTest')
+        .withSourceSet('androidHostTest')
         .build(),
     ]
   }
@@ -166,10 +173,12 @@ final class SimpleKmpProject extends AbstractProject {
   }
 
   private final Set<Advice> consumerAdvice = [
-    // jvmMainApi("com.github.ben-manes.caffeine:caffeine:3.2.3")
-    Advice.ofRemove(moduleCoordinates('com.github.ben-manes.caffeine:caffeine:3.2.3'), 'jvmMainApi'),
+    // androidMainApi("com.github.ben-manes.caffeine:caffeine:3.2.3")
+    Advice.ofRemove(moduleCoordinates(CAFFEINE), 'androidMainApi'),
     // commonMainApi("com.squareup.okio:okio:3.16.4") (was commonMainImplementation)
-    Advice.ofChange(moduleCoordinates('com.squareup.okio:okio:3.16.4'), 'commonMainImplementation', 'commonMainApi'),
+    Advice.ofChange(moduleCoordinates(OKIO), 'commonMainImplementation', 'commonMainApi'),
+    // androidHostTestImplementation("org.jetbrains.kotlin:kotlin-test:2.2.21")
+    Advice.ofAdd(moduleCoordinates(KOTLIN_TEST), 'androidHostTestImplementation')
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [

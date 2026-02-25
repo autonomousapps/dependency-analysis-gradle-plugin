@@ -23,6 +23,7 @@ object Plugins {
   @JvmStatic val androidAppId: String = provider.androidAppId
   @JvmStatic val androidApp: Plugin = provider.androidAppNoVersion
   @JvmStatic val androidLib: Plugin = provider.androidLibNoVersion
+  @JvmStatic val androidKmpLibNoVersion: Plugin = provider.androidKmpLibNoVersion
   @JvmStatic val androidTest: Plugin = provider.androidTestNoVersion
 
   @JvmStatic val javaTestFixtures: Plugin = provider.javaTestFixtures

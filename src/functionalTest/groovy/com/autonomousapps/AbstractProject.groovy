@@ -34,6 +34,14 @@ abstract class AbstractProject extends AbstractGradleProject {
   /** Applies the 'org.jetbrains.kotlin.multiplatform' and 'com.autonomousapps.dependency-analysis' plugins. */
   protected static final List<Plugin> kmpLibrary = [Plugins.kotlinMultiplatformNoVersion, Plugins.dependencyAnalysisNoVersion]
 
+  /**
+   * Applies the 'org.jetbrains.kotlin.multiplatform', 'com.android.kotlin.multiplatform.library' and
+   * 'com.autonomousapps.dependency-analysis' plugins.
+   *
+   * @see <a href="https://developer.android.com/kotlin/multiplatform/plugin#apply">Apply the Android-KMP plugin to an existing module</a>
+   */
+  protected static final List<Plugin> androidKmpLibrary = kmpLibrary + [Plugins.androidKmpLibNoVersion]
+
   protected final DependencyProvider dependencies
   protected final PluginProvider plugins
 
