@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.6.1
+* [Fix]: use compilation.disambiguatedName for crafting the task suffix.
+
 # Version 3.6.0
 * [Breaking]: min version of Android Gradle Plugin (AGP) is now 8.10.0.
 * [Feat]: support KMP projects with JVM targets.
