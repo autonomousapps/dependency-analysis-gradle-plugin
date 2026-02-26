@@ -21,8 +21,8 @@ public class Kotlin @JvmOverloads constructor(
 
   override fun render(scribe: Scribe): String = scribe.block(this) { s ->
     jvmToolchain?.render(s)
-    androidLibraryTarget?.render(s)
     jvmTarget?.render(s)
+    androidLibraryTarget?.render(s)
     sourceSets?.render(s)
   }
 
