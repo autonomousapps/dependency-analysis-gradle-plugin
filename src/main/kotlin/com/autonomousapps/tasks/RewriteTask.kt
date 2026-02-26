@@ -48,6 +48,9 @@ public abstract class RewriteTask : DefaultTask() {
   @get:Input
   public abstract val useTypesafeProjectAccessors: Property<Boolean>
 
+  @get:Input
+  public abstract val useParenthesesForGroovy: Property<Boolean>
+
   @get:Optional
   @get:Input
   @get:Option(
@@ -80,6 +83,7 @@ public abstract class RewriteTask : DefaultTask() {
         projectType = projectMetadata.projectType,
         dependencyMap = map.toLambda(),
         useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
+        useParenthesesForGroovy = useParenthesesForGroovy.get(),
       ),
       reversedDependencyMap = createReversedDependencyMap(map, useTypesafeProjectAccessors.get())
     )
