@@ -1,5 +1,8 @@
 Gradle TestKit Support Changelog
 
+# Version 0.23 (unreleased)
+* [Feat]: add support for KMP DSL constructs.
+
 # Version 0.22
 * [Feat]: expose `pluginManagement.repositories.repositories`.
 

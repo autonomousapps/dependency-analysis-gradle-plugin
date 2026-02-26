@@ -1,7 +1,21 @@
 Dependency Analysis Plugin Changelog
 
-# Version 3.6.0 (unreleased)
+# Version 3.6.0
 * [Breaking]: min version of Android Gradle Plugin (AGP) is now 8.10.0.
+* [Feat]: support KMP projects with JVM targets.
+* [Feat]: support KMP projects with Android targets.
+* [Feat]: update console report to be more idiomatic for KMP.
+* [Feat]: implement ABI inclusions filter.
+* [Feat]: add lifecycle `resolveExternalDependencies` task.
+* [Fix]: improve `Class.forName` handling.
+* [Fix]: remove dependency to `javax.inject`.
+* [Fix]: potential resource leak in `JarExploder`.
+* [Fix]: duplicate class detection for annotations.
+* [Fix]: use latest-kotlin editor.
+* [Refactor]: move two `public` types to an internal package to exclude from published api, and exclude the 
+  `com.autonomousapps.model.internal` package from the published api.
+* [Refactor]: moved a lot of task-registration code into `AbstractDependencyAnalyzer`.
+* [Docs]: add link to maven-hijack blog post.
 
 # Version 3.5.1
 * [Fix]: don't try to process a non-match as a binary incompatibility.

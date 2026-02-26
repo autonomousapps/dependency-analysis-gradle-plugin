@@ -40,6 +40,7 @@ The plugin *only analyzes* modules with *these specific plugins* applied:
 * `com.android.application`
 * `com.android.library`
 * `com.android.test`
+* `com.android.kotlin.multiplatform.library`
 
 In the case of Android modules, the plugin also takes into account whether `org.jetbrains.kotlin.android` has been
 applied.
@@ -47,6 +48,10 @@ applied.
 .JVM modules
 * `java-library`
 * `org.jetbrains.kotlin.jvm`
+
+.KMP (Kotlin Multiplatform) modules for `jvm` and `androidLibrary` targets
+* `org.jetbrains.kotlin.multiplatform`
+* `com.android.kotlin.multiplatform.library`
 
 .Other JVM plugins
 
