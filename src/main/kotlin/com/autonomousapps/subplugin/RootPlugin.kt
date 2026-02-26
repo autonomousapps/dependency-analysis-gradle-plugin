@@ -116,6 +116,7 @@ internal class RootPlugin(private val project: Project) {
       t.dslKind.set(DslKind.from(buildFile))
       t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
       t.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
+      t.useParenthesesForGroovy.set(dagpExtension.dependenciesHandler.useParenthesesForGroovy)
 
       t.output.set(paths.buildHealthPath)
       t.consoleOutput.set(paths.consoleReportPath)

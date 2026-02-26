@@ -37,6 +37,9 @@ import javax.inject.Inject
  *     // Set to true to instruct the plugin to not suggest replacing -ktx dependencies with non-ktx dependencies.
  *     ignoreKtx(<true|false>) // default: false
  *
+ *     // Set to true to use parentheses syntax for Groovy build script dependencies.
+ *     useParenthesesForGroovy(<true|false>) // default: false
+ *
  *     bundle("kotlin-stdlib") {
  *       // 1: include all in group as a single logical dependency
  *       includeGroup("org.jetbrains.kotlin")
@@ -132,6 +135,16 @@ public abstract class DependenciesHandler @Inject constructor(objects: ObjectFac
   public fun ignoreKtx(ignore: Boolean) {
     ignoreKtx.set(ignore)
     ignoreKtx.disallowChanges()
+  }
+
+  internal val useParenthesesForGroovy = objects.property(Boolean::class.java).also {
+    it.convention(false)
+  }
+
+  @Suppress("unused") // public API
+  public fun useParenthesesForGroovy(use: Boolean) {
+    useParenthesesForGroovy.set(use)
+    useParenthesesForGroovy.disallowChanges()
   }
 
   public fun bundle(name: String, action: Action<BundleHandler>) {
