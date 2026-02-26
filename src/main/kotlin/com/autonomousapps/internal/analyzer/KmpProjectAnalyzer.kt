@@ -17,7 +17,7 @@ import java.io.File
 
 internal class KmpProjectAnalyzer(
   project: Project,
-  private val sourceSet: JvmSourceSet,
+  private val sourceSet: KmpSourceSet,
   private val hasAbi: Boolean,
 ) : AbstractDependencyAnalyzer(project) {
 
