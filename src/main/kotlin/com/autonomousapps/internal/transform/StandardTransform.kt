@@ -415,11 +415,14 @@ internal class StandardTransform(
           advice -= theRemove
           remove -= theRemove
 
-          advice += Advice.ofChange(
-            coordinates = theRemove.coordinates,
-            fromConfiguration = theRemove.fromConfiguration!!,
-            toConfiguration = theAdd.toConfiguration!!
-          )
+          // If from == to, the dependency is already on the correct configuration. The add and remove cancel out.
+          if (theRemove.fromConfiguration != theAdd.toConfiguration) {
+            advice += Advice.ofChange(
+              coordinates = theRemove.coordinates,
+              fromConfiguration = theRemove.fromConfiguration!!,
+              toConfiguration = theAdd.toConfiguration!!
+            )
+          }
         }
     }
 
