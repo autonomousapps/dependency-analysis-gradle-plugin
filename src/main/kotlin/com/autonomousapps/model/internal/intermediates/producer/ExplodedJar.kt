@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates.producer
 
+import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.ifNotEmpty
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.*
@@ -67,7 +68,9 @@ internal data class ExplodedJar(
   )
 
   override fun compareTo(other: ExplodedJar): Int {
-    return coordinates.compareTo(other.coordinates)
+    return compareBy(ExplodedJar::coordinates)
+      .thenBy(LexicographicIterableComparator()) { it.binaryClasses }
+      .compare(this, other)
   }
 
   init {
