@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates.producer
 
+import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.ifNotEmpty
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.*
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
 import com.squareup.moshi.JsonClass
-import java.io.File
 
 /**
  * A library or project, along with the set of classes declared by, and other information contained within, this
@@ -16,7 +16,6 @@ import java.io.File
 @JsonClass(generateAdapter = false)
 internal data class ExplodedJar(
   override val coordinates: Coordinates,
-  val jarFile: File,
 
   /**
    * True if this dependency contains only annotations. False otherwise.
@@ -58,7 +57,6 @@ internal data class ExplodedJar(
     exploding: ExplodingJar,
   ) : this(
     coordinates = artifact.coordinates,
-    jarFile = artifact.file,
     isAnnotations = exploding.isCompileOnlyCandidate,
     securityProviders = exploding.securityProviders,
     androidLintRegistry = exploding.androidLintRegistry,
@@ -70,9 +68,9 @@ internal data class ExplodedJar(
   )
 
   override fun compareTo(other: ExplodedJar): Int {
-    return coordinates.compareTo(other.coordinates).let {
-      if (it == 0) jarFile.compareTo(other.jarFile) else it
-    }
+    return compareBy(ExplodedJar::coordinates)
+      .thenBy(LexicographicIterableComparator()) { it.binaryClasses }
+      .compare(this, other)
   }
 
   init {
