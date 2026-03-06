@@ -7,7 +7,10 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.model.ProjectTypeUsage
+import com.autonomousapps.model.TypeUsageSummary
 
+import static com.autonomousapps.internal.OutputPathsKt.getTypeUsagePath
+import static com.autonomousapps.internal.utils.MoshiUtils.MOSHI
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class TypeUsageWithFiltersProject extends AbstractProject {
@@ -71,10 +74,28 @@ final class TypeUsageWithFiltersProject extends AbstractProject {
   ]
 
   ProjectTypeUsage actualTypeUsage() {
-    def typeUsage = gradleProject.singleArtifact(':proj',
-      com.autonomousapps.internal.OutputPathsKt.getTypeUsagePath('main'))
-    def adapter = com.autonomousapps.internal.utils.MoshiUtils.MOSHI
-      .adapter(com.autonomousapps.model.ProjectTypeUsage)
+    def typeUsage = gradleProject.singleArtifact(':proj', getTypeUsagePath('main'))
+    def adapter = MOSHI.adapter(ProjectTypeUsage)
     return adapter.fromJson(typeUsage.asPath.text)
+  }
+
+  ProjectTypeUsage expectedTypeUsage() {
+    return new ProjectTypeUsage(
+      ':proj',
+      new TypeUsageSummary(
+        /* totalTypes */ 3,
+        /* totalFiles */ 2,
+        /* internalTypes */ 1,
+        /* projectDependencies */ 0,
+        /* libraryDependencies */ 2
+      ),
+      ['com.example.Example': 1],
+      [:],
+      [
+        'org.jetbrains.kotlin:kotlin-stdlib': ['kotlin.Metadata': 2],
+        'org.jetbrains:annotations': ['org.jetbrains.annotations.NotNull': 2],
+      ],
+      [:]
+    )
   }
 }

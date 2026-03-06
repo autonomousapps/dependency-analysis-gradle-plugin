@@ -6,10 +6,11 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.internal.OutputPathsKt
-import com.autonomousapps.internal.utils.MoshiUtils
 import com.autonomousapps.model.ProjectTypeUsage
+import com.autonomousapps.model.TypeUsageSummary
 
+import static com.autonomousapps.internal.OutputPathsKt.getTypeUsagePath
+import static com.autonomousapps.internal.utils.MoshiUtils.MOSHI
 import static com.autonomousapps.kit.gradle.Dependency.project
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
@@ -161,9 +162,75 @@ final class TypeUsageMultiModuleProject extends AbstractProject {
   ]
 
   ProjectTypeUsage actualTypeUsageFor(String projectPath) {
-    def typeUsage = gradleProject.singleArtifact(projectPath,
-      OutputPathsKt.getTypeUsagePath('main'))
-    def adapter = MoshiUtils.MOSHI.adapter(ProjectTypeUsage)
+    def typeUsage = gradleProject.singleArtifact(projectPath, getTypeUsagePath('main'))
+    def adapter = MOSHI.adapter(ProjectTypeUsage)
     return adapter.fromJson(typeUsage.asPath.text)
+  }
+
+  ProjectTypeUsage expectedAppTypeUsage() {
+    return new ProjectTypeUsage(
+      ':app',
+      new TypeUsageSummary(
+        /* totalTypes */ 8,
+        /* totalFiles */ 2,
+        /* internalTypes */ 1,
+        /* projectDependencies */ 2,
+        /* libraryDependencies */ 3
+      ),
+      ['com.example.app.MainActivity': 1],
+      [
+        ':core': ['com.example.core.User': 1, 'com.example.core.UserRepository': 1],
+        ':utils': ['com.example.utils.Logger': 1],
+      ],
+      [
+        'org.apache.commons:commons-collections4': ['org.apache.commons.collections4.bag.HashBag': 1],
+        'org.jetbrains.kotlin:kotlin-stdlib': ['kotlin.Metadata': 2, 'kotlin.jvm.internal.SourceDebugExtension': 1],
+        'org.jetbrains:annotations': ['org.jetbrains.annotations.NotNull': 2],
+      ],
+      [:]
+    )
+  }
+
+  ProjectTypeUsage expectedCoreTypeUsage() {
+    return new ProjectTypeUsage(
+      ':core',
+      new TypeUsageSummary(
+        /* totalTypes */ 7,
+        /* totalFiles */ 3,
+        /* internalTypes */ 1,
+        /* projectDependencies */ 1,
+        /* libraryDependencies */ 2
+      ),
+      ['com.example.core.User': 2],
+      [
+        ':utils': ['com.example.utils.Logger': 1],
+      ],
+      [
+        'org.jetbrains.kotlin:kotlin-stdlib': ['kotlin.jvm.internal.Intrinsics': 2, 'kotlin.Metadata': 3, 'kotlin.collections.CollectionsKt': 1],
+        'org.jetbrains:annotations': ['org.jetbrains.annotations.NotNull': 3, 'org.jetbrains.annotations.Nullable': 1],
+      ],
+      [:]
+    )
+  }
+
+  ProjectTypeUsage expectedUtilsTypeUsage() {
+    return new ProjectTypeUsage(
+      ':utils',
+      new TypeUsageSummary(
+        /* totalTypes */ 5,
+        /* totalFiles */ 2,
+        /* internalTypes */ 1,
+        /* projectDependencies */ 0,
+        /* libraryDependencies */ 3
+      ),
+      ['com.example.utils.Logger': 1],
+      [:],
+      [
+        'commons-io:commons-io': ['org.apache.commons.io.FileUtils': 1],
+        'org.jetbrains.kotlin:kotlin-stdlib': ['kotlin.jvm.internal.Intrinsics': 1, 'kotlin.Metadata': 2],
+        'org.jetbrains:annotations': ['org.jetbrains.annotations.NotNull': 2],
+      ],
+      [:]
+    )
   }
 }

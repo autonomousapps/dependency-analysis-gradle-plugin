@@ -21,14 +21,15 @@ public data class ProjectTypeUsage(
   /** Types defined in this project that are used by itself. Map: className -> usageCount. */
   val internal: Map<String, Int>,
 
-  /** Types used from project dependencies (other modules). Map: coordinates -> (className -> usageCount). */
+  /** Types used from project dependencies (other modules). Map: dependencyIdentifier -> (className -> usageCount). */
   val projectDependencies: Map<String, Map<String, Int>>,
 
-  /** Types used from external library dependencies. Map: coordinates -> (className -> usageCount). */
+  /** Types used from external library dependencies. Map: dependencyIdentifier -> (className -> usageCount). */
   val libraryDependencies: Map<String, Map<String, Int>>,
-) : Comparable<ProjectTypeUsage> {
 
-  override fun compareTo(other: ProjectTypeUsage): Int = projectPath.compareTo(other.projectPath)
+  /** Types used that could not be resolved to any dependency. Map: className -> usageCount. */
+  val unknownDependencies: Map<String, Int> = emptyMap(),
+) {
 
   /**
    * Returns true if there are no usages tracked.

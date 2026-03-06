@@ -27,32 +27,12 @@ public abstract class TypeUsageHandler @Inject constructor(
 
   // Excluded package prefixes
   internal val excludedPackages: SetProperty<String> = objects.setProperty(String::class.java)
-    .convention(setOf(
-      "kotlin.jvm.internal",
-      "androidx.compose.runtime.internal",
-      "kotlin.jvm.functions",
-      "android"
-    ))
 
   // Excluded specific types
   internal val excludedTypes: SetProperty<String> = objects.setProperty(String::class.java)
-    .convention(setOf(
-      "kotlin.Unit",
-      "kotlin.coroutines.Continuation",
-      "kotlin.reflect.KClass",
-      "kotlin.Lazy",
-      "dagger.internal.Factory"
-    ))
 
   // Regex patterns for flexible matching
   internal val excludedRegexPatterns: ListProperty<String> = objects.listProperty(String::class.java)
-    .convention(listOf(
-      "^anvil\\.hint\\..*",
-      ".*_Factory$",
-      ".*_Factory\\$.*",
-      ".*_MembersInjector$",
-      ".*_MembersInjector\\$.*"
-    ))
 
   /**
    * Exclude types by package prefix.
@@ -63,6 +43,7 @@ public abstract class TypeUsageHandler @Inject constructor(
    * ```
    */
   public fun excludePackages(vararg packages: String) {
+    require(packages.isNotEmpty()) { "Must provide at least one package to exclude." }
     excludedPackages.addAll(packages.toList())
   }
 
@@ -75,6 +56,7 @@ public abstract class TypeUsageHandler @Inject constructor(
    * ```
    */
   public fun excludeTypes(vararg types: String) {
+    require(types.isNotEmpty()) { "Must provide at least one type to exclude." }
     excludedTypes.addAll(types.toList())
   }
 
@@ -89,6 +71,7 @@ public abstract class TypeUsageHandler @Inject constructor(
   public fun excludeRegex(
     @org.intellij.lang.annotations.Language("RegExp") vararg patterns: String
   ) {
+    require(patterns.isNotEmpty()) { "Must provide at least one pattern to exclude." }
     excludedRegexPatterns.addAll(patterns.toList())
   }
 }

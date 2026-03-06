@@ -140,4 +140,4 @@ public fun getDuplicateDependenciesReport(): String = "$ROOT_DIR/duplicate-depen
 public fun getAllLibsVersionsTomlPath(): String = "$ROOT_DIR/allLibs.versions.toml"
 public fun getResolvedDependenciesReport(): String = "$ROOT_DIR/resolved-dependencies-report.txt"
 public fun getResolvedVersionsTomlPath(): String = "$ROOT_DIR/resolvedAllLibs.versions.toml"
-public fun getTypeUsagePath(variantName: String = "main"): String = "$ROOT_DIR/$variantName/intermediates/type-usage.json"
+public fun getTypeUsagePath(variantName: String = "main"): String = "$ROOT_DIR/$variantName/type-usage.json"
