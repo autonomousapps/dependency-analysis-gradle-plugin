@@ -8,6 +8,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -34,8 +35,10 @@ public abstract class AbstractExtension @Inject constructor(
   internal val dependenciesHandler: DependenciesHandler = dslService.get().dependenciesHandler
   internal val reportingHandler: ReportingHandler = dslService.get().reportingHandler
   internal val usageHandler: UsageHandler = dslService.get().usageHandler
+  internal val typeUsageHandler: TypeUsageHandler = objects.newInstance(TypeUsageHandler::class.java)
 
   private val adviceOutput = objects.fileProperty()
+  private val typeUsageOutputs = objects.mapProperty(String::class.java, RegularFile::class.java)
   private var postProcessingTask: TaskProvider<out AbstractPostProcessingTask>? = null
 
   internal var forceAppProject = false
@@ -47,6 +50,10 @@ public abstract class AbstractExtension @Inject constructor(
     adviceOutput.set(output)
   }
 
+  internal fun storeTypeUsageOutput(variantName: String, provider: Provider<RegularFile>) {
+    typeUsageOutputs.put(variantName, provider)
+  }
+
   /**
    * Returns the output from the project-level advice.
    *
@@ -54,6 +61,13 @@ public abstract class AbstractExtension @Inject constructor(
    */
   @Suppress("MemberVisibilityCanBePrivate") // explicit API
   public fun adviceOutput(): RegularFileProperty = adviceOutput
+
+  /**
+   * Returns the per-variant outputs from the project-level type usage analysis.
+   * Keyed by variant name (e.g., "Main", "Debug", "Release").
+   */
+  @Suppress("MemberVisibilityCanBePrivate") // explicit API
+  public fun typeUsageOutputs(): MapProperty<String, RegularFile> = typeUsageOutputs
 
   /**
    * Whether to force the project being treated as an app project even if only the `java` plugin is applied.
