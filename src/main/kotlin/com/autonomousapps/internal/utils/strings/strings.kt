@@ -32,3 +32,7 @@ internal fun String.replaceExceptLast(oldValue: String, newValue: String, ignore
 
   return stringBuilder.append(this, i, length).toString()
 }
+
+internal fun String.ensureSuffix(suffix: String): String {
+  return if (endsWith(suffix)) this else "$this$suffix"
+}

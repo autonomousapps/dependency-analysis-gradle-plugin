@@ -2,10 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.autonomousapps.internal.utils.strings.ensureSuffix
 import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.fromJson
+import com.autonomousapps.internal.utils.fromJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.getJsonListAdapter
+import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.ModuleCoordinates
+import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.ProjectTypeUsage
 import com.autonomousapps.model.TypeUsageSummary
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
@@ -19,10 +23,6 @@ import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import okio.buffer
-import okio.source
-import java.io.File
-import java.util.zip.GZIPInputStream
 import javax.inject.Inject
 
 @CacheableTask
@@ -36,6 +36,9 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
 
   @get:Input
   public abstract val projectPath: Property<String>
+
+  @get:Input
+  public abstract val buildPath: Property<String>
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -61,6 +64,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
   public fun action() {
     workerExecutor.noIsolation().submit(ComputeTypeUsageAction::class.java) {
       it.projectPath.set(projectPath)
+      it.buildPath.set(buildPath)
       it.syntheticProject.set(syntheticProject)
       it.explodedJars.set(explodedJars)
       it.excludedPackages.set(excludedPackages)
@@ -72,6 +76,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
 
   public interface ComputeTypeUsageParameters : WorkParameters {
     public val projectPath: Property<String>
+    public val buildPath: Property<String>
     public val syntheticProject: RegularFileProperty
     public val explodedJars: RegularFileProperty
     public val excludedPackages: SetProperty<String>
@@ -87,7 +92,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
 
       // 1. Load data
       val project = parameters.syntheticProject.fromJson<ProjectVariant>()
-      val classToCoords = buildClassIndex(parameters.explodedJars.get().asFile)
+      val classToCoords = buildClassIndex()
 
       // 2. Build filter
       val filter = TypeFilter(
@@ -104,22 +109,14 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
       output.bufferWriteJson(typeUsage)
     }
 
-    private fun buildClassIndex(explodedJarsFile: File): Map<String, String> {
-      if (!explodedJarsFile.exists()) return emptyMap()
+    private fun buildClassIndex(): Map<String, Coordinates> {
+      val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>(compressed = true)
 
-      val map = mutableMapOf<String, String>()
-
-      GZIPInputStream(explodedJarsFile.inputStream()).use { gzipStream ->
-        val explodedJars = gzipStream.source().buffer().use { bufferedSource ->
-          getJsonListAdapter<ExplodedJar>().fromJson(bufferedSource)!!
-        }
-
-        explodedJars.forEach { jar ->
-          // Normalize identifier to handle included builds (convert "build:project" to ":project")
-          val identifier = jar.coordinates.normalizedIdentifier(":")
-          jar.binaryClasses.forEach { binaryClass ->
-            map[binaryClass.className] = identifier
-          }
+      val map = mutableMapOf<String, Coordinates>()
+      explodedJars.forEach { jar ->
+        val coordinates = jar.coordinates.normalized(parameters.buildPath.get())
+        jar.binaryClasses.forEach { binaryClass ->
+          map[binaryClass.className] = coordinates
         }
       }
 
@@ -129,15 +126,16 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
 }
 
 private class TypeFilter(
-  val excludedPackages: Set<String>,
+  excludedPackages: Set<String>,
   val excludedTypes: Set<String>,
   excludedRegexPatterns: List<String>
 ) {
+  private val normalizedPackages = excludedPackages.map { it.ensureSuffix(".") }.toSet()
   private val compiledPatterns = excludedRegexPatterns.map { it.toRegex() }
 
   fun shouldExclude(className: String): Boolean {
     if (excludedTypes.contains(className)) return true
-    if (excludedPackages.any { className.startsWith("$it.") }) return true
+    if (normalizedPackages.any { className.startsWith(it) }) return true
     if (compiledPatterns.any { it.matches(className) }) return true
     return false
   }
@@ -145,11 +143,12 @@ private class TypeFilter(
 
 private class TypeUsageAnalyzer(
   private val project: ProjectVariant,
-  private val classToCoords: Map<String, String>,
+  private val classToCoords: Map<String, Coordinates>,
   private val filter: TypeFilter
 ) {
   fun analyze(): ProjectTypeUsage {
-    val usageMap = mutableMapOf<String, MutableMap<String, Int>>()
+    val usageMap = mutableMapOf<Coordinates, MutableMap<String, Int>>()
+    val unknown = mutableMapOf<String, Int>()
 
     // Get project's own class names for internal type detection
     val projectClasses = project.classNames
@@ -158,18 +157,17 @@ private class TypeUsageAnalyzer(
     project.codeSource.forEach { source ->
       val allUsedClasses = source.usedNonAnnotationClasses + source.usedAnnotationClasses
 
-      allUsedClasses.forEach { className ->
-        if (filter.shouldExclude(className)) return@forEach
-
+      allUsedClasses.filter { !filter.shouldExclude(it) }.forEach { className ->
         // Determine coordinates: check project classes first, then external
-        val coords = when {
-          projectClasses.contains(className) -> project.coordinates.identifier
-          else -> classToCoords[className] ?: "UNKNOWN"
-        }
+        val coords = classToCoords[className]
 
-        usageMap
-          .getOrPut(coords) { mutableMapOf() }
-          .merge(className, 1, Int::plus)
+        if (coords != null || projectClasses.contains(className)) {
+          usageMap
+            .getOrPut(coords ?: project.coordinates) { mutableMapOf() }
+            .merge(className, 1, Int::plus)
+        } else {
+          unknown.merge(className, 1, Int::plus)
+        }
       }
     }
 
@@ -179,10 +177,11 @@ private class TypeUsageAnalyzer(
     val libraryDeps = mutableMapOf<String, Map<String, Int>>()
 
     usageMap.forEach { (coords, typeUsages) ->
-      when {
-        coords == project.coordinates.identifier -> internal.putAll(typeUsages)
-        coords.startsWith(":") -> projectDeps[coords] = typeUsages
-        coords != "UNKNOWN" -> libraryDeps[coords] = typeUsages
+      when (coords) {
+        project.coordinates -> internal.putAll(typeUsages)
+        is ProjectCoordinates -> projectDeps[coords.identifier] = typeUsages
+        is ModuleCoordinates -> libraryDeps[coords.identifier] = typeUsages
+        else -> libraryDeps[coords.identifier] = typeUsages
       }
     }
 
@@ -196,8 +195,9 @@ private class TypeUsageAnalyzer(
         libraryDependencies = libraryDeps.size
       ),
       internal = internal,
-      projectDependencies = projectDeps,
-      libraryDependencies = libraryDeps
+      projectDependencies = projectDeps.toSortedMap(),
+      libraryDependencies = libraryDeps.toSortedMap(),
+      unknownDependencies = unknown.toSortedMap()
     )
   }
 }

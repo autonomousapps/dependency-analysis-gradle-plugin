@@ -1006,6 +1006,7 @@ internal class ProjectPlugin(private val project: Project) {
     // Computes type-level usage statistics for complexity analysis.
     val computeTypeUsageTask = tasks.register("computeTypeUsage${dependencyAnalyzer.taskNameSuffix}", ComputeTypeUsageTask::class.java) { t ->
       t.projectPath.set(path)
+      t.buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
       t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       t.explodedJars.set(explodeJarTask.flatMap { it.output })
 
@@ -1016,7 +1017,7 @@ internal class ProjectPlugin(private val project: Project) {
 
       t.output.set(dependencyAnalyzer.outputPaths.typeUsagePath)
     }
-    storeTypeUsageOutput(computeTypeUsageTask.flatMap { it.output })
+    storeTypeUsageOutput(dependencyAnalyzer.taskNameSuffix, computeTypeUsageTask.flatMap { it.output })
 
     // Null for JVM projects
     val androidScoreTask = dependencyAnalyzer.registerAndroidScoreTask(
@@ -1220,8 +1221,8 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   /** Stores type usage output in either root extension or subproject extension. */
-  private fun storeTypeUsageOutput(typeUsage: Provider<RegularFile>) {
-    dagpExtension.storeTypeUsageOutput(typeUsage)
+  private fun storeTypeUsageOutput(variantName: String, typeUsage: Provider<RegularFile>) {
+    dagpExtension.storeTypeUsageOutput(variantName, typeUsage)
   }
 
   private class JavaSources(project: Project, dagpExtension: AbstractExtension) {
