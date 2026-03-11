@@ -273,14 +273,22 @@ public data class KmpSourceKind(
   override fun runtimeMatches(classpaths: Collection<String>): Boolean = runtimeClasspathName in classpaths
   override fun sourceSetMatches(sourceSetName: String): Boolean = sourceSetName == name
 
+  /**
+   * KMP source sets are uniquely identified by [name]. The classpath names are derived values that may differ
+   * depending on how the sourceKind was constructed (from an actual compilation vs. inferred from a configuration
+   * name), so they must not participate in equality comparisons.
+   */
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is KmpSourceKind) return false
+    return name == other.name
+  }
+
+  override fun hashCode(): Int = name.hashCode()
+
   override fun compareTo(other: SourceKind): Int {
     if (other !is KmpSourceKind) return 1
-
-    return compareBy(SourceKind::name)
-      .thenBy(SourceKind::kind)
-      .thenBy(SourceKind::compileClasspathName)
-      .thenBy(SourceKind::runtimeClasspathName)
-      .compare(this, other)
+    return name.compareTo(other.name)
   }
 
   internal companion object {

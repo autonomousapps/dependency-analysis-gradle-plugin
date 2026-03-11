@@ -5,6 +5,7 @@ package com.autonomousapps.kmp
 import com.autonomousapps.kmp.projects.AndroidAndJvmProject
 import com.autonomousapps.kmp.projects.AndroidTargetProject
 import com.autonomousapps.kmp.projects.JvmTargetProject
+import com.autonomousapps.kmp.projects.SameConfigKmpProject
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -131,6 +132,22 @@ final class SimpleKmpSpec extends AbstractKmpSpec {
             api("${AndroidAndJvmProject.OKIO}") (was commonMainImplementation)
           }""".stripIndent()
     )
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
+  // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1649
+  def "used androidMainImplementation dep should not crash in kmp with jvm target (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new SameConfigKmpProject(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
