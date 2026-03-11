@@ -307,7 +307,7 @@ you want to create an image for a containerized build.
 
 where "Main" refers to the name of the source set or Android variant (capitalized).
 
-=== Print the denominator tree
+=== Print the dominator tree
 
 This will print the https://en.wikipedia.org/wiki/Dominator_(graph_theory)[dominator tree] for the given project. This
 is useful when looking for "fat" dependencies that contribute significantly to final binary size (such as with a fatjar
