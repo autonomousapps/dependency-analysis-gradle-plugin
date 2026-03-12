@@ -15,7 +15,7 @@ public object Graphs {
    * `false` (it is `true`, or excluded, by default).
    */
   public fun <N : Any> Graph<N>.reachableNodes(node: N, excludeSelf: Boolean = true): Set<N> {
-    val reachable = GuavaGraphs.reachableNodes(this, node)
+    val reachable = bfsReachable(node)
     return if (excludeSelf) {
       reachable.filterNotTo(HashSet()) { it == node }
     } else {
@@ -37,7 +37,7 @@ public object Graphs {
   public fun <N : Any> Graph<N>.reachableNodes(excludeSelf: Boolean, predicate: (N) -> Boolean): Set<N> {
     val node = nodes().firstOrNull(predicate) ?: return emptySet()
 
-    val reachable = GuavaGraphs.reachableNodes(this, node)
+    val reachable = bfsReachable(node)
     return if (excludeSelf) {
       reachable.filterNotTo(HashSet()) { it == node }
     } else {
@@ -49,7 +49,7 @@ public object Graphs {
   public fun <N : Any> Graph<N>.reachableNodesMatching(predicate: (N) -> Boolean): Set<N> {
     return nodes().asSequence()
       .filter(predicate)
-      .flatMap { node -> GuavaGraphs.reachableNodes(this, node) }
+      .flatMap { node -> bfsReachable(node) }
       .toSet()
   }
 
@@ -106,4 +106,24 @@ public object Graphs {
    * @see <a href="https://en.wikipedia.org/wiki/Topological_sorting">Topological sorting</a>
    */
   public fun <N : Any> Graph<N>.topological(source: N): Iterable<N> = Topological(this, source).order
+
+  /**
+   * BFS traversal from [start], returning all reachable nodes (including [start] itself).
+   *
+   * Uses custom implementation of BFS instead of Guava's Graphs.reachableNodes() / Traverser.forGraph() to avoid a
+   * ClassCastException caused by Gradle 9's InstrumentingVisitableURLClassLoader, which instruments class bytecode in a
+   * way that breaks ImmutableGraph's cast to SuccessorsFunction inside Traverser.<init>.
+   */
+  private fun <N : Any> Graph<N>.bfsReachable(start: N): Set<N> {
+    val visited = LinkedHashSet<N>()
+    val queue = ArrayDeque<N>()
+    queue.add(start)
+    while (queue.isNotEmpty()) {
+      val node = queue.removeFirst()
+      if (visited.add(node)) {
+        successors(node).forEach { queue.add(it) }
+      }
+    }
+    return visited
+  }
 }
