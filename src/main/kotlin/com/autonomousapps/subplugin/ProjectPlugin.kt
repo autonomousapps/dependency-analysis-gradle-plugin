@@ -13,6 +13,7 @@ import com.autonomousapps.Flags.checkBinaryCompat
 import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
+import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.AbiExclusions
 import com.autonomousapps.internal.NoVariantOutputPaths
 import com.autonomousapps.internal.UsagesExclusions
@@ -1060,7 +1061,7 @@ internal class ProjectPlugin(private val project: Project) {
       t.checkSuperClasses.set(dagpExtension.usageHandler.analysisHandler.checkSuperClasses)
       // Currently only modeling this via Gradle property. May hoist it to the DSL if it's necessary.
       t.checkBinaryCompat.set(checkBinaryCompat())
-      
+
       t.graph.set(graphViewTask.flatMap { it.output })
       t.declarations.set(findDeclarationsTask.flatMap { it.output })
       t.dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
@@ -1078,6 +1079,8 @@ internal class ProjectPlugin(private val project: Project) {
 
     computeAdviceTask.configure { t ->
       t.buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
+      t.buildFile.set(project.buildFile)
+      t.rootFolder.set(project.layout.settingsDirectory.asFile)
       t.dependencyGraphViews.add(graphViewTask.flatMap { it.output })
       t.dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
       t.dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
@@ -1118,6 +1121,11 @@ internal class ProjectPlugin(private val project: Project) {
       it.dependencyUsages.set(paths.dependencyUsagesPath)
       it.annotationProcessorUsages.set(paths.annotationProcessorUsagesPath)
       it.bundledTraces.set(paths.bundledTracesPath)
+      it.dependencyMap.set(
+        objects.newInstance(DependenciesHandler::class.java).apply {
+          withVersionCatalogs(project)
+        }.map
+      )
     }
 
     filterAdviceTask = tasks.register("filterAdvice", FilterAdviceTask::class.java) { t ->

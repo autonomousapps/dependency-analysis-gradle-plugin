@@ -22,7 +22,8 @@ public data class Advice(
    * The configuration on which the dependency _should_ be declared. Will be null if the dependency is unused and
    * therefore ought to be removed.
    */
-  val toConfiguration: String? = null
+  val toConfiguration: String? = null,
+  val buildFileDeclarationLineNumber: Int? = null,
 ) : Comparable<Advice> {
 
   override fun compareTo(other: Advice): Int = compareBy(Advice::coordinates)
@@ -32,24 +33,40 @@ public data class Advice(
 
   public companion object {
     @JvmStatic
-    public fun ofAdd(coordinates: Coordinates, toConfiguration: String): Advice = Advice(
+    public fun ofAdd(
+      coordinates: Coordinates,
+      toConfiguration: String,
+      declarationLineNumber: Int? = null
+    ): Advice = Advice(
       coordinates = coordinates,
       fromConfiguration = null,
-      toConfiguration = toConfiguration
+      toConfiguration = toConfiguration,
+      buildFileDeclarationLineNumber = declarationLineNumber,
     )
 
     @JvmStatic
-    public fun ofRemove(coordinates: Coordinates, fromConfiguration: String): Advice = Advice(
+    public fun ofRemove(
+      coordinates: Coordinates,
+      fromConfiguration: String,
+      declarationLineNumber: Int? = null
+    ): Advice = Advice(
       coordinates = coordinates,
-      fromConfiguration = fromConfiguration, toConfiguration = null
+      fromConfiguration = fromConfiguration,
+      toConfiguration = null,
+      buildFileDeclarationLineNumber = declarationLineNumber,
     )
 
     @JvmStatic
-    internal fun ofRemove(coordinates: Coordinates, declaration: Declaration) =
-      ofRemove(coordinates, declaration.configurationName)
+    internal fun ofRemove(coordinates: Coordinates, declaration: Declaration, declarationLineNumber: Int? = null) =
+      ofRemove(coordinates, declaration.configurationName, declarationLineNumber)
 
     @JvmStatic
-    public fun ofChange(coordinates: Coordinates, fromConfiguration: String, toConfiguration: String): Advice {
+    public fun ofChange(
+      coordinates: Coordinates,
+      fromConfiguration: String,
+      toConfiguration: String,
+      declarationLineNumber: Int? = null
+    ): Advice {
       require(fromConfiguration != toConfiguration) {
         "Change advice for ${coordinates.identifier} cannot be from and to the same configuration ($fromConfiguration in this case)"
       }
@@ -57,7 +74,8 @@ public data class Advice(
       return Advice(
         coordinates = coordinates,
         fromConfiguration = fromConfiguration,
-        toConfiguration = toConfiguration
+        toConfiguration = toConfiguration,
+        buildFileDeclarationLineNumber = declarationLineNumber,
       )
     }
   }

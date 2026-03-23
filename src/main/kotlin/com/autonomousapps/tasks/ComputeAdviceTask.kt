@@ -24,6 +24,7 @@ import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
+import org.gradle.api.provider.MapProperty
 
 /**
  * Takes [usage][com.autonomousapps.model.internal.intermediates.Usage] information from [ComputeUsagesTask] and emits
@@ -44,6 +45,16 @@ public abstract class ComputeAdviceTask @Inject constructor(
 
   @get:Input
   public abstract val buildPath: Property<String>
+
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  public abstract val buildFile: RegularFileProperty
+
+   // Do not depend on the contents of the directory,
+  // as that would cause the task to depend on every single thing inside the gradle project
+  @get:Internal
+  public abstract val rootFolder: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
@@ -105,10 +116,15 @@ public abstract class ComputeAdviceTask @Inject constructor(
   @get:OutputFile
   public abstract val bundledTraces: RegularFileProperty
 
+  @get:Input
+  public abstract val dependencyMap: MapProperty<String, String>
+
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ComputeAdviceAction::class.java) {
       it.projectPath.set(projectPath)
       it.buildPath.set(buildPath)
+      it.buildFile.set(buildFile)
+      it.rootFolder.set(rootFolder)
       it.dependencyUsageReports.set(dependencyUsageReports)
       it.dependencyGraphViews.set(dependencyGraphViews)
       it.androidScoreReports.set(androidScoreReports)
@@ -126,12 +142,17 @@ public abstract class ComputeAdviceTask @Inject constructor(
       it.dependencyUsages.set(dependencyUsages)
       it.annotationProcessorUsages.set(annotationProcessorUsages)
       it.bundledTraces.set(bundledTraces)
+      it.dependencyMap = dependencyMap.get()
     }
   }
 
   public interface ComputeAdviceParameters : WorkParameters {
     public val projectPath: Property<String>
     public val buildPath: Property<String>
+
+    public val buildFile: RegularFileProperty
+
+    public val rootFolder: RegularFileProperty
     public val dependencyUsageReports: ListProperty<RegularFile>
     public val dependencyGraphViews: ListProperty<RegularFile>
     public val androidScoreReports: ListProperty<RegularFile>
@@ -149,6 +170,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
     public val dependencyUsages: RegularFileProperty
     public val annotationProcessorUsages: RegularFileProperty
     public val bundledTraces: RegularFileProperty
+    public var dependencyMap: Map<String, String>
   }
 
   public abstract class ComputeAdviceAction : WorkAction<ComputeAdviceParameters> {
@@ -161,6 +183,9 @@ public abstract class ComputeAdviceTask @Inject constructor(
 
       val projectPath = parameters.projectPath.get()
       val buildPath = parameters.buildPath.get()
+      val rootFolder = parameters.rootFolder.get()
+
+      val buildFile = parameters.buildFile.get()
       val declarations = parameters.declarations.fromJsonSet<Declaration>()
       val dependencyGraph = DependencyGraphView.asMap(parameters.dependencyGraphViews)
       val androidScore = parameters.androidScoreReports.get()
@@ -192,6 +217,8 @@ public abstract class ComputeAdviceTask @Inject constructor(
         ignoreKtx = ignoreKtx,
       )
 
+      val buildFileLines = buildFile.readLines()
+
       val dependencyAdviceBuilder = DependencyAdviceBuilder(
         projectPath = projectPath,
         buildPath = buildPath,
@@ -204,6 +231,8 @@ public abstract class ComputeAdviceTask @Inject constructor(
         explicitSourceSets = explicitSourceSets,
         isAndroidProject = isAndroidProject,
         isKaptApplied = isKaptApplied,
+        buildFileLines = buildFileLines,
+        dependencyMap = parameters.dependencyMap,
       )
 
       val pluginAdviceBuilder = PluginAdviceBuilder(
@@ -214,6 +243,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
 
       val projectAdvice = ProjectAdvice(
         projectPath = projectPath,
+        projectBuildFile = buildFile.asFile.relativeTo(rootFolder.asFile).path,
         dependencyAdvice = dependencyAdviceBuilder.advice,
         pluginAdvice = pluginAdviceBuilder.getPluginAdvice(),
         moduleAdvice = androidScore,
@@ -276,6 +306,8 @@ internal class DependencyAdviceBuilder(
   private val explicitSourceSets: Set<String>,
   private val isAndroidProject: Boolean,
   private val isKaptApplied: Boolean,
+  private val buildFileLines: List<String>,
+  private val dependencyMap: Map<String, String>,
 ) {
 
   /** The unfiltered advice. */
@@ -361,7 +393,7 @@ internal class DependencyAdviceBuilder(
 
           else -> advice
         }
-      }
+      }.addLineNumbers()
   }
 
   // nb: no bundle support for annotation processors
@@ -380,5 +412,20 @@ internal class DependencyAdviceBuilder(
           isKaptApplied = isKaptApplied,
         ).reduce(usages)
       }
+      .addLineNumbers()
+  }
+
+  private fun Sequence<Advice>.addLineNumbers(): Sequence<Advice> = map { advice ->
+    val lineNumber = buildFileLines
+      .indexOfFirst { buildFileLine -> buildFileLine.contains(advice.coordinates.identifier) }
+      .takeIf { it >= 0 }
+      ?: dependencyMap[advice.coordinates.identifier]?.let { mappedIdentifier ->
+        buildFileLines
+          .indexOfFirst { buildFileLine ->
+            buildFileLine.contains(mappedIdentifier)
+          }.takeIf { it >= 0 }
+      }
+
+    advice.copy(buildFileDeclarationLineNumber = lineNumber?.plus(1))
   }
 }

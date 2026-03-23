@@ -9,12 +9,13 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = false)
 public data class ProjectAdvice(
   val projectPath: String,
+  val projectBuildFile: String? = null,
   val dependencyAdvice: Set<Advice> = emptySet(),
   val pluginAdvice: Set<PluginAdvice> = emptySet(),
   val moduleAdvice: Set<ModuleAdvice> = emptySet(),
   val warning: Warning = Warning.empty(),
   /** True if there is any advice in a category for which the user has declared they want the build to fail. */
-  val shouldFail: Boolean = false
+  val shouldFail: Boolean = false,
 ) : Comparable<ProjectAdvice> {
 
   /** Returns true if this has no advice, nor any warnings. */
