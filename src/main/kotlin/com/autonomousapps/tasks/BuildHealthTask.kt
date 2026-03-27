@@ -36,6 +36,11 @@ public abstract class BuildHealthTask : DefaultTask() {
   @get:Input
   public abstract val printBuildHealth: Property<Boolean>
 
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  @get:Optional
+  public abstract val sarifReport: RegularFileProperty
+
   @get:Input
   public abstract val postscript: Property<String>
 

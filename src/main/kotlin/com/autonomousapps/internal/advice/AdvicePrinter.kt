@@ -31,6 +31,9 @@ internal class AdvicePrinter(
   fun toDeclaration(advice: Advice): String =
     "  ${advice.toConfiguration}${gav(advice.coordinates)}"
 
+  fun fromDeclaration(advice: Advice): String =
+    "  ${advice.fromConfiguration}${gav(advice.coordinates)}"
+
   fun gav(coordinates: Coordinates): String {
     val quotedDep = coordinates.mapped()
 

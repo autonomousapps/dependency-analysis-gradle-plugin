@@ -115,12 +115,18 @@ internal class RootPlugin(private val project: Project) {
       it.output.set(paths.buildHealthPath)
       it.consoleOutput.set(paths.consoleReportPath)
       it.outputFail.set(paths.shouldFailPath)
+      it.sarifOutput.set(
+        dagpExtension.reportingHandler.sarifReport.flatMap { sarifReportEnabled ->
+          if (sarifReportEnabled) paths.sarifReportPath else null
+        }
+      )
     }
 
     tasks.register("buildHealth", BuildHealthTask::class.java) {
       it.shouldFail.set(generateBuildHealthTask.flatMap { it.outputFail })
       it.buildHealth.set(generateBuildHealthTask.flatMap { it.output })
       it.consoleReport.set(generateBuildHealthTask.flatMap { it.consoleOutput })
+      it.sarifReport.set(generateBuildHealthTask.flatMap { it.sarifOutput })
       it.printBuildHealth.set(dagpExtension.reportingHandler.printBuildHealth.orElse(printBuildHealth()))
       it.postscript.set(dagpExtension.reportingHandler.postscript)
     }

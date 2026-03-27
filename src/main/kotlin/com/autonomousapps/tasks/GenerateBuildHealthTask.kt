@@ -8,15 +8,18 @@ import com.autonomousapps.extension.ReportingHandler
 import com.autonomousapps.extension.getEffectivePostscript
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
+import com.autonomousapps.internal.advice.ProjectHealthSarifReportBuilder
 import com.autonomousapps.internal.utils.Colors
 import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.getAndDeleteNullable
 import com.autonomousapps.model.AndroidScore
 import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.BuildHealth.AndroidScoreMetrics
 import com.autonomousapps.model.ProjectAdvice
+import io.github.detekt.sarif4k.SarifSerializer
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -61,10 +64,15 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
   @get:OutputFile
   public abstract val outputFail: RegularFileProperty
 
+  @get:OutputFile
+  @get:Optional
+  public abstract val sarifOutput: RegularFileProperty
+
   @TaskAction public fun action() {
     val output = output.getAndDelete()
     val consoleOutput = consoleOutput.getAndDelete()
     val outputFail = outputFail.getAndDelete()
+    val sarifOutput = sarifOutput.getAndDeleteNullable()
 
     var didWrite = false
     var shouldFail = false
@@ -160,6 +168,17 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
       if (ps.isNotEmpty()) {
         consoleOutput.appendText("\n\n${ps.colorize(Colors.BOLD)}")
       }
+    }
+
+    if (sarifOutput != null) {
+      val sarifReport = ProjectHealthSarifReportBuilder(
+        projectAdvices = projectAdvice,
+        dslKind = dslKind.get(),
+        dependencyMap = dependencyMap.get().toLambda(),
+        useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
+      ).sarif
+
+      sarifOutput.writeText(SarifSerializer.toJson(sarifReport))
     }
   }
 

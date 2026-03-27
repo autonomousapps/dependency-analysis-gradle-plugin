@@ -42,6 +42,15 @@ internal fun RegularFileProperty.getAndDelete(): File {
 }
 
 /**
+ * Resolves the file from the property (if it is declared) and deletes its contents, then returns the file.
+ */
+internal fun RegularFileProperty.getAndDeleteNullable(): File? {
+  val file = orNull?.asFile
+  file?.delete()
+  return file
+}
+
+/**
  * Resolves the file from the provider and deletes its contents, then returns the file.
  */
 internal fun Provider<RegularFile>.getAndDelete(): File {

@@ -37,6 +37,7 @@ moshix = "0.30.0"
 #moshix = "0.31.0"
 okio = "3.16.4"
 shadow = "8.3.9"
+sarif4k = "0.6.0"
 spock = "2.3-groovy-4.0"
 truth = "1.4.5"
 
@@ -83,6 +84,7 @@ okio-bom = { module = "com.squareup.okio:okio-bom", version.ref = "okio" }
 relocated-antlr = { module = "com.autonomousapps:antlr", version.ref = "antlr-shadowed" }
 relocated-asm = { module = "com.autonomousapps:asm-relocated", version.ref = "asm-relocated" }
 shadowGradlePlugin = { module = "com.gradleup.shadow:com.gradleup.shadow.gradle.plugin", version.ref = "shadow" }
+sarif4k = { module = "io.github.detekt.sarif4k:sarif4k", version.ref = "sarif4k" }
 spock = { module = "org.spockframework:spock-core", version.ref = "spock" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 

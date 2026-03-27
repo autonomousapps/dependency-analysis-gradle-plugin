@@ -111,6 +111,7 @@ internal class RootOutputPaths(private val project: Project) {
   val consoleReportPath = file("$ROOT_DIR/build-health-report.txt")
   val allLibsVersionsTomlPath = file("$ROOT_DIR/allLibs.versions.toml")
   val shouldFailPath = file("$ROOT_DIR/should-fail.txt")
+  val sarifReportPath = file("$ROOT_DIR/build-health-report.sarif")
 
   val workPlanDir = dir("$ROOT_DIR/work-plan")
 }
