@@ -34,9 +34,7 @@ final class AbiExclusionsProject extends AbstractProject {
             abi {
               exclusions {
                 excludeClasses("com\\\\.example\\\\.Main")
-                excludeAnnotations(
-                  "com\\\\.example\\\\.dagger\\\\.DaggerGenerated"
-                )
+                ignoreGeneratedCode()
               }
             }
           }""")
