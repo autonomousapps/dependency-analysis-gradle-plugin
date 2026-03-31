@@ -23,7 +23,7 @@ import javax.inject.Inject
  *       ignoreSubPackage("internal")
  *       ignoreInternalPackages()
  *       ignoreGeneratedCode()
- *       excludeAnnotations(".*\\.Generated")
+ *       excludeAnnotations(".*\\.PrivateApi")
  *       excludeClasses(".*\\.internal\\..*")
  *     }
  *   }
