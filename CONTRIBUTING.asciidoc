@@ -1,6 +1,10 @@
 This document is meant to help contributors working on the project.
 For more detailed information, please refer to the https://github.com/autonomousapps/dependency-analysis-gradle-plugin/wiki/Contributing-&-Debugging[project wiki].
 
+== Code of Conduct
+
+Please read the *Code of Conduct* carefully before attempting to make any contributions.
+
 == Required Tools
 
 - Android SDK
