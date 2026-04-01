@@ -73,7 +73,7 @@ final class AndroidThemeActivityProject extends AbstractAndroidProject {
             appcompat('implementation'),
           ]
         }
-        producer.manifest = AndroidManifest.defaultLib('com.example.producer')
+        producer.manifest = AndroidManifest.defaultLib()
         producer.styles = AndroidStyleRes.of(
           '''\
           <?xml version="1.0" encoding="utf-8"?>

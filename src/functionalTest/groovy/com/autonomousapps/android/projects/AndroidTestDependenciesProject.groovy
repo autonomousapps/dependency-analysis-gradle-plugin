@@ -43,7 +43,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
       return newAndroidGradleProjectBuilder(agpVersion)
         .withAndroidSubproject('proj') { s ->
           s.sources = sources
-          s.manifest = AndroidManifest.defaultLib('com.example.proj')
+          s.manifest = AndroidManifest.defaultLib()
           s.withBuildScript { bs ->
             bs.plugins = androidLibPlugin
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
@@ -109,7 +109,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
         .withAndroidSubproject('proj') { s ->
           s.sources = sources
           s.colors = AndroidColorRes.DEFAULT
-          s.manifest = AndroidManifest.defaultLib('com.example.proj')
+          s.manifest = AndroidManifest.defaultLib()
           s.withBuildScript { bs ->
             bs.plugins = androidLibPlugin
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
@@ -176,7 +176,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
       return newAndroidGradleProjectBuilder(agpVersion)
         .withAndroidSubproject('proj') { s ->
           s.sources = sources
-          s.manifest = AndroidManifest.defaultLib('com.example.proj')
+          s.manifest = AndroidManifest.defaultLib()
           s.withBuildScript { bs ->
             bs.plugins = androidLibPlugin
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')

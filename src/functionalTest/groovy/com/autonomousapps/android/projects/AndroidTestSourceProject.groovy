@@ -44,7 +44,7 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('lib') { subproject ->
         subproject.sources = androidLibSources
-        subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
+        subproject.manifest = AndroidManifest.defaultLib()
         subproject.withBuildScript { buildScript ->
           buildScript.plugins =
             [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]

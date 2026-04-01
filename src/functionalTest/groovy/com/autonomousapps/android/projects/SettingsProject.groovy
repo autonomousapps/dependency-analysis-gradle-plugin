@@ -77,7 +77,7 @@ abstract class SettingsProject {
             bs.plugins = [plugins.androidLibNoVersion]
             bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
           }
-          lib2.manifest = AndroidManifest.defaultLib('com.example.lib2')
+          lib2.manifest = AndroidManifest.defaultLib()
           lib2.withFile('src/main/res/values/resources.xml', '''\
         <resources>
           <item name="message_layout" type="id"/>

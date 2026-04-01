@@ -139,7 +139,7 @@ class DependencyProvider(
   }
 
   fun navUiKtx(configuration: String): Dependency {
-    return Dependency(configuration, "androidx.navigation:navigation-ui-ktx:2.1.0")
+    return Dependency(configuration, "androidx.navigation:navigation-ui-ktx:2.9.7")
   }
 
   fun constraintLayout(configuration: String): Dependency {

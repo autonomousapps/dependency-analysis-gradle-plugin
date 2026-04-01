@@ -26,7 +26,7 @@ class InMemoryCacheSpec extends AbstractJvmSpec {
   }
 
   def "in memory cache is not reused across builds with different plugin classpaths (#gradleVersion)"() {
-    // Attempting to reuse the cache accross build in such a setup leads to a error like:
+    // Attempting to reuse the cache across build in such a setup leads to a error like:
     // Cannot set property 'inMemoryCache' of type com.autonomousapps.services.InMemoryCache using a provider of type com.autonomousapps.services.InMemoryCache
     // This is because the plugin, and with that the InMemoryCache class, is loaded multiple times by different classloaders.
     // See: https://github.com/gradle/gradle/issues/17559
@@ -45,7 +45,7 @@ class InMemoryCacheSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  private List<String> parseServiceObjects(BuildResult result) {
-    result.output.readLines().findAll { it.startsWith('com.autonomousapps.services.InMemoryCache$Inject@') }
+  private static List<String> parseServiceObjects(BuildResult result) {
+    result.output.readLines().findAll { it.startsWith(IncludedBuildWithDivergingPluginClasspathsProject.SERVICE_PREFIX) }
   }
 }

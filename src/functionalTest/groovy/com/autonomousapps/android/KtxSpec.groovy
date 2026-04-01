@@ -3,7 +3,6 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.fixtures.KtxProject
-import com.autonomousapps.internal.android.AgpVersion
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -24,6 +23,6 @@ final class KtxSpec extends AbstractAndroidSpec {
 
     // This test is too expensive, so we're only going to test against the latest AGP
     where:
-    [gradleVersion, agpVersion, useKtx, ignoreKtx] << gradleAgpMatrixPlus(AGP_LATEST, [true, false], [true, false])
+    [gradleVersion, agpVersion, useKtx, ignoreKtx] << gradleAgpMatrixPlus(AGP_LATEST_STABLE, [true, false], [true, false])
   }
 }

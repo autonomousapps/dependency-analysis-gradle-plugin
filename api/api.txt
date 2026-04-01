@@ -1,4 +1,4 @@
-// Signature format: 3.0
+// Signature format: 5.0
 package com.autonomousapps {
 
   public abstract class AbstractExtension {
@@ -11,7 +11,7 @@ package com.autonomousapps {
 
   @org.gradle.work.DisableCachingByDefault public abstract class AbstractPostProcessingTask extends org.gradle.api.DefaultTask {
     ctor public AbstractPostProcessingTask();
-    method @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getInput();
+    method @InaccessibleFromKotlin @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty getInput();
     method public final com.autonomousapps.model.ProjectAdvice projectAdvice();
     property @org.gradle.api.tasks.InputFile @org.gradle.api.tasks.PathSensitive(org.gradle.api.tasks.PathSensitivity.NONE) public abstract org.gradle.api.file.RegularFileProperty input;
   }
@@ -50,6 +50,13 @@ package com.autonomousapps {
     field public static final com.autonomousapps.Flags INSTANCE;
   }
 
+  @org.gradle.work.DisableCachingByDefault(because="Writes to console") public abstract class ListSourceFilesTask extends org.gradle.api.DefaultTask {
+    ctor public ListSourceFilesTask();
+    method @org.gradle.api.tasks.TaskAction public final void action();
+    method @InaccessibleFromKotlin @org.gradle.api.tasks.Nested public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.internal.kotlin.multiplatform.FileCollectionMap> getFiles();
+    property @org.gradle.api.tasks.Nested public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.internal.kotlin.multiplatform.FileCollectionMap> files;
+  }
+
 }
 
 package com.autonomousapps.exception {
@@ -70,19 +77,19 @@ package com.autonomousapps.extension {
     method public final void exclusions(org.gradle.api.Action<com.autonomousapps.extension.ExclusionsHandler> action);
   }
 
-  public abstract sealed class Behavior implements java.lang.Comparable<com.autonomousapps.extension.Behavior> java.io.Serializable {
+  public abstract sealed exhaustive class Behavior implements java.lang.Comparable<com.autonomousapps.extension.Behavior> java.io.Serializable {
     method public int compareTo(com.autonomousapps.extension.Behavior other);
-    method public final java.util.Set<com.autonomousapps.extension.Exclusion> getFilter();
-    method public final String getSourceSetName();
+    method @InaccessibleFromKotlin public final java.util.Set<com.autonomousapps.extension.Exclusion> getFilter();
+    method @InaccessibleFromKotlin public final String getSourceSetName();
     property public final java.util.Set<com.autonomousapps.extension.Exclusion> filter;
     property public final String sourceSetName;
   }
 
   public abstract class BundleHandler implements org.gradle.api.Named {
     ctor @javax.inject.Inject public BundleHandler(String name, org.gradle.api.model.ObjectFactory objects);
-    method public final org.gradle.api.provider.SetProperty<kotlin.text.Regex> getIncludes();
+    method @InaccessibleFromKotlin public final org.gradle.api.provider.SetProperty<kotlin.text.Regex> getIncludes();
     method public String getName();
-    method public final org.gradle.api.provider.Property<java.lang.String> getPrimary();
+    method @InaccessibleFromKotlin public final org.gradle.api.provider.Property<java.lang.String> getPrimary();
     method public final void include(@org.intellij.lang.annotations.Language("RegExp") String regex);
     method public final void include(kotlin.text.Regex regex);
     method public final void includeDependency(String identifier);
@@ -102,7 +109,7 @@ package com.autonomousapps.extension {
     ctor @javax.inject.Inject public DependenciesHandler(org.gradle.api.model.ObjectFactory objects);
     method public final void bundle(String name, org.gradle.api.Action<com.autonomousapps.extension.BundleHandler> action);
     method public final void explicitSourceSets(java.lang.String... sourceSets);
-    method public final org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> getMap();
+    method @InaccessibleFromKotlin public final org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> getMap();
     method public final void ignoreKtx(boolean ignore);
     property public final org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> map;
     field public static final String EXPLICIT_SOURCE_SETS_ALL = "__ALL";
@@ -110,32 +117,32 @@ package com.autonomousapps.extension {
 
   public static final class DependenciesHandler.SerializableBundles implements java.io.Serializable {
     ctor public DependenciesHandler.SerializableBundles(java.util.Map<java.lang.String,? extends java.util.Set<kotlin.text.Regex>> rules, java.util.Map<java.lang.String,java.lang.String> primaries);
-    method @org.gradle.api.tasks.Input public java.util.Map<java.lang.String,java.lang.String> getPrimaries();
-    method @org.gradle.api.tasks.Input public java.util.Map<java.lang.String,java.util.Set<kotlin.text.Regex>> getRules();
-    property @org.gradle.api.tasks.Input public final java.util.Map<java.lang.String,java.lang.String> primaries;
-    property @org.gradle.api.tasks.Input public final java.util.Map<java.lang.String,java.util.Set<kotlin.text.Regex>> rules;
+    method @InaccessibleFromKotlin @org.gradle.api.tasks.Input public java.util.Map<java.lang.String,java.lang.String> getPrimaries();
+    method @InaccessibleFromKotlin @org.gradle.api.tasks.Input public java.util.Map<java.lang.String,java.util.Set<kotlin.text.Regex>> getRules();
+    property @org.gradle.api.tasks.Input public java.util.Map<java.lang.String,java.lang.String> primaries;
+    property @org.gradle.api.tasks.Input public java.util.Map<java.lang.String,java.util.Set<kotlin.text.Regex>> rules;
   }
 
-  public sealed interface Exclusion extends java.io.Serializable {
+  public sealed exhaustive interface Exclusion extends java.io.Serializable {
     method public boolean matches(String name);
   }
 
   public static final class Exclusion.ExactMatch implements com.autonomousapps.extension.Exclusion {
     ctor public Exclusion.ExactMatch(String name);
     method public String component1();
-    method public com.autonomousapps.extension.Exclusion.ExactMatch copy(String name);
-    method public String getName();
+    method public com.autonomousapps.extension.Exclusion.ExactMatch copy(optional String name);
+    method @InaccessibleFromKotlin public String getName();
     method public boolean matches(String name);
-    property public final String name;
+    property public String name;
   }
 
   public static final class Exclusion.PatternMatch implements com.autonomousapps.extension.Exclusion {
     ctor public Exclusion.PatternMatch(kotlin.text.Regex pattern);
     method public kotlin.text.Regex component1();
-    method public com.autonomousapps.extension.Exclusion.PatternMatch copy(kotlin.text.Regex pattern);
-    method public kotlin.text.Regex getPattern();
+    method public com.autonomousapps.extension.Exclusion.PatternMatch copy(optional kotlin.text.Regex pattern);
+    method @InaccessibleFromKotlin public kotlin.text.Regex getPattern();
     method public boolean matches(String name);
-    property public final kotlin.text.Regex pattern;
+    property public kotlin.text.Regex pattern;
   }
 
   public abstract class ExclusionsHandler {
@@ -152,12 +159,12 @@ package com.autonomousapps.extension {
 
   public final class Fail extends com.autonomousapps.extension.Behavior {
     ctor public Fail();
-    ctor public Fail(java.util.Set<? extends com.autonomousapps.extension.Exclusion> filter = mutableSetOf(), String sourceSetName = "__all");
+    ctor public Fail(optional java.util.Set<? extends com.autonomousapps.extension.Exclusion> filter, optional String sourceSetName);
   }
 
   public final class Ignore extends com.autonomousapps.extension.Behavior {
     ctor public Ignore();
-    ctor public Ignore(String sourceSetName = "__all");
+    ctor public Ignore(optional String sourceSetName);
   }
 
   public class Issue {
@@ -203,8 +210,8 @@ package com.autonomousapps.extension {
   }
 
   public static interface ReportingHandler.Config {
-    method @org.gradle.api.tasks.Input public org.gradle.api.provider.Property<java.lang.Boolean> getOnlyOnFailure();
-    method @org.gradle.api.tasks.Input public org.gradle.api.provider.Property<java.lang.String> getPostscript();
+    method @InaccessibleFromKotlin @org.gradle.api.tasks.Input public org.gradle.api.provider.Property<java.lang.Boolean> getOnlyOnFailure();
+    method @InaccessibleFromKotlin @org.gradle.api.tasks.Input public org.gradle.api.provider.Property<java.lang.String> getPostscript();
     property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.Boolean> onlyOnFailure;
     property @org.gradle.api.tasks.Input public abstract org.gradle.api.provider.Property<java.lang.String> postscript;
   }
@@ -216,7 +223,7 @@ package com.autonomousapps.extension {
 
   public final class Undefined extends com.autonomousapps.extension.Behavior {
     ctor public Undefined();
-    ctor public Undefined(java.util.Set<? extends com.autonomousapps.extension.Exclusion> filter = mutableSetOf(), String sourceSetName = "__all");
+    ctor public Undefined(optional java.util.Set<? extends com.autonomousapps.extension.Exclusion> filter, optional String sourceSetName);
   }
 
   public abstract class UsageAnalysisHandler {
@@ -237,7 +244,7 @@ package com.autonomousapps.extension {
 
   public final class Warn extends com.autonomousapps.extension.Behavior {
     ctor public Warn();
-    ctor public Warn(java.util.Set<? extends com.autonomousapps.extension.Exclusion> filter = mutableSetOf(), String sourceSetName = "__all");
+    ctor public Warn(optional java.util.Set<? extends com.autonomousapps.extension.Exclusion> filter, optional String sourceSetName);
   }
 
 }
@@ -245,15 +252,15 @@ package com.autonomousapps.extension {
 package com.autonomousapps.model {
 
   @com.squareup.moshi.JsonClass(generateAdapter=false) public final class Advice implements java.lang.Comparable<com.autonomousapps.model.Advice> {
-    ctor public Advice(com.autonomousapps.model.Coordinates coordinates, String? fromConfiguration = null, String? toConfiguration = null);
+    ctor public Advice(com.autonomousapps.model.Coordinates coordinates, optional String? fromConfiguration, optional String? toConfiguration);
     method public int compareTo(com.autonomousapps.model.Advice other);
     method public com.autonomousapps.model.Coordinates component1();
     method public String? component2();
     method public String? component3();
-    method public com.autonomousapps.model.Advice copy(com.autonomousapps.model.Coordinates coordinates, String? fromConfiguration, String? toConfiguration);
-    method public com.autonomousapps.model.Coordinates getCoordinates();
-    method public String? getFromConfiguration();
-    method public String? getToConfiguration();
+    method public com.autonomousapps.model.Advice copy(optional com.autonomousapps.model.Coordinates coordinates, optional String? fromConfiguration, optional String? toConfiguration);
+    method @InaccessibleFromKotlin public com.autonomousapps.model.Coordinates getCoordinates();
+    method @InaccessibleFromKotlin public String? getFromConfiguration();
+    method @InaccessibleFromKotlin public String? getToConfiguration();
     method public boolean isAdd();
     method public boolean isAddToRuntimeOnly();
     method public boolean isAnyAdd();
@@ -272,9 +279,9 @@ package com.autonomousapps.model {
     method public static com.autonomousapps.model.Advice ofAdd(com.autonomousapps.model.Coordinates coordinates, String toConfiguration);
     method public static com.autonomousapps.model.Advice ofChange(com.autonomousapps.model.Coordinates coordinates, String fromConfiguration, String toConfiguration);
     method public static com.autonomousapps.model.Advice ofRemove(com.autonomousapps.model.Coordinates coordinates, String fromConfiguration);
-    property public final com.autonomousapps.model.Coordinates coordinates;
-    property public final String? fromConfiguration;
-    property public final String? toConfiguration;
+    property public com.autonomousapps.model.Coordinates coordinates;
+    property public String? fromConfiguration;
+    property public String? toConfiguration;
     field public static final com.autonomousapps.model.Advice.Companion Companion;
   }
 
@@ -292,23 +299,23 @@ package com.autonomousapps.model {
     method public boolean component4();
     method public boolean component5();
     method public boolean component6();
-    method public com.autonomousapps.model.AndroidScore copy(boolean hasAndroidAssets, boolean hasAndroidRes, boolean usesAndroidClasses, boolean hasBuildConfig, boolean hasAndroidDependencies, boolean hasBuildTypeSourceSplits);
+    method public com.autonomousapps.model.AndroidScore copy(optional boolean hasAndroidAssets, optional boolean hasAndroidRes, optional boolean usesAndroidClasses, optional boolean hasBuildConfig, optional boolean hasAndroidDependencies, optional boolean hasBuildTypeSourceSplits);
     method public boolean couldBeJvm();
-    method public boolean getHasAndroidAssets();
-    method public boolean getHasAndroidDependencies();
-    method public boolean getHasAndroidRes();
-    method public boolean getHasBuildConfig();
-    method public boolean getHasBuildTypeSourceSplits();
-    method public String getName();
-    method public boolean getUsesAndroidClasses();
+    method @InaccessibleFromKotlin public boolean getHasAndroidAssets();
+    method @InaccessibleFromKotlin public boolean getHasAndroidDependencies();
+    method @InaccessibleFromKotlin public boolean getHasAndroidRes();
+    method @InaccessibleFromKotlin public boolean getHasBuildConfig();
+    method @InaccessibleFromKotlin public boolean getHasBuildTypeSourceSplits();
+    method @InaccessibleFromKotlin public String getName();
+    method @InaccessibleFromKotlin public boolean getUsesAndroidClasses();
     method public boolean shouldBeJvm();
-    property public final boolean hasAndroidAssets;
-    property public final boolean hasAndroidDependencies;
-    property public final boolean hasAndroidRes;
-    property public final boolean hasBuildConfig;
-    property public final boolean hasBuildTypeSourceSplits;
+    property public boolean hasAndroidAssets;
+    property public boolean hasAndroidDependencies;
+    property public boolean hasAndroidRes;
+    property public boolean hasBuildConfig;
+    property public boolean hasBuildTypeSourceSplits;
     property public String name;
-    property public final boolean usesAndroidClasses;
+    property public boolean usesAndroidClasses;
   }
 
   @com.squareup.moshi.JsonClass(generateAdapter=false) public final class BuildHealth {
@@ -323,46 +330,46 @@ package com.autonomousapps.model {
     method public int component7();
     method public int component8();
     method public int component9();
-    method public com.autonomousapps.model.BuildHealth copy(java.util.Set<com.autonomousapps.model.ProjectAdvice> projectAdvice, boolean shouldFail, int projectCount, int unusedCount, int undeclaredCount, int misDeclaredCount, int compileOnlyCount, int runtimeOnlyCount, int processorCount, com.autonomousapps.model.BuildHealth.AndroidScoreMetrics androidScoreMetrics);
-    method public com.autonomousapps.model.BuildHealth.AndroidScoreMetrics getAndroidScoreMetrics();
-    method public int getCompileOnlyCount();
-    method public int getMisDeclaredCount();
-    method public int getProcessorCount();
-    method public java.util.Set<com.autonomousapps.model.ProjectAdvice> getProjectAdvice();
-    method public int getProjectCount();
-    method public int getRuntimeOnlyCount();
-    method public boolean getShouldFail();
-    method public int getUndeclaredCount();
-    method public int getUnusedCount();
+    method public com.autonomousapps.model.BuildHealth copy(optional java.util.Set<com.autonomousapps.model.ProjectAdvice> projectAdvice, optional boolean shouldFail, optional int projectCount, optional int unusedCount, optional int undeclaredCount, optional int misDeclaredCount, optional int compileOnlyCount, optional int runtimeOnlyCount, optional int processorCount, optional com.autonomousapps.model.BuildHealth.AndroidScoreMetrics androidScoreMetrics);
+    method @InaccessibleFromKotlin public com.autonomousapps.model.BuildHealth.AndroidScoreMetrics getAndroidScoreMetrics();
+    method @InaccessibleFromKotlin public int getCompileOnlyCount();
+    method @InaccessibleFromKotlin public int getMisDeclaredCount();
+    method @InaccessibleFromKotlin public int getProcessorCount();
+    method @InaccessibleFromKotlin public java.util.Set<com.autonomousapps.model.ProjectAdvice> getProjectAdvice();
+    method @InaccessibleFromKotlin public int getProjectCount();
+    method @InaccessibleFromKotlin public int getRuntimeOnlyCount();
+    method @InaccessibleFromKotlin public boolean getShouldFail();
+    method @InaccessibleFromKotlin public int getUndeclaredCount();
+    method @InaccessibleFromKotlin public int getUnusedCount();
     method public boolean isEmptyOrWarningOnly();
-    property public final com.autonomousapps.model.BuildHealth.AndroidScoreMetrics androidScoreMetrics;
-    property public final int compileOnlyCount;
-    property public final int misDeclaredCount;
-    property public final int processorCount;
-    property public final java.util.Set<com.autonomousapps.model.ProjectAdvice> projectAdvice;
-    property public final int projectCount;
-    property public final int runtimeOnlyCount;
-    property public final boolean shouldFail;
-    property public final int undeclaredCount;
-    property public final int unusedCount;
+    property public com.autonomousapps.model.BuildHealth.AndroidScoreMetrics androidScoreMetrics;
+    property public int compileOnlyCount;
+    property public int misDeclaredCount;
+    property public int processorCount;
+    property public java.util.Set<com.autonomousapps.model.ProjectAdvice> projectAdvice;
+    property public int projectCount;
+    property public int runtimeOnlyCount;
+    property public boolean shouldFail;
+    property public int undeclaredCount;
+    property public int unusedCount;
   }
 
   @com.squareup.moshi.JsonClass(generateAdapter=false) public static final class BuildHealth.AndroidScoreMetrics {
     ctor public BuildHealth.AndroidScoreMetrics(int shouldBeJvmCount, int couldBeJvmCount);
     method public int component1();
     method public int component2();
-    method public com.autonomousapps.model.BuildHealth.AndroidScoreMetrics copy(int shouldBeJvmCount, int couldBeJvmCount);
-    method public int getCouldBeJvmCount();
-    method public int getShouldBeJvmCount();
-    property public final int couldBeJvmCount;
-    property public final int shouldBeJvmCount;
+    method public com.autonomousapps.model.BuildHealth.AndroidScoreMetrics copy(optional int shouldBeJvmCount, optional int couldBeJvmCount);
+    method @InaccessibleFromKotlin public int getCouldBeJvmCount();
+    method @InaccessibleFromKotlin public int getShouldBeJvmCount();
+    property public int couldBeJvmCount;
+    property public int shouldBeJvmCount;
   }
 
-  @com.squareup.moshi.JsonClass(generateAdapter=false, generator="sealed:type") public abstract sealed class Coordinates implements java.lang.Comparable<com.autonomousapps.model.Coordinates> {
+  @com.squareup.moshi.JsonClass(generateAdapter=false, generator="sealed:type") public abstract sealed exhaustive class Coordinates implements java.lang.Comparable<com.autonomousapps.model.Coordinates> {
     method public int compareTo(com.autonomousapps.model.Coordinates other);
     method public abstract String gav();
-    method public com.autonomousapps.model.GradleVariantIdentification getGradleVariantIdentification();
-    method public String getIdentifier();
+    method @InaccessibleFromKotlin public com.autonomousapps.model.GradleVariantIdentification getGradleVariantIdentification();
+    method @InaccessibleFromKotlin public String getIdentifier();
     property public com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification;
     property public String identifier;
   }
@@ -374,15 +381,15 @@ package com.autonomousapps.model {
     method public String component2();
     method public String component3();
     method public java.util.Set<com.autonomousapps.model.Coordinates> component4();
-    method public com.autonomousapps.model.DuplicateClass copy(com.autonomousapps.model.source.SourceKind sourceKind, String classpathName, String className, java.util.Set<? extends com.autonomousapps.model.Coordinates> dependencies);
-    method public String getClassName();
-    method public String getClasspathName();
-    method public java.util.Set<com.autonomousapps.model.Coordinates> getDependencies();
-    method public com.autonomousapps.model.source.SourceKind getSourceKind();
-    property public final String className;
-    property public final String classpathName;
-    property public final java.util.Set<com.autonomousapps.model.Coordinates> dependencies;
-    property public final com.autonomousapps.model.source.SourceKind sourceKind;
+    method public com.autonomousapps.model.DuplicateClass copy(optional com.autonomousapps.model.source.SourceKind sourceKind, optional String classpathName, optional String className, optional java.util.Set<? extends com.autonomousapps.model.Coordinates> dependencies);
+    method @InaccessibleFromKotlin public String getClassName();
+    method @InaccessibleFromKotlin public String getClasspathName();
+    method @InaccessibleFromKotlin public java.util.Set<com.autonomousapps.model.Coordinates> getDependencies();
+    method @InaccessibleFromKotlin public com.autonomousapps.model.source.SourceKind getSourceKind();
+    property public String className;
+    property public String classpathName;
+    property public java.util.Set<com.autonomousapps.model.Coordinates> dependencies;
+    property public com.autonomousapps.model.source.SourceKind sourceKind;
     field public static final String COMPILE_CLASSPATH_NAME = "compile";
     field public static final String RUNTIME_CLASSPATH_NAME = "runtime";
   }
@@ -390,7 +397,7 @@ package com.autonomousapps.model {
   @com.squareup.moshi.JsonClass(generateAdapter=false) @dev.zacsweers.moshix.sealed.annotations.TypeLabel(label="flat") public final class FlatCoordinates extends com.autonomousapps.model.Coordinates {
     ctor public FlatCoordinates(String identifier);
     method public String component1();
-    method public com.autonomousapps.model.FlatCoordinates copy(String identifier);
+    method public com.autonomousapps.model.FlatCoordinates copy(optional String identifier);
     method public String gav();
     property public String identifier;
   }
@@ -400,19 +407,19 @@ package com.autonomousapps.model {
     method public int compareTo(com.autonomousapps.model.GradleVariantIdentification other);
     method public java.util.Set<java.lang.String> component1();
     method public java.util.Map<java.lang.String,java.lang.String> component2();
-    method public com.autonomousapps.model.GradleVariantIdentification copy(java.util.Set<java.lang.String> capabilities, java.util.Map<java.lang.String,java.lang.String> attributes);
-    method public java.util.Map<java.lang.String,java.lang.String> getAttributes();
-    method public java.util.Set<java.lang.String> getCapabilities();
+    method public com.autonomousapps.model.GradleVariantIdentification copy(optional java.util.Set<java.lang.String> capabilities, optional java.util.Map<java.lang.String,java.lang.String> attributes);
+    method @InaccessibleFromKotlin public java.util.Map<java.lang.String,java.lang.String> getAttributes();
+    method @InaccessibleFromKotlin public java.util.Set<java.lang.String> getCapabilities();
     method public static com.autonomousapps.model.GradleVariantIdentification ofCapabilities(java.lang.String... capabilities);
-    property public final java.util.Map<java.lang.String,java.lang.String> attributes;
-    property public final java.util.Set<java.lang.String> capabilities;
+    property public java.util.Map<java.lang.String,java.lang.String> attributes;
+    property public java.util.Set<java.lang.String> capabilities;
     field public static final com.autonomousapps.model.GradleVariantIdentification.Companion Companion;
   }
 
   public static final class GradleVariantIdentification.Companion {
-    method public com.autonomousapps.model.GradleVariantIdentification getEMPTY();
+    method @InaccessibleFromKotlin public com.autonomousapps.model.GradleVariantIdentification getEMPTY();
     method public com.autonomousapps.model.GradleVariantIdentification ofCapabilities(java.lang.String... capabilities);
-    property public final com.autonomousapps.model.GradleVariantIdentification EMPTY;
+    property public com.autonomousapps.model.GradleVariantIdentification EMPTY;
   }
 
   @com.squareup.moshi.JsonClass(generateAdapter=false) @dev.zacsweers.moshix.sealed.annotations.TypeLabel(label="included_build") public final class IncludedBuildCoordinates extends com.autonomousapps.model.Coordinates {
@@ -420,17 +427,17 @@ package com.autonomousapps.model {
     method public String component1();
     method public com.autonomousapps.model.ProjectCoordinates component2();
     method public com.autonomousapps.model.GradleVariantIdentification component3();
-    method public com.autonomousapps.model.IncludedBuildCoordinates copy(String identifier, com.autonomousapps.model.ProjectCoordinates resolvedProject, com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification);
+    method public com.autonomousapps.model.IncludedBuildCoordinates copy(optional String identifier, optional com.autonomousapps.model.ProjectCoordinates resolvedProject, optional com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification);
     method public String gav();
-    method public com.autonomousapps.model.ProjectCoordinates getResolvedProject();
+    method @InaccessibleFromKotlin public com.autonomousapps.model.ProjectCoordinates getResolvedProject();
     property public com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification;
     property public String identifier;
-    property public final com.autonomousapps.model.ProjectCoordinates resolvedProject;
+    property public com.autonomousapps.model.ProjectCoordinates resolvedProject;
   }
 
-  @com.squareup.moshi.JsonClass(generateAdapter=false, generator="sealed:type") public abstract sealed class ModuleAdvice implements java.lang.Comparable<com.autonomousapps.model.ModuleAdvice> {
+  @com.squareup.moshi.JsonClass(generateAdapter=false, generator="sealed:type") public abstract sealed exhaustive class ModuleAdvice implements java.lang.Comparable<com.autonomousapps.model.ModuleAdvice> {
     method public int compareTo(com.autonomousapps.model.ModuleAdvice other);
-    method public abstract String getName();
+    method @InaccessibleFromKotlin public abstract String getName();
     property public abstract String name;
   }
 
@@ -439,12 +446,12 @@ package com.autonomousapps.model {
     method public String component1();
     method public String component2();
     method public com.autonomousapps.model.GradleVariantIdentification component3();
-    method public com.autonomousapps.model.ModuleCoordinates copy(String identifier, String resolvedVersion, com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification);
+    method public com.autonomousapps.model.ModuleCoordinates copy(optional String identifier, optional String resolvedVersion, optional com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification);
     method public String gav();
-    method public String getResolvedVersion();
+    method @InaccessibleFromKotlin public String getResolvedVersion();
     property public com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification;
     property public String identifier;
-    property public final String resolvedVersion;
+    property public String resolvedVersion;
   }
 
   @com.squareup.moshi.JsonClass(generateAdapter=false) public final class PluginAdvice implements java.lang.Comparable<com.autonomousapps.model.PluginAdvice> {
@@ -452,14 +459,14 @@ package com.autonomousapps.model {
     method public int compareTo(com.autonomousapps.model.PluginAdvice other);
     method public String component1();
     method public String component2();
-    method public com.autonomousapps.model.PluginAdvice copy(String redundantPlugin, String reason);
-    method public String getReason();
-    method public String getRedundantPlugin();
+    method public com.autonomousapps.model.PluginAdvice copy(optional String redundantPlugin, optional String reason);
+    method @InaccessibleFromKotlin public String getReason();
+    method @InaccessibleFromKotlin public String getRedundantPlugin();
     method public static com.autonomousapps.model.PluginAdvice redundantJavaLibrary();
     method public static com.autonomousapps.model.PluginAdvice redundantKapt();
     method public static com.autonomousapps.model.PluginAdvice redundantKotlinJvm();
-    property public final String reason;
-    property public final String redundantPlugin;
+    property public String reason;
+    property public String redundantPlugin;
     field public static final com.autonomousapps.model.PluginAdvice.Companion Companion;
   }
 
@@ -470,7 +477,7 @@ package com.autonomousapps.model {
   }
 
   @com.squareup.moshi.JsonClass(generateAdapter=false) public final class ProjectAdvice implements java.lang.Comparable<com.autonomousapps.model.ProjectAdvice> {
-    ctor public ProjectAdvice(String projectPath, java.util.Set<com.autonomousapps.model.Advice> dependencyAdvice = emptySet(), java.util.Set<com.autonomousapps.model.PluginAdvice> pluginAdvice = emptySet(), java.util.Set<? extends com.autonomousapps.model.ModuleAdvice> moduleAdvice = emptySet(), com.autonomousapps.model.Warning warning = Warning.empty(), boolean shouldFail = false);
+    ctor public ProjectAdvice(String projectPath, optional java.util.Set<com.autonomousapps.model.Advice> dependencyAdvice, optional java.util.Set<com.autonomousapps.model.PluginAdvice> pluginAdvice, optional java.util.Set<? extends com.autonomousapps.model.ModuleAdvice> moduleAdvice, optional com.autonomousapps.model.Warning warning, optional boolean shouldFail);
     method public int compareTo(com.autonomousapps.model.ProjectAdvice other);
     method public String component1();
     method public java.util.Set<com.autonomousapps.model.Advice> component2();
@@ -478,33 +485,33 @@ package com.autonomousapps.model {
     method public java.util.Set<com.autonomousapps.model.ModuleAdvice> component4();
     method public com.autonomousapps.model.Warning component5();
     method public boolean component6();
-    method public com.autonomousapps.model.ProjectAdvice copy(String projectPath, java.util.Set<com.autonomousapps.model.Advice> dependencyAdvice, java.util.Set<com.autonomousapps.model.PluginAdvice> pluginAdvice, java.util.Set<? extends com.autonomousapps.model.ModuleAdvice> moduleAdvice, com.autonomousapps.model.Warning warning, boolean shouldFail);
-    method public java.util.Set<com.autonomousapps.model.Advice> getDependencyAdvice();
-    method public java.util.Set<com.autonomousapps.model.ModuleAdvice> getModuleAdvice();
-    method public java.util.Set<com.autonomousapps.model.PluginAdvice> getPluginAdvice();
-    method public String getProjectPath();
-    method public boolean getShouldFail();
-    method public com.autonomousapps.model.Warning getWarning();
+    method public com.autonomousapps.model.ProjectAdvice copy(optional String projectPath, optional java.util.Set<com.autonomousapps.model.Advice> dependencyAdvice, optional java.util.Set<com.autonomousapps.model.PluginAdvice> pluginAdvice, optional java.util.Set<? extends com.autonomousapps.model.ModuleAdvice> moduleAdvice, optional com.autonomousapps.model.Warning warning, optional boolean shouldFail);
+    method @InaccessibleFromKotlin public java.util.Set<com.autonomousapps.model.Advice> getDependencyAdvice();
+    method @InaccessibleFromKotlin public java.util.Set<com.autonomousapps.model.ModuleAdvice> getModuleAdvice();
+    method @InaccessibleFromKotlin public java.util.Set<com.autonomousapps.model.PluginAdvice> getPluginAdvice();
+    method @InaccessibleFromKotlin public String getProjectPath();
+    method @InaccessibleFromKotlin public boolean getShouldFail();
+    method @InaccessibleFromKotlin public com.autonomousapps.model.Warning getWarning();
     method public boolean isEmpty();
     method public boolean isEmptyOrWarningOnly();
     method public boolean isNotEmpty();
-    property public final java.util.Set<com.autonomousapps.model.Advice> dependencyAdvice;
-    property public final java.util.Set<com.autonomousapps.model.ModuleAdvice> moduleAdvice;
-    property public final java.util.Set<com.autonomousapps.model.PluginAdvice> pluginAdvice;
-    property public final String projectPath;
-    property public final boolean shouldFail;
-    property public final com.autonomousapps.model.Warning warning;
+    property public java.util.Set<com.autonomousapps.model.Advice> dependencyAdvice;
+    property public java.util.Set<com.autonomousapps.model.ModuleAdvice> moduleAdvice;
+    property public java.util.Set<com.autonomousapps.model.PluginAdvice> pluginAdvice;
+    property public String projectPath;
+    property public boolean shouldFail;
+    property public com.autonomousapps.model.Warning warning;
   }
 
   @com.squareup.moshi.JsonClass(generateAdapter=false) @dev.zacsweers.moshix.sealed.annotations.TypeLabel(label="project") public final class ProjectCoordinates extends com.autonomousapps.model.Coordinates {
-    ctor public ProjectCoordinates(String identifier, com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification, String? buildPath = null);
+    ctor public ProjectCoordinates(String identifier, com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification, optional String? buildPath);
     method public String component1();
     method public com.autonomousapps.model.GradleVariantIdentification component2();
     method public String? component3();
-    method public com.autonomousapps.model.ProjectCoordinates copy(String identifier, com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification, String? buildPath);
+    method public com.autonomousapps.model.ProjectCoordinates copy(optional String identifier, optional com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification, optional String? buildPath);
     method public String gav();
-    method public String? getBuildPath();
-    property public final String? buildPath;
+    method @InaccessibleFromKotlin public String? getBuildPath();
+    property public String? buildPath;
     property public com.autonomousapps.model.GradleVariantIdentification gradleVariantIdentification;
     property public String identifier;
   }
@@ -513,12 +520,12 @@ package com.autonomousapps.model {
     ctor public Warning(java.util.Set<com.autonomousapps.model.DuplicateClass> duplicateClasses);
     method public int compareTo(com.autonomousapps.model.Warning other);
     method public java.util.Set<com.autonomousapps.model.DuplicateClass> component1();
-    method public com.autonomousapps.model.Warning copy(java.util.Set<com.autonomousapps.model.DuplicateClass> duplicateClasses);
+    method public com.autonomousapps.model.Warning copy(optional java.util.Set<com.autonomousapps.model.DuplicateClass> duplicateClasses);
     method public static com.autonomousapps.model.Warning empty();
-    method public java.util.Set<com.autonomousapps.model.DuplicateClass> getDuplicateClasses();
+    method @InaccessibleFromKotlin public java.util.Set<com.autonomousapps.model.DuplicateClass> getDuplicateClasses();
     method public boolean isEmpty();
     method public boolean isNotEmpty();
-    property public final java.util.Set<com.autonomousapps.model.DuplicateClass> duplicateClasses;
+    property public java.util.Set<com.autonomousapps.model.DuplicateClass> duplicateClasses;
   }
 
 }
@@ -532,11 +539,11 @@ package com.autonomousapps.model.source {
     method public String component2();
     method public String component3();
     method public String component4();
-    method public com.autonomousapps.model.source.AndroidSourceKind copy(String name, String kind, String compileClasspathName, String runtimeClasspathName);
-    method public String getCompileClasspathName();
-    method public String getKind();
-    method public String getName();
-    method public String getRuntimeClasspathName();
+    method public com.autonomousapps.model.source.AndroidSourceKind copy(optional String name, optional String kind, optional String compileClasspathName, optional String runtimeClasspathName);
+    method @InaccessibleFromKotlin public String getCompileClasspathName();
+    method @InaccessibleFromKotlin public String getKind();
+    method @InaccessibleFromKotlin public String getName();
+    method @InaccessibleFromKotlin public String getRuntimeClasspathName();
     property public String compileClasspathName;
     property public String kind;
     property public String name;
@@ -550,11 +557,11 @@ package com.autonomousapps.model.source {
     method public String component2();
     method public String component3();
     method public String component4();
-    method public com.autonomousapps.model.source.JvmSourceKind copy(String name, String kind, String compileClasspathName, String runtimeClasspathName);
-    method public String getCompileClasspathName();
-    method public String getKind();
-    method public String getName();
-    method public String getRuntimeClasspathName();
+    method public com.autonomousapps.model.source.JvmSourceKind copy(optional String name, optional String kind, optional String compileClasspathName, optional String runtimeClasspathName);
+    method @InaccessibleFromKotlin public String getCompileClasspathName();
+    method @InaccessibleFromKotlin public String getKind();
+    method @InaccessibleFromKotlin public String getName();
+    method @InaccessibleFromKotlin public String getRuntimeClasspathName();
     property public String compileClasspathName;
     property public String kind;
     property public String name;
@@ -568,11 +575,11 @@ package com.autonomousapps.model.source {
     method public String component2();
     method public String component3();
     method public String component4();
-    method public com.autonomousapps.model.source.KmpSourceKind copy(String name, String kind, String compileClasspathName, String runtimeClasspathName);
-    method public String getCompileClasspathName();
-    method public String getKind();
-    method public String getName();
-    method public String getRuntimeClasspathName();
+    method public com.autonomousapps.model.source.KmpSourceKind copy(optional String name, optional String kind, optional String compileClasspathName, optional String runtimeClasspathName);
+    method @InaccessibleFromKotlin public String getCompileClasspathName();
+    method @InaccessibleFromKotlin public String getKind();
+    method @InaccessibleFromKotlin public String getName();
+    method @InaccessibleFromKotlin public String getRuntimeClasspathName();
     property public String compileClasspathName;
     property public String kind;
     property public String name;
@@ -583,11 +590,11 @@ package com.autonomousapps.model.source {
     field public static final String JVM_TEST_NAME = "jvmTest";
   }
 
-  @com.squareup.moshi.JsonClass(generateAdapter=false, generator="sealed:type") public abstract sealed class SourceKind implements java.lang.Comparable<com.autonomousapps.model.source.SourceKind> java.io.Serializable {
-    method public abstract String getCompileClasspathName();
-    method public abstract String getKind();
-    method public abstract String getName();
-    method public abstract String getRuntimeClasspathName();
+  @com.squareup.moshi.JsonClass(generateAdapter=false, generator="sealed:type") public abstract sealed exhaustive class SourceKind implements java.lang.Comparable<com.autonomousapps.model.source.SourceKind> java.io.Serializable {
+    method @InaccessibleFromKotlin public abstract String getCompileClasspathName();
+    method @InaccessibleFromKotlin public abstract String getKind();
+    method @InaccessibleFromKotlin public abstract String getName();
+    method @InaccessibleFromKotlin public abstract String getRuntimeClasspathName();
     property public abstract String compileClasspathName;
     property public abstract String kind;
     property public abstract String name;
@@ -616,7 +623,7 @@ package com.autonomousapps.services {
   }
 
   public static interface InMemoryCache.Params extends org.gradle.api.services.BuildServiceParameters {
-    method public org.gradle.api.provider.Property<java.lang.Long> getCacheSize();
+    method @InaccessibleFromKotlin public org.gradle.api.provider.Property<java.lang.Long> getCacheSize();
     property public abstract org.gradle.api.provider.Property<java.lang.Long> cacheSize;
   }
 

@@ -58,7 +58,9 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   protected static boolean isCompatible(GradleVersion gradleVersion, AgpVersion agpVersion) {
     // See https://developer.android.com/build/releases/gradle-plugin#updating-gradle
-    if (agpVersion >= AgpVersion.version('8.13.0')) {
+    if (agpVersion >= AgpVersion.version('9.2.0')) {
+      return gradleVersion >= GradleVersion.version('9.5.0')
+    } else if (agpVersion >= AgpVersion.version('8.13.0')) {
       return gradleVersion >= GradleVersion.version('8.13')
     } else if (agpVersion >= AgpVersion.version('8.12.0')) {
       return gradleVersion >= GradleVersion.version('8.13')
