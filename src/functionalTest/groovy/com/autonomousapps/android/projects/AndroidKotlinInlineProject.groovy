@@ -28,7 +28,7 @@ final class AndroidKotlinInlineProject extends AbstractAndroidProject {
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('lib') { l ->
-        l.manifest = AndroidManifest.defaultLib('com.example.lib')
+        l.manifest = AndroidManifest.defaultLib()
         l.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock()

@@ -74,7 +74,7 @@ final class ResDuplicateAttrProject extends AbstractAndroidProject {
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib_b')
           bs.dependencies(recyclerView('api'))
         }
-        lib.manifest = AndroidManifest.defaultLib('com.example.lib_b')
+        lib.manifest = AndroidManifest.defaultLib()
         lib.sources = libBSources
       }
       .write()

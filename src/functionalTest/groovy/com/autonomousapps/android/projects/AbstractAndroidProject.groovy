@@ -25,6 +25,7 @@ abstract class AbstractAndroidProject extends AbstractProject {
 
   protected final String agpVersion
   protected final AgpVersion version
+  protected final boolean isLessThanAgp9 = AgpVersion.version(agpVersion) < AgpVersion.version('9.0.0')
 
   AbstractAndroidProject(String kotlinVersion, String agpVersion) {
     super(kotlinVersion, agpVersion)

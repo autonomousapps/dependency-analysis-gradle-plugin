@@ -47,7 +47,7 @@ final class AndroidTestSmokeProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('benchmark') { test ->
         test.sources = androidBenchmarkSources
-        test.manifest = AndroidManifest.defaultLib('com.example.test')
+        test.manifest = AndroidManifest.defaultLib()
 
         test.withBuildScript { buildScript ->
           buildScript.plugins(Plugins.androidTest, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion)

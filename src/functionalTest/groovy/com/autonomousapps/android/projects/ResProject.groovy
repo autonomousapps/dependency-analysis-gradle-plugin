@@ -73,7 +73,7 @@ final class ResProject extends AbstractAndroidProject {
           bs.plugins = androidLibPlugin
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
         }
-        lib2.manifest = AndroidManifest.defaultLib('com.example.lib2')
+        lib2.manifest = AndroidManifest.defaultLib()
         lib2.withFile('src/main/res/values/resources.xml', '''\
         <resources>
           <item name="message_layout" type="id"/>

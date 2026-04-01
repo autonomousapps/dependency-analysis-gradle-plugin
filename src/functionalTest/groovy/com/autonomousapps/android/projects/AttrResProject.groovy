@@ -41,7 +41,7 @@ final class AttrResProject extends AbstractAndroidProject {
             APPCOMPAT,
           ]
         }
-        consumer.manifest = AndroidManifest.defaultLib('com.example.consumer')
+        consumer.manifest = AndroidManifest.defaultLib()
         consumer.withFile('src/main/res/drawable/ic_pin.xml', """\
         <?xml version="1.0" encoding="utf-8"?>
         <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -75,7 +75,7 @@ final class AttrResProject extends AbstractAndroidProject {
             APPCOMPAT,
           ]
         }
-        producer.manifest = AndroidManifest.defaultLib('com.example.producer')
+        producer.manifest = AndroidManifest.defaultLib()
         producer.withFile('src/main/res/values/resources.xml', """\
         <resources>
           <attr name="themeColor" format="color" />

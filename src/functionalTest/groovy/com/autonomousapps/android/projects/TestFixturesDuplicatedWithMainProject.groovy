@@ -53,7 +53,7 @@ final class TestFixturesDuplicatedWithMainProject extends AbstractAndroidProject
       }
       .withAndroidSubproject('app') { s ->
         s.sources = sourcesWithTestFixtures
-        s.manifest = AndroidManifest.defaultLib('com.example.app')
+        s.manifest = AndroidManifest.defaultLib()
         s.withBuildScript { bs ->
           bs.plugins = androidAppWithKotlin
           bs.android = defaultAndroidAppBlock(true,"com.example.app").tap {

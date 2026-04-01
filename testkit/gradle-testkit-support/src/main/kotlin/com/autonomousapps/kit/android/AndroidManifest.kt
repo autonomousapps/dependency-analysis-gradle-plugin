@@ -67,24 +67,7 @@ public class AndroidManifest(public val content: String) {
     }
 
     @JvmStatic
-    public fun app(application: String? = null): AndroidManifest {
-      return AndroidManifest(
-        """
-        |<?xml version="1.0" encoding="utf-8"?>
-        |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        |  package="com.example">
-        |
-        |<application
-        |  android:allowBackup="true"
-        |  android:label="Test app"
-        |  android:theme="@style/AppTheme"
-        |  ${application?.let { "android:name=\"$it\"" } ?: ""}>
-        |  ${activityBlock()}
-        |  </application>
-        |</manifest>
-        """.trimMargin()
-      )
-    }
+    public fun app(application: String? = null): AndroidManifest = appWithoutPackage(application)
 
     private fun activityBlock(activityName: String = "MainActivity"): String =
       """
@@ -101,13 +84,11 @@ public class AndroidManifest(public val content: String) {
     @JvmField
     public val DEFAULT_APP: AndroidManifest = app(null)
 
-    // TODO: stop using package
     @JvmStatic
-    public fun defaultLib(packageName: String): AndroidManifest = AndroidManifest(
+    public fun defaultLib(): AndroidManifest = AndroidManifest(
       """
       |<?xml version="1.0" encoding="utf-8"?>
-      |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      |  package="$packageName"/>
+      |<manifest xmlns:android="http://schemas.android.com/apk/res/android" />
       """.trimMargin()
     )
   }

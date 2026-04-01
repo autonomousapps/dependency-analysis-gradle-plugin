@@ -248,9 +248,11 @@ class AppModule(
       |  compileOptions {
       |    sourceCompatibility JavaVersion.VERSION_1_8
       |    targetCompatibility JavaVersion.VERSION_1_8
-      |  }
-      |  ${kotlinOptions()}
+      |  }  
       |}
+      |
+      ${kotlinOptions()}
+      |
       |dependencies {
       |  ${librarySpecs?.map { it.name }?.joinToString("\n\t") { "implementation project(':$it')" } ?: "" }
       |  ${appSpec.formattedDependencies()}
@@ -340,13 +342,18 @@ class AppModule(
   }
 
   private fun kotlinOptions() = when (appSpec.type) {
-    AppType.KOTLIN_ANDROID_APP ->
+    AppType.KOTLIN_ANDROID_APP -> {
       """
-      kotlinOptions {
-        jvmTarget = "1.8"
-      }
-    """.trimIndent()
-    AppType.JAVA_ANDROID_APP -> ""
+        kotlin {
+          compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+          }
+        }
+      """.trimIndent()
+    }
+    AppType.JAVA_ANDROID_APP -> {
+      ""
+    }
   }
 }
 

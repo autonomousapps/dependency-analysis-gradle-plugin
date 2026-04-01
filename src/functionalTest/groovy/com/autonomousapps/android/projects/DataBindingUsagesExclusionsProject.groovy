@@ -55,7 +55,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
           bs.dependencies = appDependencies
           bs.withGroovy('android.buildFeatures.dataBinding true')
         }
-        app.manifest = AndroidManifest.defaultLib('com.example.app')
+        app.manifest = AndroidManifest.defaultLib()
         app.sources = appSources
       }
       .withAndroidLibProject('lib', 'com.example.lib') { lib ->
