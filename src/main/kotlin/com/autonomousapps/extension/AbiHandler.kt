@@ -23,7 +23,7 @@ import javax.inject.Inject
  *       ignoreSubPackage("internal")
  *       ignoreInternalPackages()
  *       ignoreGeneratedCode()
- *       excludeAnnotations(".*\\.Generated")
+ *       excludeAnnotations(".*\\.PrivateApi")
  *       excludeClasses(".*\\.internal\\..*")
  *     }
  *   }
@@ -96,7 +96,7 @@ public abstract class ExclusionsHandler @Inject constructor(objects: ObjectFacto
    * using `SOURCE` retention. It's recommended to use your own `Generated` annotation.
    */
   public fun ignoreGeneratedCode() {
-    excludeAnnotations(".*\\.Generated")
+    excludeAnnotations(".*Generated")
   }
 
   /**
