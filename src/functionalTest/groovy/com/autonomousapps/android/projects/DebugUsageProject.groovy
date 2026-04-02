@@ -4,6 +4,7 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ProjectAdvice
@@ -30,11 +31,17 @@ final class DebugUsageProject extends AbstractAndroidProject {
   @SuppressWarnings('DuplicatedCode')
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { r ->
+        if (isAtLeastAgp9) {
+          // See https://developer.android.com/build/releases/agp-9-0-0-release-notes#android-gradle-plugin-behavior-changes
+          r.gradleProperties += GradleProperties.of('android.onlyEnableUnitTestForTheTestedBuildType=false')
+        }
+      }
       .withAndroidSubproject('consumer') { p ->
         p.sources = consumerSources
         p.manifest = null
         p.withBuildScript { bs ->
-          bs.plugins = androidLibWithKotlin
+          bs.plugins = androidLib(true)
           bs.android = defaultAndroidLibBlock()
           bs.dependencies(
             kotlinStdLib,

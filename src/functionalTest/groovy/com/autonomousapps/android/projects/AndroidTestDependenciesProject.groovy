@@ -45,7 +45,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
           s.sources = sources
           s.manifest = AndroidManifest.defaultLib()
           s.withBuildScript { bs ->
-            bs.plugins = androidLibPlugin
+            bs.plugins = androidLib(false)
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
             bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
             bs.withGroovy("""\
@@ -104,6 +104,10 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
       this.gradleProject = build()
     }
 
+    boolean isLessThanAgp9() {
+      return isLessThanAgp9
+    }
+
     private GradleProject build() {
       return newAndroidGradleProjectBuilder(agpVersion)
         .withAndroidSubproject('proj') { s ->
@@ -111,7 +115,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
           s.colors = AndroidColorRes.DEFAULT
           s.manifest = AndroidManifest.defaultLib()
           s.withBuildScript { bs ->
-            bs.plugins = androidLibPlugin
+            bs.plugins = androidLib(false)
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
             bs.dependencies = [okHttp, junit]
           }
@@ -178,7 +182,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
           s.sources = sources
           s.manifest = AndroidManifest.defaultLib()
           s.withBuildScript { bs ->
-            bs.plugins = androidLibPlugin
+            bs.plugins = androidLib(false)
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
           }
         }

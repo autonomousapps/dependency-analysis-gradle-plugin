@@ -68,7 +68,7 @@ final class AndroidFileMutationProject extends AbstractAndroidProject {
       .withAndroidSubproject('lib') { l ->
         l.manifest = AndroidManifest.defaultLib()
         l.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
+          bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock()
           bs.dependencies = [
             commonsCollections('implementation'),

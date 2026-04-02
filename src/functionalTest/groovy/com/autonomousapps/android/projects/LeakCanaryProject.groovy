@@ -36,7 +36,7 @@ final class LeakCanaryProject extends AbstractAndroidProject {
         subproject.colors = AndroidColorRes.DEFAULT
 
         subproject.withBuildScript { buildScript ->
-          buildScript.plugins(Plugins.androidApp, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion)
+          buildScript.plugins(androidApp())
           buildScript.android = defaultAndroidAppBlock()
           buildScript.dependencies(
             kotlinStdLib('implementation'),

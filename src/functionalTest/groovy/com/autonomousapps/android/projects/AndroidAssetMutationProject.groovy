@@ -40,7 +40,7 @@ final class AndroidAssetMutationProject extends AbstractAndroidProject {
       .withAndroidLibProject('lib', 'com.example.lib') { lib ->
         lib.manifest = libraryManifest('com.example.lib')
         lib.withBuildScript { bs ->
-          bs.plugins(Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion)
+          bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
           bs.dependencies(
             implementation(':assets'),
@@ -52,7 +52,7 @@ final class AndroidAssetMutationProject extends AbstractAndroidProject {
       }
       .withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
         assets.withBuildScript { bs ->
-          bs.plugins(Plugins.androidLib, Plugins.dependencyAnalysisNoVersion)
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')
         }
         assets.manifest = libraryManifest('com.example.lib.assets')

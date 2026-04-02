@@ -259,7 +259,7 @@ public abstract class FilterAdviceTask @Inject constructor(
 
     private fun Sequence<Advice>.filterDataBinding(): Sequence<Advice> {
       return if (dataBindingEnabled) filterNot {
-        databindingDependencies.contains(it.coordinates.identifier)
+        dataBindingDependencies.contains(it.coordinates.identifier)
       }
       else this
     }
@@ -308,14 +308,24 @@ public abstract class FilterAdviceTask @Inject constructor(
   }
 
   private companion object {
-    val databindingDependencies = listOf(
+    /** https://mvnrepository.com/artifact/androidx.databinding/databinding-ktx/8.10.1/dependencies */
+    val dataBindingDependencies = listOf(
+      "androidx.annotation:annotation",
+
       "androidx.databinding:databinding-adapters",
-      "androidx.databinding:databinding-runtime",
       "androidx.databinding:databinding-common",
       "androidx.databinding:databinding-compiler",
-      "androidx.databinding:databinding-ktx"
+      "androidx.databinding:databinding-ktx",
+      "androidx.databinding:databinding-runtime",
+
+      "androidx.lifecycle:lifecycle-livedata",
+      "androidx.lifecycle:lifecycle-process",
+      "androidx.lifecycle:lifecycle-runtime-ktx",
+      "androidx.lifecycle:lifecycle-service",
+      "androidx.lifecycle:lifecycle-viewmodel",
     )
 
+    /** https://mvnrepository.com/artifact/androidx.databinding/viewbinding/8.10.1/dependencies */
     val viewBindingDependencies = listOf(
       "androidx.databinding:viewbinding"
     )

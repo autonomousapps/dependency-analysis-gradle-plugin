@@ -71,7 +71,7 @@ final class AndroidResMutationProject extends AbstractAndroidProject {
       .withAndroidLibProject('lib', 'com.example.lib') { lib ->
         lib.manifest = libraryManifest('com.example.lib')
         lib.withBuildScript { bs ->
-          bs.plugins(Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion)
+          bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
           bs.dependencies(
             implementation(':res'),
@@ -83,7 +83,7 @@ final class AndroidResMutationProject extends AbstractAndroidProject {
       }
       .withAndroidLibProject('res', 'com.example.lib.res') { res ->
         res.withBuildScript { bs ->
-          bs.plugins(Plugins.androidLib, Plugins.dependencyAnalysisNoVersion)
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.res')
         }
         res.manifest = libraryManifest('com.example.lib.res')
@@ -91,7 +91,7 @@ final class AndroidResMutationProject extends AbstractAndroidProject {
       }
       .withAndroidLibProject('layouts', 'com.example.lib.layouts') { res ->
         res.withBuildScript { bs ->
-          bs.plugins(Plugins.androidLib, Plugins.dependencyAnalysisNoVersion)
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.layouts')
           bs.dependencies(
             constraintLayout('implementation'),

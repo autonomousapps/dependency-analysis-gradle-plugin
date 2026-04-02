@@ -36,7 +36,7 @@ final class AndroidTestSmokeProject extends AbstractAndroidProject {
         subproject.colors = AndroidColorRes.DEFAULT
 
         subproject.withBuildScript { buildScript ->
-          buildScript.plugins(Plugins.androidApp, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion)
+          buildScript.plugins(androidApp())
           buildScript.android = defaultAndroidAppBlock()
           buildScript.dependencies(
             kotlinStdLib('implementation'),
@@ -50,7 +50,7 @@ final class AndroidTestSmokeProject extends AbstractAndroidProject {
         test.manifest = AndroidManifest.defaultLib()
 
         test.withBuildScript { buildScript ->
-          buildScript.plugins(Plugins.androidTest, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion)
+          buildScript.plugins(androidTest())
           buildScript.android = defaultAndroidTestBlock(':app', true)
           buildScript.dependencies(okHttp)
         }

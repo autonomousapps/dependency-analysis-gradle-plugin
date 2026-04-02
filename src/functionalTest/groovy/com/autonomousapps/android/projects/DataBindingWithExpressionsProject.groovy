@@ -29,15 +29,9 @@ final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = [
-            Plugins.androidApp,
-            Plugins.kotlinAndroidNoVersion,
-            Plugins.dependencyAnalysisNoVersion,
-          ]
+          bs.plugins(androidApp(true))
           bs.android = defaultAndroidAppBlock(true, 'com.example.app')
-          bs.dependencies = [
-            appcompat("implementation")
-          ]
+          bs.dependencies(appcompat("implementation"))
           bs.withGroovy('android.buildFeatures.dataBinding true')
         }
         app.manifest = appManifest('com.example.app')

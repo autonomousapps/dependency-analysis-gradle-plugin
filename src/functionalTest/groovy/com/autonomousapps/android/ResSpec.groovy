@@ -18,7 +18,7 @@ final class ResSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth', ':app:reason', '--id', 'androidx.lifecycle:lifecycle-viewmodel:')
 
     then:
     result.task(':buildHealth').outcome == TaskOutcome.SUCCESS

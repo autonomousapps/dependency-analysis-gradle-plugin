@@ -4,6 +4,9 @@ package com.autonomousapps.kit.gradle
 
 import com.autonomousapps.kit.render.Scribe
 
+/**
+ * TODO(tsr): this should implement Element
+ */
 public class Imports(
   private val imports: MutableList<Import>,
 ) {

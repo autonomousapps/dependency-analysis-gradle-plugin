@@ -33,7 +33,6 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   private var interfaces: Set<String>? = null
   private val retentionPolicyHolder = AtomicReference("")
   private var isAnnotation = false
-  private val methods = mutableSetOf<Method>()
   private val innerClasses = mutableSetOf<String>()
   private val effectivelyPublicFields = mutableSetOf<Member.Field>()
   private val effectivelyPublicMethods = mutableSetOf<Member.Method>()
@@ -62,7 +61,6 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       isAnnotation = isAnnotation,
       hasNoMembers = hasNoMembers,
       access = access,
-      methods = methods.efficient(),
       innerClasses = innerClasses.efficient(),
       constants = constants.efficient(),
       reflectiveAccesses = reflectiveAccesses.efficient(),
@@ -116,7 +114,6 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     if (!("()V" == descriptor && ("<init>" == name || "<clinit>" == name))) {
       // ignore constructors and static initializers
       methodCount++
-      methods.add(Method(descriptor))
     }
 
     if (isEffectivelyPublic(access)) {

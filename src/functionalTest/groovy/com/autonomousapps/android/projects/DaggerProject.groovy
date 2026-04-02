@@ -6,7 +6,6 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -29,12 +28,17 @@ final class DaggerProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.plugins += rootKapt
+        }
+      }
       .withAndroidSubproject(projectName) { s ->
         s.manifest = AndroidManifest.defaultLib()
         s.sources = sources
         s.withBuildScript { bs ->
           bs.android = defaultAndroidLibBlock(true)
-          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.kotlinKaptNoVersion, Plugins.dependencyAnalysisNoVersion]
+          bs.plugins(androidLib() + kapt())
           bs.dependencies = [
             javaxInject('api'),
             dagger('api'),
@@ -43,7 +47,8 @@ final class DaggerProject extends AbstractAndroidProject {
             daggerAndroidCompiler('kapt'),
           ]
         }
-      }.write()
+      }
+      .write()
   }
 
   private List<Source> sources = [

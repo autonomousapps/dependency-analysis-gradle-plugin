@@ -29,11 +29,12 @@ final class AndroidThemeActivityProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
-          bs.plugins = androidAppPlugin
+          bs.plugins = androidApp(false)
           bs.android = defaultAndroidAppBlock(false, 'com.consumer')
-          bs.dependencies = [
+          bs.dependencies(
             project('implementation', ':producer'),
-          ]
+            appcompat('implementation'),
+          )
         }
         consumer.styles = AndroidStyleRes.EMPTY
         consumer.manifest = AndroidManifest.of(
@@ -41,8 +42,7 @@ final class AndroidThemeActivityProject extends AbstractAndroidProject {
           <?xml version="1.0" encoding="utf-8"?>
           <manifest
             xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools"
-            package="com.consumer">
+            xmlns:tools="http://schemas.android.com/tools">
             <application>
               <activity
                 android:name=".MainActivity"
@@ -67,11 +67,9 @@ final class AndroidThemeActivityProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('producer') { producer ->
         producer.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
-          bs.dependencies = [
-            appcompat('implementation'),
-          ]
+          bs.dependencies(appcompat('implementation'))
         }
         producer.manifest = AndroidManifest.defaultLib()
         producer.styles = AndroidStyleRes.of(
@@ -90,6 +88,5 @@ final class AndroidThemeActivityProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  final Set<ProjectAdvice> expectedBuildHealth =
-    emptyProjectAdviceFor(':consumer', ':producer')
+  final Set<ProjectAdvice> expectedBuildHealth = emptyProjectAdviceFor(':consumer', ':producer')
 }

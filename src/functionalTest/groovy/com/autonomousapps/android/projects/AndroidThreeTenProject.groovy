@@ -41,7 +41,7 @@ final class AndroidThreeTenProject extends AbstractAndroidProject {
         s.styles = AndroidStyleRes.DEFAULT
         s.colors = AndroidColorRes.DEFAULT
         s.withBuildScript { bs ->
-          bs.plugins = androidAppWithKotlin
+          bs.plugins = androidApp(true)
           bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
             kotlinStdLib('implementation'),

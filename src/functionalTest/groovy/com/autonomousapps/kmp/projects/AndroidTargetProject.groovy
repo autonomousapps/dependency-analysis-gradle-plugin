@@ -42,7 +42,7 @@ final class AndroidTargetProject extends AbstractProject {
         s.sources = consumerSources()
         s.withBuildScript { bs ->
           bs.plugins = androidKmpLibrary
-          bs.kotlin { k ->
+          bs.kotlinKmp { k ->
             k.androidLibrary { a ->
               a.namespace = 'dagp.test'
               a.compileSdk = 33

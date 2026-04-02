@@ -63,7 +63,7 @@ internal class KotlinConfigurer(private val project: Project) {
           r.eachDependency { details ->
             val requested = details.requested
 
-            if (requested.group == "org.jetbrains.kotlin" && requested.name == "kotlin-stdlib") {
+            if (requested.group == "org.jetbrains.kotlin" && requested.name.startsWith("kotlin-stdlib")) {
               details.useVersion(kotlin)
               details.because("Downgrading the stdlib for enhanced compatibility")
             }

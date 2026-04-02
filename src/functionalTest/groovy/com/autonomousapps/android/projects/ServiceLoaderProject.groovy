@@ -41,7 +41,7 @@ final class ServiceLoaderProject extends AbstractAndroidProject {
         a.colors = AndroidColorRes.DEFAULT
         a.layouts = layouts
         a.withBuildScript { bs ->
-          bs.plugins = androidAppWithKotlin
+          bs.plugins = androidApp(true)
           bs.android = defaultAndroidAppBlock()
           bs.dependencies = dependencies
         }

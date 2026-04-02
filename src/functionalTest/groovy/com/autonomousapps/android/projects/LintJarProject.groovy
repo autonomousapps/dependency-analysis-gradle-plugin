@@ -35,7 +35,7 @@ final class LintJarProject extends AbstractAndroidProject {
         s.colors = AndroidColorRes.DEFAULT
         s.manifest = AndroidManifest.app('com.example.MainApplication')
         s.withBuildScript { bs ->
-          bs.plugins = androidAppPlugin
+          bs.plugins = androidApp(false)
           bs.android = defaultAndroidAppBlock(false)
           bs.dependencies = [
             appcompat('implementation'),

@@ -25,10 +25,12 @@ class PluginProvider(
   val androidAppId: String = "com.android.application"
   val androidLibId: String = "com.android.library"
   val androidTestId: String = "com.android.test"
+  val androidLegacyKaptId: String = "com.android.legacy-kapt"
   val androidApp: Plugin = Plugin(androidAppId, androidVersion)
   val androidAppNoVersion: Plugin = Plugin(androidAppId)
   val androidLibNoVersion: Plugin = Plugin(androidLibId)
   val androidTestNoVersion: Plugin = Plugin(androidTestId)
+  val androidLegacyKaptNoVersion: Plugin = Plugin(androidLegacyKaptId)
 
   /** Use this in the root project. */
   val androidKmpLibNoApply: Plugin = Plugin("com.android.kotlin.multiplatform.library", androidVersion, false)

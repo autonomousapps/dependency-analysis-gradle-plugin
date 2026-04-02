@@ -13,7 +13,6 @@ public class CompilerJvmTarget(
     s.append("jvmTarget.set(")
     s.append(jvmTargetFrom(target))
     s.append(")")
-    s.appendLine()
   }
 
   private companion object {

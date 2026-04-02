@@ -38,7 +38,7 @@ final class JvmTargetProject extends AbstractProject {
         s.sources = consumerSources()
         s.withBuildScript { bs ->
           bs.plugins = kmpLibrary
-          bs.kotlin { k ->
+          bs.kotlinKmp { k ->
             k.jvmTarget = KotlinJvmTarget.default()
             k.sourceSets { sourceSets ->
               sourceSets.commonMain { commonMain ->

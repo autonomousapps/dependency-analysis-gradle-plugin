@@ -21,8 +21,10 @@ object Plugins {
   @JvmStatic val dependencyAnalysisNoVersion: Plugin = provider.dependencyAnalysisNoVersion
 
   @JvmStatic val androidAppId: String = provider.androidAppId
+  @JvmStatic val legacyKaptId: String = provider.androidLegacyKaptId
   @JvmStatic val androidApp: Plugin = provider.androidAppNoVersion
   @JvmStatic val androidLib: Plugin = provider.androidLibNoVersion
+  @JvmStatic val androidLegacyKaptNoVersion: Plugin = provider.androidLegacyKaptNoVersion
   @JvmStatic val androidKmpLibNoVersion: Plugin = provider.androidKmpLibNoVersion
   @JvmStatic val androidTest: Plugin = provider.androidTestNoVersion
 

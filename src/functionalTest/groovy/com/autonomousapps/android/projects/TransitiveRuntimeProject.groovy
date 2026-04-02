@@ -30,7 +30,7 @@ final class TransitiveRuntimeProject extends AbstractAndroidProject {
       .withAndroidLibProject('consumer', 'com.example.consumer') { s ->
         s.manifest = libraryManifest()
         s.withBuildScript { bs ->
-          bs.plugins(androidLibPlugin)
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
           bs.dependencies(
             implementation(':unused'),
@@ -41,7 +41,7 @@ final class TransitiveRuntimeProject extends AbstractAndroidProject {
       .withAndroidLibProject('unused', 'com.example.unused') { s ->
         s.manifest = libraryManifest()
         s.withBuildScript { bs ->
-          bs.plugins(androidLibPlugin)
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.unused')
           bs.dependencies(conscryptUber)
         }

@@ -2,42 +2,64 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
-import com.autonomousapps.fixtures.*
-import com.autonomousapps.model.Advice
-import kotlin.Pair
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidManifest
+import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.fixtures.Dependencies.APPCOMPAT
-import static com.autonomousapps.fixtures.Dependencies.DEPENDENCIES_KOTLIN_STDLIB
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 
-final class DataBindingProject {
+final class DataBindingProject extends AbstractAndroidProject {
+
+  final GradleProject gradleProject
+  private final String agpVersion
 
   DataBindingProject(String agpVersion) {
+    super(agpVersion)
     this.agpVersion = agpVersion
+    this.gradleProject = build()
   }
 
-  AndroidProject newProject() {
-    return new AndroidProject(rootSpec, appSpec)
-  }
-
-  private final String agpVersion
-  final appSpec = new AppSpec(
-    AppType.KOTLIN_ANDROID_APP,
-    [
-      'MainActivity.kt': """\
-        import androidx.appcompat.app.AppCompatActivity
-                
-        class MainActivity : AppCompatActivity() {
+  private GradleProject build() {
+    return newAndroidGradleProjectBuilder(agpVersion)
+      .withAndroidSubproject('app') { app ->
+        app.withBuildScript { bs ->
+          bs.plugins = androidApp()
+          bs.android = defaultAndroidAppBlock(true, 'com.example.app')
+          bs.dependencies(
+            appcompat('implementation'),
+          )
+          bs.withGroovy('android.buildFeatures.dataBinding true')
         }
-      """.stripIndent()
-    ],
-    [] as Set<AndroidLayout>,
-    DEPENDENCIES_KOTLIN_STDLIB + [new Pair<String, String>('implementation', APPCOMPAT)],
-    "android.buildFeatures.dataBinding true"
-  )
+        app.sources = appSource
+        app.manifest = AndroidManifest.app()
+        app.styles = AndroidStyleRes.DEFAULT
+        app.colors = AndroidColorRes.DEFAULT
+      }
+      .write()
+  }
 
-  private final RootSpec rootSpec = new RootSpec(
-    null, "", RootSpec.defaultGradleProperties(), agpVersion
-  )
+  private List<Source> appSource = [
+    Source.kotlin(
+      '''\
+        package mutual.aid
+        
+        import androidx.appcompat.app.AppCompatActivity
+        
+        class MainActivity : AppCompatActivity() {
+        }'''.stripIndent()
+    ).build()
+  ]
 
-  final Set<Advice> expectedAdviceForApp = []
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
+  }
+
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    emptyProjectAdviceFor(':app')
+  ]
 }

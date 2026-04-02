@@ -28,7 +28,7 @@ final class HasJavaAndKotlinProject extends AbstractAndroidProject {
         a.manifest = libraryManifest()
         a.sources = sources
         a.withBuildScript { bs ->
-          bs.plugins = androidLibWithKotlin
+          bs.plugins = androidLib(true)
           bs.android = defaultAndroidLibBlock(true)
           bs.dependencies(
             // Used by Kotlin class

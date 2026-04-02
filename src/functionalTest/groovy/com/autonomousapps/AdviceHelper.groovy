@@ -31,14 +31,6 @@ final class AdviceHelper {
     return STRATEGY.actualComprehensiveAdviceForProject(gradleProject, projectName)
   }
 
-  static FlatCoordinates flatCoordinates(com.autonomousapps.kit.gradle.Dependency dep) {
-    return flatCoordinates(dep.identifier)
-  }
-
-  static FlatCoordinates flatCoordinates(String identifier) {
-    return new FlatCoordinates(identifier)
-  }
-
   static ModuleCoordinates moduleCoordinates(com.autonomousapps.kit.gradle.Dependency dep) {
     return moduleCoordinates(dep.identifier, dep.version)
   }
@@ -93,6 +85,14 @@ final class AdviceHelper {
     return projectAdvice(projectPath, advice, pluginAdvice, [] as Set<ModuleAdvice>, shouldFail)
   }
 
+  static Set<Advice> emptyAdvice() {
+    return [] as Set<Advice>
+  }
+
+  static Set<PluginAdvice> emptyPluginAdvice() {
+    return [] as Set<PluginAdvice>
+  }
+
   static ProjectAdvice projectAdvice(
     String projectPath,
     Set<Advice> advice,
@@ -101,35 +101,6 @@ final class AdviceHelper {
     boolean shouldFail
   ) {
     return new ProjectAdvice(projectPath, advice, pluginAdvice, moduleAdvice, Warning.empty(), shouldFail)
-  }
-
-  /**
-   * This is a workaround for a deficiency in the algorithm. KGP adds the stdlib to the `api` configuration. If Kotlin
-   * is only used as an implementation detail, then the algo will suggest moving stdlib from api -> implementation.
-   * This advice cannot be followed. We still don't have a good solution for default dependencies added by plugins.
-   */
-  static Set<Advice> downgradeKotlinStdlib() {
-    return downgradeKotlinStdlib('main')
-  }
-
-  /**
-   * This is a workaround for a deficiency in the algorithm. KGP adds the stdlib to the `api` configuration. If Kotlin
-   * is only used as an implementation detail, then the algo will suggest moving stdlib from api -> implementation.
-   * This advice cannot be followed. We still don't have a good solution for default dependencies added by plugins.
-   */
-  static Set<Advice> downgradeKotlinStdlib(String sourceSetName) {
-    def from = sourceSetName == 'main' ? 'api' : "${sourceSetName}Api"
-    def to = sourceSetName == 'main' ? 'implementation' : "${sourceSetName}Implementation"
-    return [Advice.ofChange(moduleCoordinates(kotlinStdLib(from)), from, to)]
-  }
-
-  /**
-   * This is a workaround for a deficiency in the algorithm. KGP adds the stdlib to the `api` configuration. If Kotlin
-   * is only used as an implementation detail, then the algo will suggest moving stdlib from api -> implementation.
-   * This advice cannot be followed. We still don't have a good solution for default dependencies added by plugins.
-   */
-  static Set<Advice> removeKotlinStdlib() {
-    return [Advice.ofRemove(moduleCoordinates(kotlinStdLib('api')), 'api')]
   }
 
   private static GradleVariantIdentification defaultGVI(String capability) {

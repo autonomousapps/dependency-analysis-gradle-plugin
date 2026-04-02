@@ -41,7 +41,7 @@ final class TestFixturesDuplicatedWithMainProject extends AbstractAndroidProject
         s.sources = sourcesWithTestFixtures
         s.manifest = libraryManifest('lib.with.fixtures')
         s.withBuildScript { bs ->
-          bs.plugins = androidLibWithKotlin
+          bs.plugins = androidLib(true)
           bs.android = defaultAndroidLibBlock(true).tap {
             testFixturesOptions = new TestFixturesOptions(true)
           }
@@ -55,7 +55,7 @@ final class TestFixturesDuplicatedWithMainProject extends AbstractAndroidProject
         s.sources = sourcesWithTestFixtures
         s.manifest = AndroidManifest.defaultLib()
         s.withBuildScript { bs ->
-          bs.plugins = androidAppWithKotlin
+          bs.plugins = androidApp(true)
           bs.android = defaultAndroidAppBlock(true,"com.example.app").tap {
             testFixturesOptions = new TestFixturesOptions(true)
           }

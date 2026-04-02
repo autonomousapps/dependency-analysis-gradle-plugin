@@ -28,7 +28,7 @@ final class CompileOnlyTransitiveProject extends AbstractAndroidProject {
         p.manifest = libraryManifest()
         p.sources = consumerSources
         p.withBuildScript { bs ->
-          bs.plugins(androidLibPlugin)
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false)
           bs.dependencies(compileOnly(':direct'))
         }
