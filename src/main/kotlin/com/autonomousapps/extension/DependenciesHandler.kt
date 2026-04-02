@@ -77,16 +77,23 @@ public abstract class DependenciesHandler @Inject constructor(objects: ObjectFac
   internal val bundles = objects.domainObjectContainer(BundleHandler::class.java)
 
   init {
-    // With Kotlin plugin 1.4, the stdlib is now applied by default. It makes no sense to warn users
-    // about this, even if it is "incorrect." So make all stdlib-related libraries a bundle and call
-    // it a day.
-    bundle("__kotlin-stdlib") {
-      it.include(".*kotlin-stdlib.*")
+    // AppCompatActivity has an implicit reference to ViewModelProvider since it implements
+    // HasDefaultViewModelProviderFactory.
+    // See https://developer.android.com/reference/androidx/lifecycle/HasDefaultViewModelProviderFactory
+    bundle("__appcompat") {
+      it.includeDependency("androidx.appcompat:appcompat")
+      it.includeDependency("androidx.lifecycle:lifecycle-viewmodel")
     }
     // Firebase / Google services are tightly coupled
     bundle("__firebase") {
       it.includeGroup("com.google.firebase")
       it.includeGroup("com.google.android.gms")
+    }
+    // With Kotlin plugin 1.4, the stdlib is now applied by default. It makes no sense to warn users
+    // about this, even if it is "incorrect." So make all stdlib-related libraries a bundle and call
+    // it a day.
+    bundle("__kotlin-stdlib") {
+      it.include(".*kotlin-stdlib.*")
     }
     // The kotlin plugin is automatically adding another variant of the kotlin-test dependency, which can show up as
     // unused with no way to opt out.

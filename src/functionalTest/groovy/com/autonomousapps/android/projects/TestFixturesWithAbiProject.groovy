@@ -37,7 +37,7 @@ final class TestFixturesWithAbiProject extends AbstractAndroidProject {
         s.sources = libWithFixturesSources
         s.manifest = libraryManifest('lib.with.fixtures')
         s.withBuildScript { bs ->
-          bs.plugins = androidLibWithKotlin
+          bs.plugins = androidLib(true)
           bs.android = defaultAndroidLibBlock(true).tap {
             testFixturesOptions = new TestFixturesOptions(true)
           }

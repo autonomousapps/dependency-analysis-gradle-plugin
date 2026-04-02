@@ -15,8 +15,7 @@ public class AndroidManifest(public val content: String) {
     public fun simpleApp(): AndroidManifest = AndroidManifest(
       """
       |<?xml version="1.0" encoding="utf-8"?>
-      |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      |  package="com.example">
+      |<manifest xmlns:android="http://schemas.android.com/apk/res/android">
       |
       |<application
       |  android:allowBackup="false"
@@ -33,8 +32,7 @@ public class AndroidManifest(public val content: String) {
     ): AndroidManifest = AndroidManifest(
       """
       |<?xml version="1.0" encoding="utf-8"?>
-      |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      |  package="com.example">
+      |<manifest xmlns:android="http://schemas.android.com/apk/res/android">
       |
       |<application
       |  android:allowBackup="true"
@@ -66,8 +64,19 @@ public class AndroidManifest(public val content: String) {
       )
     }
 
+    @JvmOverloads
     @JvmStatic
     public fun app(application: String? = null): AndroidManifest = appWithoutPackage(application)
+
+    @JvmStatic
+    public fun appEmpty(): AndroidManifest {
+      return AndroidManifest(
+        """
+        |<?xml version="1.0" encoding="utf-8"?>
+        |<manifest xmlns:android="http://schemas.android.com/apk/res/android" />
+        """.trimMargin()
+      )
+    }
 
     private fun activityBlock(activityName: String = "MainActivity"): String =
       """

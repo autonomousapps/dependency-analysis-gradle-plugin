@@ -8,6 +8,7 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -37,10 +38,7 @@ abstract class SettingsProject {
       return newAndroidSettingsProjectBuilder(agpVersion: agpVersion, withKotlin: true)
         .withAndroidSubproject('app') { app ->
           app.withBuildScript { bs ->
-            bs.plugins = [
-              plugins.androidAppNoVersion,
-              plugins.kotlinAndroidNoVersion,
-            ]
+            bs.plugins(androidApp() - Plugins.dependencyAnalysisNoVersion)
             bs.android = defaultAndroidAppBlock()
             bs.dependencies = [
               project('implementation', ':lib'),
@@ -89,7 +87,7 @@ abstract class SettingsProject {
 
     private static final List<Source> appSources = [
       new Source(
-        SourceType.KOTLIN, 'MainActivity.kt', 'com/example',
+        SourceType.KOTLIN, 'MainActivity', 'com/example',
         '''\
         package com.example
         
@@ -133,11 +131,7 @@ abstract class SettingsProject {
         }
         .withAndroidSubproject('app') { app ->
           app.withBuildScript { bs ->
-            bs.plugins = [
-              plugins.androidApp,
-              plugins.kotlinAndroid,
-              plugins.dependencyAnalysisNoVersion,
-            ]
+            bs.plugins(androidAppWithVersions())
             bs.android = defaultAndroidAppBlock()
           }
           app.manifest = appManifest('com.example.app')

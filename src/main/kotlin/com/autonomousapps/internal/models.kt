@@ -44,7 +44,6 @@ internal data class AnalyzedClass(
    */
   val hasNoMembers: Boolean,
   val access: AccessFlags,
-  val methods: Set<Method>,
   val innerClasses: Set<String>,
   val constants: Set<Constant>,
   val reflectiveAccesses: Set<String>,
@@ -59,7 +58,6 @@ internal data class AnalyzedClass(
     isAnnotation: Boolean,
     hasNoMembers: Boolean,
     access: AccessFlags,
-    methods: Set<Method>,
     innerClasses: Set<String>,
     constants: Set<Constant>,
     reflectiveAccesses: Set<String>,
@@ -72,7 +70,6 @@ internal data class AnalyzedClass(
     retentionPolicy = fromString(retentionPolicy, isAnnotation),
     hasNoMembers = hasNoMembers,
     access = access,
-    methods = methods,
     innerClasses = innerClasses,
     constants = constants,
     reflectiveAccesses = reflectiveAccesses,
@@ -97,24 +94,6 @@ internal data class AnalyzedClass(
   }
 
   override fun compareTo(other: AnalyzedClass): Int = className.compareTo(other.className)
-}
-
-internal data class Method(val types: Set<String>) {
-
-  constructor(descriptor: String) : this(findTypes(descriptor))
-
-  companion object {
-    private val DESCRIPTOR = Pattern.compile("L(.+?);")
-
-    private fun findTypes(descriptor: String): Set<String> {
-      val types = sortedSetOf<String>()
-      val m = DESCRIPTOR.matcher(descriptor)
-      while (m.find()) {
-        types.add(m.group(1))
-      }
-      return types.efficient()
-    }
-  }
 }
 
 @JsonClass(generateAdapter = false)

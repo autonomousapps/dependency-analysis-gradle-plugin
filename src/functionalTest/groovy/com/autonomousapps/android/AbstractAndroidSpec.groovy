@@ -23,9 +23,8 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
   protected static final AGP_9_1 = AgpVersion.version('9.1.0')
   protected static final AGP_9_2 = AgpVersion.version('9.2.0-alpha04') // requires Gradle 9.5.0-milestone-5
 
-  // TODO(tsr): update to AGP 9.1 later
   protected static final AGP_MIN = AGP_8_10
-  protected static final AGP_LATEST_STABLE = AGP_8_13
+  protected static final AGP_LATEST_STABLE = AGP_9_1
   protected static final AGP_LATEST_PRE_STABLE = AGP_9_2
 
   /**

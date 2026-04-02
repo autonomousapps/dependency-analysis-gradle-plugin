@@ -217,9 +217,14 @@ final class AdviceFilterProject extends AbstractAndroidProject {
   List<Advice> expectedAppAdvice(Advice... ignored = []) {
     def advice = [
       removeLibAndroid, removeCoreKtx, removeCommonsIo,
-      addAppCompat, addCommonsCollections, addAndroidxLifecycle, addKotlinxCoroutinesAndroid,
+      addAppCompat, addCommonsCollections,
       changeRxlint
     ]
+
+    // AGP 9 has different dependency resolution behavior (not entirely sure why)
+    advice += isLessThanAgp9 ? addAndroidxLifecycle : addAndroidxLifecycleAgp9
+    advice += isLessThanAgp9 ? addKotlinxCoroutinesAndroid : addKotlinxCoroutinesAndroidAgp9
+
     advice.removeAll(ignored)
     return advice
   }
@@ -227,9 +232,13 @@ final class AdviceFilterProject extends AbstractAndroidProject {
   List<Advice> expectedLibAndroidAdvice(Advice... ignored = []) {
     def advice = [
       removeCoreKtxAndroidLib, removeNavUiKtx,
-      addAndroidAnnotation, addAndroidxCore, addAndroidxTransition,
+      addAndroidAnnotation, addAndroidxCore,
       changeAppcompat
     ]
+
+    // AGP 9 has different dependency resolution behavior (not entirely sure why)
+    advice += isLessThanAgp9 ? addAndroidxTransition : addAndroidxTransitionAgp9
+
     advice.removeAll(ignored)
     return advice
   }
@@ -247,9 +256,11 @@ final class AdviceFilterProject extends AbstractAndroidProject {
   final removeLibAndroid = Advice.ofRemove(projectCoordinates(':lib_android'), 'implementation')
   final removeCommonsIo = Advice.ofRemove(moduleCoordinates('commons-io:commons-io', '2.6'), 'debugImplementation')
   private final removeCoreKtx = Advice.ofRemove(moduleCoordinates('androidx.core:core-ktx', '1.13.1'), 'implementation')
-  private final addAppCompat = Advice.ofAdd(moduleCoordinates('androidx.appcompat:appcompat', '1.2.0'), 'implementation')
+  private final addAppCompat = Advice.ofAdd(moduleCoordinates('androidx.appcompat:appcompat', '1.7.1'), 'implementation')
   private final addAndroidxLifecycle = Advice.ofAdd(moduleCoordinates('androidx.lifecycle:lifecycle-viewmodel', '2.9.0'), 'implementation')
+  private final addAndroidxLifecycleAgp9 = Advice.ofAdd(moduleCoordinates('androidx.lifecycle:lifecycle-viewmodel', '2.6.2'), 'implementation')
   final addKotlinxCoroutinesAndroid = Advice.ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-coroutines-android', '1.7.3'), 'runtimeOnly')
+  final addKotlinxCoroutinesAndroidAgp9 = Advice.ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-coroutines-android', '1.6.4'), 'runtimeOnly')
   final addCommonsCollections = Advice.ofAdd(
     moduleCoordinates('org.apache.commons:commons-collections4', '4.4'), 'implementation'
   )
@@ -267,6 +278,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
   final addAndroidAnnotation = Advice.ofAdd(moduleCoordinates('androidx.annotation:annotation', '1.9.1'), 'implementation')
   final addAndroidxCore = Advice.ofAdd(moduleCoordinates('androidx.core:core', '1.13.1'), 'api')
   final addAndroidxTransition = Advice.ofAdd(moduleCoordinates('androidx.transition:transition', '1.3.0'), 'runtimeOnly')
+  final addAndroidxTransitionAgp9 = Advice.ofAdd(moduleCoordinates('androidx.transition:transition', '1.2.0'), 'runtimeOnly')
   final changeAppcompat = Advice.ofChange(
     moduleCoordinates('androidx.appcompat:appcompat', '1.2.0'), 'api', 'implementation'
   )

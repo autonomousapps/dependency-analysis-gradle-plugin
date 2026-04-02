@@ -4,12 +4,11 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
-import com.autonomousapps.kit.gradle.Kotlin
-import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -17,6 +16,10 @@ import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
 final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
+
+  private static final Dependency KOTLINX_IMMUTABLE = kotlinxImmutable('implementation', "-jvm")
+  private static final Dependency KOTLINX_COROUTINES_TEST = kotlinxCoroutinesTest('implementation', "-jvm")
+  private static final Dependency COMPOSE_MULTIPLATFORM_FOUNDATION = composeMultiplatformFoundation('implementation')
 
   final GradleProject gradleProject
   private final String agpVersion
@@ -43,36 +46,35 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
         s.styles = AndroidStyleRes.DEFAULT
         s.colors = AndroidColorRes.DEFAULT
         s.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidApp, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
+          bs.plugins(androidApp())
           bs.android = defaultAndroidAppBlock(true)
           bs.dependencies = [
             kotlinStdLib('implementation'),
             appcompat('implementation'),
 
             // Immutable collections JVM dep that should be corrected to the canonical target
-            kotlinxImmutable('implementation', "-jvm"),
+            KOTLINX_IMMUTABLE,
 
             // Coroutines Test JVM dep that should be
             // - Swapped with the core dep
             // - Core dep should use the canonical target
-            kotlinxCoroutinesTest('implementation', "-jvm"),
+            KOTLINX_COROUTINES_TEST,
 
             // A foundation compose dependency but we only use runtime APIs
             // This is an odd one because it will actually result in adding
             // the androidx compose dep. See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/919#issuecomment-1620643857
-            composeMultiplatformFoundation('implementation'),
+            COMPOSE_MULTIPLATFORM_FOUNDATION,
           ]
 
-          bs.kotlin = Kotlin.ofTarget(8)
+          bs.kotlin = Kotlin.DEFAULT
         }
       }
       .write()
   }
 
-  private sources = [
-    new Source(
-      SourceType.KOTLIN, 'MainApplication', 'com/example',
-      """\
+  private List<Source> sources = [
+    Source.kotlin(
+      '''\
         package com.example
         
         import android.app.Application
@@ -85,18 +87,16 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
             val list = persistentListOf(1)
             val recomposer = Recomposer(Dispatchers.IO)
           }
-        }
-      """
-    )
+        }'''.stripIndent()
+    ).build(),
   ]
 
   @SuppressWarnings("GrMethodMayBeStatic")
-  Set<Advice> expectedAdvice() {
+  private Set<Advice> expectedAdvice() {
     return [
       removeComposeFoundation(),
       addComposeRuntime(),
       addKotlinxCoroutinesCore(),
-      addKotlinxCoroutinesAndroid(),
       changeKotlinxCoroutinesTest(),
       // TODO need to make a new advice to replace KMP targets with canonical ones
       //  See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/pull/919#issuecomment-1620684615
@@ -106,7 +106,7 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
   }
 
   private static Advice removeComposeFoundation() {
-    return Advice.ofRemove(moduleCoordinates('org.jetbrains.compose.foundation:foundation', '1.0.1'), 'implementation')
+    return Advice.ofRemove(moduleCoordinates(COMPOSE_MULTIPLATFORM_FOUNDATION), 'implementation')
   }
 
   private static Advice addComposeRuntime() {
@@ -114,31 +114,17 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
   }
 
   private static Advice addKotlinxCoroutinesCore() {
-    return Advice.ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-coroutines-core', '1.6.0'), 'implementation')
-  }
-
-  private static Advice addKotlinxCoroutinesAndroid() {
-    return Advice.ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-coroutines-android', '1.6.0'), 'runtimeOnly')
+    return Advice.ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-coroutines-core', '1.7.3'), 'implementation')
   }
 
   // In practice we don't actually want to keep this, but because it has a serviceloader DAGP will
   // conservatively keep it as runtimeOnly instead of removing
   private static Advice changeKotlinxCoroutinesTest() {
     return Advice.ofChange(
-      moduleCoordinates('org.jetbrains.kotlinx:kotlinx-coroutines-test-jvm', '1.6.0'),
+      moduleCoordinates('org.jetbrains.kotlinx:kotlinx-coroutines-test-jvm', '1.7.3'),
       'implementation',
       'runtimeOnly'
     )
-  }
-
-  private static Advice removeKotlinxImmutableJvm() {
-    return Advice
-      .ofRemove(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm', '0.3.5'), 'implementation')
-  }
-
-  private static Advice addKotlinxImmutable() {
-    return Advice
-      .ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-collections-immutable', '0.3.5'), 'implementation')
   }
 
   Set<ProjectAdvice> actualBuildHealth() {

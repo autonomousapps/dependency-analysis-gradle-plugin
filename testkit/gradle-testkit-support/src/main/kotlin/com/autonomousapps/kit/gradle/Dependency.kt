@@ -213,6 +213,18 @@ public data class Dependency @JvmOverloads constructor(
 
     @JvmOverloads
     @JvmStatic
+    public fun kapt(dependency: String, capability: String? = null): Dependency {
+      return Dependency("kapt", dependency, capability = capability)
+    }
+
+    @JvmOverloads
+    @JvmStatic
+    public fun ksp(dependency: String, capability: String? = null): Dependency {
+      return Dependency("ksp", dependency, capability = capability)
+    }
+
+    @JvmOverloads
+    @JvmStatic
     public fun api(dependency: String, capability: String? = null): Dependency {
       return Dependency("api", dependency, capability = capability)
     }

@@ -24,15 +24,11 @@ final class ReleaseVariantIgnoredProject extends AbstractVariantProject {
 
   @Override
   protected GradleProperties getProjectGradleProperties() {
-    return super.getProjectGradleProperties() + GradleProperties.of(
-      "$Flags.ANDROID_IGNORED_VARIANTS=release"
-    )
+    return super.getProjectGradleProperties() + GradleProperties.of("$Flags.ANDROID_IGNORED_VARIANTS=release")
   }
 
   @Override
   Set<ProjectAdvice> expectedBuildHealth() {
-    return [
-      projectAdviceForDependencies(':app', appAdvice)
-    ]
+    return [projectAdviceForDependencies(':app', appAdvice)]
   }
 }

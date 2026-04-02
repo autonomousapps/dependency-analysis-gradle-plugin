@@ -4,6 +4,7 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.android.AndroidColorRes
+import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.model.ProjectAdvice
 
@@ -11,12 +12,12 @@ import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 
-final class EmptyResFile extends AbstractAndroidProject {
+final class AppCompatProject extends AbstractAndroidProject {
 
   final GradleProject gradleProject
   private final String agpVersion
 
-  EmptyResFile(String agpVersion) {
+  AppCompatProject(String agpVersion) {
     super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
@@ -26,22 +27,15 @@ final class EmptyResFile extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = androidApp(false)
-          bs.android = defaultAndroidAppBlock(false)
-          bs.dependencies = [
-            appcompat("implementation")
-          ]
+          bs.plugins = androidApp()
+          bs.android = defaultAndroidAppBlock(true, 'com.example.app')
+          bs.dependencies(
+            appcompat('implementation'),
+          )
         }
-
+        app.manifest = AndroidManifest.app()
         app.styles = AndroidStyleRes.DEFAULT
         app.colors = AndroidColorRes.DEFAULT
-        // https://github.com/androidx/androidx/blob/androidx-main/security/security-app-authenticator/src/androidTest/res/raw/no_root_element.xml
-        app.withFile('src/androidTest/res/raw/no_root_element.xml', """\
-          <?xml version="1.0" encoding="utf-8"?>
-          <!--
-            Hi!
-            -->""".stripIndent()
-        )
       }
       .write()
   }
@@ -51,6 +45,6 @@ final class EmptyResFile extends AbstractAndroidProject {
   }
 
   final Set<ProjectAdvice> expectedBuildHealth = [
-    emptyProjectAdviceFor(':app'),
+    emptyProjectAdviceFor(':app')
   ]
 }

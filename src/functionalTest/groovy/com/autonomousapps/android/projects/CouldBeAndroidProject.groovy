@@ -71,7 +71,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = androidAppPlugin
+          bs.plugins = androidApp(false)
           bs.android = defaultAndroidAppBlock(false)
           bs.dependencies = [
             appcompat('implementation'),
@@ -84,7 +84,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
       }
       .withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
         assets.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')
         }
         assets.withFile(
@@ -95,7 +95,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
       }
       .withAndroidLibProject('lib-android-java-deps', 'com.example.lib') { lib ->
         lib.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
           bs.dependencies = [
             project('implementation', ':lib-java'),
@@ -105,7 +105,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
       }
       .withAndroidLibProject('lib-android-android-deps', 'com.example.lib') { lib ->
         lib.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
           bs.dependencies = [
             project('implementation', ':assets')

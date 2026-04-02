@@ -57,6 +57,14 @@ private const val ANDROID_TEST_PLUGIN = "com.android.test"
  * @see <a href="https://developer.android.com/kotlin/multiplatform/plugin">Set up the Android Gradle Library Plugin for KMP</a>
  */
 private const val ANDROID_KMP_LIBRARY_PLUGIN = "com.android.kotlin.multiplatform.library"
+
+private val ANDROID_PLUGINS = listOf(
+  ANDROID_APP_PLUGIN,
+  ANDROID_LIBRARY_PLUGIN,
+  ANDROID_TEST_PLUGIN,
+  ANDROID_KMP_LIBRARY_PLUGIN,
+)
+
 private const val KOTLIN_ANDROID_PLUGIN = "org.jetbrains.kotlin.android"
 private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 private const val KOTLIN_MULTIPLATFORM_PLUGIN = "org.jetbrains.kotlin.multiplatform"
@@ -234,9 +242,14 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     // If it's a Kotlin project, users have limited ability to make changes to the stdlib.
-    pluginManager.withPlugin(KOTLIN_JVM_PLUGIN, handleKotlin)
-    pluginManager.withPlugin(KOTLIN_MULTIPLATFORM_PLUGIN, handleKotlin)
-    pluginManager.withPlugin(KOTLIN_ANDROID_PLUGIN, handleKotlin)
+    listOf(
+      KOTLIN_JVM_PLUGIN,
+      KOTLIN_MULTIPLATFORM_PLUGIN,
+      KOTLIN_ANDROID_PLUGIN,
+    )
+      // Since AGP 9, Kotlin is always implicitly available
+      .plus(ANDROID_PLUGINS)
+      .forEach { p -> pluginManager.withPlugin(p, handleKotlin) }
 
     // If it's a Scala project, it needs the scala-library dependency.
     pluginManager.withPlugin(SCALA_PLUGIN) {
@@ -994,7 +1007,7 @@ internal class ProjectPlugin(private val project: Project) {
     val computeUsagesTask = dependencyAnalyzer.registerComputeUsagesTask(
       checkSuperClasses = dagpExtension.usageHandler.analysisHandler.checkSuperClasses,
       checkBinaryCompat = checkBinaryCompat(),
-      isKaptApplied = isKaptApplied(),
+      isKaptApplied = isKaptApplied().orElse(isLegacyKaptApplied()),
       graphViewTask = graphViewTask,
       findDeclarationsTask = findDeclarationsTask,
       synthesizeProjectViewTask = synthesizeProjectViewTask,
@@ -1050,6 +1063,7 @@ internal class ProjectPlugin(private val project: Project) {
       t.explicitSourceSets.set(dagpExtension.dependenciesHandler.explicitSourceSets)
       t.projectType.set(projectType)
       t.kapt.set(isKaptApplied())
+      t.legacyKapt.set(isLegacyKaptApplied())
 
       t.output.set(paths.unfilteredAdvicePath)
       t.dependencyUsages.set(paths.dependencyUsagesPath)
@@ -1155,6 +1169,7 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("org.jetbrains.kotlin.kapt") }
+  private fun Project.isLegacyKaptApplied() = providers.provider { plugins.hasPlugin("com.android.legacy-kapt") }
 
   /**
    * Returns the names of the 'source sets' that are currently supported by the plugin. Dependencies defined on

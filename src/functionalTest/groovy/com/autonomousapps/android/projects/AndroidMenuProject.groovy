@@ -10,14 +10,11 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.gradle.Dependency.project
-import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 
 /**
  * https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/513.
  */
 final class AndroidMenuProject extends AbstractAndroidProject {
-
-  private static final APPCOMPAT = appcompat('implementation')
 
   final GradleProject gradleProject
   private final String agpVersion

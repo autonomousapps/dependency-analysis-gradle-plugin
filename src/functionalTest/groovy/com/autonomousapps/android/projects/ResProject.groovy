@@ -36,13 +36,13 @@ final class ResProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = androidAppWithKotlin
+          bs.plugins(androidApp())
           bs.android = defaultAndroidAppBlock()
-          bs.dependencies = [
+          bs.dependencies(
             project('implementation', ':lib'),
             project('implementation', ':lib2'),
-            appcompat('implementation')
-          ]
+            appcompat('implementation'),
+          )
         }
         app.manifest = appManifest('com.example.app')
         app.sources = appSources
@@ -62,7 +62,7 @@ final class ResProject extends AbstractAndroidProject {
       }
       .withAndroidLibProject('lib', 'com.example.lib') { lib ->
         lib.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
         }
         lib.colors = AndroidColorRes.DEFAULT
@@ -70,7 +70,7 @@ final class ResProject extends AbstractAndroidProject {
       }
       .withAndroidLibProject('lib2', 'com.example.lib2') { lib2 ->
         lib2.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
         }
         lib2.manifest = AndroidManifest.defaultLib()
@@ -85,7 +85,7 @@ final class ResProject extends AbstractAndroidProject {
 
   private static final List<Source> appSources = [
     new Source(
-      SourceType.KOTLIN, 'MainActivity.kt', 'com/example',
+      SourceType.KOTLIN, 'MainActivity', 'com/example',
       '''\
         package com.example
         

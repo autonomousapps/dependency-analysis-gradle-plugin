@@ -23,7 +23,6 @@ public class AndroidBlock @JvmOverloads constructor(
   public var buildTypes: BuildTypes? = null,
   public var compileOptions: CompileOptions = CompileOptions.DEFAULT,
   public var testFixturesOptions: TestFixturesOptions? = null,
-  public var kotlinOptions: KotlinOptions? = null,
   /** Used by `com.android.test` projects */
   public var targetProjectPath: String? = null,
   public var additions: String = "",
@@ -60,7 +59,6 @@ public class AndroidBlock @JvmOverloads constructor(
     defaultConfig.render(s)
     buildTypes?.render(s)
     compileOptions.render(s)
-    kotlinOptions?.render(s)
     testFixturesOptions?.render(s)
 
     if (additions.isNotBlank()) {
@@ -93,7 +91,6 @@ public class AndroidBlock @JvmOverloads constructor(
     defaultConfig.render(s)
     buildTypes?.render(s)
     compileOptions.render(s)
-    kotlinOptions?.render(s)
 
     if (additions.isNotBlank()) {
       if (usesGroovy) {
@@ -109,7 +106,6 @@ public class AndroidBlock @JvmOverloads constructor(
     public var defaultConfig: DefaultConfig = DefaultConfig.DEFAULT_APP
     public var buildTypes: BuildTypes? = null
     public var compileOptions: CompileOptions = CompileOptions.DEFAULT
-    public var kotlinOptions: KotlinOptions? = null
 
     public var additions: String = ""
     private var usesGroovy = false
@@ -132,7 +128,6 @@ public class AndroidBlock @JvmOverloads constructor(
         defaultConfig = defaultConfig,
         buildTypes = buildTypes,
         compileOptions = compileOptions,
-        kotlinOptions = kotlinOptions,
         additions = additions,
       )
     }
@@ -147,7 +142,6 @@ public class AndroidBlock @JvmOverloads constructor(
     ): AndroidBlock = AndroidBlock(
       namespace = namespace,
       defaultConfig = DefaultConfig.DEFAULT_APP,
-      kotlinOptions = if (isKotlinApplied) KotlinOptions.DEFAULT else null
     )
 
     @JvmOverloads
@@ -158,7 +152,6 @@ public class AndroidBlock @JvmOverloads constructor(
     ): AndroidBlock = AndroidBlock(
       namespace = namespace,
       defaultConfig = DefaultConfig.DEFAULT_LIB,
-      kotlinOptions = if (isKotlinApplied) KotlinOptions.DEFAULT else null
     )
 
     @JvmOverloads
@@ -171,7 +164,6 @@ public class AndroidBlock @JvmOverloads constructor(
       namespace = namespace,
       targetProjectPath = targetProjectPath,
       defaultConfig = DefaultConfig.DEFAULT_TEST,
-      kotlinOptions = if (isKotlinApplied) KotlinOptions.DEFAULT else null
     )
   }
 }

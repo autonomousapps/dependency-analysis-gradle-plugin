@@ -81,6 +81,9 @@ public abstract class ComputeAdviceTask @Inject constructor(
   @get:Input
   public abstract val kapt: Property<Boolean>
 
+  @get:Input
+  public abstract val legacyKapt: Property<Boolean>
+
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -120,6 +123,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
       it.explicitSourceSets.set(explicitSourceSets)
       it.projectType.set(projectType)
       it.kapt.set(kapt)
+      it.legacyKapt.set(legacyKapt)
       it.redundantPluginReport.set(redundantJvmPluginReport)
       it.duplicateClassesReports.set(duplicateClassesReports)
 
@@ -143,6 +147,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
     public val explicitSourceSets: SetProperty<String>
     public val projectType: Property<ProjectType>
     public val kapt: Property<Boolean>
+    public val legacyKapt: Property<Boolean>
     public val redundantPluginReport: RegularFileProperty
     public val duplicateClassesReports: ListProperty<RegularFile>
 
@@ -182,6 +187,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
       val explicitSourceSets = parameters.explicitSourceSets.get()
       val projectType = parameters.projectType.get()
       val isKaptApplied = parameters.kapt.get()
+      val isLegacyKaptApplied = parameters.legacyKapt.get()
       val ignoreKtx = parameters.ignoreKtx.get()
       val configurationNames = ConfigurationNames(projectType, supportedSourceSets)
 
@@ -212,6 +218,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
 
       val pluginAdviceBuilder = PluginAdviceBuilder(
         isKaptApplied = isKaptApplied,
+        isLegacyKaptApplied = isLegacyKaptApplied,
         redundantPlugins = parameters.redundantPluginReport.fromNullableJsonSet<PluginAdvice>(),
         annotationProcessorUsages = annotationProcessorUsages,
       )
@@ -243,6 +250,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
 
 internal class PluginAdviceBuilder(
   isKaptApplied: Boolean,
+  isLegacyKaptApplied: Boolean,
   redundantPlugins: Set<PluginAdvice>,
   annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
 ) {
@@ -263,6 +271,16 @@ internal class PluginAdviceBuilder(
       // kapt is unused
       if (usedProcs.isEmpty()) {
         pluginAdvice.add(PluginAdvice.redundantKapt())
+      }
+    } else if (isLegacyKaptApplied) {
+      val usedProcs = annotationProcessorUsages.asSequence()
+        .filter { (_, usages) -> usages.any { it.bucket == Bucket.ANNOTATION_PROCESSOR } }
+        .map { it.key }
+        .toSet()
+
+      // kapt is unused
+      if (usedProcs.isEmpty()) {
+        pluginAdvice.add(PluginAdvice.redundantLegacyKapt())
       }
     }
   }

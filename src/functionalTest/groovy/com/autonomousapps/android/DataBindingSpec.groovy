@@ -13,13 +13,13 @@ final class DataBindingSpec extends AbstractAndroidSpec {
   def "dataBinding dependencies are not reported (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DataBindingProject(agpVersion)
-    androidProject = project.newProject()
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, androidProject, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(androidProject.adviceFor(project.appSpec)).containsExactlyElementsIn(project.expectedAdviceForApp)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

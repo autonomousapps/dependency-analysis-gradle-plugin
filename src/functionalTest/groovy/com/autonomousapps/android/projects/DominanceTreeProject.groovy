@@ -23,7 +23,7 @@ final class DominanceTreeProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = androidAppPlugin
+          bs.plugins = androidApp(false)
           bs.android = defaultAndroidAppBlock(false)
           bs.dependencies = [
             appcompat('implementation'),
@@ -33,7 +33,7 @@ final class DominanceTreeProject extends AbstractAndroidProject {
       }
       .withAndroidLibProject('lib', 'com.example.lib') { lib ->
         lib.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
         }
       }.write()
@@ -46,30 +46,42 @@ final class DominanceTreeProject extends AbstractAndroidProject {
   }
 
   final expectedTree = """\
-      4308.16 KiB :app
-      +--- 4307.89 KiB (1496.37 KiB) androidx.appcompat:appcompat:1.1.0
-      |    +--- 1482.96 KiB (1413.62 KiB) androidx.core:core:1.1.0
-      |    |    \\--- 69.33 KiB androidx.versionedparcelable:versionedparcelable:1.1.0
-      |    +--- 703.31 KiB (393.27 KiB) androidx.fragment:fragment:1.1.0
-      |    |    +--- 128.23 KiB (82.23 KiB) androidx.loader:loader:1.0.0
-      |    |    |    \\--- 45.99 KiB (19.43 KiB) androidx.lifecycle:lifecycle-livedata:2.0.0
-      |    |    |         +--- 16.91 KiB androidx.lifecycle:lifecycle-livedata-core:2.0.0
-      |    |    |         \\--- 9.65 KiB androidx.arch.core:core-runtime:2.0.0
-      |    |    +--- 111.19 KiB androidx.viewpager:viewpager:1.0.0
-      |    |    +--- 54.09 KiB (35.90 KiB) androidx.activity:activity:1.0.0
-      |    |    |    \\--- 18.20 KiB androidx.savedstate:savedstate:1.0.0
-      |    |    \\--- 16.53 KiB androidx.lifecycle:lifecycle-viewmodel:2.1.0
-      |    +--- 335.70 KiB (152.99 KiB) androidx.appcompat:appcompat-resources:1.1.0
-      |    |    +--- 96.84 KiB (86.21 KiB) androidx.vectordrawable:vectordrawable-animated:1.1.0
-      |    |    |    \\--- 10.63 KiB androidx.interpolator:interpolator:1.0.0
-      |    |    \\--- 85.88 KiB androidx.vectordrawable:vectordrawable:1.1.0
-      |    +--- 76.69 KiB androidx.customview:customview:1.0.0
-      |    +--- 70.34 KiB androidx.drawerlayout:drawerlayout:1.0.0
-      |    +--- 41.95 KiB androidx.collection:collection:1.1.0
-      |    +--- 27.81 KiB androidx.annotation:annotation:1.1.0
-      |    +--- 22.47 KiB androidx.cursoradapter:cursoradapter:1.0.0
-      |    +--- 21.18 KiB androidx.lifecycle:lifecycle-common:2.1.0
-      |    +--- 18.12 KiB androidx.lifecycle:lifecycle-runtime:2.1.0
-      |    \\--- 10.99 KiB androidx.arch.core:core-common:2.1.0
-      \\--- 0.27 KiB :lib""".stripIndent().readLines()
+      10.05 MiB :app
+      +--- 8.32 MiB (1.69 MiB) androidx.appcompat:appcompat:1.7.1
+      |    +--- 2.70 MiB (2.63 MiB) androidx.core:core:1.13.0
+      |    |    \\--- 0.07 MiB androidx.versionedparcelable:versionedparcelable:1.1.1
+      |    +--- 1.43 MiB (0.02 MiB) org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4
+      |    |    +--- 1.41 MiB org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4
+      |    |    |    \\--- 1.41 MiB (1.41 MiB) org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4
+      |    |    |         \\--- org.jetbrains.kotlin:kotlin-stdlib-common:2.3.20
+      |    |    \\--- 0.00 MiB (0.00 MiB) org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0
+      |    |         \\--- 0.00 MiB org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0
+      |    +--- 0.86 MiB (0.62 MiB) androidx.fragment:fragment:1.5.4
+      |    |    +--- 0.13 MiB (0.08 MiB) androidx.loader:loader:1.0.0
+      |    |    |    \\--- 0.05 MiB (0.04 MiB) androidx.lifecycle:lifecycle-livedata:2.6.2
+      |    |    |         \\--- 0.01 MiB androidx.arch.core:core-runtime:2.1.0
+      |    |    \\--- 0.11 MiB androidx.viewpager:viewpager:1.0.0
+      |    +--- 0.37 MiB androidx.core:core-ktx:1.2.0
+      |    +--- 0.36 MiB androidx.activity:activity:1.8.0
+      |    +--- 0.32 MiB (0.15 MiB) androidx.appcompat:appcompat-resources:1.7.1
+      |    |    +--- 0.09 MiB (0.08 MiB) androidx.vectordrawable:vectordrawable-animated:1.1.0
+      |    |    |    \\--- 0.01 MiB androidx.interpolator:interpolator:1.0.0
+      |    |    \\--- 0.08 MiB androidx.vectordrawable:vectordrawable:1.1.0
+      |    +--- 0.08 MiB androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.2
+      |    +--- 0.08 MiB androidx.lifecycle:lifecycle-viewmodel:2.6.2
+      |    +--- 0.07 MiB androidx.customview:customview:1.0.0
+      |    +--- 0.07 MiB androidx.drawerlayout:drawerlayout:1.0.0
+      |    +--- 0.05 MiB androidx.annotation:annotation:1.6.0
+      |    |    \\--- 0.05 MiB androidx.annotation:annotation-jvm:1.6.0
+      |    +--- 0.05 MiB androidx.lifecycle:lifecycle-common:2.6.2
+      |    +--- 0.04 MiB androidx.collection:collection:1.1.0
+      |    +--- 0.04 MiB androidx.lifecycle:lifecycle-runtime:2.6.2
+      |    +--- 0.04 MiB androidx.savedstate:savedstate:1.2.1
+      |    +--- 0.02 MiB androidx.cursoradapter:cursoradapter:1.0.0
+      |    +--- 0.02 MiB androidx.lifecycle:lifecycle-livedata-core:2.6.2
+      |    +--- 0.01 MiB androidx.arch.core:core-common:2.2.0
+      |    \\--- 0.01 MiB androidx.annotation:annotation-experimental:1.4.0
+      +--- 1.74 MiB (1.72 MiB) org.jetbrains.kotlin:kotlin-stdlib:2.3.20
+      |    \\--- 0.02 MiB org.jetbrains:annotations:13.0
+      \\--- 0.00 MiB :lib""".stripIndent().readLines()
 }

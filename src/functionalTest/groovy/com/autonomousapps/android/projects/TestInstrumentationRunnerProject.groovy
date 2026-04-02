@@ -33,7 +33,7 @@ final class TestInstrumentationRunnerProject extends AbstractAndroidProject {
       .withAndroidSubproject('app') { app ->
         app.manifest = AndroidManifest.simpleApp()
         app.withBuildScript { bs ->
-          bs.plugins(androidAppPlugin)
+          bs.plugins(androidApp(false))
           bs.android = defaultAndroidAppBlock(false).tap {
             defaultConfig.testInstrumentationRunner = "$TEST_RUNNER_PACKAGE.$TEST_RUNNER_CLASS"
           }
@@ -43,7 +43,7 @@ final class TestInstrumentationRunnerProject extends AbstractAndroidProject {
       .withAndroidLibProject('test_runner', 'com.test.testrunner') { lib ->
         lib.sources = sourcesTestRunner
         lib.withBuildScript { bs ->
-          bs.plugins(androidLibPlugin)
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, TEST_RUNNER_PACKAGE)
           bs.dependencies(api('androidx.test:runner:1.5.2'))
         }

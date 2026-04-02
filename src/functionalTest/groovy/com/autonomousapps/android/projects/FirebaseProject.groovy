@@ -33,7 +33,7 @@ final class FirebaseProject extends AbstractAndroidProject {
         a.styles = AndroidStyleRes.DEFAULT
         a.colors = AndroidColorRes.DEFAULT
         a.withBuildScript { bs ->
-          bs.plugins = androidAppPlugin
+          bs.plugins = androidApp(false)
           bs.android = defaultAndroidAppBlock(false)
           bs.dependencies = dependencies
         }
