@@ -53,16 +53,12 @@ public class BuildScript(
   private val groupVersion = GroupVersion(group = group, version = version)
 
   public fun render(scribe: Scribe): String = buildString {
-    imports?.let { i ->
-      append(scribe.use { s -> i.render(s) })
-    }
+    imports?.let { i -> append(scribe.use { s -> i.render(s) }) }
 
-    buildscript?.let { bs ->
-      appendLine(scribe.use { s -> bs.render(s) })
-    }
+    renderElement(buildscript, scribe)
 
     if (!plugins.isEmpty) {
-      appendLine(scribe.use { s -> plugins.render(s) })
+      renderElement(plugins, scribe)
     }
 
     // These two should be grouped together for aesthetic reasons
@@ -73,26 +69,20 @@ public class BuildScript(
     }
 
     if (!repositories.isEmpty) {
-      appendLine(scribe.use { s -> repositories.render(s) })
+      renderElement(repositories, scribe)
     }
 
-    android?.let { androidBlock ->
-      appendLine(scribe.use { s -> androidBlock.render(s) })
-    }
-    androidComponents?.let { androidComponents ->
-      appendLine(scribe.use { s -> androidComponents.render(s) })
-    }
+    renderElement(android, scribe)
+    renderElement(androidComponents, scribe)
 
     // A feature variant is always a 'sourceSet' declaration AND a registerFeature
     val featureVariantNames = java?.features?.map { it.sourceSetName }.orEmpty()
     val allSourceSets = SourceSets.ofNames(featureVariantNames) + sourceSets
     if (!allSourceSets.isEmpty()) {
-      appendLine(scribe.use { s -> allSourceSets.render(s) })
+      renderElement(allSourceSets, scribe)
     }
 
-    java?.let { j -> appendLine(scribe.use { s -> j.render(s) }) }
-
-    // TODO(tsr): use renderElement elsewhere to simplify
+    renderElement(java, scribe)
     renderElement(kotlin, scribe)
     renderElement(kotlinKmp, scribe)
 
