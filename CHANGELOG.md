@@ -1,5 +1,12 @@
 Dependency Analysis Plugin Changelog
 
+# Unreleased
+* TODO: publish graph-support and other libs with updated Kotlin and other versions
+* [feat]: Expose useParenthesesForGroovy configuration for Groovy DSL syntax control.
+* [fix]: fix regex for excluding all *Generated annotations.
+* [chore]: update Gradle and Kotlin.
+* [chore]: add Code of Conduct.
+
 # Version 3.6.1
 * [Fix]: use compilation.disambiguatedName for crafting the task suffix.
 
