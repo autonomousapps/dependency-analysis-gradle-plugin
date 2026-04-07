@@ -1,4 +1,4 @@
-// Copyright (c) 2024. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 plugins {
   id("build-logic.plugin")

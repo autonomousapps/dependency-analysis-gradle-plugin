@@ -1,3 +1,5 @@
+// Copyright (c) 2026. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
 grammar Simple;
 
 file
