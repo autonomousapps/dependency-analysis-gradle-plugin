@@ -13,4 +13,6 @@ public sealed interface Element {
   }
 
   public interface Line : Element
+
+  public interface MultiLine : Element
 }
