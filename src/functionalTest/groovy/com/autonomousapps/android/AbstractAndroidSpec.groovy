@@ -25,7 +25,6 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
 
   protected static final AGP_MIN = AGP_8_10
   protected static final AGP_LATEST_STABLE = AGP_9_1
-  protected static final AGP_LATEST_PRE_STABLE = AGP_9_2
 
   /**
    * {@code AGP_MIN} represents the minimum stable _tested_ version. {@code AGP_LATEST} represents the maximum stable
@@ -37,7 +36,6 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
   protected static final SUPPORTED_AGP_VERSIONS = [
     AGP_MIN,
     AGP_LATEST_STABLE,
-//    AGP_LATEST_PRE_STABLE, // TODO(tsr): enable later
   ]
 
   protected static List<AgpVersion> agpVersions(AgpVersion minAgpVersion = AgpVersion.AGP_MIN) {
