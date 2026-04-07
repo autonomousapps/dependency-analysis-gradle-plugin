@@ -40,12 +40,12 @@ public class Source @JvmOverloads constructor(
       "package ((?:\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*);?".toRegex()
 
     /**
-     * Match a JVM clas-like declaration, capturing the `class`, `interface`, or `object` (Kotlin) name.
+     * Match a JVM clas-like declaration, capturing the `class`, `interface`, `@interface`, or `object` (Kotlin) name.
      *
      * `?:` => non-capturing group.
      */
     private val CLASS_NAME_REGEX =
-      "(?:class|interface|object) (\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)".toRegex()
+      "(?:class|@?interface|object) (\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)".toRegex()
 
     /**
      * Usage example:
