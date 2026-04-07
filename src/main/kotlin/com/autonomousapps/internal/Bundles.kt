@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
-import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.extension.DependenciesHandler.SerializableBundles
 import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.reachableNodes
@@ -10,6 +9,7 @@ import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.model.*
 import com.autonomousapps.model.Coordinates.Companion.copy
 import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import com.autonomousapps.model.internal.declaration.Declaration
@@ -78,7 +78,7 @@ internal class Bundles private constructor(
    * @see [maybePrimary]
    */
   fun maybeParent(addAdvice: Advice, originalCoordinates: Coordinates): Advice {
-    check(addAdvice.isAdd()) { "Must be add-advice" }
+    check(addAdvice.isAdd()) { "Must be add-advice. Was '$addAdvice'." }
 
     val parent = findParentInBundle(originalCoordinates)
       ?: error("No parent for $originalCoordinates. Check 'hasParentInBundle()' before calling this method.")
@@ -91,6 +91,13 @@ internal class Bundles private constructor(
 
     // Find all declarations for this dependency. E.g., ["commonMainImplementation", "jvmMainImplementation"].
     val parentDeclarations = declarations.filterToOrderedSet { decl -> decl.identifier == parentCoordinates.identifier }
+
+    // This can happen when the parent dependency is added by a plugin (no declarations). We can't do anything here.
+    // See https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1653.
+    if (parentDeclarations.isEmpty()) {
+      // nb: the only caller of this method (at time of writing!) will throw away the advice if it is unchanged.
+      return addAdvice
+    }
 
     // Pick the "highest" one (api > implementation > everything else)
     val declarationSelector: (Declaration) -> Int = { declaration ->
