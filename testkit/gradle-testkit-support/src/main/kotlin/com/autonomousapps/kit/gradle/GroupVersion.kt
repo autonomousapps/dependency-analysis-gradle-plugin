@@ -5,10 +5,19 @@ package com.autonomousapps.kit.gradle
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
+/**
+ * Represents `Project.group` and `Project.version` in a build script. Omits either value if null. If both values are
+ * null, renders an empty string.
+ *
+ * ```
+ * group = "com.group"
+ * version = "1.0"
+ * ```
+ */
 public class GroupVersion(
   private val group: String? = null,
   private val version: String? = null,
-) : Element.Line {
+) : Element.MultiLine {
 
   /**
    * Will return an empty string if both [group] and [version] are null. It is the responsibility of the caller to
@@ -17,7 +26,6 @@ public class GroupVersion(
   override fun render(scribe: Scribe): String {
     if (group == null && version == null) return ""
 
-    // TODO I feel like this is wanting an Element.MultiLine or something.
     var addLine = false
     return scribe.line { s ->
       group?.let { g ->

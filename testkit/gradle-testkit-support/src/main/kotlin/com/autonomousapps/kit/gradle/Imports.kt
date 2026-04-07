@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle
 
+import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-/**
- * TODO(tsr): this should implement Element
- */
 public class Imports(
   private val imports: MutableList<Import>,
-) {
+) : Element.MultiLine {
 
   public constructor(vararg imports: Import) : this(imports.toMutableList())
 
@@ -17,10 +15,8 @@ public class Imports(
     require(imports.isNotEmpty()) { "Imports must not be empty" }
   }
 
-  public fun render(scribe: Scribe): String {
-    return scribe.line { s ->
-      imports.forEach { it.render(s) }
-    }
+  public override fun render(scribe: Scribe): String = scribe.line { s ->
+    imports.forEach { i -> i.render(s) }
   }
 
   public companion object {

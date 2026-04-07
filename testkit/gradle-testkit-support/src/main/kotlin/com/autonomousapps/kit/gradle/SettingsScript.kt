@@ -19,9 +19,7 @@ public class SettingsScript @JvmOverloads constructor(
 ) {
 
   public fun render(scribe: Scribe): String = buildString {
-    imports?.let { i ->
-      append(scribe.use { s -> i.render(s) })
-    }
+    imports?.let { i -> append(scribe.use { s -> i.render(s) }) }
 
     appendLine(scribe.use { s -> pluginManagement.render(s) })
 

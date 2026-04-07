@@ -63,6 +63,21 @@ public class Scribe @JvmOverloads constructor(
     return buffer.toString()
   }
 
+  /**
+   * Invokes [block], appending the requested elements to the internal [buffer], followed by a newline, indenting as
+   * appropriate. For example, the following invocation:
+   *
+   * ```
+   * scribe.line { s ->
+   *   s.append("foo ")
+   *   s.append("bar")
+   * }
+   * ```
+   * Will result in the following string literal:
+   * ```
+   * "foo bar\n"
+   * ```
+   */
   public fun line(
     block: (Scribe) -> Unit,
   ): String {
