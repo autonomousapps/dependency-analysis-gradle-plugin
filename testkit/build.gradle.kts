@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 plugins {
   alias(libs.plugins.dependencyAnalysis)
-  // Need to use embedded version for Gradle 9 compatibility.
-  id("org.jetbrains.kotlin.jvm") version embeddedKotlinVersion apply false // TODO(tsr): use version catalog in followup PR
+  alias(libs.plugins.kotlinJvm) apply false
   alias(libs.plugins.dokka) apply false
   alias(libs.plugins.testkit) apply false
   alias(libs.plugins.shadow) apply false
