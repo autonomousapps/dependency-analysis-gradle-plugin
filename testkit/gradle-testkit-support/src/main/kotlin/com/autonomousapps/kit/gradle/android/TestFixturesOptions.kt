@@ -16,4 +16,9 @@ public class TestFixturesOptions(
   }
 
   override val name: String = "testFixtures"
+
+  public companion object {
+    @JvmStatic
+    public fun enabled(): TestFixturesOptions = TestFixturesOptions(true)
+  }
 }
