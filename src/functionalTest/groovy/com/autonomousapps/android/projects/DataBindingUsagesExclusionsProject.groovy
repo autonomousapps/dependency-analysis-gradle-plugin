@@ -57,7 +57,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
         app.manifest = AndroidManifest.appEmpty()
         app.sources = appSources
       }
-      .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins(androidLib() + kapt())
           bs.android = defaultAndroidLibBlock(true, 'com.example.lib')

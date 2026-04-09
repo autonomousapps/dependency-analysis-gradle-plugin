@@ -45,9 +45,10 @@ final class AndroidTestSmokeProject extends AbstractAndroidProject {
           )
         }
       }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('benchmark') { test ->
         test.sources = androidBenchmarkSources
-        test.manifest = AndroidManifest.defaultLib()
+        test.manifest = null
 
         test.withBuildScript { buildScript ->
           buildScript.plugins(androidTest())

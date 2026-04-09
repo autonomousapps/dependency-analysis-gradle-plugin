@@ -65,13 +65,14 @@ final class AndroidThemeActivityProject extends AbstractAndroidProject {
           )
         ]
       }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('producer') { producer ->
         producer.withBuildScript { bs ->
           bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
           bs.dependencies(appcompat('implementation'))
         }
-        producer.manifest = AndroidManifest.defaultLib()
+        producer.manifest = null
         producer.styles = AndroidStyleRes.of(
           '''\
           <?xml version="1.0" encoding="utf-8"?>

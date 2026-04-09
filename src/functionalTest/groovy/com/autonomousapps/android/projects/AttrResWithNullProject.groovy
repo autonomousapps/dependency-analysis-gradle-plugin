@@ -28,6 +28,7 @@ final class AttrResWithNullProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
           bs.plugins = androidLib(false)
@@ -37,7 +38,7 @@ final class AttrResWithNullProject extends AbstractAndroidProject {
             ANDROIDX_ANNOTATION,
           ]
         }
-        consumer.manifest = AndroidManifest.defaultLib()
+        consumer.manifest = null
         consumer.withFile('src/main/res/drawable/ic_pin.xml', """\
         <?xml version="1.0" encoding="utf-8"?>
         <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -55,6 +56,7 @@ final class AttrResWithNullProject extends AbstractAndroidProject {
         </vector>""".stripIndent()
         )
       }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('producer') { producer ->
         producer.withBuildScript { bs ->
           bs.plugins = androidLib(false)
@@ -64,7 +66,7 @@ final class AttrResWithNullProject extends AbstractAndroidProject {
             APPCOMPAT,
           ]
         }
-        producer.manifest = AndroidManifest.defaultLib()
+        producer.manifest = null
         producer.withFile('src/main/res/values/resources.xml', """\
         <resources>
           <attr name="themeColor" format="color" />

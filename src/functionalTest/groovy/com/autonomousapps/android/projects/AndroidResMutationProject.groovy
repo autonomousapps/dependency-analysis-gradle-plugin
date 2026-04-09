@@ -68,7 +68,7 @@ final class AndroidResMutationProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
-      .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib') { lib ->
         lib.manifest = libraryManifest('com.example.lib')
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
@@ -81,7 +81,7 @@ final class AndroidResMutationProject extends AbstractAndroidProject {
         }
         lib.sources = sources
       }
-      .withAndroidLibProject('res', 'com.example.lib.res') { res ->
+      .withAndroidLibProject('res') { res ->
         res.withBuildScript { bs ->
           bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.res')
@@ -89,7 +89,7 @@ final class AndroidResMutationProject extends AbstractAndroidProject {
         res.manifest = libraryManifest('com.example.lib.res')
         res.strings = AndroidStringRes.DEFAULT
       }
-      .withAndroidLibProject('layouts', 'com.example.lib.layouts') { res ->
+      .withAndroidLibProject('layouts') { res ->
         res.withBuildScript { bs ->
           bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.layouts')

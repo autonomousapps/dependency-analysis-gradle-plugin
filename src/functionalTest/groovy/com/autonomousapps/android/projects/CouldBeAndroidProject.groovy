@@ -82,7 +82,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
         app.styles = AndroidStyleRes.DEFAULT
         app.colors = AndroidColorRes.DEFAULT
       }
-      .withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
+      .withAndroidLibProject('assets') { assets ->
         assets.withBuildScript { bs ->
           bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')
@@ -93,7 +93,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
         )
         assets.strings = AndroidStringRes.DEFAULT
       }
-      .withAndroidLibProject('lib-android-java-deps', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib-android-java-deps') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
@@ -103,7 +103,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
           ]
         }
       }
-      .withAndroidLibProject('lib-android-android-deps', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib-android-android-deps') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib')

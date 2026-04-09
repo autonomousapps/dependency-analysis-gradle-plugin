@@ -24,7 +24,7 @@ final class CompileOnlyTransitiveProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
-      .withAndroidLibProject('consumer', 'com.example.consumer') { p ->
+      .withAndroidLibProject('consumer') { p ->
         p.manifest = libraryManifest()
         p.sources = consumerSources
         p.withBuildScript { bs ->
