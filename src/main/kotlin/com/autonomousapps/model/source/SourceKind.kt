@@ -284,6 +284,11 @@ public data class KmpSourceKind(
   }
 
   internal companion object {
+    // standard Android source sets are:
+    // 1. androidMain
+    // 2. androidHostTest   // unit tests
+    // 3. androidDeviceTest // instrumented tests
+    const val ANDROID_MAIN_NAME = "androidMain"
     const val COMMON_MAIN_NAME = "commonMain"
     const val COMMON_TEST_NAME = "commonTest"
     const val JVM_MAIN_NAME = "jvmMain"
@@ -310,19 +315,21 @@ public data class KmpSourceKind(
         name = sourceSetName,
         // Always custom
         kind = CUSTOM_JVM_KIND,
-        compileClasspathName = if (sourceSetName == JVM_MAIN_NAME) {
+        compileClasspathName = when (sourceSetName) {
           // jvmMain => jvmCompileClasspath (jvmMain is special)
-          "jvmCompileClasspath"
-        } else {
+          JVM_MAIN_NAME -> "jvmCompileClasspath"
+          // androidMain => androidCompileClasspath (androidMain is special)
+          ANDROID_MAIN_NAME -> "androidCompileClasspath"
           // jvmTest => jvmTestCompileClasspath
-          "${sourceSetName}CompileClasspath"
+          else -> "${sourceSetName}CompileClasspath"
         },
-        runtimeClasspathName = if (sourceSetName == JVM_MAIN_NAME) {
+        runtimeClasspathName = when (sourceSetName) {
           // jvmMain => jvmRuntimeClasspath (jvmMain is special)
-          "jvmRuntimeClasspath"
-        } else {
+          JVM_MAIN_NAME -> "jvmRuntimeClasspath"
+          // androidMain => androidRuntimeClasspath (androidMain is special)
+          ANDROID_MAIN_NAME -> "androidRuntimeClasspath"
           // jvmTest => jvmTestRuntimeClasspath
-          "${sourceSetName}RuntimeClasspath"
+          else -> "${sourceSetName}RuntimeClasspath"
         },
       )
     }
