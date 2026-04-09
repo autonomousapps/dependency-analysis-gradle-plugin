@@ -65,8 +65,9 @@ final class AndroidFileMutationProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
+      // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('lib') { l ->
-        l.manifest = AndroidManifest.defaultLib()
+        l.manifest = null
         l.withBuildScript { bs ->
           bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock()

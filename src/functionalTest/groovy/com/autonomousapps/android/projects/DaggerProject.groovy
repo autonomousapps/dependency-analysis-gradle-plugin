@@ -33,8 +33,9 @@ final class DaggerProject extends AbstractAndroidProject {
           bs.plugins += rootKapt
         }
       }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject(projectName) { s ->
-        s.manifest = AndroidManifest.defaultLib()
+        s.manifest = null
         s.sources = sources
         s.withBuildScript { bs ->
           bs.android = defaultAndroidLibBlock(true)

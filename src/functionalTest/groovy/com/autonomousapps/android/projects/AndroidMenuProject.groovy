@@ -28,13 +28,14 @@ final class AndroidMenuProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
+      // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
           bs.dependencies = [project('implementation', ':producer')]
         }
-        consumer.manifest = AndroidManifest.defaultLib()
+        consumer.manifest = null
         consumer.withFile('src/main/res/menu/a_menu.xml', """\
         <?xml version="1.0" encoding="utf-8"?>
         <menu xmlns:android="http://schemas.android.com/apk/res/android">
@@ -45,12 +46,13 @@ final class AndroidMenuProject extends AbstractAndroidProject {
         </menu>""".stripIndent()
         )
       }
+      // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('producer') { producer ->
         producer.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
         }
-        producer.manifest = AndroidManifest.defaultLib()
+        producer.manifest = null
         producer.withFile('src/main/res/drawable/drawable_from_other_module.xml', """\
         <?xml version="1.0" encoding="utf-8"?>
         <vector xmlns:android="http://schemas.android.com/apk/res/android"

@@ -41,9 +41,10 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
 
     private GradleProject build() {
       return newAndroidGradleProjectBuilder(agpVersion)
+      // TODO(tsr): use withAndroidLibProject() instead
         .withAndroidSubproject('proj') { s ->
           s.sources = sources
-          s.manifest = AndroidManifest.defaultLib()
+          s.manifest = null
           s.withBuildScript { bs ->
             bs.plugins = androidLib(false)
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
@@ -110,10 +111,11 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
 
     private GradleProject build() {
       return newAndroidGradleProjectBuilder(agpVersion)
+      // TODO(tsr): use withAndroidLibProject() instead
         .withAndroidSubproject('proj') { s ->
           s.sources = sources
           s.colors = AndroidColorRes.DEFAULT
-          s.manifest = AndroidManifest.defaultLib()
+          s.manifest = null
           s.withBuildScript { bs ->
             bs.plugins = androidLib(false)
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
@@ -178,9 +180,10 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
 
     private GradleProject build() {
       return newAndroidGradleProjectBuilder(agpVersion)
+      // TODO(tsr): use withAndroidLibProject() instead
         .withAndroidSubproject('proj') { s ->
           s.sources = sources
-          s.manifest = AndroidManifest.defaultLib()
+          s.manifest = null
           s.withBuildScript { bs ->
             bs.plugins = androidLib(false)
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')

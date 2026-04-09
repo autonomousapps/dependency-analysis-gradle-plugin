@@ -35,7 +35,7 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
           ]
         }
       }
-      .withAndroidLibProject('lib1', 'com.example.lib1') { lib ->
+      .withAndroidLibProject('lib1') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib1')
@@ -44,7 +44,7 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
           ]
         }
       }
-      .withAndroidLibProject('lib2', 'com.example.lib2') { lib ->
+      .withAndroidLibProject('lib2') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')

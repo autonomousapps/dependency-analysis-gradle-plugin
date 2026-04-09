@@ -48,9 +48,10 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
           buildScript.dependencies(appDependencies())
         }
       }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('lib') { subproject ->
         subproject.sources = androidLibSources
-        subproject.manifest = AndroidManifest.defaultLib()
+        subproject.manifest = null
         subproject.withBuildScript { buildScript ->
           buildScript.plugins(androidLib())
           buildScript.android = defaultAndroidLibBlock(true, 'my.android.lib')

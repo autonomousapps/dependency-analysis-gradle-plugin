@@ -42,7 +42,7 @@ final class ExternalApplicationProject extends AbstractAndroidProject {
         app.colors = AndroidColorRes.DEFAULT
         app.manifest = AndroidManifest.app('com.example.lib.ExternalApp')
       }
-      .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false)

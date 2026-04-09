@@ -60,7 +60,7 @@ final class ResProject extends AbstractAndroidProject {
         </com.example.app.MessageLayout>'''.stripIndent()
         )
       }
-      .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
@@ -68,12 +68,11 @@ final class ResProject extends AbstractAndroidProject {
         lib.colors = AndroidColorRes.DEFAULT
         lib.manifest = libraryManifest('com.example.lib')
       }
-      .withAndroidLibProject('lib2', 'com.example.lib2') { lib2 ->
+      .withAndroidLibProject('lib2') { lib2 ->
         lib2.withBuildScript { bs ->
           bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
         }
-        lib2.manifest = AndroidManifest.defaultLib()
         lib2.withFile('src/main/res/values/resources.xml', '''\
         <resources>
           <item name="message_layout" type="id"/>

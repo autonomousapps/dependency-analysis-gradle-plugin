@@ -61,7 +61,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
           bs.additions = appAdditions
         }
       }
-      .withAndroidLibProject('lib_android', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib_android') { lib ->
         lib.sources = libAndroidSources
         lib.withBuildScript { bs ->
           bs.plugins = androidLibPlugins()

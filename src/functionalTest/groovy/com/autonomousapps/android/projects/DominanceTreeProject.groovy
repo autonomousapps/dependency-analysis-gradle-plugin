@@ -31,7 +31,7 @@ final class DominanceTreeProject extends AbstractAndroidProject {
           ]
         }
       }
-      .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib')

@@ -37,8 +37,9 @@ final class AndroidTestsAreIgnorableProject extends AbstractAndroidProject {
           )
         }
       }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('lib') { lib ->
-        lib.manifest = AndroidManifest.defaultLib()
+        lib.manifest = null
         lib.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock(false, 'my.android.lib')

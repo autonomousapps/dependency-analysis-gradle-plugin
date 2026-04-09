@@ -48,6 +48,7 @@ final class AndroidThemeProject extends AbstractAndroidProject {
           </manifest>'''.stripIndent()
         )
       }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('producer') { producer ->
         producer.withBuildScript { bs ->
           bs.plugins = androidLib(false)
@@ -56,7 +57,7 @@ final class AndroidThemeProject extends AbstractAndroidProject {
             appcompat('implementation'),
           ]
         }
-        producer.manifest = AndroidManifest.defaultLib()
+        producer.manifest = null
         producer.styles = AndroidStyleRes.of(
           '''\
           <?xml version="1.0" encoding="utf-8"?>

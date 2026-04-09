@@ -26,7 +26,7 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
-      .withAndroidLibProject('consumer', 'com.example.consumer') { l ->
+      .withAndroidLibProject('consumer') { l ->
         l.withBuildScript { bs ->
           bs.plugins = androidLib(true)
           bs.android = defaultAndroidLibBlock(true, 'com.example.consumer')

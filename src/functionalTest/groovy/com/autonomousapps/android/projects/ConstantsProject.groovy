@@ -45,7 +45,7 @@ final class ConstantsProject extends AbstractAndroidProject {
         app.styles = AndroidStyleRes.DEFAULT
         app.colors = AndroidColorRes.DEFAULT
       }
-      .withAndroidLibProject('lib', 'mutual.aid.lib') { lib ->
+      .withAndroidLibProject('lib') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock(true, 'mutual.aid.lib')
@@ -53,7 +53,7 @@ final class ConstantsProject extends AbstractAndroidProject {
         }
         lib.sources = libSource
       }
-      .withAndroidLibProject('lib2', 'mutual.aid.lib2') { lib ->
+      .withAndroidLibProject('lib2') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock(true, 'mutual.aid.lib2')
@@ -61,7 +61,7 @@ final class ConstantsProject extends AbstractAndroidProject {
         }
         lib.sources = lib2Source
       }
-      .withAndroidLibProject('libstar', 'mutual.aid.libstar') { lib ->
+      .withAndroidLibProject('libstar') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock(true, 'mutual.aid.libstar')

@@ -40,7 +40,7 @@ final class TestInstrumentationRunnerProject extends AbstractAndroidProject {
           bs.dependencies(testRunner)
         }
       }
-      .withAndroidLibProject('test_runner', 'com.test.testrunner') { lib ->
+      .withAndroidLibProject('test_runner') { lib ->
         lib.sources = sourcesTestRunner
         lib.withBuildScript { bs ->
           bs.plugins(androidLib(false))

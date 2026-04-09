@@ -26,7 +26,7 @@ final class TransitiveVariantRuntimeProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
-      .withAndroidLibProject('consumer', 'com.example.consumer') { s ->
+      .withAndroidLibProject('consumer') { s ->
         s.manifest = libraryManifest()
         s.withBuildScript { bs ->
           bs.plugins(androidLib(false))
@@ -34,7 +34,7 @@ final class TransitiveVariantRuntimeProject extends AbstractAndroidProject {
           bs.dependencies(unused)
         }
       }
-      .withAndroidLibProject('unused', 'com.example.unused') { s ->
+      .withAndroidLibProject('unused') { s ->
         s.manifest = libraryManifest()
         s.withBuildScript { bs ->
           bs.plugins(androidLib(false))

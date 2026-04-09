@@ -281,14 +281,13 @@ public class GradleProject(
 
     public fun withAndroidLibProject(
       name: String,
-      packageName: String,
       block: AndroidSubproject.Builder.() -> Unit,
     ): Builder {
       // If a builder with this name already exists, returning it for building-upon
       val builder = androidSubprojectMap[name] ?: AndroidSubproject.Builder()
       builder.apply {
         this.name = name
-        this.manifest = AndroidManifest.defaultLib()
+        this.manifest = null
         this.styles = AndroidStyleRes.EMPTY
         this.colors = AndroidColorRes.EMPTY
         this.strings = null

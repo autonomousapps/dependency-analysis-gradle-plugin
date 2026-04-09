@@ -92,15 +92,5 @@ public class AndroidManifest(public val content: String) {
 
     @JvmField
     public val DEFAULT_APP: AndroidManifest = app(null)
-
-    @JvmStatic
-    public fun defaultLib(): AndroidManifest? = null
-//    @JvmStatic
-//    public fun defaultLib(): AndroidManifest = AndroidManifest(
-//      """
-//      |<?xml version="1.0" encoding="utf-8"?>
-//      |<manifest xmlns:android="http://schemas.android.com/apk/res/android" />
-//      """.trimMargin()
-//    )
   }
 }
