@@ -1,3 +1,6 @@
+import org.gradle.kotlin.dsl.assign
+import org.gradle.plugin.compatibility.compatibility
+
 // Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 plugins {
@@ -27,6 +30,12 @@ gradlePlugin {
       displayName = "Gradle TestKit Support Plugin (for plugins)"
       description = "Make it less difficult to use Gradle TestKit to test your Gradle plugins"
       tags.set(setOf("testing"))
+
+      compatibility {
+        features {
+          configurationCache = true
+        }
+      }
     }
   }
 

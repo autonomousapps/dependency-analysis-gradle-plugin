@@ -1,3 +1,5 @@
+import org.gradle.plugin.compatibility.compatibility
+
 // Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 plugins {
@@ -36,6 +38,12 @@ gradlePlugin {
       displayName = "Dependency Analysis Gradle Plugin"
       description = "A plugin to report mis-used dependencies in your JVM or Android project"
       tags.set(listOf("java", "kotlin", "groovy", "scala", "android", "dependencies"))
+
+      compatibility {
+        features {
+          configurationCache = true
+        }
+      }
     }
 
     create("buildHealthPlugin") {
@@ -45,6 +53,12 @@ gradlePlugin {
       displayName = "Build Health Gradle Plugin"
       description = "A plugin to report on the health of your JVM or Android build"
       tags.set(listOf("java", "kotlin", "groovy", "scala", "android", "dependencies"))
+
+      compatibility {
+        features {
+          configurationCache = true
+        }
+      }
     }
   }
 
