@@ -52,7 +52,7 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
 }
 
 private fun ProjectComponentIdentifier.projectPath(): String {
-  return (this as? DefaultProjectComponentIdentifier)?.projectPath?.toString()
+  return (this as? DefaultProjectComponentIdentifier)?.projectPath
     ?: error("${toCoordinates(GradleVariantIdentification.EMPTY)} is not a DefaultProjectComponentIdentifier")
 }
 
@@ -89,9 +89,6 @@ private fun ComponentIdentifier.wrapInIncludedBuildCoordinates(variant: Resolved
   )
 }
 
-/** Returns the [coordinates][Coordinates] of the root of [this][Configuration]. */
-internal fun Configuration.rootCoordinates(): Coordinates = incoming.resolutionResult.root.rootCoordinates()
-
 /** Returns the [coordinates][Coordinates] of the root of [this][ResolvedComponentResult]. */
 internal fun ResolvedComponentResult.rootCoordinates(): Coordinates {
   return id
@@ -126,6 +123,7 @@ private fun ComponentIdentifier.toIdentifier(): String = when (this) {
   is ModuleComponentIdentifier -> {
     // flat JAR/AAR files have no group. I don't trust that, if absent, it will be blank rather
     // than null.
+    @Suppress("UselessCallOnNotNull")
     if (moduleIdentifier.group.isNullOrBlank()) moduleIdentifier.name
     else moduleIdentifier.toString()
   }

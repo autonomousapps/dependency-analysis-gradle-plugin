@@ -31,6 +31,8 @@ import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.tasks.*
 import org.gradle.api.*
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
@@ -133,7 +135,7 @@ internal class ProjectPlugin(private val project: Project) {
 
   private val dslService = GlobalDslService.of(project)
 
-  fun apply() = project.run {
+  fun apply(): Unit = project.run {
     // Conditionally disable analysis on some projects
     val projectPathRegex = projectPathRegex()
     if (!projectPathRegex.matches(path)) {
@@ -793,12 +795,21 @@ internal class ProjectPlugin(private val project: Project) {
       return false
     }
 
-    val hasApiConfiguration = configurations.named(compilation.apiConfigurationName) != null
+    // TODO(tsr): configurations.named() is problematic since its lazy but I need to know NOW if this configuration exists
+    val hasApiConfiguration = configurations.namedOrNull(compilation.apiConfigurationName) != null
     // 'xTest' sourceSets do not have an ABI (this is a heuristic)
     val isNotTest = !sourceSetName.endsWith("Test")
     // The 'main' sourceSet for an app project does not have an ABI
     val isNotMainApp = !(isAppProject() && sourceSetName == KotlinSourceSet.COMMON_MAIN_SOURCE_SET_NAME)
     return hasApiConfiguration && isNotTest && isNotMainApp
+  }
+
+  private fun ConfigurationContainer.namedOrNull(configurationName: String): NamedDomainObjectProvider<Configuration>? {
+    return try {
+      named(configurationName)
+    } catch (_: UnknownDomainObjectException) {
+      null
+    }
   }
 
   private fun Project.isAppProject(): Boolean {
