@@ -11,7 +11,7 @@ caffeine = "3.2.3"
 commons-io = "2.21.0"
 dagp = "3.6.1"
 error-prone = "2.44.0"
-gradle-publish-plugin = "2.0.0"
+gradle-publish-plugin = "2.1.1"
 gradle-version-min = "8.11.1"
 gradle-version-max = "9.4.1"
 gradleTestKitPlugin = "0.17"
@@ -42,7 +42,7 @@ moshi = "1.15.2"
 moshix = "0.30.0"
 #moshix = "0.31.0"
 okio = "3.16.4"
-shadow = "8.3.9"
+shadow = "8.3.10"
 spock = "2.3-groovy-4.0"
 truth = "1.4.5"
 
@@ -97,3 +97,6 @@ buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig
 dependencyAnalysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dagp" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "kotlinDokka" }
 gradlePublishPlugin = { id = "com.gradle.plugin-publish", version.ref = "gradle-publish-plugin" }
+kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+testkit = { id = "com.autonomousapps.testkit", version.ref = "gradleTestKitPlugin" }
