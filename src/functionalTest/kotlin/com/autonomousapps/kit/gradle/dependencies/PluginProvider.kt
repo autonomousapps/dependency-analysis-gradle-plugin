@@ -47,6 +47,13 @@ class PluginProvider(
   /** Use this in the root project. */
   val kotlinMultiplatformNoApply: Plugin = Plugin("org.jetbrains.kotlin.multiplatform", kotlinVersion, false)
 
+  /** Use this in the root project. */
+  val androidKmpRootPlugins: List<Plugin> = listOf(
+    dependencyAnalysis,
+    kotlinMultiplatformNoApply,
+    androidKmpLibNoApply,
+  )
+
   /** Use this in subprojects. */
   val kotlinMultiplatformNoVersion: Plugin = Plugin("org.jetbrains.kotlin.multiplatform")
   val kotlinKaptNoVersion: Plugin = Plugin("org.jetbrains.kotlin.kapt")
