@@ -1,7 +1,7 @@
 // Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 plugins {
-  `kotlin-dsl`
+  id("org.jetbrains.kotlin.jvm") version "2.2.21" apply false
   alias(libs.plugins.dependencyAnalysis)
 }
 
