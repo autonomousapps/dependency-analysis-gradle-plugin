@@ -392,3 +392,8 @@ dependencyAnalysis {
     }
   }
 }
+
+// TODO(tsr): delete. But right now kinda useful for debugging daemon-client issues.
+//val loc = org.gradle.workers.internal.DefaultWorkerServer::class.java.protectionDomain.codeSource.location
+////val loc = org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork::class.java.protectionDomain.codeSource.location
+//println("loc = " + loc)
