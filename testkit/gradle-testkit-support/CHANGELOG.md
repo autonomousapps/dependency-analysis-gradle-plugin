@@ -1,7 +1,13 @@
 Gradle TestKit Support Changelog
 
-# Version 0.23 (unreleased)
+# Version 0.23
 * [Feat]: add support for KMP DSL constructs.
+* [Feat]: add support for Android KMP lib constructs.
+* [Feat]: add factory to `TestFixturesOptions`.
+* [Feat]: `Imports` implements new interface `Element.MultiLine`. `GroupVersion` now does as well.
+* [Feat]: `Source` factories recognize annotation classes automatically.
+* [Feat]: kotlin.jvm is above kotlin.anroidLibrary.
+* Compiled against Kotlin 2.2 and Gradle 9.4.1.
 
 # Version 0.22
 * [Feat]: expose `pluginManagement.repositories.repositories`.
