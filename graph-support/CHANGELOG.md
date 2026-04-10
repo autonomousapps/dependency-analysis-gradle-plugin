@@ -1,5 +1,8 @@
 Graph-Support Changelog
 
+# Version 0.10.0
+* Compiled against Kotlin 2.2 and Gradle 9.4.1.
+
 # Version 0.9.0
 * [Feat]: add `Graphs.reversed()`.
 
