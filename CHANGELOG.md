@@ -1,10 +1,11 @@
 Dependency Analysis Plugin Changelog
 
-# Unreleased
-* TODO: publish graph-support and other libs with updated Kotlin and other versions
+# Version 3.7.0
 * [feat]: Expose useParenthesesForGroovy configuration for Groovy DSL syntax control.
 * [fix]: fix regex for excluding all *Generated annotations.
-* [chore]: update Gradle and Kotlin.
+* [fix]: don't attempt to suggest upgrading an undeclared 'parent' dependency of a KMP dependency.
+* [fix]: the 'androidMain' source set is special.
+* [chore]: Compiled against Kotlin 2.2 and Gradle 9.4.1.
 * [chore]: add Code of Conduct.
 
 # Version 3.6.1
