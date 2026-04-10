@@ -1,5 +1,8 @@
 Variant-Artifacts Changelog
 
+# Version 0.4.0
+* Compiled against Kotlin 2.2 and Gradle 9.4.1.
+
 # Version 0.3.3
 * [Fix] Remove auto-applied kotlin-stdlib for Gradle 8.11 support.
 
