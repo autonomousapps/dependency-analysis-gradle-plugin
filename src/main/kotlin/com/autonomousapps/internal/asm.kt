@@ -463,6 +463,24 @@ private class MethodAnalyzer(
   ) {
     log { "- MethodAnalyzer#visitInvokeDynamicInsn: $name $descriptor" }
     addClass(descriptor, ClassRef.Kind.NOT_ANNOTATION)
+
+    // Bootstrap arguments may contain Handle instances pointing to the actual implementation
+    // method (e.g. a static method reference compiled to INVOKEDYNAMIC). Record each such Handle
+    // as a MemberAccess so callers appear in binaryClassAccesses.
+    for (arg in bootstrapMethodArguments) {
+      if (arg is Handle) {
+        log { "  - MethodAnalyzer#visitInvokeDynamicInsn bootstrap Handle: ${arg.owner}.${arg.name} ${arg.desc}" }
+        addClass(if (arg.owner.startsWith("[")) arg.owner else "L${arg.owner};", ClassRef.Kind.NOT_ANNOTATION)
+        val method = MemberAccess.Method(
+          owner = arg.owner,
+          name = arg.name,
+          descriptor = arg.desc,
+        )
+        binaryClasses.merge(arg.owner, sortedSetOf(method)) { acc, inc ->
+          acc.apply { addAll(inc) }
+        }
+      }
+    }
   }
 
   override fun visitLocalVariable(
