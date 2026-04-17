@@ -16,6 +16,7 @@ import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 
 /** Abstraction for differentiating between android-app, android-lib, and java-lib projects.  */
 internal interface DependencyAnalyzer {
@@ -215,6 +216,14 @@ internal abstract class AbstractDependencyAnalyzer(
       t.setConfiguration(project.configurations.named(compileConfigurationName)) { c ->
         c.artifactsFor(attributeValueJar)
       }
+      t.setOpaqueConfiguration(project.configurations.named(compileConfigurationName)) { c ->
+        // We want "opaque" artifacts so we can capture the gradle version catalog (and maybe eventually other things)
+        c.incoming.artifactView { view ->
+          view
+            .componentFilter { id -> id is OpaqueComponentArtifactIdentifier }
+            .lenient(true)
+        }.artifacts
+      }
       t.buildPath.set(project.buildPath(compileConfigurationName))
 
       t.output.set(outputPaths.compileArtifactsPath)
@@ -226,6 +235,14 @@ internal abstract class AbstractDependencyAnalyzer(
     return project.tasks.register("artifactsReportRuntime$taskNameSuffix", ArtifactsReportTask::class.java) { t ->
       t.setConfiguration(project.configurations.named(runtimeConfigurationName)) { c ->
         c.artifactsFor(attributeValueJar)
+      }
+      t.setOpaqueConfiguration(project.configurations.named(runtimeConfigurationName)) { c ->
+        // We want "opaque" artifacts so we can capture the gradle version catalog (and maybe eventually other things)
+        c.incoming.artifactView { view ->
+          view
+            .componentFilter { id -> id is OpaqueComponentArtifactIdentifier }
+            .lenient(true)
+        }.artifacts
       }
       t.buildPath.set(project.buildPath(runtimeConfigurationName))
 
