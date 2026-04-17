@@ -61,6 +61,8 @@ public class Plugin @JvmOverloads constructor(
     @JvmStatic public val groovyGradle: Plugin = Plugin("groovy-gradle-plugin")
     @JvmStatic public val jacocoReportAggregation: Plugin = Plugin("jacoco-report-aggregation")
     @JvmStatic public val java: Plugin = Plugin("java")
+
+    /** `java-gradle-plugin`. The Gradle Plugin Development Plugin. */
     @JvmStatic public val javaGradle: Plugin = Plugin("java-gradle-plugin")
     @JvmStatic public val javaLibrary: Plugin = Plugin("java-library")
     @JvmStatic public val javaTestFixtures: Plugin = Plugin("java-test-fixtures")

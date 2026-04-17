@@ -6,13 +6,13 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.gradle.Dependency.implementation
 import static com.autonomousapps.kit.gradle.Dependency.testImplementation
 
 final class IncludedBuildProject extends AbstractProject {
@@ -29,7 +29,7 @@ final class IncludedBuildProject extends AbstractProject {
       .withRootProject { root ->
         root.withBuildScript { bs ->
           bs.plugins.add(Plugin.javaLibrary)
-          bs.dependencies = [new Dependency('implementation', 'second:second-build:1.0')]
+          bs.dependencies(implementation('second:second-build:1.0'))
           bs.group = 'first'
           bs.version = '1.0'
         }
