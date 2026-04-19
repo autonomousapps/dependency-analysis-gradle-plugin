@@ -12,7 +12,9 @@ import org.gradle.util.GradleVersion
 
 private val current: GradleVersion = GradleVersion.current()
 private val gradle85: GradleVersion = GradleVersion.version("8.5")
+private val gradle90: GradleVersion = GradleVersion.version("9.0")
 private val isAtLeastGradle85: Boolean = current >= gradle85
+private val isAtLeastGradle90: Boolean = current >= gradle90
 
 /**
  * Creates a "dependency scope"-type configuration, which we can think of as a _bucket_ for declaring dependencies. See
@@ -25,7 +27,10 @@ public fun Project.dependencyScopeConfiguration(configurationName: String): Name
     configurations.register(configurationName) { c ->
       c.isCanBeResolved = false
       c.isCanBeConsumed = true
-      c.isVisible = false
+      if (!isAtLeastGradle90) {
+        @Suppress("DEPRECATION")
+        c.isVisible = false
+      }
     }
   }
 }
@@ -48,7 +53,10 @@ public fun Project.resolvableConfiguration(
     configurations.register(configurationName) { c ->
       c.isCanBeResolved = true
       c.isCanBeConsumed = false
-      c.isVisible = false
+      if (!isAtLeastGradle90) {
+        @Suppress("DEPRECATION")
+        c.isVisible = false
+      }
 
       c.extendsFrom(dependencyScopeConfiguration.get())
       configureAction.execute(c)
@@ -73,7 +81,10 @@ public fun Project.consumableConfiguration(
     configurations.register(configurationName) { c ->
       c.isCanBeConsumed = true
       c.isCanBeResolved = false
-      c.isVisible = false
+      if (!isAtLeastGradle90) {
+        @Suppress("DEPRECATION")
+        c.isVisible = false
+      }
 
       configureAction.execute(c)
     }
