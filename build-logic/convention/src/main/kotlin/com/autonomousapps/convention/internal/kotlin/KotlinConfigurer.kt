@@ -12,8 +12,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 internal class KotlinConfigurer(private val project: Project) {
 
   private val versionCatalog = project.extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
-
-  private val dokka = versionCatalog.findLibrary("kotlin.dokka").get()
   private val javaTarget = versionCatalog.findVersion("javaTarget").orElseThrow().requiredVersion
   private val kotlin = versionCatalog.findVersion("kotlin").get().requiredVersion
 
@@ -21,14 +19,9 @@ internal class KotlinConfigurer(private val project: Project) {
   private val kotlinVersion = KotlinVersion.fromVersion(kotlin.substringBeforeLast('.'))
 
   fun configure(): Unit = project.run {
-    configureDokka()
     configureKotlinExtension()
     configureKotlinTarget()
     configureKotlinVersion()
-  }
-
-  private fun Project.configureDokka() {
-    dependencies.add("dokkaHtmlPlugin", dokka)
   }
 
   private fun Project.configureKotlinExtension() {

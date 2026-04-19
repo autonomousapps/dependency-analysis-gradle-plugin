@@ -26,8 +26,7 @@ junit = "5.14.1"
 kotlin = "2.3.20"
 kotlinForAndroidtests = "2.3.20"
 kotlinMetadata = "2.3.20"
-# TODO(tsr): update Dokka
-kotlinDokka = "2.0.0"
+kotlinDokka = "2.2.0"
 # Cannot be called kotlin-editor as it causes `libs.versions.kotlin.get()` to fail
 kotlineditor-core = "0.20"
 kotlineditor-relocated = "0.20.0"
@@ -62,7 +61,6 @@ junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine" }
 junit-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 junit-params = { module = "org.junit.jupiter:junit-jupiter-params" }
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
-kotlin-dokka = { module = "org.jetbrains.dokka:kotlin-as-java-plugin", version.ref = "kotlinDokka" }
 kotlinDokkaGradlePlugin = { module = "org.jetbrains.dokka-javadoc:org.jetbrains.dokka-javadoc.gradle.plugin", version.ref = "kotlinDokka" }
 kotlin-editor-core = { module = "app.cash.kotlin-editor:core", version.ref = "kotlineditor-core" }
 kotlin-editor-grammar = { module = "app.cash.kotlin-editor:grammar", version.ref = "kotlineditor-core" }

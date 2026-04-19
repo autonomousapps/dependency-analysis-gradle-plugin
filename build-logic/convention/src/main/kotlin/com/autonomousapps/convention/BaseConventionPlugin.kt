@@ -3,7 +3,6 @@
 package com.autonomousapps.convention
 
 import com.autonomousapps.convention.tasks.metalava.MetalavaConfigurer
-import com.vanniktech.maven.publish.tasks.JavadocJar
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.JavaPluginExtension
@@ -25,7 +24,7 @@ internal class BaseConventionPlugin(private val project: Project) {
     pluginManager.run {
       apply("com.vanniktech.maven.publish.base")
       apply("org.gradle.signing")
-      apply("org.jetbrains.dokka")
+      apply("org.jetbrains.dokka-javadoc")
       apply("com.autonomousapps.dependency-analysis")
       apply("com.autonomousapps.testkit")
     }
@@ -59,13 +58,6 @@ internal class BaseConventionPlugin(private val project: Project) {
     tasks.withType(AbstractArchiveTask::class.java).configureEach { t ->
       t.isPreserveFileTimestamps = false
       t.isReproducibleFileOrder = true
-    }
-
-    tasks.withType(DokkaTask::class.java).configureEach { t ->
-      t.notCompatibleWithConfigurationCache("Uses 'project' at execution time")
-    }
-    tasks.withType(JavadocJar::class.java).configureEach { t ->
-      t.notCompatibleWithConfigurationCache("Uses 'project' at execution time")
     }
 
     // We only use the Jupiter platform (JUnit 5)
