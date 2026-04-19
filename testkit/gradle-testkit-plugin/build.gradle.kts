@@ -1,8 +1,7 @@
-import org.gradle.kotlin.dsl.assign
-import org.gradle.plugin.compatibility.compatibility
-
 // Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
+import org.gradle.plugin.compatibility.compatibility
+
 plugins {
   id("build-logic.plugin")
   id("com.github.gmazzo.buildconfig")
@@ -80,8 +79,13 @@ val publishToMavenCentral = tasks.named("publishToMavenCentral") {
 }
 
 val publishToPluginPortal = tasks.named("publishPlugins") {
+  val key = "is-release"
+  inputs.property(key, isRelease)
   // Can't publish snapshots to the portal
-  onlyIf { isRelease }
+  onlyIf("only publish releases to the plugin portal") {
+    inputs.properties[key] as Boolean
+  }
+
   shouldRunAfter(publishToMavenCentral)
 
   // Note that publishing a release requires a successful smokeTest
