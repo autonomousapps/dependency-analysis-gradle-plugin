@@ -1,5 +1,9 @@
 Variant-Artifacts Changelog
 
+# Version 0.5.0
+* Don't call deprecated API (`Configuration.isVisible`).
+* Compiled against Kotlin 2.3.20.
+
 # Version 0.4.0
 * Compiled against Kotlin 2.2 and Gradle 9.4.1.
 
