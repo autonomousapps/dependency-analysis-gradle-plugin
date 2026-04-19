@@ -5,17 +5,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.internal.*
-import com.autonomousapps.model.internal.intermediates.producer.AndroidAssetDependency
-import com.autonomousapps.model.internal.intermediates.producer.AndroidManifestDependency
-import com.autonomousapps.model.internal.intermediates.producer.AndroidResDependency
-import com.autonomousapps.model.internal.intermediates.producer.AnnotationProcessorDependency
-import com.autonomousapps.model.internal.intermediates.producer.DependencyView
-import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
-import com.autonomousapps.model.internal.intermediates.producer.InlineMemberDependency
-import com.autonomousapps.model.internal.intermediates.producer.NativeLibDependency
-import com.autonomousapps.model.internal.intermediates.producer.ReflectingDependency
-import com.autonomousapps.model.internal.intermediates.producer.ServiceLoaderDependency
-import com.autonomousapps.model.internal.intermediates.producer.TypealiasDependency
+import com.autonomousapps.model.internal.intermediates.producer.*
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
@@ -25,7 +15,6 @@ import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
-import java.io.File
 import javax.inject.Inject
 
 @CacheableTask
@@ -156,10 +145,12 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
       val androidRes = parameters.androidRes.fromNullableJsonSet<AndroidResDependency>()
       val androidAssets = parameters.androidAssets.fromNullableJsonSet<AndroidAssetDependency>()
 
+      // TODO(tsr): I wonder if we don't need this anymore. If not, we can remove this as a task input which would help
+      //  cacheability (since `PhysicalArtifact` has a reference to an absolute `File`).
       physicalArtifacts.forEach { artifact ->
         builders.merge(
           artifact.coordinates,
-          DependencyBuilder(artifact.coordinates).apply { files.add(artifact.file) },
+          DependencyBuilder(artifact.coordinates),
           DependencyBuilder::concat
         )
       }
@@ -254,10 +245,8 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
   private class DependencyBuilder(val coordinates: Coordinates) {
 
     val capabilities: MutableList<Capability> = mutableListOf()
-    val files: MutableSet<File> = sortedSetOf()
 
     fun concat(other: DependencyBuilder): DependencyBuilder {
-      files.addAll(other.files)
       other.capabilities.forEach { otherCapability ->
         val existing = capabilities.find { it.javaClass.canonicalName == otherCapability.javaClass.canonicalName }
         if (existing != null) {
@@ -274,10 +263,10 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
     fun build(): Dependency {
       val capabilities: Map<String, Capability> = capabilities.associateBy { it.javaClass.canonicalName }.toSortedMap()
       return when (coordinates) {
-        is ProjectCoordinates -> ProjectDependency(coordinates, capabilities, files)
-        is ModuleCoordinates -> ModuleDependency(coordinates, capabilities, files)
-        is FlatCoordinates -> FlatDependency(coordinates, capabilities, files)
-        is IncludedBuildCoordinates -> IncludedBuildDependency(coordinates, capabilities, files)
+        is ProjectCoordinates -> ProjectDependency(coordinates, capabilities)
+        is ModuleCoordinates -> ModuleDependency(coordinates, capabilities)
+        is FlatCoordinates -> FlatDependency(coordinates, capabilities)
+        is IncludedBuildCoordinates -> IncludedBuildDependency(coordinates, capabilities)
       }
     }
   }

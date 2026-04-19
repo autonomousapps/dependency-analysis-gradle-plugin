@@ -18,6 +18,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 
@@ -46,19 +47,23 @@ public abstract class ArtifactsReportTask : DefaultTask() {
    * jars really does matter here. Using [Classpath] is an error, as it looks only at content and
    * not name or path, and we really do need to know the actual path to the artifact, even if its
    * contents haven't changed.
+   *
+   * Attempts to make this path non-absolute have thus far failed. Please stop trying.
    */
   @PathSensitive(PathSensitivity.ABSOLUTE)
-  @InputFiles // TODO(tsr): can I avoid using `get()`?
-  public fun getClasspathArtifactFiles(): FileCollection = artifacts.get().artifactFiles
+  @InputFiles
+  public fun getClasspathArtifactFiles(): Provider<FileCollection> {
+    return artifacts.map { it.artifactFiles }
+  }
 
   /** @see [getClasspathArtifactFiles] */
   @PathSensitive(PathSensitivity.ABSOLUTE)
-  @InputFiles // TODO(tsr): can I avoid using `get()`?
-  public fun getClasspathOpaqueArtifactFiles(): FileCollection = opaqueArtifacts.get().artifactFiles
+  @InputFiles
+  public fun getClasspathOpaqueArtifactFiles(): Provider<FileCollection> {
+    return opaqueArtifacts.map { it.artifactFiles }
+  }
 
-  /**
-   * This artifact collection is the result of resolving the compile or runtime classpath.
-   */
+  /** This artifact collection is the result of resolving the compile or runtime classpath for jar artifacts. */
   public fun setConfiguration(
     configuration: NamedDomainObjectProvider<Configuration>,
     action: (Configuration) -> ArtifactCollection,
@@ -67,6 +72,10 @@ public abstract class ArtifactsReportTask : DefaultTask() {
     artifacts.set(configuration.map { c -> action(c) })
   }
 
+  /**
+   * This artifact collection is the result of resolving the compile or runtime classpath for
+   * [OpaqueComponentArtifactIdentifiers][org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier].
+   */
   public fun setOpaqueConfiguration(
     configuration: NamedDomainObjectProvider<Configuration>,
     action: (Configuration) -> ArtifactCollection,

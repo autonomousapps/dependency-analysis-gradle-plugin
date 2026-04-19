@@ -12,7 +12,10 @@ import java.io.File
 @JsonClass(generateAdapter = false)
 internal data class PhysicalArtifact(
   val coordinates: Coordinates,
-  /** Physical artifact on disk; a jar file or directory pointing to class files. */
+  /**
+   * Physical artifact on disk; a jar file or directory pointing to class files. This file has an absolute path.
+   * nb: attempts to make this file relative have thus far been doomed to fail. Please stop trying.
+   */
   val file: File,
 ) : Comparable<PhysicalArtifact> {
 
