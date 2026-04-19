@@ -6,6 +6,7 @@ package com.autonomousapps.internal.analyzer
 
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.artifactsFor
+import com.autonomousapps.internal.opaqueComponentArtifacts
 import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.model.source.SourceKind
@@ -217,12 +218,7 @@ internal abstract class AbstractDependencyAnalyzer(
         c.artifactsFor(attributeValueJar)
       }
       t.setOpaqueConfiguration(project.configurations.named(compileConfigurationName)) { c ->
-        // We want "opaque" artifacts so we can capture the gradle version catalog (and maybe eventually other things)
-        c.incoming.artifactView { view ->
-          view
-            .componentFilter { id -> id is OpaqueComponentArtifactIdentifier }
-            .lenient(true)
-        }.artifacts
+        c.opaqueComponentArtifacts()
       }
       t.buildPath.set(project.buildPath(compileConfigurationName))
 
@@ -237,12 +233,7 @@ internal abstract class AbstractDependencyAnalyzer(
         c.artifactsFor(attributeValueJar)
       }
       t.setOpaqueConfiguration(project.configurations.named(runtimeConfigurationName)) { c ->
-        // We want "opaque" artifacts so we can capture the gradle version catalog (and maybe eventually other things)
-        c.incoming.artifactView { view ->
-          view
-            .componentFilter { id -> id is OpaqueComponentArtifactIdentifier }
-            .lenient(true)
-        }.artifacts
+        c.opaqueComponentArtifacts()
       }
       t.buildPath.set(project.buildPath(runtimeConfigurationName))
 
