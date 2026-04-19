@@ -1,5 +1,11 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.8.0
+* [feat]: record lambda in binaryClassAccesses.
+* [feat]: support analysis of a Gradle version catalog dependency.
+* [feat]: remove unused 'file' property.
+* Compiled against Kotlin 2.3.20.
+
 # Version 3.7.0
 * [feat]: Expose useParenthesesForGroovy configuration for Groovy DSL syntax control.
 * [fix]: fix regex for excluding all *Generated annotations.
