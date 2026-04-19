@@ -22,15 +22,10 @@ javaTarget = "11"
 jdkVersion = "17"
 jspecify = "1.0.0"
 junit = "5.14.1"
-# TODO(tsr): downgraded to 2.2.21 due to issues with the kotlin-daemon-client.
-#  See https://kotlinlang.slack.com/archives/C19FD9681/p1775698198510429.
 # IMPORTANT: keep this version in sync with build-logic/build.gradle.kts
-#kotlin = "2.3.20"
-#kotlinForAndroidtests = "2.3.20"
-#kotlinMetadata = "2.3.20"
-kotlin = "2.2.21"
-kotlinForAndroidtests = "2.2.21"
-kotlinMetadata = "2.2.21"
+kotlin = "2.3.20"
+kotlinForAndroidtests = "2.3.20"
+kotlinMetadata = "2.3.20"
 # TODO(tsr): update Dokka
 kotlinDokka = "2.0.0"
 # Cannot be called kotlin-editor as it causes `libs.versions.kotlin.get()` to fail
