@@ -70,11 +70,11 @@ public abstract class DagpExtension(
     }
 
     project.tasks.named("publishToMavenCentral") { t ->
-      t.notCompatibleWithConfigurationCache("Cannot serialize object of type DefaultProject")
-      t.inputs.property("is-snapshot", isSnapshot)
+      val key = "is-snapshot"
+      t.inputs.property(key, isSnapshot)
 
       t.doLast {
-        if (isSnapshot.get()) {
+        if ((t.inputs.properties[key] as Boolean)) {
           t.logger.quiet("Browse files at https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/com/autonomousapps/")
         } else {
           t.logger.quiet(

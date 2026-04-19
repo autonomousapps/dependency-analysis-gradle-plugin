@@ -1,7 +1,7 @@
-import org.gradle.plugin.compatibility.compatibility
-
 // Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
+import org.gradle.plugin.compatibility.compatibility
+
 plugins {
   id("build-logic.plugin")
   id("groovy")
@@ -15,7 +15,7 @@ plugins {
 val VERSION: String by project
 version = VERSION
 
-val isSnapshot: Boolean = project.version.toString().endsWith("SNAPSHOT")
+val isSnapshot: Boolean = version.toString().endsWith("SNAPSHOT")
 val isRelease: Boolean = !isSnapshot
 
 dagp {
@@ -319,10 +319,14 @@ val publishToMavenCentral = tasks.named("publishToMavenCentral") {
 }
 
 val publishToPluginPortal = tasks.named("publishPlugins") {
+  val key = "is-release"
+  inputs.property(key, isRelease)
   // Can't publish snapshots to the portal
-  onlyIf("only publish releases to the plugin portal") { isRelease }
-  shouldRunAfter(publishToMavenCentral)
+  onlyIf("only publish releases to the plugin portal") {
+    inputs.properties[key] as Boolean
+  }
 
+  shouldRunAfter(publishToMavenCentral)
   configureForRelease()
 }
 
