@@ -9,6 +9,7 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.Category
+import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 
 /**
  * This is different than [org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE], which has type
@@ -19,6 +20,13 @@ internal val CATEGORY = Attribute.of("org.gradle.category", String::class.java)
 private val attributeKey = Attribute.of("artifactType", String::class.java)
 
 internal fun Configuration.artifactsFor(attrValue: String): ArtifactCollection = artifactViewFor(attrValue).artifacts
+
+/** Captures things like the Gradle version catalog and Gradle API jar. */
+internal fun Configuration.opaqueComponentArtifacts(): ArtifactCollection = incoming.artifactView { view ->
+  view
+    .componentFilter { id -> id is OpaqueComponentArtifactIdentifier }
+    .lenient(true)
+}.artifacts
 
 private fun Configuration.artifactViewFor(attrValue: String): ArtifactView = incoming.artifactView {
   it.attributes.attribute(attributeKey, attrValue)
