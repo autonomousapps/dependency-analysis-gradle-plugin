@@ -111,6 +111,7 @@ package com.autonomousapps.extension {
     method public final void explicitSourceSets(java.lang.String... sourceSets);
     method @InaccessibleFromKotlin public final org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> getMap();
     method public final void ignoreKtx(boolean ignore);
+    method public final void useParenthesesForGroovy(boolean use);
     property public final org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> map;
     field public static final String EXPLICIT_SOURCE_SETS_ALL = "__ALL";
   }
@@ -465,6 +466,7 @@ package com.autonomousapps.model {
     method public static com.autonomousapps.model.PluginAdvice redundantJavaLibrary();
     method public static com.autonomousapps.model.PluginAdvice redundantKapt();
     method public static com.autonomousapps.model.PluginAdvice redundantKotlinJvm();
+    method public static com.autonomousapps.model.PluginAdvice redundantLegacyKapt();
     property public String reason;
     property public String redundantPlugin;
     field public static final com.autonomousapps.model.PluginAdvice.Companion Companion;
@@ -474,6 +476,7 @@ package com.autonomousapps.model {
     method public com.autonomousapps.model.PluginAdvice redundantJavaLibrary();
     method public com.autonomousapps.model.PluginAdvice redundantKapt();
     method public com.autonomousapps.model.PluginAdvice redundantKotlinJvm();
+    method public com.autonomousapps.model.PluginAdvice redundantLegacyKapt();
   }
 
   @com.squareup.moshi.JsonClass(generateAdapter=false) public final class ProjectAdvice implements java.lang.Comparable<com.autonomousapps.model.ProjectAdvice> {
@@ -584,6 +587,7 @@ package com.autonomousapps.model.source {
     property public String kind;
     property public String name;
     property public String runtimeClasspathName;
+    field public static final String ANDROID_MAIN_NAME = "androidMain";
     field public static final String COMMON_MAIN_NAME = "commonMain";
     field public static final String COMMON_TEST_NAME = "commonTest";
     field public static final String JVM_MAIN_NAME = "jvmMain";
