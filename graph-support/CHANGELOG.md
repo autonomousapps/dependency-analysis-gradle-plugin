@@ -1,5 +1,8 @@
 Graph-Support Changelog
 
+# Version 0.11.0
+* Compiled against Kotlin 2.3.20.
+
 # Version 0.10.0
 * Compiled against Kotlin 2.2 and Gradle 9.4.1.
 
