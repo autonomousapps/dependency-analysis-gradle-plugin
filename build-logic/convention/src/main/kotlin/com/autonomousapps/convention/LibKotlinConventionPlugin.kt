@@ -27,8 +27,7 @@ public abstract class LibKotlinConventionPlugin : Plugin<Project> {
     extensions.getByType(MavenPublishBaseExtension::class.java).run {
       configure(
         KotlinJvm(
-          // TODO(tsr): dokkaHtml is from Dokka v1. Does not exist in Dokka v2. See gradle.properties.
-          javadocJar = JavadocJar.Dokka("dokkaHtml"),
+          javadocJar = JavadocJar.Dokka("dokkaGeneratePublicationJavadoc"),
           sourcesJar = true,
         )
       )
