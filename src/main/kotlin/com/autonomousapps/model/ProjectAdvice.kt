@@ -9,7 +9,6 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = false)
 public data class ProjectAdvice(
   val projectPath: String,
-  val projectBuildFile: String? = null,
   val dependencyAdvice: Set<Advice> = emptySet(),
   val pluginAdvice: Set<PluginAdvice> = emptySet(),
   val moduleAdvice: Set<ModuleAdvice> = emptySet(),

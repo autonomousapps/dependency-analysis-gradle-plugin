@@ -418,7 +418,6 @@ internal class StandardTransform(
             coordinates = theRemove.coordinates,
             fromConfiguration = theRemove.fromConfiguration!!,
             toConfiguration = theAdd.toConfiguration!!,
-            declarationLineNumber = theRemove.buildFileDeclarationLineNumber ?: theAdd.buildFileDeclarationLineNumber
           )
         }
     }

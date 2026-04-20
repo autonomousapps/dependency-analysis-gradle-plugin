@@ -12,6 +12,8 @@ import com.autonomousapps.internal.advice.SeverityHandler
 import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.getAndDeleteNullable
+import com.autonomousapps.internal.utils.readLines
 import com.autonomousapps.model.*
 import com.autonomousapps.model.internal.DependencyGraphView
 import org.gradle.api.DefaultTask
@@ -24,6 +26,7 @@ import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
+import org.gradle.api.provider.MapProperty
 
 @CacheableTask
 public abstract class FilterAdviceTask @Inject constructor(
@@ -36,6 +39,11 @@ public abstract class FilterAdviceTask @Inject constructor(
 
   @get:Input
   public abstract val buildPath: Property<String>
+
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  public abstract val buildFile: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -84,6 +92,18 @@ public abstract class FilterAdviceTask @Inject constructor(
   @get:OutputFile
   public abstract val output: RegularFileProperty
 
+  @get:OutputFile
+  @get:Optional
+  public abstract val sourcedOutput: RegularFileProperty
+
+  @get:Input
+  public abstract val dependencyMap: MapProperty<String, String>
+
+  // Do not depend on the contents of the directory,
+  // as that would cause the task to depend on every single thing inside the gradle project
+  @get:Internal
+  public abstract val rootFolder: RegularFileProperty
+
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(FilterAdviceAction::class.java) {
       it.buildPath.set(buildPath)
@@ -102,6 +122,10 @@ public abstract class FilterAdviceTask @Inject constructor(
       it.redundantPluginsBehavior.set(redundantPluginsBehavior)
       it.moduleStructureBehavior.set(moduleStructureBehavior)
       it.output.set(output)
+      it.sourcedOutput.set(sourcedOutput)
+      it.rootFolder.set(rootFolder)
+      it.buildFile.set(buildFile)
+      it.dependencyMap = dependencyMap.get()
     }
   }
 
@@ -122,6 +146,10 @@ public abstract class FilterAdviceTask @Inject constructor(
     public val redundantPluginsBehavior: Property<Behavior>
     public val moduleStructureBehavior: Property<Behavior>
     public val output: RegularFileProperty
+    public val sourcedOutput: RegularFileProperty
+    public val buildFile: RegularFileProperty
+    public var dependencyMap: Map<String, String>
+    public val rootFolder: RegularFileProperty
   }
 
   public abstract class FilterAdviceAction : WorkAction<FilterAdviceParameters> {
@@ -155,6 +183,7 @@ public abstract class FilterAdviceTask @Inject constructor(
 
     override fun execute() {
       val output = parameters.output.getAndDelete()
+      val sourcedOutput = parameters.sourcedOutput.getAndDeleteNullable()
 
       val projectAdvice = parameters.projectAdvice.fromJson<ProjectAdvice>()
       val dependencyAdvice: Set<Advice> = projectAdvice.dependencyAdvice.asSequence()
@@ -218,6 +247,24 @@ public abstract class FilterAdviceTask @Inject constructor(
       )
 
       output.bufferWriteJson(filteredAdvice)
+
+      if (sourcedOutput != null) {
+        val buildFileLines = parameters.buildFile.readLines()
+        val sourcedAdvice = dependencyAdvice.addLineNumbers(buildFileLines)
+
+        val sourcedFilteredAdvice = SourcedProjectAdvice(
+          projectPath = filteredAdvice.projectPath,
+          pluginAdvice = pluginAdvice,
+          moduleAdvice = moduleAdvice,
+          warning = filteredAdvice.warning,
+          shouldFail = filteredAdvice.shouldFail,
+          dependencyAdvice = sourcedAdvice,
+          projectBuildFile = parameters.buildFile.orNull?.asFile
+            ?.relativeTo(parameters.rootFolder.get().asFile)
+            ?.path,
+        )
+        sourcedOutput.bufferWriteJson(sourcedFilteredAdvice)
+      }
     }
 
     private fun Sequence<Advice>.filterOf(
@@ -305,6 +352,20 @@ public abstract class FilterAdviceTask @Inject constructor(
         (byGlobal(duplicateClass) || bySourceSets(duplicateClass))
       }
     }
+
+    private fun Set<Advice>.addLineNumbers(buildFileLines: List<String>): Set<SourcedAdvice> = map { advice ->
+      val lineNumber = buildFileLines
+        .indexOfFirst { buildFileLine -> buildFileLine.contains(advice.coordinates.identifier) }
+        .takeIf { it >= 0 }
+        ?: parameters.dependencyMap[advice.coordinates.identifier]?.let { mappedIdentifier ->
+          buildFileLines
+            .indexOfFirst { buildFileLine ->
+              buildFileLine.contains(mappedIdentifier)
+            }.takeIf { it >= 0 }
+        }
+
+      SourcedAdvice(advice, buildFileDeclarationLineNumber = lineNumber?.plus(1))
+    }.toSet()
   }
 
   private companion object {

@@ -43,6 +43,10 @@ internal class RootPlugin(private val project: Project) {
     project = project,
     artifactDescription = DagpArtifacts.Kind.PROJECT_HEALTH,
   )
+  private val sourcedAdviceResolver = interProjectResolver(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.SOURCED_PROJECT_HEALTH,
+  )
   private val combinedGraphResolver = interProjectResolver(
     project = project,
     artifactDescription = DagpArtifacts.Kind.COMBINED_GRAPH,
@@ -106,6 +110,7 @@ internal class RootPlugin(private val project: Project) {
 
     val generateBuildHealthTask = tasks.register("generateBuildHealth", GenerateBuildHealthTask::class.java) {
       it.projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      it.sourcedProjectHealthReports.setFrom(sourcedAdviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
       it.reportingConfig.set(dagpExtension.reportingHandler.config())
       it.projectCount.set(allprojects.size)
       it.dslKind.set(DslKind.from(buildFile))
@@ -146,6 +151,10 @@ internal class RootPlugin(private val project: Project) {
       project = this,
       artifactDescription = DagpArtifacts.Kind.PROJECT_HEALTH,
     )
+    val sourcedProjectHealthPublisher = interProjectPublisher(
+      project = this,
+      artifactDescription = DagpArtifacts.Kind.SOURCED_PROJECT_HEALTH,
+    )
     val resolvedDependenciesPublisher = interProjectPublisher(
       project = this,
       artifactDescription = DagpArtifacts.Kind.RESOLVED_DEPS,
@@ -155,6 +164,7 @@ internal class RootPlugin(private val project: Project) {
       dependencies.let { d ->
         d.add(combinedGraphPublisher.declarableName, d.project(mapOf("path" to p.path)))
         d.add(projectHealthPublisher.declarableName, d.project(mapOf("path" to p.path)))
+        d.add(sourcedProjectHealthPublisher.declarableName, d.project(mapOf("path" to p.path)))
         d.add(resolvedDependenciesPublisher.declarableName, d.project(mapOf("path" to p.path)))
       }
     }

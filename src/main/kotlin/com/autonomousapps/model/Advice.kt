@@ -23,7 +23,6 @@ public data class Advice(
    * therefore ought to be removed.
    */
   val toConfiguration: String? = null,
-  val buildFileDeclarationLineNumber: Int? = null,
 ) : Comparable<Advice> {
 
   override fun compareTo(other: Advice): Int = compareBy(Advice::coordinates)
@@ -41,7 +40,6 @@ public data class Advice(
       coordinates = coordinates,
       fromConfiguration = null,
       toConfiguration = toConfiguration,
-      buildFileDeclarationLineNumber = declarationLineNumber,
     )
 
     @JvmStatic
@@ -53,7 +51,6 @@ public data class Advice(
       coordinates = coordinates,
       fromConfiguration = fromConfiguration,
       toConfiguration = null,
-      buildFileDeclarationLineNumber = declarationLineNumber,
     )
 
     @JvmStatic
@@ -65,7 +62,6 @@ public data class Advice(
       coordinates: Coordinates,
       fromConfiguration: String,
       toConfiguration: String,
-      declarationLineNumber: Int? = null
     ): Advice {
       require(fromConfiguration != toConfiguration) {
         "Change advice for ${coordinates.identifier} cannot be from and to the same configuration ($fromConfiguration in this case)"
@@ -75,7 +71,6 @@ public data class Advice(
         coordinates = coordinates,
         fromConfiguration = fromConfiguration,
         toConfiguration = toConfiguration,
-        buildFileDeclarationLineNumber = declarationLineNumber,
       )
     }
   }

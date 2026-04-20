@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
-import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.model.SourcedProjectAdvice
 import io.github.detekt.sarif4k.*
 
 internal class ProjectHealthSarifReportBuilder(
-  private val projectAdvices: Collection<ProjectAdvice>,
+  projectAdvices: Collection<SourcedProjectAdvice>,
   dslKind: DslKind,
   /** Customize how dependencies are printed. */
   dependencyMap: ((String) -> String?)? = null,
@@ -37,10 +37,11 @@ internal class ProjectHealthSarifReportBuilder(
 
     }
     val dependencyResults = projectAdvices.flatMap { projectAdvice ->
-      projectAdvice.dependencyAdvice.map { advice ->
+      projectAdvice.dependencyAdvice.map { sourcedAdvice ->
         val message: String
         val ruleId: String
 
+        val advice = sourcedAdvice.advice
         when {
           advice.isAdd() -> {
             message = "Transitive dependency ${advicePrinter.toDeclaration(advice).trim()} should be declared directly"
@@ -87,8 +88,8 @@ internal class ProjectHealthSarifReportBuilder(
               artifactLocation = ArtifactLocation(uri = buildFile),
               region =
                 Region(
-                  startLine = advice.buildFileDeclarationLineNumber?.toLong(),
-                  endLine = advice.buildFileDeclarationLineNumber?.toLong(),
+                  startLine = sourcedAdvice.buildFileDeclarationLineNumber?.toLong(),
+                  endLine = sourcedAdvice.buildFileDeclarationLineNumber?.toLong(),
                 )
             ),
           )

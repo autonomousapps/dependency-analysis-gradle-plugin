@@ -17,6 +17,7 @@ internal interface DagpArtifacts : Named {
   enum class Kind : ArtifactDescription<DagpArtifacts> {
     COMBINED_GRAPH,
     PROJECT_HEALTH,
+    SOURCED_PROJECT_HEALTH,
     RESOLVED_DEPS,
     ;
 

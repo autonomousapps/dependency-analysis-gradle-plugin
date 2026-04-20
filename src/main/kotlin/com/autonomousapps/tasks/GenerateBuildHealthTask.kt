@@ -19,6 +19,7 @@ import com.autonomousapps.model.AndroidScore
 import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.BuildHealth.AndroidScoreMetrics
 import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.model.SourcedProjectAdvice
 import io.github.detekt.sarif4k.SarifSerializer
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -37,6 +38,10 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   public abstract val projectHealthReports: ConfigurableFileCollection
+
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val sourcedProjectHealthReports: ConfigurableFileCollection
 
   // TODO(tsr): this shouldn't be a Property for Complicated Reasons
   @get:Nested
@@ -171,8 +176,10 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
     }
 
     if (sarifOutput != null) {
+      val sourcedAdvice = sourcedProjectHealthReports.files.map { it.fromJson<SourcedProjectAdvice>() }
+
       val sarifReport = ProjectHealthSarifReportBuilder(
-        projectAdvices = projectAdvice,
+        projectAdvices = sourcedAdvice,
         dslKind = dslKind.get(),
         dependencyMap = dependencyMap.get().toLambda(),
         useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
