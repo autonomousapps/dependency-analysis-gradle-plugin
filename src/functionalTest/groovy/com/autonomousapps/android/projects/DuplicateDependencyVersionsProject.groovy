@@ -124,10 +124,10 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
     junit-junit-4-12 = { module = "junit:junit", version = "4.12" }
     junit-junit-4-13 = { module = "junit:junit", version = "4.13" }
     org-hamcrest-hamcrest-core-1-3 = { module = "org.hamcrest:hamcrest-core", version = "1.3" }
-    org-jetbrains-kotlin-kotlin-stdlib-common-2-3-20 = { module = "org.jetbrains.kotlin:kotlin-stdlib-common", version = "2.3.20" }
+    org-jetbrains-kotlin-kotlin-stdlib-common-2-2-21 = { module = "org.jetbrains.kotlin:kotlin-stdlib-common", version = "2.2.21" }
     org-jetbrains-kotlin-kotlin-stdlib-jdk7-1-8-0 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk7", version = "1.8.0" }
     org-jetbrains-kotlin-kotlin-stdlib-jdk8-1-8-0 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version = "1.8.0" }
-    org-jetbrains-kotlin-kotlin-stdlib-2-3-20 = { module = "org.jetbrains.kotlin:kotlin-stdlib", version = "2.3.20" }
+    org-jetbrains-kotlin-kotlin-stdlib-2-2-21 = { module = "org.jetbrains.kotlin:kotlin-stdlib", version = "2.2.21" }
     org-jetbrains-kotlinx-kotlinx-coroutines-android-1-6-4 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version = "1.6.4" }
     org-jetbrains-kotlinx-kotlinx-coroutines-core-jvm-1-6-4 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm", version = "1.6.4" }
     org-jetbrains-kotlinx-kotlinx-coroutines-core-1-6-4 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.6.4" }

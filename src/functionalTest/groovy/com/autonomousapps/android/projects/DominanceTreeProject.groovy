@@ -46,14 +46,14 @@ final class DominanceTreeProject extends AbstractAndroidProject {
   }
 
   final expectedTree = """\
-      10.05 MiB :app
+      10.01 MiB :app
       +--- 8.32 MiB (1.69 MiB) androidx.appcompat:appcompat:1.7.1
       |    +--- 2.70 MiB (2.63 MiB) androidx.core:core:1.13.0
       |    |    \\--- 0.07 MiB androidx.versionedparcelable:versionedparcelable:1.1.1
       |    +--- 1.43 MiB (0.02 MiB) org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4
       |    |    +--- 1.41 MiB org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4
       |    |    |    \\--- 1.41 MiB (1.41 MiB) org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4
-      |    |    |         \\--- org.jetbrains.kotlin:kotlin-stdlib-common:2.3.20
+      |    |    |         \\--- org.jetbrains.kotlin:kotlin-stdlib-common:2.2.21
       |    |    \\--- 0.00 MiB (0.00 MiB) org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0
       |    |         \\--- 0.00 MiB org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0
       |    +--- 0.86 MiB (0.62 MiB) androidx.fragment:fragment:1.5.4
@@ -81,7 +81,7 @@ final class DominanceTreeProject extends AbstractAndroidProject {
       |    +--- 0.02 MiB androidx.lifecycle:lifecycle-livedata-core:2.6.2
       |    +--- 0.01 MiB androidx.arch.core:core-common:2.2.0
       |    \\--- 0.01 MiB androidx.annotation:annotation-experimental:1.4.0
-      +--- 1.74 MiB (1.72 MiB) org.jetbrains.kotlin:kotlin-stdlib:2.3.20
+      +--- 1.70 MiB (1.68 MiB) org.jetbrains.kotlin:kotlin-stdlib:2.2.21
       |    \\--- 0.02 MiB org.jetbrains:annotations:13.0
       \\--- 0.00 MiB :lib""".stripIndent().readLines()
 }

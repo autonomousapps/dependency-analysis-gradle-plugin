@@ -40,7 +40,7 @@ public abstract class DagpExtension(
 
   private fun setupPublishingRepo() {
     // Don't validate because I don't want to wait 15min for my build to finish.
-    mavenPublish.publishToMavenCentral(automaticRelease = true, validateDeployment = false)
+    mavenPublish.publishToMavenCentral(automaticRelease = true)
     mavenPublish.signAllPublications()
 
     // We set the version explicitly because it seems there may be a race condition bug otherwise.

@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.9.0
+* (Reverted) Compiled against Kotlin 2.3.20. Compiling against Kotlin 2.2.21 again, with language level 2.2.
+
 # Version 3.8.0
 * [feat]: record lambda in binaryClassAccesses.
 * [feat]: support analysis of a Gradle version catalog dependency.
