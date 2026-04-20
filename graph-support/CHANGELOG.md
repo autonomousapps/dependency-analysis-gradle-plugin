@@ -1,5 +1,8 @@
 Graph-Support Changelog
 
+# Version 0.12.0
+* (Reverted) Compiled against Kotlin 2.3.20. Compiling against Kotlin 2.2.21 again, with language level 2.2.
+
 # Version 0.11.0
 * Compiled against Kotlin 2.3.20.
 

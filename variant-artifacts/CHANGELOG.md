@@ -1,5 +1,8 @@
 Variant-Artifacts Changelog
 
+# Version 0.6.0
+* (Reverted) Compiled against Kotlin 2.3.20. Compiling against Kotlin 2.2.21 again, with language level 2.2.
+
 # Version 0.5.0
 * Don't call deprecated API (`Configuration.isVisible`).
 * Compiled against Kotlin 2.3.20.
