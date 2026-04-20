@@ -66,8 +66,10 @@ public abstract class ReportingHandler @Inject constructor(private val objects: 
    * Whether to generate a .sarif file report
    */
   public fun sarifReport(report: Boolean) {
-    this.sarifReport.set(report)
-    this.sarifReport.disallowChanges()
+    if (this.sarifReport.get() != report) {
+      this.sarifReport.set(report)
+      this.sarifReport.disallowChanges()
+    }
   }
 
   internal fun config(): Config {

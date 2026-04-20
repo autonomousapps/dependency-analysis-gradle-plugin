@@ -5,6 +5,7 @@ package com.autonomousapps
 import com.autonomousapps.extension.AbiHandler
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.extension.ProjectIssueHandler
+import com.autonomousapps.extension.ReportingHandler
 import org.gradle.api.Action
 import org.gradle.api.Project
 import javax.naming.OperationNotSupportedException
@@ -51,6 +52,11 @@ public abstract class DependencyAnalysisSubExtension(
   @Suppress("UNUSED_PARAMETER")
   public fun structure(action: Action<DependenciesHandler>) {
     throw OperationNotSupportedException("Dependency bundles must be declared in the root project only")
+  }
+
+  /** Customize issue reports. See [ReportingHandler] for more information. */
+  public fun reporting(action: Action<ReportingHandler>) {
+    action.execute(reportingHandler)
   }
 
   internal companion object {
