@@ -189,8 +189,8 @@ fun maxParallelForks() =
   else Runtime.getRuntime().availableProcessors() / 2
 
 val isCi = providers.environmentVariable("CI")
-  .getOrElse("false")
-  .toBoolean()
+  .map { it.toBoolean() }
+  .getOrElse(false)
 
 // This will slow down tests on CI, but maybe it won't run out of metaspace.
 fun forkEvery(): Long = if (isCi) 40 else 0
@@ -199,7 +199,7 @@ fun forkEvery(): Long = if (isCi) 40 else 0
 // quickTest only runs against the latest gradle version. For iterating faster
 fun quickTest(): Boolean = providers
   .systemProperty("funcTest.quick")
-  .orNull != null
+  .isPresent
 
 val functionalTest = tasks.named("functionalTest", Test::class) {
   // forking JVMs is very expensive, and only necessary with full test runs
@@ -264,11 +264,6 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
   doFirst {
     logger.quiet(">>> $testKindLog (use '-DfuncTest.package=<android|jvm|all>' to change filter)")
   }
-}
-
-tasks.register("quickFunctionalTest") {
-  dependsOn(functionalTest)
-  System.setProperty("funcTest.quick", "true")
 }
 
 val smokeTestVersionKey = "com.autonomousapps.version"
