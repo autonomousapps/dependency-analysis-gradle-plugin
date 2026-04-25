@@ -191,6 +191,8 @@ internal class Bundles private constructor(
   }
 
   companion object {
+    private const val GRADLE_PLUGIN_MARKER_SUFFIX = ".gradle.plugin"
+
     fun of(
       projectPath: String,
       dependencyGraph: Map<String, DependencyGraphView>,
@@ -249,7 +251,7 @@ internal class Bundles private constructor(
           }
 
           // handle Gradle plugin marker artifacts
-          if (parentNode.identifier.endsWith(".gradle.plugin")) {
+          if (parentNode.identifier.endsWith(GRADLE_PLUGIN_MARKER_SUFFIX)) {
             view.graph.children(parentNode)
               .singleOrNull()
               ?.let { child -> bundles[parentNode] = child }
@@ -266,6 +268,21 @@ internal class Bundles private constructor(
           implicitKmpBundleFor("jvm")
           implicitKmpBundleFor("android")
         }
+
+        // handle Gradle plugin marker artifacts buried in the graph
+        view.graph.nodes()
+          .filter { node -> node.identifier.endsWith(GRADLE_PLUGIN_MARKER_SUFFIX) }
+          .mapNotNull { markerArtifact ->
+            val plugin = view.graph.children(markerArtifact).singleOrNull()
+            if (plugin != null) {
+              markerArtifact to plugin
+            } else {
+              null
+            }
+          }
+          .forEach { (markerArtifact, plugin) ->
+            bundles.setPrimary(markerArtifact, plugin)
+          }
 
         fun implicitKmpPrimaryFor(target: String) {
           val suffix = "-$target"
