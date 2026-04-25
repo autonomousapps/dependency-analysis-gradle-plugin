@@ -248,6 +248,13 @@ internal class Bundles private constructor(
             }
           }
 
+          // handle Gradle plugin marker artifacts
+          if (parentNode.identifier.endsWith(".gradle.plugin")) {
+            view.graph.children(parentNode)
+              .singleOrNull()
+              ?.let { child -> bundles[parentNode] = child }
+          }
+
           fun implicitKmpBundleFor(target: String) {
             val candidate = "${parentNode.identifier}-${target}"
             view.graph.children(parentNode)
@@ -263,7 +270,7 @@ internal class Bundles private constructor(
         fun implicitKmpPrimaryFor(target: String) {
           val suffix = "-$target"
           view.graph.nodes()
-            .filter { it.identifier.endsWith(suffix) }
+            .filter { node -> node.identifier.endsWith(suffix) }
             .mapNotNull { candidate ->
               val kmpIdentifier = candidate.identifier.substringBeforeLast(suffix)
               val kmp = candidate.copy(
