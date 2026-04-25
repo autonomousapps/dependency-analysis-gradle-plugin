@@ -9,18 +9,19 @@ import static com.google.common.truth.Truth.assertThat
 
 final class BuildLogicSpec extends AbstractJvmSpec {
 
-  def "gradle plugin markers are used when the plugin is used (#gradleVersion)"() {
+  // This ensures that plugin dependencies preferable reference the marker artifact.
+  def "gradle plugin markers are used when the plugin is used (#gradleVersion isDirect=#isDirect)"() {
     given:
-    def project = new BuildLogicProject()
+    def project = new BuildLogicProject(isDirect)
     gradleProject = project.gradleProject
 
     when:
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
-    gradleVersion << gradleVersions()
+    [gradleVersion, isDirect] << multivariableDataPipe(gradleVersions(), [true, false])
   }
 }
