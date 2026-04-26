@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage")
 
@@ -37,6 +37,9 @@ import javax.inject.Inject
  *     // Set to true to instruct the plugin to not suggest replacing -ktx dependencies with non-ktx dependencies.
  *     ignoreKtx(<true|false>) // default: false
  *
+ *     // Set to true to use parentheses syntax for Groovy build script dependencies.
+ *     useParenthesesForGroovy(<true|false>) // default: false
+ *
  *     bundle("kotlin-stdlib") {
  *       // 1: include all in group as a single logical dependency
  *       includeGroup("org.jetbrains.kotlin")
@@ -74,16 +77,23 @@ public abstract class DependenciesHandler @Inject constructor(objects: ObjectFac
   internal val bundles = objects.domainObjectContainer(BundleHandler::class.java)
 
   init {
-    // With Kotlin plugin 1.4, the stdlib is now applied by default. It makes no sense to warn users
-    // about this, even if it is "incorrect." So make all stdlib-related libraries a bundle and call
-    // it a day.
-    bundle("__kotlin-stdlib") {
-      it.include(".*kotlin-stdlib.*")
+    // AppCompatActivity has an implicit reference to ViewModelProvider since it implements
+    // HasDefaultViewModelProviderFactory.
+    // See https://developer.android.com/reference/androidx/lifecycle/HasDefaultViewModelProviderFactory
+    bundle("__appcompat") {
+      it.includeDependency("androidx.appcompat:appcompat")
+      it.includeDependency("androidx.lifecycle:lifecycle-viewmodel")
     }
     // Firebase / Google services are tightly coupled
     bundle("__firebase") {
       it.includeGroup("com.google.firebase")
       it.includeGroup("com.google.android.gms")
+    }
+    // With Kotlin plugin 1.4, the stdlib is now applied by default. It makes no sense to warn users
+    // about this, even if it is "incorrect." So make all stdlib-related libraries a bundle and call
+    // it a day.
+    bundle("__kotlin-stdlib") {
+      it.include(".*kotlin-stdlib.*")
     }
     // The kotlin plugin is automatically adding another variant of the kotlin-test dependency, which can show up as
     // unused with no way to opt out.
@@ -132,6 +142,16 @@ public abstract class DependenciesHandler @Inject constructor(objects: ObjectFac
   public fun ignoreKtx(ignore: Boolean) {
     ignoreKtx.set(ignore)
     ignoreKtx.disallowChanges()
+  }
+
+  internal val useParenthesesForGroovy = objects.property(Boolean::class.java).also {
+    it.convention(false)
+  }
+
+  @Suppress("unused") // public API
+  public fun useParenthesesForGroovy(use: Boolean) {
+    useParenthesesForGroovy.set(use)
+    useParenthesesForGroovy.disallowChanges()
   }
 
   public fun bundle(name: String, action: Action<BundleHandler>) {

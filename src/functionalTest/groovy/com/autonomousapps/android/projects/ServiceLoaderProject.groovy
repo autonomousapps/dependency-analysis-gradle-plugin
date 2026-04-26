@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -41,7 +41,7 @@ final class ServiceLoaderProject extends AbstractAndroidProject {
         a.colors = AndroidColorRes.DEFAULT
         a.layouts = layouts
         a.withBuildScript { bs ->
-          bs.plugins = androidAppWithKotlin
+          bs.plugins = androidApp(true)
           bs.android = defaultAndroidAppBlock()
           bs.dependencies = dependencies
         }

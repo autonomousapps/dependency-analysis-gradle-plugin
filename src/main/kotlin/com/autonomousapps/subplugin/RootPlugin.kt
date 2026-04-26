@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.subplugin
 
@@ -116,6 +116,7 @@ internal class RootPlugin(private val project: Project) {
       t.dslKind.set(DslKind.from(buildFile))
       t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
       t.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
+      t.useParenthesesForGroovy.set(dagpExtension.dependenciesHandler.useParenthesesForGroovy)
 
       t.output.set(paths.buildHealthPath)
       t.consoleOutput.set(paths.consoleReportPath)

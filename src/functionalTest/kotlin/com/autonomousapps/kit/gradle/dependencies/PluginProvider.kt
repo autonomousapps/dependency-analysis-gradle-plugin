@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle.dependencies
 
@@ -25,10 +25,12 @@ class PluginProvider(
   val androidAppId: String = "com.android.application"
   val androidLibId: String = "com.android.library"
   val androidTestId: String = "com.android.test"
+  val androidLegacyKaptId: String = "com.android.legacy-kapt"
   val androidApp: Plugin = Plugin(androidAppId, androidVersion)
   val androidAppNoVersion: Plugin = Plugin(androidAppId)
   val androidLibNoVersion: Plugin = Plugin(androidLibId)
   val androidTestNoVersion: Plugin = Plugin(androidTestId)
+  val androidLegacyKaptNoVersion: Plugin = Plugin(androidLegacyKaptId)
 
   /** Use this in the root project. */
   val androidKmpLibNoApply: Plugin = Plugin("com.android.kotlin.multiplatform.library", androidVersion, false)
@@ -44,6 +46,13 @@ class PluginProvider(
 
   /** Use this in the root project. */
   val kotlinMultiplatformNoApply: Plugin = Plugin("org.jetbrains.kotlin.multiplatform", kotlinVersion, false)
+
+  /** Use this in the root project. */
+  val androidKmpRootPlugins: List<Plugin> = listOf(
+    dependencyAnalysis,
+    kotlinMultiplatformNoApply,
+    androidKmpLibNoApply,
+  )
 
   /** Use this in subprojects. */
   val kotlinMultiplatformNoVersion: Plugin = Plugin("org.jetbrains.kotlin.multiplatform")

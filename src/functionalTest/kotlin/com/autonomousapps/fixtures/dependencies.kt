@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 @file:JvmName("Dependencies")
 
@@ -36,9 +36,9 @@ const val CONSTRAINT_LAYOUT = "$CONSTRAINT_LAYOUT_ID:1.1.3"
 const val MATERIAL_ID = "com.google.android.material:material"
 const val MATERIAL = "$MATERIAL_ID:1.0.0"
 const val NAV_FRAGMENT_KTX_ID = "androidx.navigation:navigation-fragment-ktx"
-const val NAV_FRAGMENT_KTX = "$NAV_FRAGMENT_KTX_ID:2.1.0"
+const val NAV_FRAGMENT_KTX = "$NAV_FRAGMENT_KTX_ID:2.9.7"
 const val NAV_UI_KTX_ID = "androidx.navigation:navigation-ui-ktx"
-const val NAV_UI_KTX = "$NAV_UI_KTX_ID:2.1.0"
+const val NAV_UI_KTX = "$NAV_UI_KTX_ID:2.9.7"
 
 // Annotation Processors
 const val TP_COMPILER_ID = "com.github.stephanenicolas.toothpick:toothpick-compiler"

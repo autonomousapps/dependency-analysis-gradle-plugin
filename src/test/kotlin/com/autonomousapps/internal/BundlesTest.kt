@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
@@ -185,6 +185,52 @@ class BundlesTest {
       val addAdvice = Advice.ofAdd(okioJvm, "jvmMainApi")
       val expectedAdvice = Advice.ofChange(okio, "jvmMainImplementation", "jvmMainApi")
       assertThat(bundles.maybeParent(addAdvice, okioJvm)).isEqualTo(expectedAdvice)
+    }
+
+    /**
+     * Metro (and other plugins) can add dependencies, meaning those dependencies are undeclared. When this happens, we
+     * can't recommend upgrading the _parent_ of a -jvm (etc.) dependency because the user has no control over that.
+     * This test validates that `bundles.maybeParent(addAdvice)` returns that same `addAdvice` in this scenario.
+     *
+     * @see <a href="https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1653">Issue 1653</a>.
+     */
+    @Test fun `does not transform change (jvmMainImplementation-jvmMainApi) for metro-runtime for kmp (implicit bundles)`() {
+      // Given a project that has a dependency graph with three nodes (itself, okio, and okio-jvm)
+      val consumer = ProjectCoordinates(":consumer", gvi)
+      val metroRuntime = ModuleCoordinates("dev.zacsweers.metro:runtime", "0.10.2", gvi)
+      val metroRuntimeJvm = ModuleCoordinates("dev.zacsweers.metro:runtime-jvm", "0.10.2", gvi)
+      val graph = newGraphFrom(
+        // :consumer -> metroRuntime -> metroRuntimeJvm
+        listOf(consumer to metroRuntime, metroRuntime to metroRuntimeJvm),
+        sourceKind = KmpSourceKind.JVM_MAIN,
+        configurationName = "jvmCompileClasspath",
+        graphKey = "jvmMain,CUSTOM_JVM,jvmCompileClasspath",
+      )
+
+      // no declarations (the dep is provided by a plugin!)
+      val declarations = emptySet<Declaration>()
+
+      // ...usages of project :consumer
+      val unused = Reason.Unused.intoSet()
+      val abi = Reason.Abi("Imports 1 class: dev.zacsweers.metro.ContributesTo").intoSet()
+      val metroRuntimeUsages = metroRuntime to usage(Bucket.NONE, KmpSourceKind.JVM_MAIN, reasons = unused).intoSet()
+      val metroRuntimeJvmUsages = metroRuntimeJvm to usage(Bucket.API, KmpSourceKind.JVM_MAIN, reasons = abi).intoSet()
+      val dependencyUsages = listOf(metroRuntimeUsages, metroRuntimeJvmUsages).toMap<Coordinates, Set<Usage>>()
+
+      // When we build the thing under test
+      val bundles = Bundles.of(
+        projectPath = ":consumer",
+        dependencyGraph = graph,
+        bundleRules = dependenciesHandler.serializableBundles(),
+        dependencyUsages = dependencyUsages,
+        declarations = declarations,
+        configurationNames = kmpConfigurationNames,
+        ignoreKtx = false
+      )
+
+      // Then the advice remains unchanged
+      val addAdvice = Advice.ofAdd(metroRuntimeJvm, "jvmMainApi")
+      assertThat(bundles.maybeParent(addAdvice, metroRuntimeJvm)).isEqualTo(addAdvice)
     }
   }
 

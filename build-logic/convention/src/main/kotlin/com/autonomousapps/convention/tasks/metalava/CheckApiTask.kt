@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.convention.tasks.metalava
 
@@ -98,7 +98,7 @@ public abstract class CheckApiTask @Inject constructor(
         spec.mainClass.set("com.android.tools.metalava.Driver")
         spec.classpath = parameters.metalava
         spec.args = listOf(
-          "--format=v3",
+          "--format=5.0",
           "--jdk-home", jdkHome,
           "--classpath", classpath,
           "--source-path", sourcePath,
@@ -111,7 +111,7 @@ public abstract class CheckApiTask @Inject constructor(
         spec.mainClass.set("com.android.tools.metalava.Driver")
         spec.classpath = parameters.metalava
         spec.args = listOf(
-          "--format=v3",
+          "--format=5.0",
           "--jdk-home", jdkHome,
           "--classpath", classpath,
           "--source-files", currentApi.absolutePath,

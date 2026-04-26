@@ -1,5 +1,8 @@
 Gradle TestKit Support Changelog
 
+# Version 1.7.0
+* Compiled against Kotlin 2.2 and Gradle 9.4.1.
+
 # Version 1.6.1
 * [fix] Re-publish with non-broken metadata. 
 

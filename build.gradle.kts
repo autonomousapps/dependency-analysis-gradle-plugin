@@ -1,5 +1,7 @@
-// Copyright (c) 2024. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
+import org.gradle.plugin.compatibility.compatibility
+
 plugins {
   id("build-logic.plugin")
   id("groovy")
@@ -13,7 +15,7 @@ plugins {
 val VERSION: String by project
 version = VERSION
 
-val isSnapshot: Boolean = project.version.toString().endsWith("SNAPSHOT")
+val isSnapshot: Boolean = version.toString().endsWith("SNAPSHOT")
 val isRelease: Boolean = !isSnapshot
 
 dagp {
@@ -36,6 +38,12 @@ gradlePlugin {
       displayName = "Dependency Analysis Gradle Plugin"
       description = "A plugin to report mis-used dependencies in your JVM or Android project"
       tags.set(listOf("java", "kotlin", "groovy", "scala", "android", "dependencies"))
+
+      compatibility {
+        features {
+          configurationCache = true
+        }
+      }
     }
 
     create("buildHealthPlugin") {
@@ -45,6 +53,12 @@ gradlePlugin {
       displayName = "Build Health Gradle Plugin"
       description = "A plugin to report on the health of your JVM or Android build"
       tags.set(listOf("java", "kotlin", "groovy", "scala", "android", "dependencies"))
+
+      compatibility {
+        features {
+          configurationCache = true
+        }
+      }
     }
   }
 
@@ -175,8 +189,8 @@ fun maxParallelForks() =
   else Runtime.getRuntime().availableProcessors() / 2
 
 val isCi = providers.environmentVariable("CI")
-  .getOrElse("false")
-  .toBoolean()
+  .map { it.toBoolean() }
+  .getOrElse(false)
 
 // This will slow down tests on CI, but maybe it won't run out of metaspace.
 fun forkEvery(): Long = if (isCi) 40 else 0
@@ -185,7 +199,7 @@ fun forkEvery(): Long = if (isCi) 40 else 0
 // quickTest only runs against the latest gradle version. For iterating faster
 fun quickTest(): Boolean = providers
   .systemProperty("funcTest.quick")
-  .orNull != null
+  .isPresent
 
 val functionalTest = tasks.named("functionalTest", Test::class) {
   // forking JVMs is very expensive, and only necessary with full test runs
@@ -252,11 +266,6 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
   }
 }
 
-tasks.register("quickFunctionalTest") {
-  dependsOn(functionalTest)
-  System.setProperty("funcTest.quick", "true")
-}
-
 val smokeTestVersionKey = "com.autonomousapps.version"
 val smokeTestVersion: String = System.getProperty(smokeTestVersionKey, latestRelease())
 
@@ -305,10 +314,14 @@ val publishToMavenCentral = tasks.named("publishToMavenCentral") {
 }
 
 val publishToPluginPortal = tasks.named("publishPlugins") {
+  val key = "is-release"
+  inputs.property(key, isRelease)
   // Can't publish snapshots to the portal
-  onlyIf("only publish releases to the plugin portal") { isRelease }
-  shouldRunAfter(publishToMavenCentral)
+  onlyIf("only publish releases to the plugin portal") {
+    inputs.properties[key] as Boolean
+  }
 
+  shouldRunAfter(publishToMavenCentral)
   configureForRelease()
 }
 
@@ -392,3 +405,8 @@ dependencyAnalysis {
     }
   }
 }
+
+// TODO(tsr): delete. But right now kinda useful for debugging daemon-client issues.
+//val loc = org.gradle.workers.internal.DefaultWorkerServer::class.java.protectionDomain.codeSource.location
+////val loc = org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork::class.java.protectionDomain.codeSource.location
+//println("loc = " + loc)

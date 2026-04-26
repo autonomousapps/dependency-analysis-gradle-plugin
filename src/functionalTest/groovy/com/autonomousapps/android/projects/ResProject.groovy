@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -36,13 +36,13 @@ final class ResProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = androidAppWithKotlin
+          bs.plugins(androidApp())
           bs.android = defaultAndroidAppBlock()
-          bs.dependencies = [
+          bs.dependencies(
             project('implementation', ':lib'),
             project('implementation', ':lib2'),
-            appcompat('implementation')
-          ]
+            appcompat('implementation'),
+          )
         }
         app.manifest = appManifest('com.example.app')
         app.sources = appSources
@@ -60,20 +60,19 @@ final class ResProject extends AbstractAndroidProject {
         </com.example.app.MessageLayout>'''.stripIndent()
         )
       }
-      .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib') { lib ->
         lib.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
         }
         lib.colors = AndroidColorRes.DEFAULT
         lib.manifest = libraryManifest('com.example.lib')
       }
-      .withAndroidLibProject('lib2', 'com.example.lib2') { lib2 ->
+      .withAndroidLibProject('lib2') { lib2 ->
         lib2.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
         }
-        lib2.manifest = AndroidManifest.defaultLib('com.example.lib2')
         lib2.withFile('src/main/res/values/resources.xml', '''\
         <resources>
           <item name="message_layout" type="id"/>
@@ -85,7 +84,7 @@ final class ResProject extends AbstractAndroidProject {
 
   private static final List<Source> appSources = [
     new Source(
-      SourceType.KOTLIN, 'MainActivity.kt', 'com/example',
+      SourceType.KOTLIN, 'MainActivity', 'com/example',
       '''\
         package com.example
         

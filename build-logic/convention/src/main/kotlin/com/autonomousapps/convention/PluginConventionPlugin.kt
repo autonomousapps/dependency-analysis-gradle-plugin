@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.convention
 
@@ -10,7 +10,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
-import org.gradle.api.publish.maven.tasks.AbstractPublishToMaven
 import org.gradle.api.tasks.compile.GroovyCompile
 import org.gradle.plugin.devel.tasks.ValidatePlugins
 
@@ -30,7 +29,9 @@ public abstract class PluginConventionPlugin : Plugin<Project> {
     configureKotlin()
     configurePlugins()
     configurePublishing()
-    disableConfigurationCache()
+
+    // TODO(tsr): figure out this CC issue.
+//    disableConfigurationCache()
   }
 
   private fun Project.configureGroovy(versionCatalog: VersionCatalog) {
@@ -64,10 +65,10 @@ public abstract class PluginConventionPlugin : Plugin<Project> {
 
   private fun Project.disableConfigurationCache() {
     tasks.withType(PublishTask::class.java).configureEach { t ->
-      t.notCompatibleWithConfigurationCache("Various problems")
+      t.notCompatibleWithConfigurationCache("cannot serialize Gradle script object references as these are not supported with the configuration cache.")
     }
-    tasks.withType(AbstractPublishToMaven::class.java) { t ->
-      t.notCompatibleWithConfigurationCache("Various problems")
-    }
+//    tasks.withType(org.gradle.api.publish.maven.tasks.AbstractPublishToMaven::class.java) { t ->
+//      t.notCompatibleWithConfigurationCache("Various problems")
+//    }
   }
 }

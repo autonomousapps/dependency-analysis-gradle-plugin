@@ -1,9 +1,8 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.convention
 
 import com.autonomousapps.convention.tasks.metalava.MetalavaConfigurer
-import com.vanniktech.maven.publish.tasks.JavadocJar
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.JavaPluginExtension
@@ -14,7 +13,7 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.plugins.signing.Sign
-import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.dokka.gradle.tasks.DokkaGeneratePublicationTask
 
 @Suppress("unused")
 internal class BaseConventionPlugin(private val project: Project) {
@@ -25,7 +24,7 @@ internal class BaseConventionPlugin(private val project: Project) {
     pluginManager.run {
       apply("com.vanniktech.maven.publish.base")
       apply("org.gradle.signing")
-      apply("org.jetbrains.dokka")
+      apply("org.jetbrains.dokka-javadoc")
       apply("com.autonomousapps.dependency-analysis")
       apply("com.autonomousapps.testkit")
     }
@@ -61,13 +60,6 @@ internal class BaseConventionPlugin(private val project: Project) {
       t.isReproducibleFileOrder = true
     }
 
-    tasks.withType(DokkaTask::class.java).configureEach { t ->
-      t.notCompatibleWithConfigurationCache("Uses 'project' at execution time")
-    }
-    tasks.withType(JavadocJar::class.java).configureEach { t ->
-      t.notCompatibleWithConfigurationCache("Uses 'project' at execution time")
-    }
-
     // We only use the Jupiter platform (JUnit 5)
     configurations.all {
       it.exclude(mapOf("group" to "junit", "module" to "junit"))
@@ -88,33 +80,43 @@ internal class BaseConventionPlugin(private val project: Project) {
       .map { it.toBoolean() }
 
     val taskGraph = gradle.taskGraph
-    val isFunctionalTest: Provider<Boolean> = providers
-      .provider { taskGraph.hasTask(":functionalTest") }
+    val isFunctionalTest: Provider<Boolean> = providers.provider { taskGraph.hasTask(":functionalTest") }
 
     tasks.withType(Sign::class.java).configureEach { t ->
       with(t) {
         inputs.property("version", publishedVersion)
+        inputs.property("is-snapshot", isSnapshot)
         inputs.property("is-ci", isCi)
         inputs.property("is-functional-test", isFunctionalTest)
 
         // Don't sign snapshots
-        onlyIf("Not a snapshot") { !isSnapshot.get() }
+        onlyIf("Not a snapshot") {
+          !(inputs.properties["is-snapshot"] as Boolean)
+        }
         // We currently don't support publishing from CI
-        onlyIf("release environment") { !isCi.get() }
+        onlyIf("release environment") {
+          !(inputs.properties["is-ci"] as Boolean)
+        }
         // Don't sign when running functional tests
-        onlyIf("not running functional tests") { !isFunctionalTest.get() }
+        onlyIf("not running functional tests") {
+          !(inputs.properties["is-functional-test"] as Boolean)
+        }
 
         doFirst {
-          logger.quiet("Signing v${publishedVersion.get()}")
+          val version = inputs.properties["version"] as String
+          logger.quiet("Signing v$version")
         }
       }
     }
 
-    tasks.withType(DokkaTask::class.java).configureEach { t ->
-      t.inputs.property("is-functional-test", isFunctionalTest)
+    tasks.withType(DokkaGeneratePublicationTask::class.java).configureEach { t ->
+      val key = "is-functional-test"
+      t.inputs.property(key, isFunctionalTest)
 
       // Don't sign when running functional tests
-      t.onlyIf("not running functional tests") { !isFunctionalTest.get() }
+      t.onlyIf("not running functional tests") {
+        !(t.inputs.properties[key] as Boolean)
+      }
     }
 
     configureMetalava()

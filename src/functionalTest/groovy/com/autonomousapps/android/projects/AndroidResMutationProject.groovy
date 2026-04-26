@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -68,10 +68,10 @@ final class AndroidResMutationProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
-      .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib') { lib ->
         lib.manifest = libraryManifest('com.example.lib')
         lib.withBuildScript { bs ->
-          bs.plugins(Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion)
+          bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
           bs.dependencies(
             implementation(':res'),
@@ -81,17 +81,17 @@ final class AndroidResMutationProject extends AbstractAndroidProject {
         }
         lib.sources = sources
       }
-      .withAndroidLibProject('res', 'com.example.lib.res') { res ->
+      .withAndroidLibProject('res') { res ->
         res.withBuildScript { bs ->
-          bs.plugins(Plugins.androidLib, Plugins.dependencyAnalysisNoVersion)
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.res')
         }
         res.manifest = libraryManifest('com.example.lib.res')
         res.strings = AndroidStringRes.DEFAULT
       }
-      .withAndroidLibProject('layouts', 'com.example.lib.layouts') { res ->
+      .withAndroidLibProject('layouts') { res ->
         res.withBuildScript { bs ->
-          bs.plugins(Plugins.androidLib, Plugins.dependencyAnalysisNoVersion)
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.layouts')
           bs.dependencies(
             constraintLayout('implementation'),

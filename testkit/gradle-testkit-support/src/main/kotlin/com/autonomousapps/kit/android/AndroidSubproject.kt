@@ -1,12 +1,14 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.android
 
 import com.autonomousapps.kit.File
 import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.Subproject
 import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 
 public class AndroidSubproject(
   name: String,
@@ -55,7 +57,7 @@ public class AndroidSubproject(
     private fun defaultBuildScriptBuilder(): BuildScript.Builder {
       return BuildScript.Builder().apply {
         plugins = mutableListOf()
-        android = AndroidBlock.defaultAndroidAppBlock(false)
+        android = AndroidBlock.defaultAndroidAppBlock()
         dependencies = mutableListOf()
         additions = ""
       }
@@ -71,6 +73,16 @@ public class AndroidSubproject(
 
     public fun build(): AndroidSubproject {
       val name = name ?: error("'name' must not be null")
+
+      // Update the `kotlin{}` block if there's any Kotlin source and the block hasn't already been set.
+      val hasKotlin = sources.any { s -> s.sourceType == SourceType.KOTLIN }
+      if (hasKotlin && buildScript.kotlin == null) {
+        // mutates buildScript
+        withBuildScript {
+          kotlin = Kotlin.DEFAULT
+        }
+      }
+
       return AndroidSubproject(
         name = name,
         variant = variant,

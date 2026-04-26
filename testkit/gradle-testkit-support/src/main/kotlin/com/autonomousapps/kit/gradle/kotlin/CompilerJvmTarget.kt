@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle.kotlin
 
@@ -13,7 +13,6 @@ public class CompilerJvmTarget(
     s.append("jvmTarget.set(")
     s.append(jvmTargetFrom(target))
     s.append(")")
-    s.appendLine()
   }
 
   private companion object {

@@ -1,4 +1,4 @@
-// Copyright (c) 2024. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -67,8 +67,7 @@ dependencies {
     because("For extending Gradle Plugin-Publish Plugin functionality")
   }
 
-  // Need to use embedded version for Gradle 9 compatibility.
-  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${embeddedKotlinVersion}") {
+  implementation(libs.kotlin.gradle) {
     because("For applying the kotlin-jvm plugin")
   }
   implementation(libs.kotlinDokkaGradlePlugin)

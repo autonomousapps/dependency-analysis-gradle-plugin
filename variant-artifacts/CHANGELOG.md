@@ -1,5 +1,15 @@
 Variant-Artifacts Changelog
 
+# Version 0.6.0
+* (Reverted) Compiled against Kotlin 2.3.20. Compiling against Kotlin 2.2.21 again, with language level 2.2.
+
+# Version 0.5.0
+* Don't call deprecated API (`Configuration.isVisible`).
+* Compiled against Kotlin 2.3.20.
+
+# Version 0.4.0
+* Compiled against Kotlin 2.2 and Gradle 9.4.1.
+
 # Version 0.3.3
 * [Fix] Remove auto-applied kotlin-stdlib for Gradle 8.11 support.
 

@@ -138,6 +138,30 @@ dependencyAnalysis {
 }
 ----
 
+=== Partial analysis
+
+The instructions above will configure the plugin to do a global analysis of the entire multi-project project. There are
+cases where it may be desirable to do partial analysis, or analysis of just one or a set of projects, or conversely to
+exclude specific projects. There are various ways to achieve this.
+
+One such approach is to use the `projectHealth` task, which is discussed in more detail <<project_health,below>>.
+
+Another common approach, especially for very large projects, is to <<advanced_usage,selectively apply>> the
+`com.autonomousapps.dependency-analysis` plugin, rather than the `com.autonomousapps.build-health` plugin as discussed
+above.
+
+Finally, one may use a Gradle property to specify which projects to include:
+
+.gradle.properties
+[source,properties]
+----
+# Include all projects except those whose path begins with `:prefix`
+dependency.analysis.project.includes=^((?!:prefix)).*$
+----
+
+The value provided is evaluated as a regex. The example above uses a negative lookahead to exclude any project whose
+path (`project.path`) begins with `:prefix`, and include everything else.
+
 == Repositories
 
 From 2.19.0 for releases, and 2.18.1-SNAPSHOT for snapshots, this plugin uses https://central.sonatype.com. To add this
@@ -159,7 +183,7 @@ pluginManagement {
 }
 ----
 
-== More advanced usage
+== More advanced usage [[advanced_usage]]
 
 You do not have to apply this plugin to all projects via the settings script. It can also be applied to only specific
 subprojects. In this case, it must also be applied to the root build script.
@@ -184,7 +208,7 @@ IMPORTANT: If your project uses Kotlin or Android (or both), then those plugins 
 script classloader (or a parent). See
 https://github.com/autonomousapps/dependency-analysis-gradle-plugin/wiki/Adding-to-your-project[the wiki] for more information
 
-== Project Health
+== Project Health [[project_health]]
 
 The analysis can be run against individual modules with the `projectHealth` task. For example:
 
@@ -307,7 +331,7 @@ you want to create an image for a containerized build.
 
 where "Main" refers to the name of the source set or Android variant (capitalized).
 
-=== Print the denominator tree
+=== Print the dominator tree
 
 This will print the https://en.wikipedia.org/wiki/Dominator_(graph_theory)[dominator tree] for the given project. This
 is useful when looking for "fat" dependencies that contribute significantly to final binary size (such as with a fatjar

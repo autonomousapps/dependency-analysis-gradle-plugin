@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 
 //file:noinspection DuplicatedCode
@@ -65,18 +65,14 @@ abstract class AbstractVariantProject extends AbstractAndroidProject {
         a.styles = AndroidStyleRes.DEFAULT
         a.colors = AndroidColorRes.DEFAULT
         a.withBuildScript { bs ->
-          bs.plugins = appliedPlugins
+          bs.plugins(appliedPlugins)
           bs.android = defaultAndroidAppBlock()
           bs.dependencies = dependencies
         }
       }.write()
   }
 
-  protected final List<Plugin> appliedPlugins = [
-    Plugins.androidApp,
-    Plugins.kotlinAndroidNoVersion,
-    Plugins.dependencyAnalysisNoVersion,
-  ]
+  protected final List<Plugin> appliedPlugins = androidApp()
 
   protected final List<Dependency> dependencies = [
     kotlinStdLib("implementation"),

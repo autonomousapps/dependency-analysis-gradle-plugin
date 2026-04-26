@@ -1,5 +1,22 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.9.0
+* (Reverted) Compiled against Kotlin 2.3.20. Compiling against Kotlin 2.2.21 again, with language level 2.2.
+
+# Version 3.8.0
+* [feat]: record lambda in binaryClassAccesses.
+* [feat]: support analysis of a Gradle version catalog dependency.
+* [feat]: remove unused 'file' property.
+* Compiled against Kotlin 2.3.20.
+
+# Version 3.7.0
+* [feat]: Expose useParenthesesForGroovy configuration for Groovy DSL syntax control.
+* [fix]: fix regex for excluding all *Generated annotations.
+* [fix]: don't attempt to suggest upgrading an undeclared 'parent' dependency of a KMP dependency.
+* [fix]: the 'androidMain' source set is special.
+* [chore]: Compiled against Kotlin 2.2 and Gradle 9.4.1.
+* [chore]: add Code of Conduct.
+
 # Version 3.6.1
 * [Fix]: use compilation.disambiguatedName for crafting the task suffix.
 

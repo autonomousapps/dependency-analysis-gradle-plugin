@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage")
 
@@ -53,6 +53,9 @@ public abstract class GenerateProjectHealthReportTask @Inject constructor(
   @get:Input
   public abstract val useTypesafeProjectAccessors: Property<Boolean>
 
+  @get:Input
+  public abstract val useParenthesesForGroovy: Property<Boolean>
+
   @get:OutputFile
   public abstract val output: RegularFileProperty
 
@@ -64,6 +67,7 @@ public abstract class GenerateProjectHealthReportTask @Inject constructor(
       it.dslKind.set(dslKind)
       it.dependencyMap.set(dependencyMap)
       it.useTypesafeProjectAccessors.set(useTypesafeProjectAccessors)
+      it.useParenthesesForGroovy.set(useParenthesesForGroovy)
       it.output.set(output)
     }
   }
@@ -75,6 +79,7 @@ public abstract class GenerateProjectHealthReportTask @Inject constructor(
     public val dslKind: Property<DslKind>
     public val dependencyMap: MapProperty<String, String>
     public val useTypesafeProjectAccessors: Property<Boolean>
+    public val useParenthesesForGroovy: Property<Boolean>
     public val output: RegularFileProperty
   }
 
@@ -93,6 +98,7 @@ public abstract class GenerateProjectHealthReportTask @Inject constructor(
         dslKind = parameters.dslKind.get(),
         dependencyMap = parameters.dependencyMap.get().toLambda(),
         useTypesafeProjectAccessors = parameters.useTypesafeProjectAccessors.get(),
+        useParenthesesForGroovy = parameters.useParenthesesForGroovy.get(),
       ).text
 
       output.writeText(consoleText)

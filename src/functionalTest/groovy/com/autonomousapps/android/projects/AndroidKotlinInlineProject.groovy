@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -27,10 +27,11 @@ final class AndroidKotlinInlineProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
+      // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('lib') { l ->
-        l.manifest = AndroidManifest.defaultLib('com.example.lib')
+        l.manifest = null
         l.withBuildScript { bs ->
-          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
+          bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock()
           bs.dependencies = [
             coreKtx('implementation'),

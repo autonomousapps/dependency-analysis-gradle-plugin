@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.android
 
@@ -13,7 +13,7 @@ internal class AgpVersion private constructor(val version: String) : Comparable<
   companion object {
 
     @JvmStatic val AGP_MIN = version("8.10.0")
-    @JvmStatic val AGP_MAX = version("8.13.2")
+    @JvmStatic val AGP_MAX = version("9.1.0")
 
     @JvmStatic fun current(): AgpVersion = AgpVersion(agpVersion())
     @JvmStatic fun version(version: String): AgpVersion = AgpVersion(version)

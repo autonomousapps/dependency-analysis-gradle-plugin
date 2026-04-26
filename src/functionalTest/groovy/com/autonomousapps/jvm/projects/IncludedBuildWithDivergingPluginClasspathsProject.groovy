@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm.projects
 
@@ -8,6 +8,8 @@ import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 
 final class IncludedBuildWithDivergingPluginClasspathsProject extends AbstractProject {
+
+  static final String SERVICE_PREFIX = "service::"
 
   final GradleProject gradleProject
 
@@ -19,7 +21,8 @@ final class IncludedBuildWithDivergingPluginClasspathsProject extends AbstractPr
     def printServiceObject = """\
       afterEvaluate { // needs 'afterEvaluate' because plugin code also uses 'afterEvaluate'
         tasks.named('explodeJarMain') {
-          doLast { println(inMemoryCache.get()) }
+          // Gradle's representation of inMemoryCache.get() changes without warning between versions
+          doLast { println("$SERVICE_PREFIX" + inMemoryCache.get()) }
         }
       }""".stripIndent()
 

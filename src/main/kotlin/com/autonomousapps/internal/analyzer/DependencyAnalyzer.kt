@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage")
 
@@ -6,6 +6,7 @@ package com.autonomousapps.internal.analyzer
 
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.artifactsFor
+import com.autonomousapps.internal.opaqueComponentArtifacts
 import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.model.source.SourceKind
@@ -16,6 +17,7 @@ import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 
 /** Abstraction for differentiating between android-app, android-lib, and java-lib projects.  */
 internal interface DependencyAnalyzer {
@@ -215,6 +217,9 @@ internal abstract class AbstractDependencyAnalyzer(
       t.setConfiguration(project.configurations.named(compileConfigurationName)) { c ->
         c.artifactsFor(attributeValueJar)
       }
+      t.setOpaqueConfiguration(project.configurations.named(compileConfigurationName)) { c ->
+        c.opaqueComponentArtifacts()
+      }
       t.buildPath.set(project.buildPath(compileConfigurationName))
 
       t.output.set(outputPaths.compileArtifactsPath)
@@ -226,6 +231,9 @@ internal abstract class AbstractDependencyAnalyzer(
     return project.tasks.register("artifactsReportRuntime$taskNameSuffix", ArtifactsReportTask::class.java) { t ->
       t.setConfiguration(project.configurations.named(runtimeConfigurationName)) { c ->
         c.artifactsFor(attributeValueJar)
+      }
+      t.setOpaqueConfiguration(project.configurations.named(runtimeConfigurationName)) { c ->
+        c.opaqueComponentArtifacts()
       }
       t.buildPath.set(project.buildPath(runtimeConfigurationName))
 

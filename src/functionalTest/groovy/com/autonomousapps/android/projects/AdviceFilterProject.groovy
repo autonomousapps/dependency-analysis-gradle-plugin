@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -14,6 +14,7 @@ import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.gradle.Dependency.implementation
 import static com.autonomousapps.kit.gradle.Dependency.project
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
@@ -44,50 +45,74 @@ final class AdviceFilterProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
-      .withRootProject { root ->
-        root.withBuildScript { buildScript ->
-          buildScript.additions = rootAdditions
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.additions = rootAdditions
         }
       }
       .withAndroidSubproject('app') { app ->
         app.sources = appSources
         app.styles = AndroidStyleRes.DEFAULT
         app.colors = AndroidColorRes.DEFAULT
-        app.withBuildScript { script ->
-          script.plugins = androidAppPlugins
-          script.android = defaultAndroidAppBlock()
-          script.dependencies = appDependencies
-          script.additions = appAdditions
+        app.withBuildScript { bs ->
+          bs.plugins = androidAppPlugins()
+          bs.android = defaultAndroidAppBlock(isLessThanAgp9)
+          bs.dependencies = appDependencies
+          bs.additions = appAdditions
         }
       }
-      .withAndroidLibProject('lib_android', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib_android') { lib ->
         lib.sources = libAndroidSources
-        lib.withBuildScript { script ->
-          script.plugins = androidLibPlugins
-          script.android = defaultAndroidLibBlock()
-          script.dependencies = androidLibDependencies
+        lib.withBuildScript { bs ->
+          bs.plugins = androidLibPlugins()
+          bs.android = defaultAndroidLibBlock(isLessThanAgp9)
+          bs.dependencies = androidLibDependencies
         }
       }
       .withSubproject('lib_jvm') { lib ->
         lib.sources = libJvmSources
-        lib.withBuildScript { script ->
-          script.plugins = jvmLibPlugins
-          script.dependencies = jvmLibDependencies
+        lib.withBuildScript { bs ->
+          bs.plugins = jvmLibPlugins
+          bs.dependencies = jvmLibDependencies
         }
-      }.write()
+      }
+      .withSubproject('java-annotations') { lib ->
+        lib.sources = annotationSource()
+        lib.withBuildScript { bs ->
+          bs.plugins(
+            Plugin.javaLibrary,
+            Plugins.dependencyAnalysisNoVersion,
+          )
+        }
+      }
+      .write()
   }
 
-  private List<Plugin> androidAppPlugins = [
-    Plugins.androidApp,
-    Plugins.kotlinAndroidNoVersion,
-    Plugins.dependencyAnalysisNoVersion,
-  ]
+  private List<Plugin> androidAppPlugins() {
+    def plugins = [
+      Plugins.androidApp,
+      Plugins.dependencyAnalysisNoVersion,
+    ]
 
-  private List<Plugin> androidLibPlugins = [
-    Plugins.androidLib,
-    Plugins.kotlinAndroidNoVersion,
-    Plugins.dependencyAnalysisNoVersion,
-  ]
+    if (isLessThanAgp9) {
+      plugins += Plugins.kotlinAndroidNoVersion
+    }
+
+    return plugins
+  }
+
+  private List<Plugin> androidLibPlugins() {
+    def plugins = [
+      Plugins.androidLib,
+      Plugins.dependencyAnalysisNoVersion,
+    ]
+
+    if (isLessThanAgp9) {
+      plugins += Plugins.kotlinAndroidNoVersion
+    }
+
+    return plugins
+  }
 
   private List<Plugin> jvmLibPlugins = [
     Plugins.kotlinJvmNoVersion,
@@ -97,7 +122,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
 
   private List<Source> appSources = [
     new Source(
-      SourceType.KOTLIN, "MainActivity", "com/example",
+      SourceType.KOTLIN, 'MainActivity', 'com/example',
       """\
         package com.example
         
@@ -121,14 +146,16 @@ final class AdviceFilterProject extends AbstractAndroidProject {
 
   private List<Source> libAndroidSources = [
     new Source(
-      SourceType.KOTLIN, "AndroidLibrary", "com/example/lib",
+      SourceType.KOTLIN, 'AndroidLibrary', 'com/example/lib',
       """\
         package com.example.lib
 
         import androidx.annotation.AnyThread
         import androidx.appcompat.app.AppCompatActivity
         import androidx.core.provider.FontRequest
+        import com.example.producer.PrintFormat
               
+        @PrintFormat
         class AndroidLibrary {
           // FontRequest from CORE_KTX is part of the ABI
           fun abi() = FontRequest("foo", "foo", "foo", 0)
@@ -146,7 +173,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
 
   private List<Source> libJvmSources = [
     new Source(
-      SourceType.KOTLIN, "JvmLibrary", "com/example",
+      SourceType.KOTLIN, 'JvmLibrary', 'com/example',
       """\
         package com.example
 
@@ -171,6 +198,53 @@ final class AdviceFilterProject extends AbstractAndroidProject {
     )
   ]
 
+  // Borrows liberally from `org.jetbrains:annotations:13.0`
+  // Also jvm.projects.CompileOnlyProject
+  private static List<Source> annotationSource() {
+    return [
+      Source.java(
+        '''\
+            package com.example.producer;
+
+            import java.lang.annotation.*;
+
+            @Target({ElementType.TYPE})
+            @Retention(RetentionPolicy.SOURCE)
+            @Pattern(PrintFormatPattern.PRINT_FORMAT)
+            public @interface PrintFormat {}
+          '''
+      )
+        .withPath('com.example.producer', 'PrintFormat')
+        .build(),
+      Source.java(
+        '''\
+            package com.example.producer;
+
+            import java.lang.annotation.*;
+
+            @Target({ElementType.TYPE})
+            @Retention(RetentionPolicy.SOURCE)
+            public @interface Pattern {
+              String value();
+            }
+          '''
+      )
+        .withPath('com.example.producer', 'Pattern')
+        .build(),
+      Source.java(
+        '''\
+            package com.example.producer;
+
+            class PrintFormatPattern {
+              static final String PRINT_FORMAT = "magic";
+            }
+          '''
+      )
+        .withPath('com.example.producer', 'PrintFormatPattern')
+        .build(),
+    ]
+  }
+
   private List<Dependency> appDependencies = [
     project('implementation', ':lib_android'),
     project('implementation', ':lib_jvm'),
@@ -182,18 +256,19 @@ final class AdviceFilterProject extends AbstractAndroidProject {
   ]
 
   private List<Dependency> androidLibDependencies = [
-    kotlinStdLib("api"),
-    appcompat("api"),
-    coreKtx("implementation"),
-    navUiKtx("implementation")
+    kotlinStdLib('api'),
+    appcompat('api'),
+    coreKtx('implementation'),
+    navUiKtx('implementation'),
+    implementation(':java-annotations'),
   ]
 
   private List<Dependency> jvmLibDependencies = [
-    kotlinStdLib("api"),
-    commonsText("implementation"),
-    commonsCollections("api"),
-    commonsIO("implementation"),
-    tpCompiler("kapt")
+    kotlinStdLib('api'),
+    commonsText('implementation'),
+    commonsCollections('api'),
+    commonsIO('implementation'),
+    tpCompiler('kapt'),
   ]
 
   Set<ProjectAdvice> actualBuildHealth() {
@@ -204,8 +279,13 @@ final class AdviceFilterProject extends AbstractAndroidProject {
     def advice = [
       removeLibAndroid, removeCoreKtx, removeCommonsIo,
       addAppCompat, addCommonsCollections,
-      changeAndroidxAnnotation, changeRxlint
+      changeRxlint
     ]
+
+    // AGP 9 has different dependency resolution behavior (not entirely sure why)
+    advice += isLessThanAgp9 ? addAndroidxLifecycle : addAndroidxLifecycleAgp9
+    advice += isLessThanAgp9 ? addKotlinxCoroutinesAndroid : addKotlinxCoroutinesAndroidAgp9
+
     advice.removeAll(ignored)
     return advice
   }
@@ -213,9 +293,13 @@ final class AdviceFilterProject extends AbstractAndroidProject {
   List<Advice> expectedLibAndroidAdvice(Advice... ignored = []) {
     def advice = [
       removeCoreKtxAndroidLib, removeNavUiKtx,
-      addAndroidxCore, addAndroidxTransition,
-      changeAppcompat
+      addAndroidAnnotation, addAndroidxCore,
+      changeJavaAnnotations,
     ]
+
+    // AGP 9 has different dependency resolution behavior (not entirely sure why)
+    advice += isLessThanAgp9 ? addAndroidxTransition : addAndroidxTransitionAgp9
+
     advice.removeAll(ignored)
     return advice
   }
@@ -232,15 +316,14 @@ final class AdviceFilterProject extends AbstractAndroidProject {
 
   final removeLibAndroid = Advice.ofRemove(projectCoordinates(':lib_android'), 'implementation')
   final removeCommonsIo = Advice.ofRemove(moduleCoordinates('commons-io:commons-io', '2.6'), 'debugImplementation')
-  private final removeCoreKtx = Advice.ofRemove(moduleCoordinates('androidx.core:core-ktx', '1.1.0'), 'implementation')
-  private final addAppCompat = Advice.ofAdd(
-    moduleCoordinates('androidx.appcompat:appcompat', '1.1.0'), 'implementation'
-  )
+  private final removeCoreKtx = Advice.ofRemove(moduleCoordinates('androidx.core:core-ktx', '1.13.1'), 'implementation')
+  private final addAppCompat = Advice.ofAdd(moduleCoordinates('androidx.appcompat:appcompat', '1.7.1'), 'implementation')
+  private final addAndroidxLifecycle = Advice.ofAdd(moduleCoordinates('androidx.lifecycle:lifecycle-viewmodel', '2.9.0'), 'implementation')
+  private final addAndroidxLifecycleAgp9 = Advice.ofAdd(moduleCoordinates('androidx.lifecycle:lifecycle-viewmodel', '2.6.2'), 'implementation')
+  final addKotlinxCoroutinesAndroid = Advice.ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-coroutines-android', '1.7.3'), 'runtimeOnly')
+  final addKotlinxCoroutinesAndroidAgp9 = Advice.ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-coroutines-android', '1.6.4'), 'runtimeOnly')
   final addCommonsCollections = Advice.ofAdd(
     moduleCoordinates('org.apache.commons:commons-collections4', '4.4'), 'implementation'
-  )
-  final changeAndroidxAnnotation = Advice.ofChange(
-    moduleCoordinates('androidx.annotation:annotation', '1.1.0'), 'api', 'compileOnly'
   )
   final changeRxlint = Advice.ofChange(
     moduleCoordinates('nl.littlerobots.rxlint:rxlint', '1.7.6'), 'implementation', 'runtimeOnly'
@@ -248,15 +331,17 @@ final class AdviceFilterProject extends AbstractAndroidProject {
 
   // lib-android
   final removeNavUiKtx = Advice.ofRemove(
-    moduleCoordinates('androidx.navigation:navigation-ui-ktx', '2.1.0'), 'implementation'
+    moduleCoordinates('androidx.navigation:navigation-ui-ktx', '2.9.7'), 'implementation'
   )
   private final removeCoreKtxAndroidLib = Advice.ofRemove(
-    moduleCoordinates('androidx.core:core-ktx', '1.1.0'), 'implementation'
+    moduleCoordinates('androidx.core:core-ktx', '1.13.1'), 'implementation'
   )
-  final addAndroidxCore = Advice.ofAdd(moduleCoordinates('androidx.core:core', '1.1.0'), 'api')
-  final addAndroidxTransition = Advice.ofAdd(moduleCoordinates('androidx.transition:transition', '1.0.1'), 'runtimeOnly')
-  final changeAppcompat = Advice.ofChange(
-    moduleCoordinates('androidx.appcompat:appcompat', '1.1.0'), 'api', 'implementation'
+  final addAndroidAnnotation = Advice.ofAdd(moduleCoordinates('androidx.annotation:annotation', '1.9.1'), 'implementation')
+  final addAndroidxCore = Advice.ofAdd(moduleCoordinates('androidx.core:core', '1.13.1'), 'api')
+  final addAndroidxTransition = Advice.ofAdd(moduleCoordinates('androidx.transition:transition', '1.3.0'), 'runtimeOnly')
+  final addAndroidxTransitionAgp9 = Advice.ofAdd(moduleCoordinates('androidx.transition:transition', '1.2.0'), 'runtimeOnly')
+  final changeJavaAnnotations = Advice.ofChange(
+    projectCoordinates(':java-annotations'), 'implementation', 'compileOnly'
   )
 
   // lib-jvm

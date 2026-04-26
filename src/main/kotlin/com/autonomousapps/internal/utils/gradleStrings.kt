@@ -1,7 +1,8 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.utils
 
+import com.autonomousapps.internal.utils.OpaqueNames.GRADLE_VERSION_CATALOG
 import com.autonomousapps.model.*
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.*
@@ -26,6 +27,20 @@ import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifi
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import java.io.File
 import java.io.Serializable
+
+public object OpaqueNames {
+  public const val GRADLE_VERSION_CATALOG: String = "gradle-version-catalog"
+
+  /**
+   * An example file/URL path is:
+   * ```
+   * "file:/Users/tony/.gradle/caches/9.2.1/dependencies-accessors/d174284f561fa71e6bcefa60fe17d9f7c7a5acf7/classes/"
+   * ```
+   */
+  internal fun isGradleVersionCatalog(fileLike: String): Boolean {
+    return fileLike.contains("dependencies-accessors")
+  }
+}
 
 /** Converts this [ResolvedDependencyResult] to group-artifact-version (GAV) coordinates in a tuple of (GA, V?). */
 internal fun ResolvedDependencyResult.toCoordinates(): Coordinates =
@@ -52,7 +67,7 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
 }
 
 private fun ProjectComponentIdentifier.projectPath(): String {
-  return (this as? DefaultProjectComponentIdentifier)?.projectPath?.toString()
+  return (this as? DefaultProjectComponentIdentifier)?.projectPath
     ?: error("${toCoordinates(GradleVariantIdentification.EMPTY)} is not a DefaultProjectComponentIdentifier")
 }
 
@@ -89,9 +104,6 @@ private fun ComponentIdentifier.wrapInIncludedBuildCoordinates(variant: Resolved
   )
 }
 
-/** Returns the [coordinates][Coordinates] of the root of [this][Configuration]. */
-internal fun Configuration.rootCoordinates(): Coordinates = incoming.resolutionResult.root.rootCoordinates()
-
 /** Returns the [coordinates][Coordinates] of the root of [this][ResolvedComponentResult]. */
 internal fun ResolvedComponentResult.rootCoordinates(): Coordinates {
   return id
@@ -126,13 +138,20 @@ private fun ComponentIdentifier.toIdentifier(): String = when (this) {
   is ModuleComponentIdentifier -> {
     // flat JAR/AAR files have no group. I don't trust that, if absent, it will be blank rather
     // than null.
+    @Suppress("UselessCallOnNotNull")
     if (moduleIdentifier.group.isNullOrBlank()) moduleIdentifier.name
     else moduleIdentifier.toString()
   }
   // e.g. "Gradle API"
   is OpaqueComponentIdentifier -> displayName
   // for a file dependency
-  is OpaqueComponentArtifactIdentifier -> displayName
+  is OpaqueComponentArtifactIdentifier -> {
+    if (OpaqueNames.isGradleVersionCatalog(file.toString())) {
+      GRADLE_VERSION_CATALOG
+    } else {
+      displayName
+    }
+  }
   else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
 }.intern()
 
@@ -223,10 +242,34 @@ internal fun Dependency.toIdentifier(): Pair<ModuleInfo, GradleVariantIdentifica
             // Handle weirdness that seems to come from KGP? Unclear. See comments from
             // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/997#issuecomment-1826627186
             when (firstFile) {
+              null -> null
               is Function0<*> -> null // "() -> Any?"
               is Provider<*> -> null  // "property 'destinationDirectory'"
               is File -> firstFile.invariantSeparatorsPath.substringAfterLast('/')
-              else -> firstFile?.toString()?.let { it.substring(it.lastIndexOfAny(charArrayOf('/', '\\')) + 1) }
+
+              // TODO: can be a URL too
+              // TODO: cleanup
+
+              else -> {
+                // This can result in an empty string when this is the value (a gradle version catalog):
+                // "file:/Users/tony/.gradle/caches/9.2.1/dependencies-accessors/d174284f561fa71e6bcefa60fe17d9f7c7a5acf7/classes/"
+                val s = firstFile.toString()
+
+                if (OpaqueNames.isGradleVersionCatalog(s)) {
+                  // "...dependencies-accessors..." => GRADLE_VERSION_CATALOG
+                  GRADLE_VERSION_CATALOG
+                } else if (s.endsWith('/') || s.endsWith('\\')) {
+                  // ".../classes/" => "classes"
+                  // "...\classes\" => "classes"
+                  s
+                    .substringBeforeLast('/').substringBeforeLast('\\')
+                    .let { it.substring(it.lastIndexOfAny(charArrayOf('/', '\\')) + 1) }
+                } else {
+                  // ".../foo" => "foo"
+                  // "...\foo" => "foo"
+                  s.let { it.substring(it.lastIndexOfAny(charArrayOf('/', '\\')) + 1) }
+                }
+              }
             }
           }?.let {
             Pair(ModuleInfo(it.intern()), GradleVariantIdentification.EMPTY)

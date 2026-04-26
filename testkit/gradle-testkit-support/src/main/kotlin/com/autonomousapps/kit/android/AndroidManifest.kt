@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.android
 
@@ -15,8 +15,7 @@ public class AndroidManifest(public val content: String) {
     public fun simpleApp(): AndroidManifest = AndroidManifest(
       """
       |<?xml version="1.0" encoding="utf-8"?>
-      |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      |  package="com.example">
+      |<manifest xmlns:android="http://schemas.android.com/apk/res/android">
       |
       |<application
       |  android:allowBackup="false"
@@ -33,8 +32,7 @@ public class AndroidManifest(public val content: String) {
     ): AndroidManifest = AndroidManifest(
       """
       |<?xml version="1.0" encoding="utf-8"?>
-      |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      |  package="com.example">
+      |<manifest xmlns:android="http://schemas.android.com/apk/res/android">
       |
       |<application
       |  android:allowBackup="true"
@@ -66,22 +64,16 @@ public class AndroidManifest(public val content: String) {
       )
     }
 
+    @JvmOverloads
     @JvmStatic
-    public fun app(application: String? = null): AndroidManifest {
+    public fun app(application: String? = null): AndroidManifest = appWithoutPackage(application)
+
+    @JvmStatic
+    public fun appEmpty(): AndroidManifest {
       return AndroidManifest(
         """
         |<?xml version="1.0" encoding="utf-8"?>
-        |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        |  package="com.example">
-        |
-        |<application
-        |  android:allowBackup="true"
-        |  android:label="Test app"
-        |  android:theme="@style/AppTheme"
-        |  ${application?.let { "android:name=\"$it\"" } ?: ""}>
-        |  ${activityBlock()}
-        |  </application>
-        |</manifest>
+        |<manifest xmlns:android="http://schemas.android.com/apk/res/android" />
         """.trimMargin()
       )
     }
@@ -100,15 +92,5 @@ public class AndroidManifest(public val content: String) {
 
     @JvmField
     public val DEFAULT_APP: AndroidManifest = app(null)
-
-    // TODO: stop using package
-    @JvmStatic
-    public fun defaultLib(packageName: String): AndroidManifest = AndroidManifest(
-      """
-      |<?xml version="1.0" encoding="utf-8"?>
-      |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      |  package="$packageName"/>
-      """.trimMargin()
-    )
   }
 }

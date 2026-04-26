@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
@@ -56,6 +56,9 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
 
   @get:Input
   public abstract val useTypesafeProjectAccessors: Property<Boolean>
+
+  @get:Input
+  public abstract val useParenthesesForGroovy: Property<Boolean>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
@@ -119,6 +122,7 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
             dslKind = dslKind.get(),
             dependencyMap = dependencyMap.get().toLambda(),
             useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
+            useParenthesesForGroovy = useParenthesesForGroovy.get(),
           ).text
           val projectPath = if (projectAdvice.projectPath == ":") "root project" else projectAdvice.projectPath
           consoleOutput.appendText("Advice for ${projectPath}\n$report")

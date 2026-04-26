@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
@@ -16,13 +16,13 @@ final class AllDependenciesSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion as GradleVersion, gradleProject.rootDir, 'computeAllDependencies')
+    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'computeAllDependencies')
 
     then: 'all dependencies report'
     def report = project.actualAllDependencies()
     assertThat(report).isEqualTo(project.expectedAllDependencies)
 
     where:
-    [gradleVersion, agpVersion] << multivariableDataPipe([GRADLE_LATEST], [AGP_8_13.version])
+    [gradleVersion, agpVersion] << multivariableDataPipe([GRADLE_LATEST], [AGP_LATEST_STABLE.version])
   }
 }

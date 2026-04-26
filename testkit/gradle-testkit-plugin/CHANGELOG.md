@@ -1,5 +1,10 @@
 Gradle TestKit Plugin Changelog
 
+# Version 0.18
+* [Feat] Update default support lib version to 0.23.
+* [Feat] Update default truth version to 1.7.0.
+* Compiled against Kotlin 2.2 and Gradle 9.4.1.
+
 # Version 0.17
 * [Feat] Update default support lib version to 0.21.
 

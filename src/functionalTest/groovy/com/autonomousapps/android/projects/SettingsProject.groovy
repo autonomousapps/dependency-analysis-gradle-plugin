@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -8,6 +8,7 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -37,10 +38,7 @@ abstract class SettingsProject {
       return newAndroidSettingsProjectBuilder(agpVersion: agpVersion, withKotlin: true)
         .withAndroidSubproject('app') { app ->
           app.withBuildScript { bs ->
-            bs.plugins = [
-              plugins.androidAppNoVersion,
-              plugins.kotlinAndroidNoVersion,
-            ]
+            bs.plugins(androidApp() - Plugins.dependencyAnalysisNoVersion)
             bs.android = defaultAndroidAppBlock()
             bs.dependencies = [
               project('implementation', ':lib'),
@@ -64,7 +62,7 @@ abstract class SettingsProject {
         </com.example.app.MessageLayout>'''.stripIndent()
           )
         }
-        .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+        .withAndroidLibProject('lib') { lib ->
           lib.withBuildScript { bs ->
             bs.plugins = [plugins.androidLibNoVersion]
             bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
@@ -72,12 +70,11 @@ abstract class SettingsProject {
           lib.colors = AndroidColorRes.DEFAULT
           lib.manifest = libraryManifest('com.example.lib')
         }
-        .withAndroidLibProject('lib2', 'com.example.lib2') { lib2 ->
+        .withAndroidLibProject('lib2') { lib2 ->
           lib2.withBuildScript { bs ->
             bs.plugins = [plugins.androidLibNoVersion]
             bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
           }
-          lib2.manifest = AndroidManifest.defaultLib('com.example.lib2')
           lib2.withFile('src/main/res/values/resources.xml', '''\
         <resources>
           <item name="message_layout" type="id"/>
@@ -89,7 +86,7 @@ abstract class SettingsProject {
 
     private static final List<Source> appSources = [
       new Source(
-        SourceType.KOTLIN, 'MainActivity.kt', 'com/example',
+        SourceType.KOTLIN, 'MainActivity', 'com/example',
         '''\
         package com.example
         
@@ -133,11 +130,7 @@ abstract class SettingsProject {
         }
         .withAndroidSubproject('app') { app ->
           app.withBuildScript { bs ->
-            bs.plugins = [
-              plugins.androidApp,
-              plugins.kotlinAndroid,
-              plugins.dependencyAnalysisNoVersion,
-            ]
+            bs.plugins(androidAppWithVersions())
             bs.android = defaultAndroidAppBlock()
           }
           app.manifest = appManifest('com.example.app')

@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kmp.projects
 
@@ -38,7 +38,7 @@ final class JvmTargetProject extends AbstractProject {
         s.sources = consumerSources()
         s.withBuildScript { bs ->
           bs.plugins = kmpLibrary
-          bs.kotlin { k ->
+          bs.kotlinKmp { k ->
             k.jvmTarget = KotlinJvmTarget.default()
             k.sourceSets { sourceSets ->
               sourceSets.commonMain { commonMain ->

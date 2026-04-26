@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
@@ -20,6 +20,7 @@ internal class ProjectHealthConsoleReportBuilder(
   /** Customize how dependencies are printed. */
   dependencyMap: ((String) -> String?)? = null,
   useTypesafeProjectAccessors: Boolean,
+  useParenthesesForGroovy: Boolean = false,
 ) {
 
   val text: String
@@ -31,6 +32,7 @@ internal class ProjectHealthConsoleReportBuilder(
     projectType = projectMetadata.projectType,
     dependencyMap = dependencyMap,
     useTypesafeProjectAccessors = useTypesafeProjectAccessors,
+    useParenthesesForGroovy = useParenthesesForGroovy,
   )
   private var shouldPrintNewLine = false
 

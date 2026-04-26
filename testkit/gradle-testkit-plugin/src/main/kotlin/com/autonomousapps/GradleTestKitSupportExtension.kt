@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
@@ -261,8 +261,8 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
   internal companion object {
 
     // TODO(tsr): can we inject these values so they're not hardcoded?
-    private const val DEFAULT_SUPPORT_VERSION = "0.21"
-    private const val DEFAULT_TRUTH_VERSION = "1.6.1"
+    private const val DEFAULT_SUPPORT_VERSION = "0.23"
+    private const val DEFAULT_TRUTH_VERSION = "1.7.0"
 
     fun create(project: Project): GradleTestKitSupportExtension {
       return project.extensions.create(

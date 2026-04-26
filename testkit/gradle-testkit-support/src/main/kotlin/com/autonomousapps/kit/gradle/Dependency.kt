@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle
 
@@ -14,6 +14,7 @@ public data class Dependency @JvmOverloads constructor(
   private val ext: String? = null,
   private val capability: String? = null,
   private val isVersionCatalog: Boolean = false,
+  private val isRaw: Boolean = false,
 ) : Element.Line {
 
   private val isProject = dependency.startsWith(":")
@@ -75,6 +76,16 @@ public data class Dependency @JvmOverloads constructor(
     return copy(ext = ext)
   }
 
+  /**
+   * Specify that this [Dependency], when rendered, should omit enclosing quotation marks. For example:
+   * ```
+   * implementation(files(libs::class.java.superclass.protectionDomain.codeSource.location))
+   * ```
+   */
+  public fun raw(): Dependency {
+    return copy(isRaw = true)
+  }
+
   /** Specify that this [Dependency] uses a version catalog accessor. */
   public fun versionCatalog(): Dependency {
     return copy(isVersionCatalog = true)
@@ -92,10 +103,7 @@ public data class Dependency @JvmOverloads constructor(
       dependency.startsWith(':') -> "$configuration project('$dependency')"
       // function call
       dependency.endsWith("()") -> "$configuration $dependency"
-      // Some kind of custom notation
-      !dependency.contains(":") -> "$configuration $dependency"
-      // version catalog reference
-      isVersionCatalog -> "$configuration $dependency"
+      noQuotes() -> "$configuration $dependency"
 
       // normal dependency
       else -> {
@@ -149,10 +157,7 @@ public data class Dependency @JvmOverloads constructor(
       dependency.startsWith(':') -> "$configuration(project(\"$dependency\"))"
       // function call
       dependency.endsWith("()") -> "$configuration($dependency)"
-      // Some kind of custom notation
-      !dependency.contains(":") -> "$configuration($dependency)"
-      // version catalog reference
-      isVersionCatalog -> "$configuration($dependency)"
+      noQuotes() -> "$configuration($dependency)"
 
       // normal dependency
       else -> {
@@ -193,6 +198,15 @@ public data class Dependency @JvmOverloads constructor(
     s.append(text)
   }
 
+  /**
+   * 1. some kind of custom notation; or
+   * 2. version catalog reference; or
+   * 3. we just don't want enclosing quotation marks
+   */
+  private fun noQuotes(): Boolean {
+    return !dependency.contains(":") || isVersionCatalog || isRaw
+  }
+
   override fun toString(): String {
     error("don't call toString()")
   }
@@ -209,6 +223,18 @@ public data class Dependency @JvmOverloads constructor(
     @JvmStatic
     public fun annotationProcessor(dependency: String, capability: String? = null): Dependency {
       return Dependency("annotationProcessor", dependency, capability = capability)
+    }
+
+    @JvmOverloads
+    @JvmStatic
+    public fun kapt(dependency: String, capability: String? = null): Dependency {
+      return Dependency("kapt", dependency, capability = capability)
+    }
+
+    @JvmOverloads
+    @JvmStatic
+    public fun ksp(dependency: String, capability: String? = null): Dependency {
+      return Dependency("ksp", dependency, capability = capability)
     }
 
     @JvmOverloads

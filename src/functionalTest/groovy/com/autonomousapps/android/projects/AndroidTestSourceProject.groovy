@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -10,7 +10,6 @@ import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Plugin
-import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -32,6 +31,13 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          if (withKapt) {
+            bs.plugins += rootKapt
+          }
+        }
+      }
       .withAndroidSubproject('app') { subproject ->
         subproject.sources = appSources()
         subproject.styles = AndroidStyleRes.DEFAULT
@@ -39,28 +45,26 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
         subproject.withBuildScript { buildScript ->
           buildScript.plugins = appPlugins()
           buildScript.android = defaultAndroidAppBlock()
-          buildScript.dependencies = appDependencies()
+          buildScript.dependencies(appDependencies())
         }
       }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('lib') { subproject ->
         subproject.sources = androidLibSources
-        subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
+        subproject.manifest = null
         subproject.withBuildScript { buildScript ->
-          buildScript.plugins =
-            [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
+          buildScript.plugins(androidLib())
           buildScript.android = defaultAndroidLibBlock(true, 'my.android.lib')
-          buildScript.dependencies = [
-            junit('implementation'),
-          ]
+          buildScript.dependencies(junit('implementation'))
         }
       }
       .write()
   }
 
   private List<Plugin> appPlugins() {
-    def plugins = [Plugins.androidApp, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
+    def plugins = androidApp()
     if (withKapt) {
-      plugins += Plugins.kotlinKaptNoVersion
+      plugins += kapt()
     }
     plugins
   }

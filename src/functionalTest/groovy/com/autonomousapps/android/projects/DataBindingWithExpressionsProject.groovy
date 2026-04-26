@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -29,15 +29,9 @@ final class DataBindingWithExpressionsProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = [
-            Plugins.androidApp,
-            Plugins.kotlinAndroidNoVersion,
-            Plugins.dependencyAnalysisNoVersion,
-          ]
+          bs.plugins(androidApp(true))
           bs.android = defaultAndroidAppBlock(true, 'com.example.app')
-          bs.dependencies = [
-            appcompat("implementation")
-          ]
+          bs.dependencies(appcompat("implementation"))
           bs.withGroovy('android.buildFeatures.dataBinding true')
         }
         app.manifest = appManifest('com.example.app')

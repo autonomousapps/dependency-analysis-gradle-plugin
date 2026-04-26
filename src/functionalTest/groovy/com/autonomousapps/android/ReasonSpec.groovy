@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
@@ -25,13 +25,13 @@ final class ReasonSpec extends AbstractAndroidSpec {
     def result = build(gradleVersion, gradleProject.rootDir, 'proj:reason', '--id', 'com.squareup.okhttp3:okhttp:4.6.0')
 
     then:
-    outputMatchesForOkhttp(result)
+    outputMatchesForOkhttp(result, project.isLessThanAgp9())
 
     when: 'Works for GA (no Version)'
     result = build(gradleVersion, gradleProject.rootDir, 'proj:reason', '--id', 'com.squareup.okhttp3:okhttp')
 
     then:
-    outputMatchesForOkhttp(result)
+    outputMatchesForOkhttp(result, project.isLessThanAgp9())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -46,13 +46,13 @@ final class ReasonSpec extends AbstractAndroidSpec {
     def result = build(gradleVersion, gradleProject.rootDir, 'proj:reason', '--id', 'com.squareup.okio:okio:2.6.0')
 
     then:
-    outputMatchesForOkio(result)
+    outputMatchesForOkio(result, project.isLessThanAgp9())
 
     when:
     result = build(gradleVersion, gradleProject.rootDir, 'proj:reason', '--id', 'com.squareup.okio:okio')
 
     then:
-    outputMatchesForOkio(result)
+    outputMatchesForOkio(result, project.isLessThanAgp9())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -139,7 +139,7 @@ final class ReasonSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << [gradleAgpMatrix().last()]
   }
 
-  private static void outputMatchesForOkhttp(BuildResult result) {
+  private static void outputMatchesForOkhttp(BuildResult result, boolean isLessThanAgp9) {
     def lines = Colors.decolorize(result.output).readLines()
     def asked = lines.find { it.startsWith("You asked about") }
     def advised = lines.find { it.startsWith('You have been advised') }
@@ -150,11 +150,16 @@ final class ReasonSpec extends AbstractAndroidSpec {
     assertThatResult(result).output().contains('Source: debug, main')
     assertThatResult(result).output().contains('Source: release, main')
     assertThatResult(result).output().contains('Source: debug, test')
-    assertThatResult(result).output().contains('Source: release, test')
-    assertThat(lines.findAll { it == '(no usages)' }.size()).isEqualTo(5)
+
+    if (isLessThanAgp9) {
+      assertThatResult(result).output().contains('Source: release, test')
+      assertThat(lines.findAll { it == '(no usages)' }.size()).isEqualTo(5)
+    } else {
+      assertThat(lines.findAll { it == '(no usages)' }.size()).isEqualTo(4)
+    }
   }
 
-  private static void outputMatchesForOkio(BuildResult result) {
+  private static void outputMatchesForOkio(BuildResult result, boolean isLessThanAgp9) {
     def lines = Colors.decolorize(result.output).readLines()
     def asked = lines.find { it.startsWith("You asked about") }
     def advised = lines.find { it.startsWith('You have been advised') }
@@ -165,10 +170,16 @@ final class ReasonSpec extends AbstractAndroidSpec {
     assertThatResult(result).output().contains('Source: debug, main')
     assertThatResult(result).output().contains('Source: release, main')
     assertThatResult(result).output().contains('Source: debug, test')
-    assertThatResult(result).output().contains('Source: release, test')
 
-    assertThat(lines.findAll { it.endsWith('Uses 1 class: okio.Buffer (implies testImplementation).') }.size())
-      .isEqualTo(2)
+    if (isLessThanAgp9) {
+      assertThatResult(result).output().contains('Source: release, test')
+      assertThat(lines.findAll { it.endsWith('Uses 1 class: okio.Buffer (implies testImplementation).') }.size())
+        .isEqualTo(2)
+    } else {
+      assertThat(lines.findAll { it.endsWith('Uses 1 class: okio.Buffer (implies testImplementation).') }.size())
+        .isEqualTo(1)
+    }
+
     assertThat(lines.findAll { it == '(no usages)' }.size()).isEqualTo(3)
   }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -33,17 +33,17 @@ final class TestInstrumentationRunnerProject extends AbstractAndroidProject {
       .withAndroidSubproject('app') { app ->
         app.manifest = AndroidManifest.simpleApp()
         app.withBuildScript { bs ->
-          bs.plugins(androidAppPlugin)
+          bs.plugins(androidApp(false))
           bs.android = defaultAndroidAppBlock(false).tap {
             defaultConfig.testInstrumentationRunner = "$TEST_RUNNER_PACKAGE.$TEST_RUNNER_CLASS"
           }
           bs.dependencies(testRunner)
         }
       }
-      .withAndroidLibProject('test_runner', 'com.test.testrunner') { lib ->
+      .withAndroidLibProject('test_runner') { lib ->
         lib.sources = sourcesTestRunner
         lib.withBuildScript { bs ->
-          bs.plugins(androidLibPlugin)
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, TEST_RUNNER_PACKAGE)
           bs.dependencies(api('androidx.test:runner:1.5.2'))
         }

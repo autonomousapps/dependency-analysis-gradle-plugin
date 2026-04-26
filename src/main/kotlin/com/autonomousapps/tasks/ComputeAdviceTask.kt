@@ -1,8 +1,7 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.UsageContainer
@@ -11,6 +10,7 @@ import com.autonomousapps.internal.transform.StandardTransform
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import com.autonomousapps.model.internal.declaration.Declaration
@@ -81,6 +81,9 @@ public abstract class ComputeAdviceTask @Inject constructor(
   @get:Input
   public abstract val kapt: Property<Boolean>
 
+  @get:Input
+  public abstract val legacyKapt: Property<Boolean>
+
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -120,6 +123,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
       it.explicitSourceSets.set(explicitSourceSets)
       it.projectType.set(projectType)
       it.kapt.set(kapt)
+      it.legacyKapt.set(legacyKapt)
       it.redundantPluginReport.set(redundantJvmPluginReport)
       it.duplicateClassesReports.set(duplicateClassesReports)
 
@@ -143,6 +147,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
     public val explicitSourceSets: SetProperty<String>
     public val projectType: Property<ProjectType>
     public val kapt: Property<Boolean>
+    public val legacyKapt: Property<Boolean>
     public val redundantPluginReport: RegularFileProperty
     public val duplicateClassesReports: ListProperty<RegularFile>
 
@@ -182,6 +187,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
       val explicitSourceSets = parameters.explicitSourceSets.get()
       val projectType = parameters.projectType.get()
       val isKaptApplied = parameters.kapt.get()
+      val isLegacyKaptApplied = parameters.legacyKapt.get()
       val ignoreKtx = parameters.ignoreKtx.get()
       val configurationNames = ConfigurationNames(projectType, supportedSourceSets)
 
@@ -203,7 +209,6 @@ public abstract class ComputeAdviceTask @Inject constructor(
         annotationProcessorUsages = annotationProcessorUsages,
         declarations = declarations,
         dependencyGraph = dependencyGraph,
-        supportedSourceSets = supportedSourceSets,
         explicitSourceSets = explicitSourceSets,
         projectType = projectType,
         configurationNames = configurationNames,
@@ -212,6 +217,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
 
       val pluginAdviceBuilder = PluginAdviceBuilder(
         isKaptApplied = isKaptApplied,
+        isLegacyKaptApplied = isLegacyKaptApplied,
         redundantPlugins = parameters.redundantPluginReport.fromNullableJsonSet<PluginAdvice>(),
         annotationProcessorUsages = annotationProcessorUsages,
       )
@@ -243,6 +249,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
 
 internal class PluginAdviceBuilder(
   isKaptApplied: Boolean,
+  isLegacyKaptApplied: Boolean,
   redundantPlugins: Set<PluginAdvice>,
   annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
 ) {
@@ -264,6 +271,16 @@ internal class PluginAdviceBuilder(
       if (usedProcs.isEmpty()) {
         pluginAdvice.add(PluginAdvice.redundantKapt())
       }
+    } else if (isLegacyKaptApplied) {
+      val usedProcs = annotationProcessorUsages.asSequence()
+        .filter { (_, usages) -> usages.any { it.bucket == Bucket.ANNOTATION_PROCESSOR } }
+        .map { it.key }
+        .toSet()
+
+      // kapt is unused
+      if (usedProcs.isEmpty()) {
+        pluginAdvice.add(PluginAdvice.redundantLegacyKapt())
+      }
     }
   }
 }
@@ -276,7 +293,6 @@ internal class DependencyAdviceBuilder(
   private val annotationProcessorUsages: Map<Coordinates, Set<Usage>>,
   private val declarations: Set<Declaration>,
   private val dependencyGraph: Map<String, DependencyGraphView>,
-  private val supportedSourceSets: Set<String>,
   private val explicitSourceSets: Set<String>,
   private val projectType: ProjectType,
   private val configurationNames: ConfigurationNames,
@@ -343,10 +359,10 @@ internal class DependencyAdviceBuilder(
           // is declared on a commonX configuration, and the "child" -jvm or -android dep needs to be upgraded.
           advice.isAdd() && bundles.hasParentInBundle(originalCoordinates) -> {
             val parent = bundles.findParentInBundle(originalCoordinates)!!
-            bundledTraces.add(BundleTrace.DeclaredParent(parent = parent, child = originalCoordinates))
 
             val parentAdvice = bundles.maybeParent(advice, originalCoordinates)
             if (parentAdvice != advice) {
+              bundledTraces.add(BundleTrace.DeclaredParent(parent = parent, child = originalCoordinates))
               parentAdvice
             } else {
               null

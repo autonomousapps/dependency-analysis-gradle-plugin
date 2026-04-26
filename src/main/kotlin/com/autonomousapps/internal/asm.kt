@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
@@ -33,7 +33,6 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   private var interfaces: Set<String>? = null
   private val retentionPolicyHolder = AtomicReference("")
   private var isAnnotation = false
-  private val methods = mutableSetOf<Method>()
   private val innerClasses = mutableSetOf<String>()
   private val effectivelyPublicFields = mutableSetOf<Member.Field>()
   private val effectivelyPublicMethods = mutableSetOf<Member.Method>()
@@ -62,7 +61,6 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       isAnnotation = isAnnotation,
       hasNoMembers = hasNoMembers,
       access = access,
-      methods = methods.efficient(),
       innerClasses = innerClasses.efficient(),
       constants = constants.efficient(),
       reflectiveAccesses = reflectiveAccesses.efficient(),
@@ -116,7 +114,6 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     if (!("()V" == descriptor && ("<init>" == name || "<clinit>" == name))) {
       // ignore constructors and static initializers
       methodCount++
-      methods.add(Method(descriptor))
     }
 
     if (isEffectivelyPublic(access)) {
@@ -463,6 +460,24 @@ private class MethodAnalyzer(
   ) {
     log { "- MethodAnalyzer#visitInvokeDynamicInsn: $name $descriptor" }
     addClass(descriptor, ClassRef.Kind.NOT_ANNOTATION)
+
+    // Bootstrap arguments may contain Handle instances pointing to the actual implementation
+    // method (e.g. a static method reference compiled to INVOKEDYNAMIC). Record each such Handle
+    // as a MemberAccess so callers appear in binaryClassAccesses.
+    for (arg in bootstrapMethodArguments) {
+      if (arg is Handle) {
+        log { "  - MethodAnalyzer#visitInvokeDynamicInsn bootstrap Handle: ${arg.owner}.${arg.name} ${arg.desc}" }
+        addClass(if (arg.owner.startsWith("[")) arg.owner else "L${arg.owner};", ClassRef.Kind.NOT_ANNOTATION)
+        val method = MemberAccess.Method(
+          owner = arg.owner,
+          name = arg.name,
+          descriptor = arg.desc,
+        )
+        binaryClasses.merge(arg.owner, sortedSetOf(method)) { acc, inc ->
+          acc.apply { addAll(inc) }
+        }
+      }
+    }
   }
 
   override fun visitLocalVariable(

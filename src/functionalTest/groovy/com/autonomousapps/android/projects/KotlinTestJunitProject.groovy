@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -33,7 +33,7 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
         subproject.styles = AndroidStyleRes.DEFAULT
         subproject.colors = AndroidColorRes.DEFAULT
         subproject.withBuildScript { bs ->
-          bs.plugins = androidAppWithKotlin
+          bs.plugins = androidApp(true)
           bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
             kotlinTestJunit,

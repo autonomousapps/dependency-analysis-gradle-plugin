@@ -1,11 +1,13 @@
-// Copyright (c) 2024. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
+import org.gradle.plugin.compatibility.compatibility
+
 plugins {
   id("build-logic.plugin")
   id("com.github.gmazzo.buildconfig")
 }
 
-version = "0.18-SNAPSHOT"
+version = "0.19-SNAPSHOT"
 val isSnapshot: Boolean = version.toString().endsWith("SNAPSHOT")
 val isRelease: Boolean = !isSnapshot
 
@@ -27,6 +29,12 @@ gradlePlugin {
       displayName = "Gradle TestKit Support Plugin (for plugins)"
       description = "Make it less difficult to use Gradle TestKit to test your Gradle plugins"
       tags.set(setOf("testing"))
+
+      compatibility {
+        features {
+          configurationCache = true
+        }
+      }
     }
   }
 
@@ -71,8 +79,13 @@ val publishToMavenCentral = tasks.named("publishToMavenCentral") {
 }
 
 val publishToPluginPortal = tasks.named("publishPlugins") {
+  val key = "is-release"
+  inputs.property(key, isRelease)
   // Can't publish snapshots to the portal
-  onlyIf { isRelease }
+  onlyIf("only publish releases to the plugin portal") {
+    inputs.properties[key] as Boolean
+  }
+
   shouldRunAfter(publishToMavenCentral)
 
   // Note that publishing a release requires a successful smokeTest

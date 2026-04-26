@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage")
 
@@ -18,14 +18,15 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 
 /**
  * Produces a report of all the artifacts required to build the given project; i.e., the artifacts on the compile
- * classpath, the runtime classpath, and a few others. See
- * [FindDeclarationsTask.Locator] for the full list of analyzed [Configuration][org.gradle.api.artifacts.Configuration]s. These artifacts are
- * physical files on disk, such as jars.
+ * classpath, the runtime classpath, and a few others. See [com.autonomousapps.model.internal.declaration.Locator] for
+ * the full list of analyzed [Configuration][org.gradle.api.artifacts.Configuration]s. These artifacts are physical
+ * files on disk, such as jars.
  */
 @CacheableTask
 public abstract class ArtifactsReportTask : DefaultTask() {
@@ -37,26 +38,49 @@ public abstract class ArtifactsReportTask : DefaultTask() {
   @get:Internal
   public abstract val artifacts: Property<ArtifactCollection>
 
+  @get:Internal
+  public abstract val opaqueArtifacts: Property<ArtifactCollection>
+
   /**
    * This is the "official" input for wiring task dependencies correctly, but is otherwise
    * unused. This needs to use [InputFiles] and [PathSensitivity.ABSOLUTE] because the path to the
    * jars really does matter here. Using [Classpath] is an error, as it looks only at content and
    * not name or path, and we really do need to know the actual path to the artifact, even if its
    * contents haven't changed.
+   *
+   * Attempts to make this path non-absolute have thus far failed. Please stop trying.
    */
   @PathSensitive(PathSensitivity.ABSOLUTE)
-  @InputFiles // TODO(tsr): can I avoid using `get()`?
-  public fun getClasspathArtifactFiles(): FileCollection = artifacts.get().artifactFiles
+  @InputFiles
+  public fun getClasspathArtifactFiles(): Provider<FileCollection> {
+    return artifacts.map { it.artifactFiles }
+  }
 
-  /**
-   * This artifact collection is the result of resolving the compile or runtime classpath.
-   */
+  /** @see [getClasspathArtifactFiles] */
+  @PathSensitive(PathSensitivity.ABSOLUTE)
+  @InputFiles
+  public fun getClasspathOpaqueArtifactFiles(): Provider<FileCollection> {
+    return opaqueArtifacts.map { it.artifactFiles }
+  }
+
+  /** This artifact collection is the result of resolving the compile or runtime classpath for jar artifacts. */
   public fun setConfiguration(
     configuration: NamedDomainObjectProvider<Configuration>,
     action: (Configuration) -> ArtifactCollection,
   ) {
     excludedIdentifiers.set(configuration.map { c -> c.excludeRules.map { "${it.group}:${it.module}".intern() } })
     artifacts.set(configuration.map { c -> action(c) })
+  }
+
+  /**
+   * This artifact collection is the result of resolving the compile or runtime classpath for
+   * [OpaqueComponentArtifactIdentifiers][org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier].
+   */
+  public fun setOpaqueConfiguration(
+    configuration: NamedDomainObjectProvider<Configuration>,
+    action: (Configuration) -> ArtifactCollection,
+  ) {
+    opaqueArtifacts.set(configuration.map { c -> action(c) })
   }
 
   /** Needed to make sure task gives the same result if the build configuration in a composite changed between runs. */
@@ -66,9 +90,7 @@ public abstract class ArtifactsReportTask : DefaultTask() {
   @get:Input
   public abstract val excludedIdentifiers: SetProperty<String>
 
-  /**
-   * [PhysicalArtifact]s used to compile or run main source.
-   */
+  /** [PhysicalArtifact]s used to compile or run main source. */
   @get:OutputFile
   public abstract val output: RegularFileProperty
 
@@ -81,9 +103,10 @@ public abstract class ArtifactsReportTask : DefaultTask() {
     val excludedIdentifiersOutput = excludedIdentifiersOutput.getAndDelete()
 
     val allArtifacts = toPhysicalArtifacts(artifacts.get())
+    val opaqueArtifacts = toPhysicalArtifacts(opaqueArtifacts.get())
     val excludedIdentifiers = getExcludedIdentifiers()
 
-    output.bufferWriteJsonSet(allArtifacts)
+    output.bufferWriteJsonSet(allArtifacts + opaqueArtifacts)
     excludedIdentifiersOutput.writeText(excludedIdentifiers.toJson())
   }
 

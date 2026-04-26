@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.subplugin
 
@@ -31,6 +31,8 @@ import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.services.GlobalDslService
 import com.autonomousapps.tasks.*
 import org.gradle.api.*
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
@@ -57,6 +59,14 @@ private const val ANDROID_TEST_PLUGIN = "com.android.test"
  * @see <a href="https://developer.android.com/kotlin/multiplatform/plugin">Set up the Android Gradle Library Plugin for KMP</a>
  */
 private const val ANDROID_KMP_LIBRARY_PLUGIN = "com.android.kotlin.multiplatform.library"
+
+private val ANDROID_PLUGINS = listOf(
+  ANDROID_APP_PLUGIN,
+  ANDROID_LIBRARY_PLUGIN,
+  ANDROID_TEST_PLUGIN,
+  ANDROID_KMP_LIBRARY_PLUGIN,
+)
+
 private const val KOTLIN_ANDROID_PLUGIN = "org.jetbrains.kotlin.android"
 private const val KOTLIN_JVM_PLUGIN = "org.jetbrains.kotlin.jvm"
 private const val KOTLIN_MULTIPLATFORM_PLUGIN = "org.jetbrains.kotlin.multiplatform"
@@ -125,7 +135,7 @@ internal class ProjectPlugin(private val project: Project) {
 
   private val dslService = GlobalDslService.of(project)
 
-  fun apply() = project.run {
+  fun apply(): Unit = project.run {
     // Conditionally disable analysis on some projects
     val projectPathRegex = projectPathRegex()
     if (!projectPathRegex.matches(path)) {
@@ -234,9 +244,14 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     // If it's a Kotlin project, users have limited ability to make changes to the stdlib.
-    pluginManager.withPlugin(KOTLIN_JVM_PLUGIN, handleKotlin)
-    pluginManager.withPlugin(KOTLIN_MULTIPLATFORM_PLUGIN, handleKotlin)
-    pluginManager.withPlugin(KOTLIN_ANDROID_PLUGIN, handleKotlin)
+    listOf(
+      KOTLIN_JVM_PLUGIN,
+      KOTLIN_MULTIPLATFORM_PLUGIN,
+      KOTLIN_ANDROID_PLUGIN,
+    )
+      // Since AGP 9, Kotlin is always implicitly available
+      .plus(ANDROID_PLUGINS)
+      .forEach { p -> pluginManager.withPlugin(p, handleKotlin) }
 
     // If it's a Scala project, it needs the scala-library dependency.
     pluginManager.withPlugin(SCALA_PLUGIN) {
@@ -780,12 +795,21 @@ internal class ProjectPlugin(private val project: Project) {
       return false
     }
 
-    val hasApiConfiguration = configurations.named(compilation.apiConfigurationName) != null
+    // TODO(tsr): configurations.named() is problematic since its lazy but I need to know NOW if this configuration exists
+    val hasApiConfiguration = configurations.namedOrNull(compilation.apiConfigurationName) != null
     // 'xTest' sourceSets do not have an ABI (this is a heuristic)
     val isNotTest = !sourceSetName.endsWith("Test")
     // The 'main' sourceSet for an app project does not have an ABI
     val isNotMainApp = !(isAppProject() && sourceSetName == KotlinSourceSet.COMMON_MAIN_SOURCE_SET_NAME)
     return hasApiConfiguration && isNotTest && isNotMainApp
+  }
+
+  private fun ConfigurationContainer.namedOrNull(configurationName: String): NamedDomainObjectProvider<Configuration>? {
+    return try {
+      named(configurationName)
+    } catch (_: UnknownDomainObjectException) {
+      null
+    }
   }
 
   private fun Project.isAppProject(): Boolean {
@@ -994,7 +1018,7 @@ internal class ProjectPlugin(private val project: Project) {
     val computeUsagesTask = dependencyAnalyzer.registerComputeUsagesTask(
       checkSuperClasses = dagpExtension.usageHandler.analysisHandler.checkSuperClasses,
       checkBinaryCompat = checkBinaryCompat(),
-      isKaptApplied = isKaptApplied(),
+      isKaptApplied = isKaptApplied().orElse(isLegacyKaptApplied()),
       graphViewTask = graphViewTask,
       findDeclarationsTask = findDeclarationsTask,
       synthesizeProjectViewTask = synthesizeProjectViewTask,
@@ -1050,6 +1074,7 @@ internal class ProjectPlugin(private val project: Project) {
       t.explicitSourceSets.set(dagpExtension.dependenciesHandler.explicitSourceSets)
       t.projectType.set(projectType)
       t.kapt.set(isKaptApplied())
+      t.legacyKapt.set(isLegacyKaptApplied())
 
       t.output.set(paths.unfilteredAdvicePath)
       t.dependencyUsages.set(paths.dependencyUsagesPath)
@@ -1098,6 +1123,7 @@ internal class ProjectPlugin(private val project: Project) {
         t.dslKind.set(DslKind.from(buildFile))
         t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
         t.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
+        t.useParenthesesForGroovy.set(dagpExtension.dependenciesHandler.useParenthesesForGroovy)
         t.output.set(paths.consoleReportPath)
       }
 
@@ -1124,6 +1150,7 @@ internal class ProjectPlugin(private val project: Project) {
       t.projectMetadata.set(writeProjectMetadata.flatMap { it.output })
       t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
       t.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
+      t.useParenthesesForGroovy.set(dagpExtension.dependenciesHandler.useParenthesesForGroovy)
     }
 
     resolveExternalDependenciesTask = tasks.register("resolveExternalDependencies")
@@ -1153,6 +1180,7 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("org.jetbrains.kotlin.kapt") }
+  private fun Project.isLegacyKaptApplied() = providers.provider { plugins.hasPlugin("com.android.legacy-kapt") }
 
   /**
    * Returns the names of the 'source sets' that are currently supported by the plugin. Dependencies defined on

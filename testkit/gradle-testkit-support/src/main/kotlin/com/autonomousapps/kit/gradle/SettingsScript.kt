@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle
 
@@ -19,9 +19,7 @@ public class SettingsScript @JvmOverloads constructor(
 ) {
 
   public fun render(scribe: Scribe): String = buildString {
-    imports?.let { i ->
-      append(scribe.use { s -> i.render(s) })
-    }
+    imports?.let { i -> append(scribe.use { s -> i.render(s) }) }
 
     appendLine(scribe.use { s -> pluginManagement.render(s) })
 

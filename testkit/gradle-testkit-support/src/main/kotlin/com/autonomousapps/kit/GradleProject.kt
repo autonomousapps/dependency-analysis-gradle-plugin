@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit
 
@@ -281,14 +281,13 @@ public class GradleProject(
 
     public fun withAndroidLibProject(
       name: String,
-      packageName: String,
       block: AndroidSubproject.Builder.() -> Unit,
     ): Builder {
       // If a builder with this name already exists, returning it for building-upon
       val builder = androidSubprojectMap[name] ?: AndroidSubproject.Builder()
       builder.apply {
         this.name = name
-        this.manifest = AndroidManifest.defaultLib(packageName)
+        this.manifest = null
         this.styles = AndroidStyleRes.EMPTY
         this.colors = AndroidColorRes.EMPTY
         this.strings = null

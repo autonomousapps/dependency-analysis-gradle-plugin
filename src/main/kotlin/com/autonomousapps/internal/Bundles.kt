@@ -1,8 +1,7 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
-import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.extension.DependenciesHandler.SerializableBundles
 import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.reachableNodes
@@ -10,6 +9,7 @@ import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.model.*
 import com.autonomousapps.model.Coordinates.Companion.copy
 import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import com.autonomousapps.model.internal.declaration.Declaration
@@ -78,7 +78,7 @@ internal class Bundles private constructor(
    * @see [maybePrimary]
    */
   fun maybeParent(addAdvice: Advice, originalCoordinates: Coordinates): Advice {
-    check(addAdvice.isAdd()) { "Must be add-advice" }
+    check(addAdvice.isAdd()) { "Must be add-advice. Was '$addAdvice'." }
 
     val parent = findParentInBundle(originalCoordinates)
       ?: error("No parent for $originalCoordinates. Check 'hasParentInBundle()' before calling this method.")
@@ -91,6 +91,13 @@ internal class Bundles private constructor(
 
     // Find all declarations for this dependency. E.g., ["commonMainImplementation", "jvmMainImplementation"].
     val parentDeclarations = declarations.filterToOrderedSet { decl -> decl.identifier == parentCoordinates.identifier }
+
+    // This can happen when the parent dependency is added by a plugin (no declarations). We can't do anything here.
+    // See https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1653.
+    if (parentDeclarations.isEmpty()) {
+      // nb: the only caller of this method (at time of writing!) will throw away the advice if it is unchanged.
+      return addAdvice
+    }
 
     // Pick the "highest" one (api > implementation > everything else)
     val declarationSelector: (Declaration) -> Int = { declaration ->
@@ -184,6 +191,8 @@ internal class Bundles private constructor(
   }
 
   companion object {
+    private const val GRADLE_PLUGIN_MARKER_SUFFIX = ".gradle.plugin"
+
     fun of(
       projectPath: String,
       dependencyGraph: Map<String, DependencyGraphView>,
@@ -241,6 +250,13 @@ internal class Bundles private constructor(
             }
           }
 
+          // handle Gradle plugin marker artifacts
+          if (parentNode.identifier.endsWith(GRADLE_PLUGIN_MARKER_SUFFIX)) {
+            view.graph.children(parentNode)
+              .singleOrNull()
+              ?.let { child -> bundles[parentNode] = child }
+          }
+
           fun implicitKmpBundleFor(target: String) {
             val candidate = "${parentNode.identifier}-${target}"
             view.graph.children(parentNode)
@@ -253,10 +269,25 @@ internal class Bundles private constructor(
           implicitKmpBundleFor("android")
         }
 
+        // handle Gradle plugin marker artifacts buried in the graph
+        view.graph.nodes()
+          .filter { node -> node.identifier.endsWith(GRADLE_PLUGIN_MARKER_SUFFIX) }
+          .mapNotNull { markerArtifact ->
+            val plugin = view.graph.children(markerArtifact).singleOrNull()
+            if (plugin != null) {
+              markerArtifact to plugin
+            } else {
+              null
+            }
+          }
+          .forEach { (markerArtifact, plugin) ->
+            bundles.setPrimary(markerArtifact, plugin)
+          }
+
         fun implicitKmpPrimaryFor(target: String) {
           val suffix = "-$target"
           view.graph.nodes()
-            .filter { it.identifier.endsWith(suffix) }
+            .filter { node -> node.identifier.endsWith(suffix) }
             .mapNotNull { candidate ->
               val kmpIdentifier = candidate.identifier.substringBeforeLast(suffix)
               val kmp = candidate.copy(

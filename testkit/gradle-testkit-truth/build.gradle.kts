@@ -1,10 +1,10 @@
-// Copyright (c) 2024. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 plugins {
   id("build-logic.lib.kotlin")
 }
 
-version = "1.7-SNAPSHOT"
+version = "1.7.1-SNAPSHOT"
 
 dagp {
   version(version)

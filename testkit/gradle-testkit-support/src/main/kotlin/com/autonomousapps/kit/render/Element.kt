@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.render
 
@@ -13,4 +13,6 @@ public sealed interface Element {
   }
 
   public interface Line : Element
+
+  public interface MultiLine : Element
 }

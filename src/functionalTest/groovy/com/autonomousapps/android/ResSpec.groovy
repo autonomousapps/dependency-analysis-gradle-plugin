@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
@@ -18,7 +18,7 @@ final class ResSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth', ':app:reason', '--id', 'androidx.lifecycle:lifecycle-viewmodel:')
 
     then:
     result.task(':buildHealth').outcome == TaskOutcome.SUCCESS

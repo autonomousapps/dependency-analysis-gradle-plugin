@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle.dependencies
 
@@ -115,11 +115,11 @@ class DependencyProvider(
   }
 
   fun appcompat(configuration: String): Dependency {
-    return Dependency(configuration, "androidx.appcompat:appcompat:1.1.0")
+    return Dependency(configuration, "androidx.appcompat:appcompat:1.7.1")
   }
 
   fun androidxAnnotations(configuration: String): Dependency {
-    return Dependency(configuration, "androidx.annotation:annotation:1.1.0")
+    return Dependency(configuration, "androidx.annotation:annotation:1.9.1")
   }
 
   fun composeMultiplatformRuntime(configuration: String): Dependency {
@@ -131,15 +131,15 @@ class DependencyProvider(
   }
 
   fun coreKtx(configuration: String): Dependency {
-    return Dependency(configuration, "androidx.core:core-ktx:1.1.0")
+    return Dependency(configuration, "androidx.core:core-ktx:1.13.1")
   }
 
   fun core(configuration: String): Dependency {
-    return Dependency(configuration, "androidx.core:core:1.1.0")
+    return Dependency(configuration, "androidx.core:core:1.13.1")
   }
 
   fun navUiKtx(configuration: String): Dependency {
-    return Dependency(configuration, "androidx.navigation:navigation-ui-ktx:2.1.0")
+    return Dependency(configuration, "androidx.navigation:navigation-ui-ktx:2.9.7")
   }
 
   fun constraintLayout(configuration: String): Dependency {
@@ -191,17 +191,17 @@ class DependencyProvider(
   }
 
   fun kotlinxCoroutinesAndroid(configuration: String): Dependency {
-    return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
+    return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
   }
 
   @JvmOverloads
   fun kotlinxCoroutinesCore(configuration: String, target: String = ""): Dependency {
-    return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-core$target:1.6.0")
+    return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-core$target:1.7.3")
   }
 
   @JvmOverloads
   fun kotlinxCoroutinesTest(configuration: String, target: String = ""): Dependency {
-    return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-test$target:1.6.0")
+    return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-test$target:1.7.3")
   }
 
   @JvmOverloads

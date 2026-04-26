@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -71,7 +71,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = androidAppPlugin
+          bs.plugins = androidApp(false)
           bs.android = defaultAndroidAppBlock(false)
           bs.dependencies = [
             appcompat('implementation'),
@@ -82,9 +82,9 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
         app.styles = AndroidStyleRes.DEFAULT
         app.colors = AndroidColorRes.DEFAULT
       }
-      .withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
+      .withAndroidLibProject('assets') { assets ->
         assets.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')
         }
         assets.withFile(
@@ -93,9 +93,9 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
         )
         assets.strings = AndroidStringRes.DEFAULT
       }
-      .withAndroidLibProject('lib-android-java-deps', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib-android-java-deps') { lib ->
         lib.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
           bs.dependencies = [
             project('implementation', ':lib-java'),
@@ -103,9 +103,9 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
           ]
         }
       }
-      .withAndroidLibProject('lib-android-android-deps', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib-android-android-deps') { lib ->
         lib.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
           bs.dependencies = [
             project('implementation', ':assets')

@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -42,7 +42,7 @@ final class AndroidAssetsProject extends AbstractAndroidProject {
         app.styles = AndroidStyleRes.DEFAULT
         app.colors = AndroidColorRes.DEFAULT
       }
-      .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib') { lib ->
         lib.manifest = libraryManifest('com.example.lib')
         lib.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
@@ -52,7 +52,7 @@ final class AndroidAssetsProject extends AbstractAndroidProject {
           ]
         }
       }
-      .withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
+      .withAndroidLibProject('assets') { assets ->
         assets.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')

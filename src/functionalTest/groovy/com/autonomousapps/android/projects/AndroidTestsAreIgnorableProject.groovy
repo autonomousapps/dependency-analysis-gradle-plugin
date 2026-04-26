@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -37,8 +37,9 @@ final class AndroidTestsAreIgnorableProject extends AbstractAndroidProject {
           )
         }
       }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('lib') { lib ->
-        lib.manifest = AndroidManifest.defaultLib('my.android.lib')
+        lib.manifest = null
         lib.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
           bs.android = defaultAndroidLibBlock(false, 'my.android.lib')

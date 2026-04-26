@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -29,7 +29,7 @@ final class BundleProject extends AbstractAndroidProject {
         a.sources = sources
         a.manifest = libraryManifest()
         a.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false)
           bs.dependencies = [
             firebaseAnalyticsKtx("api")
