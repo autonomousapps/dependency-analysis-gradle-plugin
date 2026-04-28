@@ -3,7 +3,6 @@
 package com.autonomousapps.convention
 
 import com.autonomousapps.convention.internal.kotlin.KotlinConfigurer
-import com.gradle.publish.PublishTask
 import com.vanniktech.maven.publish.GradlePublishPlugin
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.api.Plugin
@@ -29,9 +28,6 @@ public abstract class PluginConventionPlugin : Plugin<Project> {
     configureKotlin()
     configurePlugins()
     configurePublishing()
-
-    // TODO(tsr): figure out this CC issue.
-//    disableConfigurationCache()
   }
 
   private fun Project.configureGroovy(versionCatalog: VersionCatalog) {
@@ -61,14 +57,5 @@ public abstract class PluginConventionPlugin : Plugin<Project> {
     extensions.getByType(MavenPublishBaseExtension::class.java).run {
       configure(GradlePublishPlugin())
     }
-  }
-
-  private fun Project.disableConfigurationCache() {
-    tasks.withType(PublishTask::class.java).configureEach { t ->
-      t.notCompatibleWithConfigurationCache("cannot serialize Gradle script object references as these are not supported with the configuration cache.")
-    }
-//    tasks.withType(org.gradle.api.publish.maven.tasks.AbstractPublishToMaven::class.java) { t ->
-//      t.notCompatibleWithConfigurationCache("Various problems")
-//    }
   }
 }
