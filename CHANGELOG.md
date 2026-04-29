@@ -1,5 +1,11 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.10.0
+* [feat]: Gradle plugin markers are the preferred way to depend on a plugin.
+* [feat]: Gradle plugin markers are part of an implicit bundle.
+* [fix]: handle `dependencies` blocks that have a single line.
+* [docs]: add 'partial analysis' section to readme.
+
 # Version 3.9.0
 * (Reverted) Compiled against Kotlin 2.3.20. Compiling against Kotlin 2.2.21 again, with language level 2.2.
 
