@@ -422,135 +422,6 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
     )
   }
 
-  @Nested
-  inner class TestFixtures {
-    @Test fun `test fixtures of different dependency`() {
-      // Given
-      val sourceFile = dir.resolve("build.gradle.kts")
-      sourceFile.writeText(
-        """
-        dependencies {
-          implementation("heart:of-gold:1.+")
-          implementation(testFixtures(project(":foo")))
-        }
-      """.trimIndent()
-      )
-
-      // When
-      val parser = KotlinBuildScriptDependenciesRewriter.of(
-        sourceFile,
-        emptySet(),
-        AdvicePrinter(
-          dslKind = DslKind.KOTLIN,
-          projectType = projectType,
-          useTypesafeProjectAccessors = false,
-        ),
-      )
-
-      // Then
-      assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
-        """
-        dependencies {
-          implementation("heart:of-gold:1.+")
-          implementation(testFixtures(project(":foo")))
-        }
-      """.trimIndent().trimmedLines()
-      ).inOrder()
-    }
-
-    @Test fun `advice to change main visibility, with testFixtures dep on same project`() {
-      // Given
-      val sourceFile = dir.resolve("build.gradle.kts")
-      sourceFile.writeText(
-        """
-        dependencies {
-          implementation(project(":producer"))
-          implementation(testFixtures(project(":producer")))
-        }
-      """.trimIndent()
-      )
-      val advice = Advice.ofChange(
-        coordinates = ProjectCoordinates(":producer", GradleVariantIdentification.EMPTY),
-        fromConfiguration = "implementation",
-        toConfiguration = "api",
-      ).intoSet()
-
-      // When
-      val parser = KotlinBuildScriptDependenciesRewriter.of(
-        file = sourceFile,
-        advice = advice,
-        advicePrinter = AdvicePrinter(
-          dslKind = DslKind.KOTLIN,
-          projectType = projectType,
-          useTypesafeProjectAccessors = false,
-        ),
-      )
-
-      // Then
-      assertThat(parser.rewritten()).isEqualTo(
-        """
-        dependencies {
-          api(project(":producer"))
-          implementation(testFixtures(project(":producer")))
-        }
-      """.trimIndent()
-      )
-    }
-
-    @Test fun `advice to change main and testFixtures visibility, with deps on same project`() {
-      // Given
-      val sourceFile = dir.resolve("build.gradle.kts")
-      sourceFile.writeText(
-        """
-        dependencies {
-          implementation(project(":producer"))
-          api(testFixtures(project(":producer")))
-        }
-      """.trimIndent()
-      )
-      val advice = setOf(
-        // Advice for main variant
-        Advice.ofChange(
-          coordinates = ProjectCoordinates(":producer", GradleVariantIdentification.EMPTY),
-          fromConfiguration = "implementation",
-          toConfiguration = "api",
-        ),
-        // Advice for test-fixtures variant
-        Advice.ofChange(
-          coordinates = ProjectCoordinates(
-            ":producer", GradleVariantIdentification(
-              capabilities = setOf(":producer${GradleVariantIdentification.TEST_FIXTURES}"),
-              attributes = emptyMap(),
-            )
-          ),
-          fromConfiguration = "api",
-          toConfiguration = "implementation",
-        )
-      )
-
-      // When
-      val parser = KotlinBuildScriptDependenciesRewriter.of(
-        file = sourceFile,
-        advice = advice,
-        advicePrinter = AdvicePrinter(
-          dslKind = DslKind.KOTLIN,
-          projectType = projectType,
-          useTypesafeProjectAccessors = false,
-        ),
-      )
-
-      // Then
-      assertThat(parser.rewritten()).isEqualTo(
-        """
-        dependencies {
-          api(project(":producer"))
-          implementation(testFixtures(project(":producer")))
-        }
-      """.trimIndent()
-      )
-    }
-  }
-
   @Test fun `can add dependencies to build script that didn't have a dependencies block`() {
     // Given
     val sourceFile = dir.resolve("build.gradle.kts")
@@ -814,6 +685,135 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
         }
       """.trimIndent().trimmedLines()
     ).inOrder()
+  }
+
+  @Nested
+  inner class TestFixtures {
+    @Test fun `test fixtures of different dependency`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
+        dependencies {
+          implementation("heart:of-gold:1.+")
+          implementation(testFixtures(project(":foo")))
+        }
+      """.trimIndent()
+      )
+
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        sourceFile,
+        emptySet(),
+        AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        ),
+      )
+
+      // Then
+      assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+        """
+        dependencies {
+          implementation("heart:of-gold:1.+")
+          implementation(testFixtures(project(":foo")))
+        }
+      """.trimIndent().trimmedLines()
+      ).inOrder()
+    }
+
+    @Test fun `advice to change main visibility, with testFixtures dep on same project`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
+        dependencies {
+          implementation(project(":producer"))
+          implementation(testFixtures(project(":producer")))
+        }
+      """.trimIndent()
+      )
+      val advice = Advice.ofChange(
+        coordinates = ProjectCoordinates(":producer", GradleVariantIdentification.EMPTY),
+        fromConfiguration = "implementation",
+        toConfiguration = "api",
+      ).intoSet()
+
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        file = sourceFile,
+        advice = advice,
+        advicePrinter = AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        ),
+      )
+
+      // Then
+      assertThat(parser.rewritten()).isEqualTo(
+        """
+        dependencies {
+          api(project(":producer"))
+          implementation(testFixtures(project(":producer")))
+        }
+      """.trimIndent()
+      )
+    }
+
+    @Test fun `advice to change main and testFixtures visibility, with deps on same project`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
+        dependencies {
+          implementation(project(":producer"))
+          api(testFixtures(project(":producer")))
+        }
+      """.trimIndent()
+      )
+      val advice = setOf(
+        // Advice for main variant
+        Advice.ofChange(
+          coordinates = ProjectCoordinates(":producer", GradleVariantIdentification.EMPTY),
+          fromConfiguration = "implementation",
+          toConfiguration = "api",
+        ),
+        // Advice for test-fixtures variant
+        Advice.ofChange(
+          coordinates = ProjectCoordinates(
+            ":producer", GradleVariantIdentification(
+              capabilities = setOf(":producer${GradleVariantIdentification.TEST_FIXTURES}"),
+              attributes = emptyMap(),
+            )
+          ),
+          fromConfiguration = "api",
+          toConfiguration = "implementation",
+        )
+      )
+
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        file = sourceFile,
+        advice = advice,
+        advicePrinter = AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        ),
+      )
+
+      // Then
+      assertThat(parser.rewritten()).isEqualTo(
+        """
+        dependencies {
+          api(project(":producer"))
+          implementation(testFixtures(project(":producer")))
+        }
+      """.trimIndent()
+      )
+    }
   }
 
   private fun Path.writeText(text: String): Path = Files.writeString(this, text)
