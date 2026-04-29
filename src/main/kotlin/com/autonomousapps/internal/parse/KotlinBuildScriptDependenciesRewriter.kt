@@ -4,7 +4,9 @@ package com.autonomousapps.internal.parse
 
 import com.autonomousapps.exception.BuildScriptParseException
 import com.autonomousapps.internal.advice.AdvicePrinter
-import com.autonomousapps.internal.antlr.v4.runtime.*
+import com.autonomousapps.internal.antlr.v4.runtime.CharStream
+import com.autonomousapps.internal.antlr.v4.runtime.CommonTokenStream
+import com.autonomousapps.internal.antlr.v4.runtime.Token
 import com.autonomousapps.internal.cash.grammar.kotlindsl.parse.Parser
 import com.autonomousapps.internal.cash.grammar.kotlindsl.parse.Rewriter
 import com.autonomousapps.internal.cash.grammar.kotlindsl.utils.Blocks.isBuildscript
@@ -82,7 +84,8 @@ internal class KotlinBuildScriptDependenciesRewriter(
   override fun exitNamedBlock(ctx: NamedBlockContext) {
     if (ctx.isDependencies && !inBuildscriptBlock) {
       hasDependenciesBlock = true
-      insertAdvice(advice, ctx.stop, withDependenciesBlock = false)
+      val ktfmt = ctx.start.line == ctx.stop.line
+      insertAdvice(advice, ctx.stop, withDependenciesBlock = false, ktfmt = ktfmt)
     }
 
     // Must be last
@@ -97,21 +100,36 @@ internal class KotlinBuildScriptDependenciesRewriter(
     // Exit early if this build script has a dependencies block. If it doesn't, we may need to add missing dependencies.
     if (hasDependenciesBlock) return
 
-    insertAdvice(advice, ctx.stop, withDependenciesBlock = true)
+    insertAdvice(advice, ctx.stop, withDependenciesBlock = true, ktfmt = false)
   }
 
-  private fun insertAdvice(advice: Set<Advice>, beforeToken: Token, withDependenciesBlock: Boolean) {
-    val prefix = if (withDependenciesBlock) "\ndependencies {\n" else ""
+  /**
+   * ktfmt has this extremely dumb behavior where it collapses blocks to be on one line whenever possible. It will do
+   * this:
+   * ```
+   * dependencies { implementation(libs.foo.bar) }
+   * ```
+   * This probably happens with other tools but I'm feeling petty. If we detect that the start and stop of a
+   * `dependencies` block is on the same line, we insert a single newline before adding new dependencies, else the build
+   * script wouldn't compile because it was looking like this:
+   * ```
+   * dependencies { implementation(libs.foo.bar) implementation(libs.baz) }
+   * ```
+   */
+  private fun insertAdvice(advice: Set<Advice>, beforeToken: Token, withDependenciesBlock: Boolean, ktfmt: Boolean) {
+    val prefix = if (withDependenciesBlock) "\ndependencies {\n" else if (ktfmt) "\n" else ""
     val postfix = if (withDependenciesBlock) "\n}\n" else "\n"
 
-    advice.filterToOrderedSet { it.isAnyAdd() }.ifNotEmpty { addAdvice ->
-      rewriter.insertBefore(
-        beforeToken,
-        addAdvice.joinToString(prefix = prefix, postfix = postfix, separator = "\n") { a ->
-          printer.toDeclaration(a)
-        }
-      )
-    }
+    advice
+      .filterToOrderedSet { it.isAnyAdd() }
+      .ifNotEmpty { addAdvice ->
+        rewriter.insertBefore(
+          beforeToken,
+          addAdvice.joinToString(prefix = prefix, postfix = postfix, separator = "\n") { a ->
+            printer.toDeclaration(a)
+          }
+        )
+      }
   }
 
   private fun handleDependencies(ctx: NamedBlockContext) {
