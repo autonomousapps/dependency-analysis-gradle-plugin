@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.parse
 
-import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.utils.intoSet
@@ -10,6 +9,7 @@ import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ProjectCoordinates
+import com.autonomousapps.model.internal.ProjectType
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -685,6 +685,93 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
         }
       """.trimIndent().trimmedLines()
     ).inOrder()
+  }
+
+  @Nested
+  inner class Ktfmt {
+    @Test fun `can add a single dependency`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
+        plugins {
+          id("foo")
+        }
+
+        dependencies { implementation(libs.foo.bar) }
+      """.trimIndent()
+      )
+      val advice = setOf(Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"))
+
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        sourceFile,
+        advice,
+        AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        )
+      )
+
+      // Then
+      // nb: there's an extra whitespace at the end of the `dependencies` line and this is necessary for the test to pass
+      assertThat(parser.rewritten()).isEqualTo(
+        """
+        plugins {
+          id("foo")
+        }
+
+        dependencies { implementation(libs.foo.bar) 
+          runtimeOnly(project(":sad-robot"))
+        }
+      """.trimIndent()
+      )
+    }
+
+    @Test fun `can add two dependencies`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
+        plugins {
+          id("foo")
+        }
+
+        dependencies { implementation(libs.foo.bar) }
+      """.trimIndent()
+      )
+      val advice = setOf(
+        Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
+        Advice.ofAdd(Coordinates.of(":marvin"), "runtimeOnly"),
+      )
+
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        sourceFile,
+        advice,
+        AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        )
+      )
+
+      // Then
+      // nb: there's an extra whitespace at the end of the `dependencies` line and this is necessary for the test to pass
+      assertThat(parser.rewritten()).isEqualTo(
+        """
+        plugins {
+          id("foo")
+        }
+
+        dependencies { implementation(libs.foo.bar) 
+          runtimeOnly(project(":marvin"))
+          runtimeOnly(project(":sad-robot"))
+        }
+      """.trimIndent()
+      )
+    }
   }
 
   @Nested
