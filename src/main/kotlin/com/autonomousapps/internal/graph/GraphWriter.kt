@@ -15,7 +15,7 @@ import com.google.common.graph.Traverser
 internal class GraphWriter(private val buildPath: String) {
 
   private companion object {
-    // TODO(tsr): similar code in moshi.kt
+    // nb: `EdgeJson` in moshi.kt has a similar compareTo() function.
     val EDGE_COMPARATOR: Comparator<EndpointPair<Coordinates>> = Comparator { left, right ->
       compareBy(EndpointPair<Coordinates>::source)
         .thenComparing(EndpointPair<Coordinates>::target)
@@ -60,13 +60,10 @@ internal class GraphWriter(private val buildPath: String) {
 
   /**
    * Returns the [graph] sorted into topological order, ascending. Each node in the graph is paired with its depth.
-   *
-   * TODO(tsr): shortest path is wrong, I need the _longest_ path.
    */
   fun topological(graph: Graph<Coordinates>): String {
     val root = graph.root()
     val top = graph.topological(root)
-    // val paths = graph.shortestPaths(root)
 
     return buildString {
       top.forEach { node ->
