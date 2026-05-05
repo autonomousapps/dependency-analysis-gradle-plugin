@@ -1,5 +1,8 @@
 Gradle TestKit Support Changelog
 
+# Version 0.24
+* [Feat]: simplify defaults for Android library projects and AndroidBlock element.
+
 # Version 0.23
 * [Feat]: add support for KMP DSL constructs.
 * [Feat]: add support for Android KMP lib constructs.
