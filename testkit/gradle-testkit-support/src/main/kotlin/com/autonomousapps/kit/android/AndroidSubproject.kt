@@ -72,16 +72,26 @@ public class AndroidSubproject(
     }
 
     public fun build(): AndroidSubproject {
-      val name = name ?: error("'name' must not be null")
+      val name = name
+        // Allow users to specify a name like ":lib" even though internally we don't want the colon prefix.
+        ?.removePrefix(":")
+        ?: error("'name' must not be null")
+
+      if (name.isBlank()) {
+        error("'name' must not be blank")
+      }
 
       // Update the `kotlin{}` block if there's any Kotlin source and the block hasn't already been set.
-      val hasKotlin = sources.any { s -> s.sourceType == SourceType.KOTLIN }
-      if (hasKotlin && buildScript.kotlin == null) {
-        // mutates buildScript
-        withBuildScript {
-          kotlin = Kotlin.DEFAULT
-        }
-      }
+//      val hasKotlin = sources.any { s -> s.sourceType == SourceType.KOTLIN }
+//
+//      // TODO(tsr): this is bad. Users may fully configure their Kotlin options in plugins and will not want crap
+//      //  littering their build scripts.
+//      if (hasKotlin && buildScript.kotlin == null) {
+//        // mutates buildScript
+//        withBuildScript {
+//          kotlin = Kotlin.DEFAULT
+//        }
+//      }
 
       return AndroidSubproject(
         name = name,
