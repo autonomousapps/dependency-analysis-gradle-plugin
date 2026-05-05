@@ -261,7 +261,7 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
   internal companion object {
 
     // TODO(tsr): can we inject these values so they're not hardcoded?
-    private const val DEFAULT_SUPPORT_VERSION = "0.23"
+    private const val DEFAULT_SUPPORT_VERSION = "0.24"
     private const val DEFAULT_TRUTH_VERSION = "1.7.0"
 
     fun create(project: Project): GradleTestKitSupportExtension {
