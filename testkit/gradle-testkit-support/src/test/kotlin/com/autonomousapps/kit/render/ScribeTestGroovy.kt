@@ -6,6 +6,8 @@ import com.autonomousapps.kit.GradleProject.DslKind
 import com.autonomousapps.kit.gradle.*
 import com.autonomousapps.kit.gradle.Dependency.Companion.implementation
 import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.gradle.android.CompileOptions
+import com.autonomousapps.kit.gradle.android.DefaultConfig
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -456,7 +458,10 @@ internal class ScribeTestGroovy {
       val version = "1.0"
       val dependencies = Dependencies(Dependency("api", ":magic"))
       val androidBlock = AndroidBlock(
-        namespace = "ankh.morpork"
+        namespace = "ankh.morpork",
+        compileSdkVersion = 34,
+        defaultConfig = DefaultConfig.DEFAULT_APP,
+        compileOptions = CompileOptions.DEFAULT,
       )
 
       val buildScript = BuildScript(

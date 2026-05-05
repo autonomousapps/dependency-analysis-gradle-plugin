@@ -24,6 +24,7 @@ dependencies {
 
   testImplementation(platform(libs.junit.bom))
   testImplementation(libs.junit.api)
+  testImplementation(libs.junit.params)
   testImplementation(libs.truth)
 
   testRuntimeOnly(libs.junit.engine)
