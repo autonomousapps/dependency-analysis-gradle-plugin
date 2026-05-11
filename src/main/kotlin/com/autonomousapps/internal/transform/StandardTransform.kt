@@ -378,12 +378,12 @@ internal class StandardTransform(
 
   /** Use coordinates/variant of the original declaration when reporting remove/change as it is more precise. */
   private fun declarationCoordinates(decl: Declaration): Coordinates {
-    return when {
-      coordinates is IncludedBuildCoordinates && decl.identifier.startsWith(":") -> coordinates.resolvedProject
+    return when (coordinates) {
+      is IncludedBuildCoordinates if decl.identifier.startsWith(":") -> coordinates.resolvedProject
 
       // This handles the case where we have an unused dependency because it's been excluded via
       // configurations.<foo>.exclude(group = "group", module = "module")
-      coordinates is FlatCoordinates && decl.version != null -> {
+      is FlatCoordinates if decl.version != null -> {
         ModuleCoordinates(coordinates.identifier, decl.version, decl.gradleVariantIdentification)
       }
 
