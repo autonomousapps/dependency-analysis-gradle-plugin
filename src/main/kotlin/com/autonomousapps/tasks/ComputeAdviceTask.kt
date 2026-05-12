@@ -357,8 +357,8 @@ internal class DependencyAdviceBuilder(
           //  `parentAdvice` case.
           // This can transform add-advice to change-advice. Currently only for KMP projects where the "parent" KMP dep
           // is declared on a commonX configuration, and the "child" -jvm or -android dep needs to be upgraded.
-          advice.isAdd() && bundles.hasParentInBundle(originalCoordinates) -> {
-            val parent = bundles.findParentInBundle(originalCoordinates)!!
+          advice.isAdd() && bundles.hasParent(originalCoordinates) -> {
+            val parent = bundles.findParent(originalCoordinates)!!
 
             val parentAdvice = bundles.maybeParent(advice, originalCoordinates)
             if (parentAdvice != advice) {

@@ -51,13 +51,13 @@ internal class Bundles private constructor(
     primaryPointers.putIfAbsent(subordinate, primary)
   }
 
-  fun hasParentInBundle(coordinates: Coordinates): Boolean = parentPointers[coordinates] != null
+  fun findParent(coordinates: Coordinates): Coordinates? = parentPointers[coordinates]
 
-  fun findParentInBundle(coordinates: Coordinates): Coordinates? = parentPointers[coordinates]
+  fun hasParent(coordinates: Coordinates): Boolean = findParent(coordinates) != null
 
   /**
    * Requirements for calling this method:
-   * 1. [hasParentInBundle] has already been called and it returns true. Otherwise this method will throw.
+   * 1. [hasParent] has already been called and it returns true. Otherwise this method will throw.
    * 2. [addAdvice] is add-advice. Otherwise this method will throw.
    *
    * Can return either [addAdvice] exactly, or a change-advice. Will do the latter when the following is true:
@@ -80,7 +80,7 @@ internal class Bundles private constructor(
   fun maybeParent(addAdvice: Advice, originalCoordinates: Coordinates): Advice {
     check(addAdvice.isAdd()) { "Must be add-advice. Was '$addAdvice'." }
 
-    val parent = findParentInBundle(originalCoordinates)
+    val parent = findParent(originalCoordinates)
       ?: error("No parent for $originalCoordinates. Check 'hasParentInBundle()' before calling this method.")
     val parentCoordinates = preferredCoordinates(parent, addAdvice)
 
@@ -139,8 +139,10 @@ internal class Bundles private constructor(
           // This means the parent is in the same source set
           else -> addAdvice.toConfiguration
         }
+      } else if (parentDeclaration.configurationName == "implementation") {
+        "api"
       } else {
-        // TODO(tsr): not a KMP project. What can we say?
+        // TODO(tsr): handle any other cases?
         null
       }
 
@@ -176,6 +178,7 @@ internal class Bundles private constructor(
 
   fun maybePrimary(addAdvice: Advice, originalCoordinates: Coordinates): Advice {
     check(addAdvice.isAdd()) { "Must be add-advice" }
+
     return primaryPointers[originalCoordinates]?.let { primary ->
       val preferredCoordinatesNotation = preferredCoordinates(primary, addAdvice)
       addAdvice.copy(coordinates = preferredCoordinatesNotation.withoutDefaultCapability())

@@ -12,6 +12,7 @@ import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.model.internal.intermediates.Usage
+import com.autonomousapps.model.source.AndroidSourceKind
 import com.autonomousapps.model.source.JvmSourceKind
 import com.autonomousapps.model.source.KmpSourceKind
 import com.autonomousapps.model.source.SourceKind
@@ -32,6 +33,14 @@ class BundlesTest {
   private val dependenciesHandler = RealDependenciesHandler(objects)
   private val gvi = GradleVariantIdentification.EMPTY
 
+  private val androidConfigurationNames = ConfigurationNames(
+    projectType = ProjectType.ANDROID,
+    supportedSourceSetNames = setOf(
+      "main",
+      "debug",
+      "test",
+    )
+  )
   private val jvmConfigurationNames = ConfigurationNames(ProjectType.JVM, setOf("main", "test"))
   private val kmpConfigurationNames = ConfigurationNames(
     projectType = ProjectType.KMP,
@@ -71,7 +80,7 @@ class BundlesTest {
         ignoreKtx = false
       )
 
-      assertThat(bundles.hasParentInBundle(stdlib)).isTrue()
+      assertThat(bundles.hasParent(stdlib)).isTrue()
       assertThat(bundles.hasUsedChild(stdlibJdk8)).isTrue()
     }
 
@@ -86,7 +95,7 @@ class BundlesTest {
      * ```
      * because okio is the implicit parent of okio-jvm, and in this case okio is declared on commonMainImplementation.
      */
-    @Test fun `transforms add (jvmMainApi) to change (commonMainImplementation to commonMainApi) for kmp (implicit bundles)`() {
+    @Test fun `transforms add (jvmMainApi) to change (commonMainImplementation to commonMainApi) for kmp`() {
       // Given a project that has a dependency graph with three nodes (itself, okio, and okio-jvm)
       val consumer = ProjectCoordinates(":consumer", gvi)
       val okio = ModuleCoordinates("com.squareup.okio:okio", "3.16.4", gvi)
@@ -142,7 +151,7 @@ class BundlesTest {
      * ```
      * because okio is the implicit parent of okio-jvm, and in this case okio is declared on jvmMainImplementation.
      */
-    @Test fun `transforms change (jvmMainImplementation-jvmMainApi) for okio-jvm to okio for kmp (implicit bundles)`() {
+    @Test fun `transforms change (jvmMainImplementation-jvmMainApi) for okio-jvm to okio for kmp`() {
       // Given a project that has a dependency graph with three nodes (itself, okio, and okio-jvm)
       val consumer = ProjectCoordinates(":consumer", gvi)
       val okio = ModuleCoordinates("com.squareup.okio:okio", "3.16.4", gvi)
@@ -194,7 +203,7 @@ class BundlesTest {
      *
      * @see <a href="https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1653">Issue 1653</a>.
      */
-    @Test fun `does not transform change (jvmMainImplementation-jvmMainApi) for metro-runtime for kmp (implicit bundles)`() {
+    @Test fun `does not transform change (jvmMainImplementation-jvmMainApi) for metro-runtime for kmp`() {
       // Given a project that has a dependency graph with three nodes (itself, okio, and okio-jvm)
       val consumer = ProjectCoordinates(":consumer", gvi)
       val metroRuntime = ModuleCoordinates("dev.zacsweers.metro:runtime", "0.10.2", gvi)
@@ -231,6 +240,69 @@ class BundlesTest {
       // Then the advice remains unchanged
       val addAdvice = Advice.ofAdd(metroRuntimeJvm, "jvmMainApi")
       assertThat(bundles.maybeParent(addAdvice, metroRuntimeJvm)).isEqualTo(addAdvice)
+    }
+  }
+
+  @Nested inner class ExplicitBundles {
+    /**
+     * Because of user-supplied bundle, will transform:
+     * ```
+     * add foo-bar to debugApi
+     * ```
+     * to
+     * ```
+     * change foo from implementation to api
+     * ```
+     * because foo-bar is explicitly declared the primary of foo-bar, and in this case foo is declared on
+     * implementation.
+     */
+    @Test fun `transforms change (debugApi-api) for foo-bar to foo for non-KMP user-supplied bundle`() {
+      // Given a project that has a dependency graph with three nodes (itself, okio, and okio-jvm)
+      val consumer = ProjectCoordinates(":consumer", gvi)
+      val foo = ModuleCoordinates("com.foo:foo", "1", gvi)
+      val fooBar = ModuleCoordinates("com.foo:foo-bar", "1", gvi)
+      val graph = newGraphFrom(
+        // :consumer -> foo -> foo-bar
+        listOf(consumer to foo, foo to fooBar),
+        sourceKind = AndroidSourceKind.MAIN,
+      )
+
+      // ...a single declaration: implementation(libs.foo)
+      val declarations = Declaration(
+        identifier = "com.foo:foo",
+        version = "1",
+        configurationName = "implementation",
+        gradleVariantIdentification = gvi,
+      ).intoSet()
+
+      // ...usages of project :consumer
+      val unused = Reason.Unused.intoSet()
+      val abi = Reason.Abi("Uses 1 class: foo.FooBar").intoSet()
+      val fooUsages = foo to usage(Bucket.NONE, AndroidSourceKind.MAIN, reasons = unused).intoSet()
+      val fooBarUsages = fooBar to usage(Bucket.API, AndroidSourceKind.main("debug"), reasons = abi).intoSet()
+      val dependencyUsages = listOf(fooUsages, fooBarUsages).toMap<Coordinates, Set<Usage>>()
+
+      // ...and the explicit bundle
+      dependenciesHandler.bundle("foo") {
+        it.primary("com.foo:foo")
+        it.includeGroup("com.foo")
+      }
+
+      // When we build the thing under test
+      val bundles = Bundles.of(
+        projectPath = ":consumer",
+        dependencyGraph = graph,
+        bundleRules = dependenciesHandler.serializableBundles(),
+        dependencyUsages = dependencyUsages,
+        declarations = declarations,
+        configurationNames = androidConfigurationNames,
+        ignoreKtx = false
+      )
+
+      // Then it mutates the advice as expected
+      val addAdvice = Advice.ofAdd(fooBar, "debugApi")
+      val expectedAdvice = Advice.ofChange(foo, "implementation", "api")
+      assertThat(bundles.maybeParent(addAdvice, fooBar)).isEqualTo(expectedAdvice)
     }
   }
 
