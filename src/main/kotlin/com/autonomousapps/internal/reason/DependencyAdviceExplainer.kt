@@ -98,8 +98,9 @@ internal class DependencyAdviceExplainer(
             check(trace is BundleTrace.PrimaryMap) { "Expected a ${BundleTrace.PrimaryMap::class.java.simpleName}" }
 
             "You have been advised to add this dependency to '${a.toConfiguration!!.colorize(Colors.GREEN)}'.\n" +
-              "It matched a $bundle rule: ${printableIdentifier(trace.primary).colorize(Colors.BOLD)} was substituted for " +
-              "${printableIdentifier(trace.subordinate).colorize(Colors.BOLD)}."
+              "It matched a $bundle rule: ${printableIdentifier(trace.primary).colorize(Colors.BOLD)} was substituted for ${
+                printableIdentifier(trace.subordinate).colorize(Colors.BOLD)
+              }."
           } else {
             "You have been advised to add this dependency to '${a.toConfiguration!!.colorize(Colors.GREEN)}'."
           }
@@ -110,8 +111,19 @@ internal class DependencyAdviceExplainer(
         }
 
         a.isChange() || a.isChangeToRuntimeOnly() || a.isCompileOnly() -> {
-          "You have been advised to change this dependency to '${a.toConfiguration!!.colorize(Colors.GREEN)}' " +
-            "from '${a.fromConfiguration!!.colorize(Colors.YELLOW)}'."
+          val base =
+            "You have been advised to change this dependency to '${a.toConfiguration!!.colorize(Colors.GREEN)}' from '${
+              a.fromConfiguration!!.colorize(Colors.YELLOW)
+            }'."
+
+          val trace = findTrace()
+          if (trace != null) {
+            "$base\nIt matched a $bundle rule: ${printableIdentifier(trace.top).colorize(Colors.BOLD)} was substituted for ${
+              printableIdentifier(trace.bottom).colorize(Colors.BOLD)
+            }."
+          } else {
+            base
+          }
         }
 
         else -> error("Unknown advice type: $advice")
