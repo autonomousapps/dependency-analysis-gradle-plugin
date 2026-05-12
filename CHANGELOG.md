@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.11.0
+* [fix]: when following a bundle rule, don't drop `api` dependencies.
+
 # Version 3.10.0
 * [feat]: Gradle plugin markers are the preferred way to depend on a plugin.
 * [feat]: Gradle plugin markers are part of an implicit bundle.
