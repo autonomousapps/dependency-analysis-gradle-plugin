@@ -12,7 +12,6 @@ import com.autonomousapps.model.internal.intermediates.producer.Constant
 import com.autonomousapps.model.internal.intermediates.producer.Member
 import com.squareup.moshi.JsonClass
 import java.lang.annotation.RetentionPolicy
-import java.util.regex.Pattern
 
 /** Metadata from an Android manifest. */
 internal data class Manifest(
@@ -47,8 +46,9 @@ internal data class AnalyzedClass(
   val innerClasses: Set<String>,
   val constants: Set<Constant>,
   val reflectiveAccesses: Set<String>,
+  val exceptions: Set<String>,
   val binaryClass: BinaryClass,
-) : Comparable<AnalyzedClass> {
+) {
   constructor(
     className: String,
     outerClassName: String?,
@@ -61,6 +61,7 @@ internal data class AnalyzedClass(
     innerClasses: Set<String>,
     constants: Set<Constant>,
     reflectiveAccesses: Set<String>,
+    exceptions: Set<String>,
     effectivelyPublicFields: Set<Member.Field>,
     effectivelyPublicMethods: Set<Member.Method>,
   ) : this(
@@ -73,6 +74,7 @@ internal data class AnalyzedClass(
     innerClasses = innerClasses,
     constants = constants,
     reflectiveAccesses = reflectiveAccesses,
+    exceptions = exceptions,
     binaryClass = BinaryClass(
       className = className.intern(),
       superClassName = superClassName?.intern(),
@@ -92,8 +94,6 @@ internal data class AnalyzedClass(
       else -> null
     }
   }
-
-  override fun compareTo(other: AnalyzedClass): Int = className.compareTo(other.className)
 }
 
 @JsonClass(generateAdapter = false)
@@ -121,7 +121,9 @@ internal data class AbiExclusions(
   private val pathRegexes = pathExclusions.mapToSet(String::toRegex)
 
   fun includeAll() = includeAnnotationRegexes.isEmpty() && includeClassRegexes.isEmpty()
-  fun includesAnnotation(fqcn: String): Boolean = includeAnnotationRegexes.any { it.containsMatchIn(fqcn.binaryToHuman()) }
+  fun includesAnnotation(fqcn: String): Boolean =
+    includeAnnotationRegexes.any { it.containsMatchIn(fqcn.binaryToHuman()) }
+
   fun includesClass(fqcn: String) = includeClassRegexes.any { it.containsMatchIn(fqcn.binaryToHuman()) }
   fun excludesAnnotation(fqcn: String): Boolean = annotationRegexes.any { it.containsMatchIn(fqcn.binaryToHuman()) }
   fun excludesClass(fqcn: String) = classRegexes.any { it.containsMatchIn(fqcn.binaryToHuman()) }

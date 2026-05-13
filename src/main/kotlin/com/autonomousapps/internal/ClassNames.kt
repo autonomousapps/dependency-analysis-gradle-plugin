@@ -6,6 +6,8 @@ internal object ClassNames {
 
   fun canonicalize(className: String): String = className.replace('/', '.').intern()
 
+  fun isCoreJava(className: String): Boolean = className.startsWith("java/")
+
   // TODO(tsr): I think I can delete the slashy version but I'm not sure
   fun isEnum(superClassName: String?): Boolean = superClassName == "java.lang.Enum" || superClassName == "java/lang/Enum"
 

@@ -89,11 +89,9 @@ internal class JarExploder(
     }
 
     val analyzedClasses = visitors.map { it.getAnalyzedClass() }
-      .filterNot {
-        // Filter out `java` packages, but not `javax`
-        it.className.startsWith("java.")
-      }
-      .toSortedSet()
+      // Filter out `java` packages, but not `javax`
+      .filterNot { it.className.startsWith("java.") }
+      .toSet()
 
     return ExplodingJar(
       analyzedClasses = analyzedClasses,

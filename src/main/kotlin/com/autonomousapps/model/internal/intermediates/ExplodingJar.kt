@@ -66,22 +66,27 @@ internal class ExplodingJar(
   /** Map of class names to the reflective accesses they make. May be empty. */
   val reflectiveAccesses: Map<String, Set<String>> = analyzedClasses.asSequence()
     .filterNot { it.reflectiveAccesses.isEmpty() }
-    .map { it.className to it.reflectiveAccesses }
-    .toMap()
+    .associate { it.className to it.reflectiveAccesses }
+    .toSortedMap()
+    .efficient()
+
+  /** Map of class names to the exceptions they handle. Does not include standard Java exceptions. May be empty. */
+  val exceptions: Map<String, Set<String>> = analyzedClasses.asSequence()
+    .filterNot { it.exceptions.isEmpty() }
+    .associate { it.className to it.exceptions }
     .toSortedMap()
     .efficient()
 
   /**
    * A jar is a lint jar if it's _only_ for linting.
    *
-   * nb: We're deliberately using `all` here because it is also true if the collection is empty,
-   * which is what we want.
+   * nb: We're deliberately using `all` here because it is also true if the collection is empty, which is what we want.
    */
   val isLintJar: Boolean = analyzedClasses.all { it.hasNoMembers } && androidLintRegistry != null
 
   /**
-   * True if this jar is a candidate for the `compileOnly` configuration, and false otherwise. See
-   * the class-level javadoc for an explanation of the algorithm.
+   * True if this jar is a candidate for the `compileOnly` configuration, and false otherwise. See the class-level
+   * Javadoc for an explanation of the algorithm.
    */
   val isCompileOnlyCandidate: Boolean =
     if (analyzedClasses.isEmpty()) {
