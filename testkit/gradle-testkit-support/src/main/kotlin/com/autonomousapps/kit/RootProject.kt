@@ -98,6 +98,7 @@ public class RootProject(
      */
     public fun withVersionCatalog(file: File) {
       withFile(file)
+      // TODO(tsr): wire this file into DependencyResolutionManagement.versionCatalogs directly
     }
 
     public fun withFile(path: String, content: String) {

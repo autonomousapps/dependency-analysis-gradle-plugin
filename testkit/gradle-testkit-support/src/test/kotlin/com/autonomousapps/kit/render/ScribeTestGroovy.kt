@@ -60,7 +60,11 @@ internal class ScribeTestGroovy {
     @Test fun `can render dependencyResolutionManagement block`() {
       // Given
       val repositories = Repositories(Repository.GOOGLE, Repository.MAVEN_CENTRAL)
-      val dependencyResolutionManagement = DependencyResolutionManagement(repositories)
+      val dependencyResolutionManagement = DependencyResolutionManagement.Builder()
+        .withRepositories(repositories)
+        .withRepositoriesMode(DependencyResolutionManagement.RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+        .withVersionCatalogs(VersionCatalogs.of(VersionCatalog("myLibs", "my-libs.versions.toml")))
+        .build()
 
       // When
       val text = dependencyResolutionManagement.render(scribe)
@@ -68,14 +72,20 @@ internal class ScribeTestGroovy {
       // Then
       assertThat(text).isEqualTo(
         """
-        dependencyResolutionManagement {
-          repositories {
-            google()
-            mavenCentral()
-          }
-        }
-        
-      """.trimIndent()
+          |dependencyResolutionManagement {
+          |  repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+          |  repositories {
+          |    google()
+          |    mavenCentral()
+          |  }
+          |  versionCatalogs {
+          |    myLibs {
+          |      from(files("my-libs.versions.toml"))
+          |    }
+          |  }
+          |}
+          |
+        """.trimMargin()
       )
     }
 

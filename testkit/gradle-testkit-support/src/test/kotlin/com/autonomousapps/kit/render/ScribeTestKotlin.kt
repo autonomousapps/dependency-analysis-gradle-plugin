@@ -60,7 +60,11 @@ internal class ScribeTestKotlin {
     @Test fun `can render dependencyResolutionManagement block`() {
       // Given
       val repositories = Repositories(Repository.GOOGLE, Repository.MAVEN_CENTRAL)
-      val dependencyResolutionManagement = DependencyResolutionManagement(repositories)
+      val dependencyResolutionManagement = DependencyResolutionManagement.Builder()
+        .withRepositories(repositories)
+        .withRepositoriesMode(DependencyResolutionManagement.RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+        .withVersionCatalogs(VersionCatalogs.of(VersionCatalog("my-libs", "my-libs.versions.toml")))
+        .build()
 
       // When
       val text = dependencyResolutionManagement.render(scribe)
@@ -68,14 +72,20 @@ internal class ScribeTestKotlin {
       // Then
       assertThat(text).isEqualTo(
         """
-        dependencyResolutionManagement {
-          repositories {
-            google()
-            mavenCentral()
-          }
-        }
-        
-      """.trimIndent()
+          |dependencyResolutionManagement {
+          |  repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+          |  repositories {
+          |    google()
+          |    mavenCentral()
+          |  }
+          |  versionCatalogs {
+          |    create("my-libs") {
+          |      from(files("my-libs.versions.toml"))
+          |    }
+          |  }
+          |}
+          |
+        """.trimMargin()
       )
     }
 
