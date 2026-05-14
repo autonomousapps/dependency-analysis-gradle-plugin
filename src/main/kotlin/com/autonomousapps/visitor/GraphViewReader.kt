@@ -16,12 +16,13 @@ internal class GraphViewReader(
   private val project: ProjectVariant,
   private val dependencies: Set<Dependency>,
   private val graph: DependencyGraphView,
+  private val graphRuntime: DependencyGraphView,
   private val declarations: Set<Declaration>,
   private val duplicateClasses: Set<DuplicateClass>,
 ) {
 
   fun accept(visitor: GraphViewVisitor) {
-    val context = DefaultContext(project, dependencies, graph, declarations, duplicateClasses)
+    val context = DefaultContext(project, dependencies, graph, graphRuntime, declarations, duplicateClasses)
     project.excludedIdentifiers.forEach { excludedIdentifier ->
       visitor.visit(excludedIdentifier)
     }
@@ -35,6 +36,7 @@ internal class DefaultContext(
   override val project: ProjectVariant,
   override val dependencies: Set<Dependency>,
   override val graph: DependencyGraphView,
+  override val graphRuntime: DependencyGraphView,
   override val declarations: Set<Declaration>,
   override val duplicateClasses: Set<DuplicateClass>,
 ) : GraphViewVisitor.Context {

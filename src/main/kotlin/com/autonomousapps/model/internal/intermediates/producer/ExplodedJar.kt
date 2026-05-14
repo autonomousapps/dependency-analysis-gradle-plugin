@@ -104,6 +104,7 @@ internal data class ExplodedJar(
     capabilities += InferredCapability(isAnnotations)
     binaryClasses.ifNotEmpty { capabilities += BinaryClassCapability.newInstance(it) }
     constants.ifNotEmpty { capabilities += ConstantCapability.newInstance(it, ktFiles) }
+    exceptions.ifNotEmpty { capabilities += ExceptionCapability.newInstance(it) }
     securityProviders.ifNotEmpty { capabilities += SecurityProviderCapability.newInstance(it) }
     androidLintRegistry?.let { capabilities += AndroidLinterCapability(it, isLintJar) }
     return capabilities

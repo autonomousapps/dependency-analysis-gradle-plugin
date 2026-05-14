@@ -19,6 +19,7 @@ internal interface GraphViewVisitor {
     val project: ProjectVariant
     val dependencies: Set<Dependency>
     val graph: DependencyGraphView
+    val graphRuntime: DependencyGraphView
     val declarations: Set<Declaration>
     val duplicateClasses: Set<DuplicateClass>
 

@@ -31,21 +31,19 @@ internal data class ReflectingDependency(
       require(accessingClasses.isNotEmpty())
     }
 
-    fun asReason(): String {
-      return buildString {
-        append(accessor.gav())
-        append(" in class ")
+    fun asReason() = buildString {
+      append(accessor.gav())
+      append(" in class ")
 
-        if (accessingClasses.size == 1) {
-          append(accessingClasses.first())
-        } else {
-          append(accessingClasses)
-          append("*")
-        }
-
-        append(": ")
-        append(accessedClass)
+      if (accessingClasses.size == 1) {
+        append(accessingClasses.first())
+      } else {
+        append(accessingClasses)
+        append("*")
       }
+
+      append(": ")
+      append(accessedClass)
     }
 
     override fun compareTo(other: ReflectiveAccess): Int {

@@ -46,7 +46,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
 
   private val localVariableArray = LocalVariableArray()
   private val reflectiveAccesses = mutableSetOf<String>()
-  private val methodAnalyzer = MethodAnalyzer(logger, localVariableArray, reflectiveAccesses)
+  private val methodAnalyzer = MethodAnalyzer(logger, localVariableArray, reflectiveAccesses, exceptions)
 
   internal fun getAnalyzedClass(): AnalyzedClass {
     val className = this.className
@@ -226,6 +226,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     private val logger: Logger,
     private val localVariableArray: LocalVariableArray,
     private val reflectiveAccesses: MutableSet<String>,
+    private val exceptions: MutableSet<String>,
   ) : MethodVisitor(ASM_VERSION) {
 
     private fun log(msgProvider: () -> String) {
@@ -267,6 +268,14 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       // that parameter.
       if ("$owner.$name" == "java/lang/Class.forName" && lastConstant != null) {
         reflectiveAccesses += lastConstant.value
+      }
+    }
+
+    override fun visitTryCatchBlock(start: Label, end: Label, handler: Label, type: String?) {
+      log { "  - MethodAnalyzer#visitTryCatchBlock: type=$type" }
+
+      if (type != null && !ClassNames.isCoreJava(type)) {
+        exceptions.add(canonicalize(type))
       }
     }
   }

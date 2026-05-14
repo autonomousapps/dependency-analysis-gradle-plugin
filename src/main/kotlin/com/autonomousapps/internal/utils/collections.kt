@@ -146,6 +146,18 @@ internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (
   return mapNotNullTo(TreeSet(), transform)
 }
 
+internal inline fun <T, R : Any, V : Any> Iterable<T>.mapSecondNotNull(transform: (T) -> Pair<R, V?>): List<Pair<R, V>> {
+  return mapNotNull {
+    val pair = transform(it)
+    if (pair.second != null) {
+      @Suppress("UNCHECKED_CAST")
+      pair as Pair<R, V>
+    } else {
+      null
+    }
+  }
+}
+
 /**
  * Sort elements keeping Comparable-equal elements (stable sorting).
  * This method has different semantics with standard toSortedSet(Comparator).
