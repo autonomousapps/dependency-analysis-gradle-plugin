@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.12.0
+* [feat]: exceptions are special. Exceptions get verified early by the JVM and so if a dependency is missing an 
+  exception's type from the runtime classpath, that can cause failures in the consumer at runtime.
+
 # Version 3.11.0
 * [fix]: when following a bundle rule, don't drop `api` dependencies.
 
