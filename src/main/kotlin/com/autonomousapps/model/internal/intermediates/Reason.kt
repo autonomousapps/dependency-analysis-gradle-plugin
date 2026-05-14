@@ -4,6 +4,7 @@ package com.autonomousapps.model.internal.intermediates
 
 import com.autonomousapps.internal.strings.slashy
 import com.autonomousapps.internal.utils.capitalizeSafely
+import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.AndroidResSource
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
@@ -165,6 +166,37 @@ internal sealed class Reason(open val reason: String) {
     )
 
     override val configurationName: String = "implementation"
+  }
+
+  @TypeLabel("exceptions")
+  @JsonClass(generateAdapter = false)
+  data class Exceptions(override val reason: String) : Reason(reason) {
+    constructor(users: Map<Coordinates, Map<String, Set<String>>>) : this(
+      buildReason(asReason(users), "Has exceptions referenced", Kind.Exception)
+    )
+
+    override val configurationName: String = "runtimeOnly"
+
+    private companion object {
+      /**
+       * Ends up looking like
+       * ```
+       * * Referenced 1 time by another dependency: (1) ':producer': (a) [org.json.JSONException] by class mutual.aid.producer.Producer (implies runtimeOnly).
+       * ```
+       * See `ExceptionsAreSpecialSpec`.
+       */
+      fun asReason(users: Map<Coordinates, Map<String, Set<String>>>): Collection<String> {
+        return users.entries.mapIndexed { i, user ->
+          val uses = user.value.entries
+            .mapIndexed { j, entry ->
+              "(${'a' + j}) ${entry.value} by class ${entry.key}"
+            }
+            .joinToString(separator = ", ")
+
+          "(${i + 1}) '${user.key.gav()}': $uses"
+        }
+      }
+    }
   }
 
   @TypeLabel("impl")
@@ -419,6 +451,7 @@ private enum class Kind(
   Annotation("annotation", "annotations"),
   Class("class", "classes"),
   Constant("constant", "constants"),
+  Exception("time by another dependency", "times by other dependencies"),
   InlineMember("inline member", "inline members"),
   LintRegistry("lint registry", "lint registries"),
   NativeBinary("native binary", "native binaries"),

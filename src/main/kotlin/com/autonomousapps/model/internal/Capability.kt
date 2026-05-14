@@ -176,6 +176,24 @@ internal data class ConstantCapability(
   }
 }
 
+@TypeLabel("exception")
+@JsonClass(generateAdapter = false)
+internal data class ExceptionCapability(
+  /** Map of class names to the exceptions they handle. Does not include standard Java exceptions. */
+  val exceptions: Map<String, Set<String>>,
+) : Capability() {
+
+  companion object {
+    fun newInstance(exceptions: Map<String, Set<String>>): ExceptionCapability {
+      return ExceptionCapability(exceptions.toSortedMap().efficient())
+    }
+  }
+
+  override fun merge(other: Capability): Capability {
+    return newInstance(exceptions + (other as ExceptionCapability).exceptions)
+  }
+}
+
 @TypeLabel("inferred")
 @JsonClass(generateAdapter = false)
 internal data class InferredCapability(

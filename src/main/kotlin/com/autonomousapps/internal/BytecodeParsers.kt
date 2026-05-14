@@ -109,7 +109,7 @@ private class BytecodeReader(
   private fun Sequence<String>.fixup(classAnalyzer: ClassAnalyzer): Set<String> {
     return this
       // Filter out `java` packages, but not `javax`
-      .filterNot { it.startsWith("java/") }
+      .filterNot(ClassNames::isCoreJava)
       // Filter out a "used class" that is exactly the class under analysis
       .filterNot { it == classAnalyzer.className }
       // More human-readable
@@ -122,7 +122,7 @@ private class BytecodeReader(
   private fun Sequence<Pair<String, String>>.fixup(classAnalyzer: ClassAnalyzer): Map<String, String> {
     return this
       // Filter out `java` packages, but not `javax`
-      .filterNot { it.first.startsWith("java/") }
+      .filterNot { ClassNames.isCoreJava(it.first) }
       // Filter out a "used class" that is exactly the class under analysis
       .filterNot { it.first == classAnalyzer.className }
       // More human-readable
@@ -136,7 +136,7 @@ private class BytecodeReader(
   private fun Map<String, Set<MemberAccess>>.fixup(classAnalyzer: ClassAnalyzer): Map<String, Set<MemberAccess>> {
     return this
       // Filter out `java` packages, but not `javax`
-      .filterKeys { !it.startsWith("java/") }
+      .filterKeys { !ClassNames.isCoreJava(it) }
       // Filter out a "used class" that is exactly the class under analysis
       .filterKeys { it != classAnalyzer.className }
   }

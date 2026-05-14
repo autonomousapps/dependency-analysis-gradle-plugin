@@ -2,9 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.android.utils.associateNotNull
 import com.autonomousapps.graph.Graphs.parents
+import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.graph.Graphs.root
 import com.autonomousapps.internal.binary.BinaryCompatibilityChecker
+import com.autonomousapps.internal.graph.maybeProjectCoordinates
 import com.autonomousapps.internal.graph.supers.SuperNode
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
@@ -46,9 +49,16 @@ public abstract class ComputeUsagesTask @Inject constructor(
   @get:Input
   public abstract val checkBinaryCompat: Property<Boolean>
 
+  @get:Input
+  public abstract val buildPath: Property<String>
+
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   public abstract val graph: RegularFileProperty
+
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  public abstract val graphRuntime: RegularFileProperty
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -77,7 +87,9 @@ public abstract class ComputeUsagesTask @Inject constructor(
       it.checkSuperClasses.set(checkSuperClasses)
       it.checkBinaryCompat.set(checkBinaryCompat)
 
+      it.buildPath.set(buildPath)
       it.graph.set(graph)
+      it.graph.set(graphRuntime)
       it.declarations.set(declarations)
       it.dependencies.set(dependencies)
       it.syntheticProject.set(syntheticProject)
@@ -91,7 +103,9 @@ public abstract class ComputeUsagesTask @Inject constructor(
     public val checkSuperClasses: Property<Boolean>
     public val checkBinaryCompat: Property<Boolean>
 
+    public val buildPath: Property<String>
     public val graph: RegularFileProperty
+    public val graphRuntime: RegularFileProperty
     public val declarations: RegularFileProperty
     public val dependencies: DirectoryProperty
     public val syntheticProject: RegularFileProperty
@@ -102,14 +116,16 @@ public abstract class ComputeUsagesTask @Inject constructor(
 
   public abstract class ComputeUsagesAction : WorkAction<ComputeUsagesParameters> {
 
+    private val buildPath = parameters.buildPath.get()
     private val graph = parameters.graph.fromJson<DependencyGraphView>()
+    private val graphRuntime = parameters.graph.fromJson<DependencyGraphView>()
     private val declarations = parameters.declarations.fromJsonSet<Declaration>()
     private val project = parameters.syntheticProject.fromJson<ProjectVariant>()
     private val dependencies = project.dependencies(parameters.dependencies.get())
-    private val duplicateClasses = parameters.duplicateClassesReports.get().asSequence()
-      .map { it.fromJsonSet<DuplicateClass>() }
-      .flatten()
-      .toSortedSet()
+    private val duplicateClasses =
+      parameters.duplicateClassesReports.get().asSequence()
+        .flatMap { it.fromJsonSet<DuplicateClass>() }
+        .toSortedSet()
 
     override fun execute() {
       val output = parameters.output.getAndDelete()
@@ -118,11 +134,13 @@ public abstract class ComputeUsagesTask @Inject constructor(
         project = project,
         dependencies = dependencies,
         graph = graph,
+        graphRuntime = graphRuntime,
         declarations = declarations,
         duplicateClasses = duplicateClasses,
       )
       val visitor = GraphVisitor(
         project = project,
+        buildPath = buildPath,
         kapt = parameters.kapt.get(),
         checkSuperClasses = parameters.checkSuperClasses.get(),
         checkBinaryCompat = parameters.checkBinaryCompat.get(),
@@ -136,6 +154,7 @@ public abstract class ComputeUsagesTask @Inject constructor(
 
 private class GraphVisitor(
   project: ProjectVariant,
+  private val buildPath: String,
   private val kapt: Boolean,
   private val checkSuperClasses: Boolean,
   private val checkBinaryCompat: Boolean,
@@ -173,6 +192,7 @@ private class GraphVisitor(
     var isCompileOnlyCandidate = false
     var isAnnotationCandidate = false
     var isRuntimeAndroid = false
+    var hasReferencedExceptionType = false
     var usesTestInstrumentationRunner = false
     var usesResBySource = false
     var usesResByResCompileTime = false
@@ -242,6 +262,10 @@ private class GraphVisitor(
           // only if necessary.
           usesConstant = usesConstantByBytecode(dependencyCoordinates, capability, context)
           usesConstant = usesConstant || usesConstantByImport(dependencyCoordinates, capability, context)
+        }
+
+        is ExceptionCapability -> {
+          hasReferencedExceptionType = isForMissingRuntimeException(dependencyCoordinates, capability, context)
         }
 
         is InferredCapability -> {
@@ -323,6 +347,9 @@ private class GraphVisitor(
       isUnusedCandidate = false
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.COMPILE_ONLY
     } else if (isAccessedByReflection) {
+      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
+    } else if (hasReferencedExceptionType) {
+      isUnusedCandidate = false
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
     } else if (noRealCapabilities(dependency)) {
       isUnusedCandidate = true
@@ -660,6 +687,70 @@ private class GraphVisitor(
 
     return if (imports.isNotEmpty()) {
       reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.ConstantImport(imports)
+      true
+    } else {
+      false
+    }
+  }
+
+  private fun isForMissingRuntimeException(
+    coordinates: Coordinates,
+    capability: ExceptionCapability,
+    context: GraphViewVisitor.Context,
+  ): Boolean {
+    val codeSource = context.project.codeSource
+    if (codeSource.isEmpty()) {
+      // nothing to do here
+      return false
+    }
+
+    // These are all the exception types referenced by `coordinates`, which is a specific dependency of `this` project
+    // (i.e., `context.project`).
+    val exceptions = capability.exceptions.values.flatten().toSet()
+
+    // TODO(tsr): extract this to testable function
+    // These are all the dependencies of this project that use the exception types provided by `coordinates`.
+    val users: Map<Coordinates, Map<String, Set<String>>> = context.dependencies
+      // The dependency can see all its own exceptions
+      .filterNot { dependency -> dependency.coordinates == coordinates }
+      // If the dependency's runtime graph can reach `this` dependency, then we can skip analysis
+      .filterNot { dependency ->
+        val graph = context.graphRuntime.graph
+        if (dependency.coordinates in graph.nodes()) {
+          graph
+            .reachableNodes(dependency.coordinates)
+            .contains(coordinates)
+        } else {
+          false
+        }
+      }
+      .mapSecondNotNull { dependency -> dependency.coordinates to dependency.findCapability<ExceptionCapability>() }
+      .associateNotNull { (coordinates, exceptionCapability) ->
+        val classToExceptionType = exceptionCapability.exceptions
+          .mapNotNull { (className, types) ->
+            val relevantTypes = types.filterToOrderedSet { type -> type in exceptions }
+            if (relevantTypes.isEmpty()) {
+              null
+            } else {
+              className to relevantTypes
+            }
+          }
+          // It only matters if the code of `this` project refers to a class that itself references a relevant type
+          .filter { (className, _) ->
+            codeSource.any { source -> className in source.usedNonAnnotationClasses }
+          }
+          .toMap()
+
+        if (classToExceptionType.isNotEmpty()) {
+          // The specific exception types this dependency references
+          coordinates.maybeProjectCoordinates(buildPath) to classToExceptionType
+        } else {
+          null
+        }
+      }
+
+    return if (users.isNotEmpty()) {
+      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Exceptions(users)
       true
     } else {
       false

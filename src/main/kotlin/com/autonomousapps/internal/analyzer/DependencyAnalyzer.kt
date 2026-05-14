@@ -258,7 +258,9 @@ internal abstract class AbstractDependencyAnalyzer(
       // Currently only modeling this via Gradle property. TODO(tsr): hoist it to the DSL.
       t.checkBinaryCompat.set(checkBinaryCompat)
 
+      t.buildPath.set(project.buildPath(compileConfigurationName))
       t.graph.set(graphViewTask.flatMap { it.output })
+      t.graphRuntime.set(graphViewTask.flatMap { it.outputRuntime })
       t.declarations.set(findDeclarationsTask.flatMap { it.output })
       t.dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
       t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })

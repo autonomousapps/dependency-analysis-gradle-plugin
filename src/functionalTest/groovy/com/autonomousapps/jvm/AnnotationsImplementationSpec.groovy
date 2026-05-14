@@ -91,8 +91,6 @@ final class AnnotationsImplementationSpec extends AbstractJvmSpec {
 
     when:
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
-    // TODO(tsr): still need better tests for reason. Before the fix, this output was wrong. Still not fixed really.
-    //, ':consumer:reason', '--id', 'org.jetbrains:annotations')
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
@@ -103,7 +101,10 @@ final class AnnotationsImplementationSpec extends AbstractJvmSpec {
 
   private static String kgpVersionFrom(GradleVersion gradleVersion) {
     if (gradleVersion < GradleVersion.version('9.0.0')) {
-      return '2.0.21'
+      // TODO(tsr): causes Kotlin compilation failure. Possibly related to
+      //  https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1671
+//      return '2.0.21'
+      return '2.1.21'
     } else {
       return '2.2.10'
     }

@@ -36,6 +36,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   private val innerClasses = mutableSetOf<String>()
   private val effectivelyPublicFields = mutableSetOf<Member.Field>()
   private val effectivelyPublicMethods = mutableSetOf<Member.Method>()
+  private val exceptions = mutableSetOf<String>()
 
   private var methodCount = 0
   private var fieldCount = 0
@@ -45,7 +46,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
 
   private val localVariableArray = LocalVariableArray()
   private val reflectiveAccesses = mutableSetOf<String>()
-  private val methodAnalyzer = MethodAnalyzer(logger, localVariableArray, reflectiveAccesses)
+  private val methodAnalyzer = MethodAnalyzer(logger, localVariableArray, reflectiveAccesses, exceptions)
 
   internal fun getAnalyzedClass(): AnalyzedClass {
     val className = this.className
@@ -64,6 +65,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       innerClasses = innerClasses.efficient(),
       constants = constants.efficient(),
       reflectiveAccesses = reflectiveAccesses.efficient(),
+      exceptions = exceptions.efficient(),
       effectivelyPublicFields = effectivelyPublicFields.efficient(),
       effectivelyPublicMethods = effectivelyPublicMethods.efficient(),
     )
@@ -109,7 +111,20 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
   override fun visitMethod(
     access: Int, name: String, descriptor: String, signature: String?, exceptions: Array<out String>?
   ): MethodVisitor {
-    log { "- visitMethod: ${AccessFlags(access).getModifierString()} descriptor=$descriptor name=$name signature=$signature" }
+    log {
+      val exceptions = exceptions.orEmpty().joinToString(separator = ",", prefix = "[", postfix = "]")
+      "- visitMethod: ${AccessFlags(access).getModifierString()} descriptor=$descriptor name=$name signature=$signature exceptions=$exceptions"
+    }
+
+    // Exceptions go in the Exceptions table and get verified by the JVM when it loads a class
+    // About how the JVM handles exceptions: https://www.infoworld.com/article/2165977/how-the-java-virtual-machine-handles-exceptions.html
+    this.exceptions.addAll(
+      exceptions
+        .orEmpty()
+        // Filter out `java` packages
+        .filterNot(ClassNames::isCoreJava)
+        .map(::canonicalize)
+    )
 
     if (!("()V" == descriptor && ("<init>" == name || "<clinit>" == name))) {
       // ignore constructors and static initializers
@@ -211,6 +226,7 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
     private val logger: Logger,
     private val localVariableArray: LocalVariableArray,
     private val reflectiveAccesses: MutableSet<String>,
+    private val exceptions: MutableSet<String>,
   ) : MethodVisitor(ASM_VERSION) {
 
     private fun log(msgProvider: () -> String) {
@@ -252,6 +268,14 @@ internal class ClassNameAndAnnotationsVisitor(private val logger: Logger) : Clas
       // that parameter.
       if ("$owner.$name" == "java/lang/Class.forName" && lastConstant != null) {
         reflectiveAccesses += lastConstant.value
+      }
+    }
+
+    override fun visitTryCatchBlock(start: Label, end: Label, handler: Label, type: String?) {
+      log { "  - MethodAnalyzer#visitTryCatchBlock: type=$type" }
+
+      if (type != null && !ClassNames.isCoreJava(type)) {
+        exceptions.add(canonicalize(type))
       }
     }
   }
