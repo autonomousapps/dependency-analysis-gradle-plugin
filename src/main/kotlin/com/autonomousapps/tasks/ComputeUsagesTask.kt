@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.android.utils.associateNotNull
 import com.autonomousapps.graph.Graphs.parents
 import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.graph.Graphs.root
@@ -707,8 +708,9 @@ private class GraphVisitor(
     // (i.e., `context.project`).
     val exceptions = capability.exceptions.values.flatten().toSet()
 
+    // TODO(tsr): extract this to testable function
     // These are all the dependencies of this project that use the exception types provided by `coordinates`.
-    val users = context.dependencies
+    val users: Map<Coordinates, Map<String, Set<String>>> = context.dependencies
       // The dependency can see all its own exceptions
       .filterNot { dependency -> dependency.coordinates == coordinates }
       // If the dependency's runtime graph can reach `this` dependency, then we can skip analysis
@@ -723,10 +725,8 @@ private class GraphVisitor(
         }
       }
       .mapSecondNotNull { dependency -> dependency.coordinates to dependency.findCapability<ExceptionCapability>() }
-      .associate { (coordinates, exceptionCapability) ->
-        // The specific exception types this dependency references
-        val preferredCoordinates = coordinates.maybeProjectCoordinates(buildPath)
-        preferredCoordinates to exceptionCapability.exceptions
+      .associateNotNull { (coordinates, exceptionCapability) ->
+        val classToExceptionType = exceptionCapability.exceptions
           .mapNotNull { (className, types) ->
             val relevantTypes = types.filterToOrderedSet { type -> type in exceptions }
             if (relevantTypes.isEmpty()) {
@@ -740,6 +740,13 @@ private class GraphVisitor(
             codeSource.any { source -> className in source.usedNonAnnotationClasses }
           }
           .toMap()
+
+        if (classToExceptionType.isNotEmpty()) {
+          // The specific exception types this dependency references
+          coordinates.maybeProjectCoordinates(buildPath) to classToExceptionType
+        } else {
+          null
+        }
       }
 
     return if (users.isNotEmpty()) {

@@ -125,7 +125,7 @@ final class ExceptionsAreSpecialProject extends AbstractProject {
       '''\
       Source: main
       ------------
-      * Referenced 1 time by another dependency: (1) ':producer': (a) [org.json.JSONException] by class mutual.aid.producer.Producer (implies runtimeOnly).'''.stripIndent()
+      * Has exceptions referenced 1 time by another dependency: (1) ':producer': (a) [org.json.JSONException] by class mutual.aid.producer.Producer (implies runtimeOnly).'''.stripIndent()
     } else {
       '''\
       Source: main

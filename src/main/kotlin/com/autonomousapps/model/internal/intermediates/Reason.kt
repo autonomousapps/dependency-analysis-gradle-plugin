@@ -172,7 +172,7 @@ internal sealed class Reason(open val reason: String) {
   @JsonClass(generateAdapter = false)
   data class Exceptions(override val reason: String) : Reason(reason) {
     constructor(users: Map<Coordinates, Map<String, Set<String>>>) : this(
-      buildReason(asReason(users), "Referenced", Kind.Exception)
+      buildReason(asReason(users), "Has exceptions referenced", Kind.Exception)
     )
 
     override val configurationName: String = "runtimeOnly"
