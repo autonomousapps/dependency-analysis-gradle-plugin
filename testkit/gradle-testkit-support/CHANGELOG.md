@@ -1,5 +1,10 @@
 Gradle TestKit Support Changelog
 
+# Version 0.26
+* [Feat]: new factory method on `VersionCatalogs` to simplify creation.
+* [Feat]: improve `repository` rendering for Kotlin DSL.
+* [Feat]: add more default Gradle properties to `GradleProperties`.
+
 # Version 0.25
 * [Feat]: `DependencyResolutionManagement` can specify `repositoriesMode` and `versionCatalogs`.
 
