@@ -1,5 +1,8 @@
 Gradle TestKit Support Changelog
 
+# Version 0.25
+* [Feat]: `DependencyResolutionManagement` can specify `repositoriesMode` and `versionCatalogs`.
+
 # Version 0.24
 * [Feat]: simplify defaults for Android library projects and AndroidBlock element.
 
