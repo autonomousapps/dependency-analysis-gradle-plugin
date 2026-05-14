@@ -48,7 +48,7 @@ internal class ScribeTestKotlin {
         repositories {
           google()
           mavenCentral()
-          maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") }
+          maven(url = "https://central.sonatype.com/repository/maven-snapshots/")
         }
         
       """.trimIndent()
@@ -125,7 +125,7 @@ internal class ScribeTestKotlin {
         
         pluginManagement {
           repositories {
-            maven { url = uri("") }
+            maven(url = "")
             gradlePluginPortal()
             mavenCentral()
             google()
@@ -409,7 +409,7 @@ internal class ScribeTestKotlin {
         """
           buildscript {
             repositories {
-              maven { url = uri("") }
+              maven(url = "")
               gradlePluginPortal()
               mavenCentral()
               google()
@@ -503,7 +503,7 @@ internal class ScribeTestKotlin {
           
           buildscript {
             repositories {
-              maven { url = uri("") }
+              maven(url = "")
               gradlePluginPortal()
               mavenCentral()
               google()
