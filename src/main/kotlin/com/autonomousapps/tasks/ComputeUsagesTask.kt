@@ -713,18 +713,31 @@ private class GraphVisitor(
       .filterNot { dependency -> dependency.coordinates == coordinates }
       // If the dependency's runtime graph can reach `this` dependency, then we can skip analysis
       .filterNot { dependency ->
-        context.graphRuntime.graph
-          .reachableNodes(dependency.coordinates)
-          .contains(coordinates)
+        val graph = context.graphRuntime.graph
+        if (dependency.coordinates in graph.nodes()) {
+          graph
+            .reachableNodes(dependency.coordinates)
+            .contains(coordinates)
+        } else {
+          false
+        }
       }
       .mapSecondNotNull { dependency -> dependency.coordinates to dependency.findCapability<ExceptionCapability>() }
       .associate { (coordinates, exceptionCapability) ->
         // The specific exception types this dependency references
         val preferredCoordinates = coordinates.maybeProjectCoordinates(buildPath)
         preferredCoordinates to exceptionCapability.exceptions
-          .map { (className, types) ->
-            val relevantTypes = types.filterToOrderedSet { exceptions.contains(it) }
-            className to relevantTypes
+          .mapNotNull { (className, types) ->
+            val relevantTypes = types.filterToOrderedSet { type -> type in exceptions }
+            if (relevantTypes.isEmpty()) {
+              null
+            } else {
+              className to relevantTypes
+            }
+          }
+          // It only matters if the code of `this` project refers to a class that itself references a relevant type
+          .filter { (className, _) ->
+            codeSource.any { source -> className in source.usedNonAnnotationClasses }
           }
           .toMap()
       }
