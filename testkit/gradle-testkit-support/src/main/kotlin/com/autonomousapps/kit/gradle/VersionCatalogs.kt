@@ -31,5 +31,18 @@ public class VersionCatalogs(
     public fun of(vararg versionCatalogs: VersionCatalog): VersionCatalogs {
       return VersionCatalogs(versionCatalogs.toList())
     }
+
+    /**
+     * ```
+     * VersionCatalogs.of(
+     *   "myLibs" to "gradle/my-libs.versions.toml",
+     *   "myOtherLibs" to "gradle/my-other-libs.versions.toml"
+     * )
+     * ```
+     */
+    @JvmStatic
+    public fun of(vararg versionCatalogs: Pair<String, String>): VersionCatalogs {
+      return VersionCatalogs(versionCatalogs.map { VersionCatalog(it.first, it.second) })
+    }
   }
 }
