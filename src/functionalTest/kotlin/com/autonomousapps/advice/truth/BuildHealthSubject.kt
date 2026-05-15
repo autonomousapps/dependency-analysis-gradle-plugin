@@ -70,13 +70,6 @@ class BuildHealthSubject private constructor(
       .containsExactlyEntriesIn(expected.associate { it.projectPath to it.dependencyAdvice })
   }
 
-  fun containsExactlyDependencyAdviceIn(expected: Map<String, Set<Advice>>): Ordered {
-    if (actual == null) failWithActual(simpleFact("build health was null"))
-    return assertThat(actual)
-      .comparingElementsUsing(DEPENDENCY_EQUIVALENCE)
-      .containsExactlyElementsIn(pairs(expected))
-  }
-
   fun isEquivalentIgnoringModuleAdviceAndWarnings(expected: Iterable<ProjectAdvice>) {
     if (actual == null) failWithActual(simpleFact("build health was null"))
     assertThat(actual)
@@ -88,16 +81,6 @@ class BuildHealthSubject private constructor(
     assertThat(actual)
       .comparingElementsUsing(SHOULD_FAIL_EQUIVALENCE)
       .containsExactlyElementsIn(expected.map { it.projectPath to it.shouldFail })
-  }
-
-  fun containsExactlyModuleAdviceIn(expected: Iterable<ProjectAdvice>): Ordered {
-    if (actual == null) failWithActual(simpleFact("build health was null"))
-    assertThat(actual)
-      .comparingElementsUsing(SHOULD_FAIL_EQUIVALENCE)
-      .containsExactlyElementsIn(expected.map { it.projectPath to it.shouldFail })
-    return assertThat(actual)
-      .comparingElementsUsing(MODULE_EQUIVALENCE)
-      .containsExactlyElementsIn(pairs(expected) { it.moduleAdvice })
   }
 
   fun containsExactlyModuleAdviceIn(expected: Map<String, Set<ModuleAdvice>>): Ordered {

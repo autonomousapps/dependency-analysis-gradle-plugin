@@ -11,14 +11,6 @@ class DependencyProvider(
 
   private val pluginUnderTestVersion = AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION
 
-  /*
-   * Common configurations. TODO(tsr): add later.
-   */
-
-  /*
-   * Frequently-used dependencies.
-   */
-
   fun dagp(configurationName: String): Dependency {
     return Dependency(
       configurationName,
@@ -36,14 +28,6 @@ class DependencyProvider(
 
   fun kotlinStdLib(configuration: String): Dependency {
     return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-  }
-
-  fun kotlinStdlibJdk8(configuration: String): Dependency {
-    return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-  }
-
-  fun kotlinStdlibJdk7(configuration: String): Dependency {
-    return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion")
   }
 
   fun kotlinTestJunit(configuration: String): Dependency {
@@ -86,18 +70,6 @@ class DependencyProvider(
     return Dependency(configuration, "io.kotest:kotest-assertions-core:4.6.0")
   }
 
-  fun moshi(configuration: String): Dependency {
-    return Dependency(configuration, "com.squareup.moshi:moshi:1.14.0")
-  }
-
-  fun moshiKotlin(configuration: String): Dependency {
-    return Dependency(configuration, "com.squareup.moshi:moshi-kotlin:1.14.0")
-  }
-
-  fun moshiAdapters(configuration: String): Dependency {
-    return Dependency(configuration, "com.squareup.moshi:moshi-adapters:1.14.0")
-  }
-
   fun okio(configuration: String): Dependency {
     return Dependency(configuration, "com.squareup.okio:okio:2.6.0")
   }
@@ -120,10 +92,6 @@ class DependencyProvider(
 
   fun androidxAnnotations(configuration: String): Dependency {
     return Dependency(configuration, "androidx.annotation:annotation:1.9.1")
-  }
-
-  fun composeMultiplatformRuntime(configuration: String): Dependency {
-    return Dependency(configuration, "org.jetbrains.compose.runtime:runtime:1.0.1")
   }
 
   fun composeMultiplatformFoundation(configuration: String): Dependency {
