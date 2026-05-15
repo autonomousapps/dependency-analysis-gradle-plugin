@@ -230,8 +230,6 @@ class AppModule(
   override val variant = "debug"
 
   init {
-    val agpVersion = "\${com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION}"
-
     withBuildFile("""
       |${plugins()}
       |

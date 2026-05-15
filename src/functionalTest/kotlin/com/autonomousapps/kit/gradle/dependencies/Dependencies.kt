@@ -32,16 +32,6 @@ object Dependencies {
   }
 
   @JvmStatic
-  fun kotlinStdlibJdk8(configuration: String): Dependency {
-    return provider.kotlinStdlibJdk8(configuration)
-  }
-
-  @JvmStatic
-  fun kotlinStdlibJdk7(configuration: String): Dependency {
-    return provider.kotlinStdlibJdk7(configuration)
-  }
-
-  @JvmStatic
   fun kotlinTestJunit(configuration: String): Dependency {
     return provider.kotlinTestJunit(configuration)
   }
@@ -92,21 +82,6 @@ object Dependencies {
   }
 
   @JvmStatic
-  fun moshi(configuration: String): Dependency {
-    return provider.moshi(configuration)
-  }
-
-  @JvmStatic
-  fun moshiKotlin(configuration: String): Dependency {
-    return provider.moshiKotlin(configuration)
-  }
-
-  @JvmStatic
-  fun moshiAdapters(configuration: String): Dependency {
-    return provider.moshiAdapters(configuration)
-  }
-
-  @JvmStatic
   fun okio(configuration: String): Dependency {
     return provider.okio(configuration)
   }
@@ -134,11 +109,6 @@ object Dependencies {
   @JvmStatic
   fun androidxAnnotations(configuration: String): Dependency {
     return provider.androidxAnnotations(configuration)
-  }
-
-  @JvmStatic
-  fun composeMultiplatformRuntime(configuration: String): Dependency {
-    return provider.composeMultiplatformRuntime(configuration)
   }
 
   @JvmStatic

@@ -5,7 +5,7 @@ package com.autonomousapps.fixtures
 import com.autonomousapps.kit.AbstractGradleProject
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import java.io.File
-import java.util.UUID
+import java.util.*
 
 // Very similar to what is in AbstractProject
 private fun newSlug() = buildString {
@@ -43,10 +43,8 @@ class RootSpec @JvmOverloads constructor(
   override val name: String = ":"
 
   companion object {
-    // For use from Groovy
-    @JvmStatic @JvmOverloads fun defaultRootSpec(librarySpecs: List<LibrarySpec>? = null) = RootSpec(librarySpecs)
-
-    @JvmStatic fun defaultGradleProperties() = """
+    @JvmStatic
+    fun defaultGradleProperties() = """
       # Necessary for AGP 3.6+
       android.useAndroidX=true
       
@@ -54,7 +52,8 @@ class RootSpec @JvmOverloads constructor(
       org.gradle.jvmargs=-Dfile.encoding=UTF-8 -XX:+HeapDumpOnOutOfMemoryError -XX:MaxMetaspaceSize=1024m
     """.trimIndent()
 
-    @JvmStatic fun defaultSettingsScript(agpVersion: String?, librarySpecs: List<LibrarySpec>?) = """
+    @JvmStatic
+    fun defaultSettingsScript(agpVersion: String?, librarySpecs: List<LibrarySpec>?) = """
       pluginManagement {
         repositories {
           maven { url = '${System.getProperty("com.autonomousapps.plugin-under-test.repo")}' }
@@ -69,7 +68,8 @@ class RootSpec @JvmOverloads constructor(
       ${librarySpecs?.map { it.name }?.joinToString("\n") { "include(':$it')" } ?: ""}
     """.trimIndent()
 
-    @JvmStatic fun defaultBuildScript(
+    @JvmStatic
+    fun defaultBuildScript(
       agpVersion: String?,
       extensionSpec: String,
     ) = """
@@ -95,18 +95,5 @@ class RootSpec @JvmOverloads constructor(
       }
       $extensionSpec
     """.trimIndent()
-
-    @JvmStatic
-    fun kotlinGradlePlugin(librarySpecs: List<LibrarySpec>?): String {
-      val anyKotlin = librarySpecs?.any {
-        it.type == LibraryType.KOTLIN_ANDROID_LIB || it.type == LibraryType.KOTLIN_JVM_LIB
-      } ?: false
-
-      return if (anyKotlin) {
-        """classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${Plugins.KOTLIN_VERSION}""""
-      } else {
-        ""
-      }
-    }
   }
 }

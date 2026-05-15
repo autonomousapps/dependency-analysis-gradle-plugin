@@ -13,14 +13,12 @@ object Plugins {
     kotlinVersion = KOTLIN_VERSION
   )
 
-  @JvmStatic val buildHealthId: String = provider.buildHealthId
   @JvmStatic val buildHealth: Plugin = provider.buildHealth
 
   @JvmStatic val dagpId: String = provider.dagpId
   @JvmStatic val dependencyAnalysis: Plugin = provider.dependencyAnalysis
   @JvmStatic val dependencyAnalysisNoVersion: Plugin = provider.dependencyAnalysisNoVersion
 
-  @JvmStatic val androidAppId: String = provider.androidAppId
   @JvmStatic val legacyKaptId: String = provider.androidLegacyKaptId
   @JvmStatic val androidApp: Plugin = provider.androidAppNoVersion
   @JvmStatic val androidLib: Plugin = provider.androidLibNoVersion
@@ -32,10 +30,8 @@ object Plugins {
 
   @JvmStatic val kotlinJvm: Plugin = provider.kotlinJvm
   @JvmStatic val kotlinJvmNoApply: Plugin = provider.kotlinJvmNoApply
-  @JvmStatic val kotlinAndroid: Plugin = provider.kotlinAndroid
   @JvmStatic val kotlinAndroidNoVersion: Plugin = provider.kotlinAndroidNoVersion
   @JvmStatic val kotlinJvmNoVersion: Plugin = provider.kotlinJvmNoVersion
-  @JvmStatic val kotlinMultiplatformNoApply: Plugin = provider.kotlinMultiplatformNoApply
   @JvmStatic val kotlinMultiplatformNoVersion: Plugin = provider.kotlinMultiplatformNoVersion
   @JvmStatic val kotlinKaptNoVersion: Plugin = provider.kotlinKaptNoVersion
 
