@@ -83,10 +83,6 @@ public abstract class DagpExtension(
         }
       }
     }
-
-    // TODO(tsr): update URL
-    //val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-    //val snapshotsRepoUrl = "https://central.sonatype.com/repository/maven-snapshots/"
   }
 
   internal companion object {

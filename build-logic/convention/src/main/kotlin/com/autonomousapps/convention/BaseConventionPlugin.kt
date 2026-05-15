@@ -79,35 +79,44 @@ internal class BaseConventionPlugin(private val project: Project) {
       .orElse("false")
       .map { it.toBoolean() }
 
-    val taskGraph = gradle.taskGraph
-    val isFunctionalTest: Provider<Boolean> = providers.provider { taskGraph.hasTask(":functionalTest") }
+    // Both these values are static and safe to get during configuration
+    val shouldSign = !isCi.get() && !isSnapshot.get()
 
     tasks.withType(Sign::class.java).configureEach { t ->
+      // Disabling this task is better than configuring it with `onlyIf()`. The latter is evaluated at execution time,
+      // so the task still has to get serialized during the CC store phase, which takes a very long time when Sign task
+      // inputs must be serialized. Apparently the task is "some of the worst code in Gradle in terms of laziness"
+      // (personal communication).
+      t.enabled = shouldSign
+
       with(t) {
         inputs.property("version", publishedVersion)
-        inputs.property("is-snapshot", isSnapshot)
-        inputs.property("is-ci", isCi)
-        inputs.property("is-functional-test", isFunctionalTest)
-
-        // Don't sign snapshots
-        onlyIf("Not a snapshot") {
-          !(inputs.properties["is-snapshot"] as Boolean)
-        }
-        // We currently don't support publishing from CI
-        onlyIf("release environment") {
-          !(inputs.properties["is-ci"] as Boolean)
-        }
-        // Don't sign when running functional tests
-        onlyIf("not running functional tests") {
-          !(inputs.properties["is-functional-test"] as Boolean)
-        }
-
+//        inputs.property("is-snapshot", isSnapshot)
+//        inputs.property("is-ci", isCi)
+//        inputs.property("is-functional-test", isFunctionalTest)
+//
+//        // Don't sign snapshots
+//        onlyIf("Not a snapshot") {
+//          !(inputs.properties["is-snapshot"] as Boolean)
+//        }
+//        // We currently don't support publishing from CI
+//        onlyIf("release environment") {
+//          !(inputs.properties["is-ci"] as Boolean)
+//        }
+//        // Don't sign when running functional tests
+//        onlyIf("not running functional tests") {
+//          !(inputs.properties["is-functional-test"] as Boolean)
+//        }
+//
         doFirst {
           val version = inputs.properties["version"] as String
           logger.quiet("Signing v$version")
         }
       }
     }
+
+    val taskGraph = gradle.taskGraph
+    val isFunctionalTest: Provider<Boolean> = providers.provider { taskGraph.hasTask(":functionalTest") }
 
     tasks.withType(DokkaGeneratePublicationTask::class.java).configureEach { t ->
       val key = "is-functional-test"
