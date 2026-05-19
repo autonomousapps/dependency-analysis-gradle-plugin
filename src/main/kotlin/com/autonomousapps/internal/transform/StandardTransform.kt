@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.transform
 
-import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.graph.Graphs.children
 import com.autonomousapps.graph.Graphs.root
@@ -12,6 +11,7 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.Coordinates.Companion.copy
 import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import com.autonomousapps.model.internal.declaration.Declaration
@@ -196,15 +196,37 @@ internal class StandardTransform(
     }
   }
 
-  private fun MutableSet<Usage>.simplify(visibility: Bucket.Visibility, sourceSetName: String): MutableSet<Usage> {
+  /**
+   * Simplifies a set of [usages][Usage], taking into account the [visibility] of [sourceSetName] into the `main` source
+   * set, and also whether the user has opted-into "explicit source sets." For example, if a `main` usage is visible
+   * on the compile classpath of a downstream source set like `test`, then we filter out all non-runtime-only usages.
+   *
+   * Android unit (host) tests get special treatment, essentially collapsing something like "debugTest" into simply
+   * "test," reflecting the reality of how most Android projects are configured.
+   */
+  private fun MutableSet<Usage>.simplify(
+    visibility: Bucket.Visibility,
+    sourceSetName: String,
+  ): MutableSet<Usage> {
+    fun MutableSet<Usage>.maybeReduceFurther(): MutableSet<Usage> {
+      return if (projectType == ProjectType.ANDROID && sourceSetName == SourceKind.TEST_NAME) {
+        reduceUsages(this)
+      } else {
+        this
+      }
+    }
+
+    // TODO(tsr): is there a case where both forCompile and forRuntime are true? What then?
     return if (visibility.forCompile && !explicitFor(sourceSetName)) {
       asSequence()
         .filterNot { usage -> usage.bucket != Bucket.RUNTIME_ONLY }
         .toMutableSet()
+        .maybeReduceFurther()
     } else if (visibility.forRuntime && !explicitFor(sourceSetName)) {
       asSequence()
         .filterNot { usage -> usage.bucket == Bucket.RUNTIME_ONLY }
         .toMutableSet()
+        .maybeReduceFurther()
     } else {
       reduceUsages(this)
     }

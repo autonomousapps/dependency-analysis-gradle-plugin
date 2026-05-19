@@ -9,6 +9,7 @@ import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -54,6 +55,7 @@ final class TestDependenciesProject extends AbstractAndroidProject {
         s.withBuildScript { bs ->
           bs.plugins = androidLib()
           bs.android = defaultAndroidLibBlock(true)
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [
             commonsCollections('api'),
             junit('testImplementation'),
