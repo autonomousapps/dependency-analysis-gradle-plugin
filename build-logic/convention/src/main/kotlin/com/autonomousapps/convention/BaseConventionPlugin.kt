@@ -80,14 +80,14 @@ internal class BaseConventionPlugin(private val project: Project) {
       .map { it.toBoolean() }
 
     // Both these values are static and safe to get during configuration
-    val shouldSign = !isCi.get() && !isSnapshot.get()
+//    val shouldSign = !isCi.get() && !isSnapshot.get()
 
     tasks.withType(Sign::class.java).configureEach { t ->
       // Disabling this task is better than configuring it with `onlyIf()`. The latter is evaluated at execution time,
       // so the task still has to get serialized during the CC store phase, which takes a very long time when Sign task
       // inputs must be serialized. Apparently the task is "some of the worst code in Gradle in terms of laziness"
       // (personal communication).
-      t.enabled = shouldSign
+      t.enabled = !isCi.get() && !isSnapshot.get()
 
       with(t) {
         inputs.property("version", publishedVersion)
