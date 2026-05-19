@@ -5,7 +5,7 @@ package com.autonomousapps.kit.gradle.android
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
-// TODO(tsr): model more thoroughly?
+// TODO(tsr): model more thoroughly!
 public class AndroidComponents(
   private val content: String,
 ) : Element.Block {

@@ -116,6 +116,7 @@ public class BuildScript(
     public var version: String? = null
     public var repositories: MutableList<Repository> = mutableListOf()
     public var android: AndroidBlock? = null
+    public var androidComponents: AndroidComponents? = null
     public var sourceSets: MutableList<String> = mutableListOf()
     public var dependencies: MutableList<Dependency> = mutableListOf()
     public var java: Java? = null
@@ -180,6 +181,7 @@ public class BuildScript(
         version = version,
         repositories = Repositories(repositories),
         android = android,
+        androidComponents = androidComponents,
         sourceSets = SourceSets.ofNames(sourceSets),
         dependencies = Dependencies(dependencies),
         java = java,

@@ -18,10 +18,10 @@ import org.intellij.lang.annotations.Language
  */
 public class AndroidBlock @JvmOverloads constructor(
   public var namespace: String? = null,
-  public var compileSdkVersion: Int? = null,//34,
-  public var defaultConfig: DefaultConfig? = null,//DefaultConfig.DEFAULT_APP,
+  public var compileSdkVersion: Int? = null,
+  public var defaultConfig: DefaultConfig? = null,
   public var buildTypes: BuildTypes? = null,
-  public var compileOptions: CompileOptions? = null,//CompileOptions.DEFAULT,
+  public var compileOptions: CompileOptions? = null,
   public var testFixturesOptions: TestFixturesOptions? = null,
   /** Used by `com.android.test` projects */
   public var targetProjectPath: String? = null,

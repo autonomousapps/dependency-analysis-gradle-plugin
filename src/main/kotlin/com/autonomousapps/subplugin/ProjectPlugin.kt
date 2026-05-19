@@ -100,7 +100,9 @@ internal class ProjectPlugin(private val project: Project) {
   /** We only want to register the aggregation tasks if the by-variants tasks are registered. */
   private val aggregatorsRegistered = AtomicBoolean(false)
 
-  private lateinit var computeAdviceTask: TaskProvider<ComputeAdviceTask>
+  private val computeAdviceTask: TaskProvider<ComputeAdviceTask> =
+    project.tasks.register("computeAdvice", ComputeAdviceTask::class.java)
+
   private lateinit var filterAdviceTask: TaskProvider<FilterAdviceTask>
   private lateinit var computeResolvedDependenciesTask: TaskProvider<ComputeResolvedDependenciesTask>
   private lateinit var findDeclarationsTask: TaskProvider<FindDeclarationsTask>
@@ -299,14 +301,12 @@ internal class ProjectPlugin(private val project: Project) {
         } else {
           null
         }
-        val unitTestSourceSets = unitTest?.sources
 
         val androidTest = if (shouldAnalyzeTests() && variant is HasAndroidTest) {
           variant.androidTest
         } else {
           null
         }
-        val androidTestSourceSets = androidTest?.sources
 
         mainSourceSets.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
@@ -326,7 +326,7 @@ internal class ProjectPlugin(private val project: Project) {
           analyzeDependencies(dependencyAnalyzer)
         }
 
-        unitTestSourceSets?.let { sourceSets ->
+        unitTest?.sources?.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
             sourceKind = AndroidSourceKind.test(variant.name),
             variant = variant,
@@ -362,7 +362,7 @@ internal class ProjectPlugin(private val project: Project) {
           analyzeDependencies(dependencyAnalyzer)
         }
 
-        androidTestSourceSets?.let { sourceSets ->
+        androidTest?.sources?.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
             sourceKind = AndroidSourceKind.androidTest(variant.name),
             variant = variant,
@@ -401,14 +401,12 @@ internal class ProjectPlugin(private val project: Project) {
         } else {
           null
         }
-        val unitTestSourceSets = unitTest?.sources
 
         val androidTest = if (shouldAnalyzeTests() && variant is HasAndroidTest) {
           variant.androidTest
         } else {
           null
         }
-        val androidTestSourceSets = androidTest?.sources
 
         mainSourceSets.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
@@ -448,7 +446,7 @@ internal class ProjectPlugin(private val project: Project) {
           analyzeDependencies(dependencyAnalyzer)
         }
 
-        unitTestSourceSets?.let { sourceSets ->
+        unitTest?.sources?.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
             sourceKind = AndroidSourceKind.test(variant.name),
             variant = variant,
@@ -467,7 +465,7 @@ internal class ProjectPlugin(private val project: Project) {
           analyzeDependencies(dependencyAnalyzer)
         }
 
-        androidTestSourceSets?.let { sourceSets ->
+        androidTest?.sources?.let { sourceSets ->
           val variantSourceSet = newVariantSourceSet(
             sourceKind = AndroidSourceKind.androidTest(variant.name),
             variant = variant,
@@ -1065,7 +1063,7 @@ internal class ProjectPlugin(private val project: Project) {
         outputPaths = paths
       )
     }
-    computeAdviceTask = tasks.register("computeAdvice", ComputeAdviceTask::class.java) { t ->
+    computeAdviceTask.configure { t ->
       t.projectPath.set(theProjectPath)
       t.declarations.set(findDeclarationsTask.flatMap { it.output })
       t.bundles.set(dagpExtension.dependenciesHandler.serializableBundles())

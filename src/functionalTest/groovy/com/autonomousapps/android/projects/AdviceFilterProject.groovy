@@ -10,6 +10,7 @@ import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -57,6 +58,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
         app.withBuildScript { bs ->
           bs.plugins = androidAppPlugins()
           bs.android = defaultAndroidAppBlock(isLessThanAgp9)
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = appDependencies
           bs.additions = appAdditions
         }
@@ -66,6 +68,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
         lib.withBuildScript { bs ->
           bs.plugins = androidLibPlugins()
           bs.android = defaultAndroidLibBlock(isLessThanAgp9)
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = androidLibDependencies
         }
       }

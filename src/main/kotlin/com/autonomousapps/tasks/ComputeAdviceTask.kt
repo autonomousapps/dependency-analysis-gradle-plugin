@@ -70,10 +70,10 @@ public abstract class ComputeAdviceTask @Inject constructor(
   public abstract val supportedSourceSets: SetProperty<String>
 
   @get:Input
-  public abstract val ignoreKtx: Property<Boolean>
+  public abstract val explicitSourceSets: SetProperty<String>
 
   @get:Input
-  public abstract val explicitSourceSets: SetProperty<String>
+  public abstract val ignoreKtx: Property<Boolean>
 
   @get:Input
   public abstract val projectType: Property<ProjectType>
@@ -119,8 +119,8 @@ public abstract class ComputeAdviceTask @Inject constructor(
       it.declarations.set(declarations)
       it.bundles.set(bundles)
       it.supportedSourceSets.set(supportedSourceSets)
-      it.ignoreKtx.set(ignoreKtx)
       it.explicitSourceSets.set(explicitSourceSets)
+      it.ignoreKtx.set(ignoreKtx)
       it.projectType.set(projectType)
       it.kapt.set(kapt)
       it.legacyKapt.set(legacyKapt)
@@ -143,8 +143,8 @@ public abstract class ComputeAdviceTask @Inject constructor(
     public val declarations: RegularFileProperty
     public val bundles: Property<DependenciesHandler.SerializableBundles>
     public val supportedSourceSets: SetProperty<String>
-    public val ignoreKtx: Property<Boolean>
     public val explicitSourceSets: SetProperty<String>
+    public val ignoreKtx: Property<Boolean>
     public val projectType: Property<ProjectType>
     public val kapt: Property<Boolean>
     public val legacyKapt: Property<Boolean>
