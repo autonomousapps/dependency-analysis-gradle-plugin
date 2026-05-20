@@ -9,6 +9,7 @@ import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -40,6 +41,7 @@ abstract class SettingsProject {
           app.withBuildScript { bs ->
             bs.plugins(androidApp() - Plugins.dependencyAnalysisNoVersion)
             bs.android = defaultAndroidAppBlock()
+            bs.kotlin = Kotlin.DEFAULT
             bs.dependencies = [
               project('implementation', ':lib'),
               project('implementation', ':lib2'),
@@ -51,15 +53,15 @@ abstract class SettingsProject {
           app.styles = AndroidStyleRes.DEFAULT
           app.colors = AndroidColorRes.DEFAULT
           app.withFile('src/main/res/layout/message_layout.xml', '''\
-        <?xml version="1.0" encoding="utf-8"?>
-        <com.example.app.MessageLayout xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:app="http://schemas.android.com/apk/res-auto"
-          xmlns:tools="http://schemas.android.com/tools"
-          android:id="@id/message_layout"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content">
-          
-        </com.example.app.MessageLayout>'''.stripIndent()
+            <?xml version="1.0" encoding="utf-8"?>
+            <com.example.app.MessageLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:id="@id/message_layout"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content">
+              
+            </com.example.app.MessageLayout>'''.stripIndent()
           )
         }
         .withAndroidLibProject('lib') { lib ->

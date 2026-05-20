@@ -7,6 +7,7 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
@@ -46,6 +47,7 @@ final class KaptProject extends AbstractAndroidProject {
         a.withBuildScript { bs ->
           bs.plugins(androidLib(true) + kapt())
           bs.android = defaultAndroidLibBlock(true)
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(dependencies)
         }
       }.write()

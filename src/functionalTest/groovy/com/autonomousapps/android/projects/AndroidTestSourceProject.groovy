@@ -10,6 +10,7 @@ import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Plugin
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -42,20 +43,22 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
         subproject.sources = appSources()
         subproject.styles = AndroidStyleRes.DEFAULT
         subproject.colors = AndroidColorRes.DEFAULT
-        subproject.withBuildScript { buildScript ->
-          buildScript.plugins = appPlugins()
-          buildScript.android = defaultAndroidAppBlock()
-          buildScript.dependencies(appDependencies())
+        subproject.withBuildScript { bs ->
+          bs.plugins = appPlugins()
+          bs.android = defaultAndroidAppBlock()
+          bs.kotlin = Kotlin.DEFAULT
+          bs.dependencies(appDependencies())
         }
       }
     // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('lib') { subproject ->
         subproject.sources = androidLibSources
         subproject.manifest = null
-        subproject.withBuildScript { buildScript ->
-          buildScript.plugins(androidLib())
-          buildScript.android = defaultAndroidLibBlock(true, 'my.android.lib')
-          buildScript.dependencies(junit('implementation'))
+        subproject.withBuildScript { bs ->
+          bs.plugins(androidLib())
+          bs.android = defaultAndroidLibBlock(true, 'my.android.lib')
+          bs.kotlin = Kotlin.DEFAULT
+          bs.dependencies(junit('implementation'))
         }
       }
       .write()

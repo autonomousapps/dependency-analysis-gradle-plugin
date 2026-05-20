@@ -93,7 +93,6 @@ final class AdviceSpec extends AbstractAndroidSpec {
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
-//    [gradleVersion, agpVersion] << [[GradleVersion.version('8.11.1'), '8.10.1']]
   }
 
   def "can filter incorrect configuration dependencies (#gradleVersion AGP #agpVersion)"() {

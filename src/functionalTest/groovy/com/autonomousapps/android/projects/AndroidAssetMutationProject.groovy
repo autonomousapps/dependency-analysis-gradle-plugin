@@ -5,6 +5,7 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -42,6 +43,7 @@ final class AndroidAssetMutationProject extends AbstractAndroidProject {
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(
             implementation(':assets'),
             commonsCollections('implementation'),

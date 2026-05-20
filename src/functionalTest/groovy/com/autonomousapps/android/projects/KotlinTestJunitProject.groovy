@@ -7,6 +7,7 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -35,6 +36,7 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
         subproject.withBuildScript { bs ->
           bs.plugins = androidApp(true)
           bs.android = defaultAndroidAppBlock()
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [
             kotlinTestJunit,
 //            junit('androidTestImplementation'),

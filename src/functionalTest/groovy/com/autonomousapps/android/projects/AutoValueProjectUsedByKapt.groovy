@@ -5,6 +5,7 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.android.AndroidManifest
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.PluginAdvice
 import com.autonomousapps.model.ProjectAdvice
@@ -48,6 +49,7 @@ final class AutoValueProjectUsedByKapt extends AbstractAndroidProject {
         app.withBuildScript { bs ->
           bs.plugins(androidApp() + kapt())
           bs.android = defaultAndroidAppBlock()
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(kotlinStdLib('implementation'))
           if (spec != Spec.NO_KAPT_DECLARATIONS) {
             bs.dependencies += KAPT

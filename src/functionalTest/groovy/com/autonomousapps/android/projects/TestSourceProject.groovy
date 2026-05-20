@@ -10,6 +10,7 @@ import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -36,6 +37,7 @@ final class TestSourceProject extends AbstractAndroidProject {
         subproject.withBuildScript { bs ->
           bs.plugins = androidApp(true)
           bs.android = defaultAndroidAppBlock()
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [
             kotlinStdLib('implementation'),
             appcompat('implementation'),
@@ -50,6 +52,7 @@ final class TestSourceProject extends AbstractAndroidProject {
         subproject.withBuildScript { bs ->
           bs.plugins = androidLib(true)
           bs.android = defaultAndroidLibBlock(true, 'my.android.lib')
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [junit('implementation')]
         }
       }
