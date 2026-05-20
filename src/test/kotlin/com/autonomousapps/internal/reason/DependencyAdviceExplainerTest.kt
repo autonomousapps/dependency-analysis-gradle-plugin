@@ -85,7 +85,7 @@ class DependencyAdviceExplainerTest {
       * Uses 6 classes, 5 of which are shown: One, Two, Three, Four, Five (implies implementation).
       * Imports 6 classes, 5 of which are shown: One, Two, Three, Four, Five (implies implementation).
       * Imports 6 inline members, 5 of which are shown: One, Two, Three, Four, Five (implies implementation).
-      * Provides 1 lint registry: LintRegistry (implies implementation).
+      * Provides 1 lint registry: LintRegistry (implies runtimeOnly).
       * Provides 2 native binaries: foo, bar (implies runtimeOnly).
       * Imports 2 resources: drawable, string (implies implementation).
       * Uses 2 resources: StyleParentRef(styleParent=AppCompat), AttrRef(type=drawable, id=logo) (implies implementation).

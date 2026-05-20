@@ -209,22 +209,29 @@ internal class StandardTransform(
     sourceSetName: String,
   ): MutableSet<Usage> {
     fun MutableSet<Usage>.maybeReduceFurther(): MutableSet<Usage> {
-      return if (projectType == ProjectType.ANDROID && sourceSetName == SourceKind.TEST_NAME) {
+      return if (projectType == ProjectType.ANDROID && sourceSetName == SourceKind.TEST_NAME) { // TODO: `&& SourceKind.ANDROID_TEST_NAME`?
         reduceUsages(this)
       } else {
         this
       }
     }
 
-    // TODO(tsr): is there a case where both forCompile and forRuntime are true? What then?
-    return if (visibility.forCompile && !explicitFor(sourceSetName)) {
-      asSequence()
-        .filterNot { usage -> usage.bucket != Bucket.RUNTIME_ONLY }
-        .toMutableSet()
-        .maybeReduceFurther()
-    } else if (visibility.forRuntime && !explicitFor(sourceSetName)) {
-      asSequence()
-        .filterNot { usage -> usage.bucket == Bucket.RUNTIME_ONLY }
+    return if (visibility.forEither && !explicitFor(sourceSetName)) {
+      // TODO(tsr): add test for this case.
+      //  1. a dep that should be moved from impl->api
+      //  2. dep has runtime capabilities as well and is on test runtime classpath
+      //  3. previously we'd see advice to both move to api and also add to testRuntimeOnly. The latter is undesirable.
+
+      // Yes, if something is visible forCompile and forRuntime, then we filter out all usages.
+      var seq = asSequence()
+      if (visibility.forCompile) {
+        seq = seq.filterNot { usage -> usage.bucket != Bucket.RUNTIME_ONLY }
+      }
+      if (visibility.forRuntime) {
+        seq = seq.filterNot { usage -> usage.bucket == Bucket.RUNTIME_ONLY }
+      }
+
+      seq
         .toMutableSet()
         .maybeReduceFurther()
     } else {

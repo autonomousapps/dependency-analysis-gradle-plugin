@@ -129,5 +129,7 @@ internal enum class Bucket(val value: String) {
     }
   }
 
-  class Visibility(val forCompile: Boolean, val forRuntime: Boolean)
+  class Visibility(val forCompile: Boolean, val forRuntime: Boolean) {
+    val forEither: Boolean get() = forCompile || forRuntime
+  }
 }
