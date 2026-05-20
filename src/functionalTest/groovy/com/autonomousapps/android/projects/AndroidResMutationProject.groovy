@@ -7,6 +7,7 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.android.AndroidLayout
 import com.autonomousapps.kit.android.AndroidStringRes
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -73,6 +74,7 @@ final class AndroidResMutationProject extends AbstractAndroidProject {
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(
             implementation(':res'),
             commonsCollections('implementation'),

@@ -9,6 +9,7 @@ import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -51,6 +52,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
         app.withBuildScript { bs ->
           bs.plugins(androidApp())
           bs.android = defaultAndroidAppBlock(true, 'com.example.app')
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(appDependencies)
           bs.withGroovy('android.buildFeatures.dataBinding true')
         }
@@ -61,6 +63,7 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
         lib.withBuildScript { bs ->
           bs.plugins(androidLib() + kapt())
           bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
+          bs.kotlin = Kotlin.DEFAULT
           bs.withGroovy('android.buildFeatures.dataBinding true')
         }
         lib.sources = libSources

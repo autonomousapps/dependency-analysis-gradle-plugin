@@ -6,6 +6,7 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.gradle.JvmToolchain
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -30,6 +31,7 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
         l.withBuildScript { bs ->
           bs.plugins = androidLib(true)
           bs.android = defaultAndroidLibBlock(true, 'com.example.consumer')
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [
             project('implementation', ':producer')
           ]
