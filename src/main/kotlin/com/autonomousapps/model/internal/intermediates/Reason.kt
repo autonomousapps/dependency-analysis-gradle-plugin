@@ -268,7 +268,7 @@ internal sealed class Reason(open val reason: String) {
   @TypeLabel("lint")
   @JsonClass(generateAdapter = false)
   data class LintJar(override val reason: String) : Reason(reason) {
-    override val configurationName: String = "implementation"
+    override val configurationName: String = "runtimeOnly"
 
     internal companion object {
       fun of(lintRegistry: String) = LintJar(

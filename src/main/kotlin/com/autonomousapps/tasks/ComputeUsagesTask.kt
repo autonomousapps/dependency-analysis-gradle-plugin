@@ -698,21 +698,43 @@ private class GraphVisitor(
     capability: ExceptionCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
+    // TODO(tsr): extract this to a testable function
     val codeSource = context.project.codeSource
     if (codeSource.isEmpty()) {
-      // nothing to do here
+      // Nothing to do here. We don't have any code, so we can't be referring to any exception types, by definition.
+      // This is an optimization.
       return false
     }
 
-    // These are all the exception types referenced by `coordinates`, which is a specific dependency of `this` project
-    // (i.e., `context.project`).
-    val exceptions = capability.exceptions.values.flatten().toSet()
+    // These are all the exception types referenced by `this` dependency.
+    val referencedExceptions = capability.exceptions.values.flatten().toSet()
 
-    // TODO(tsr): extract this to testable function
+    // Ideally this would be a single item, but it could be multiple if we have duplicates on the classpath.
+    val exceptionProviders: Map<Coordinates, Set<String>> = context.dependencies
+      // We only care about dependencies that have classes
+      .mapSecondNotNull { dependency -> dependency.coordinates to dependency.findCapability<BinaryClassCapability>() }
+      // Find the dependencies that have a class that matches any exception referenced by `this` dependency.
+      .mapNotNull { (coordinates, binaryClass) ->
+        val relevantTypes = binaryClass.classes.filterToOrderedSet { it in referencedExceptions }
+        if (relevantTypes.isEmpty()) {
+          null
+        } else {
+          coordinates to relevantTypes
+        }
+      }
+      .toMap()
+
+    if (exceptionProviders.isEmpty()) {
+      // Nothing to do here.
+      return false
+    }
+
     // These are all the dependencies of this project that use the exception types provided by `coordinates`.
-    val users: Map<Coordinates, Map<String, Set<String>>> = context.dependencies
+    val users: Map<Coordinates, Map<String, Set<String>>> = context.dependencies.asSequence()
       // The dependency can see all its own exceptions
       .filterNot { dependency -> dependency.coordinates == coordinates }
+      // Don't scan the exception providers, that doesn't make sense and leads to incorrect results
+      .filterNot { dependency -> dependency.coordinates in exceptionProviders.keys }
       // If the dependency's runtime graph can reach `this` dependency, then we can skip analysis
       .filterNot { dependency ->
         val graph = context.graphRuntime.graph
@@ -728,7 +750,7 @@ private class GraphVisitor(
       .associateNotNull { (coordinates, exceptionCapability) ->
         val classToExceptionType = exceptionCapability.exceptions
           .mapNotNull { (className, types) ->
-            val relevantTypes = types.filterToOrderedSet { type -> type in exceptions }
+            val relevantTypes = types.filterToOrderedSet { type -> type in referencedExceptions }
             if (relevantTypes.isEmpty()) {
               null
             } else {
@@ -736,9 +758,7 @@ private class GraphVisitor(
             }
           }
           // It only matters if the code of `this` project refers to a class that itself references a relevant type
-          .filter { (className, _) ->
-            codeSource.any { source -> className in source.usedNonAnnotationClasses }
-          }
+          .filter { (className, _) -> codeSource.any { source -> className in source.usedNonAnnotationClasses } }
           .toMap()
 
         if (classToExceptionType.isNotEmpty()) {

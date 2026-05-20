@@ -11,7 +11,7 @@ import static com.google.common.truth.Truth.assertThat
 class ExceptionsAreSpecialSpec extends AbstractJvmSpec {
 
   @SuppressWarnings('GroovyAssignabilityCheck')
-  def "annotations on public classes are part of the abi (#gradleVersion isBroken=#isBroken)"() {
+  def "exception types are required at runtime (#gradleVersion isBroken=#isBroken)"() {
     given:
     def project = new ExceptionsAreSpecialProject(isBroken)
     gradleProject = project.gradleProject

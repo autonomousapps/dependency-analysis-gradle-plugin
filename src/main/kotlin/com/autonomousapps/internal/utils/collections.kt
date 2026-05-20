@@ -146,7 +146,9 @@ internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (
   return mapNotNullTo(TreeSet(), transform)
 }
 
-internal inline fun <T, R : Any, V : Any> Iterable<T>.mapSecondNotNull(transform: (T) -> Pair<R, V?>): List<Pair<R, V>> {
+internal inline fun <T, R : Any, V : Any> Iterable<T>.mapSecondNotNull(
+  transform: (T) -> Pair<R, V?>
+): List<Pair<R, V>> {
   return mapNotNull {
     val pair = transform(it)
     if (pair.second != null) {
@@ -156,6 +158,26 @@ internal inline fun <T, R : Any, V : Any> Iterable<T>.mapSecondNotNull(transform
       null
     }
   }
+}
+
+internal inline fun <T, R : Any, V : Any> Sequence<T>.mapSecondNotNull(
+  crossinline transform: (T) -> Pair<R, V?>
+): Sequence<Pair<R, V>> {
+  return mapNotNull {
+    val pair = transform(it)
+    if (pair.second != null) {
+      @Suppress("UNCHECKED_CAST")
+      pair as Pair<R, V>
+    } else {
+      null
+    }
+  }
+}
+
+internal inline fun <T : Any, K : Any, V : Any> Sequence<T>.associateNotNull(
+  crossinline transform: (T) -> Pair<K, V>?
+): Map<K, V> {
+  return mapNotNull { transform(it) }.toMap()
 }
 
 /**

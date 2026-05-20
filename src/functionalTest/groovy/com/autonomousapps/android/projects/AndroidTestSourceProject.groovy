@@ -6,7 +6,6 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidColorRes
-import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Plugin
@@ -86,16 +85,6 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
 
   private List<Source> appSources() {
     def sources = [
-      new Source(
-        SourceType.KOTLIN, 'App', 'com/example',
-        """\
-          package com.example
-          
-          class App {
-            fun magic() = 42
-          }
-        """.stripIndent()
-      ),
       new Source(
         SourceType.KOTLIN, 'Test', 'com/example',
         """\
