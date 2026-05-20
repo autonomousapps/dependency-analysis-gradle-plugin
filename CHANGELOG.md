@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.12.1
+* [fix]: don't suggest non-existent Android unit test variant in advice.
+
 # Version 3.12.0
 * [feat]: exceptions are special. Exceptions get verified early by the JVM and so if a dependency is missing an 
   exception's type from the runtime classpath, that can cause failures in the consumer at runtime.
