@@ -7,6 +7,7 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -32,6 +33,7 @@ final class ConstantsProject extends AbstractAndroidProject {
         app.withBuildScript { bs ->
           bs.plugins = androidApp()
           bs.android = defaultAndroidAppBlock(true, 'com.example.app')
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(
             implementation(':lib'),
             implementation(':lib2'),
@@ -49,6 +51,7 @@ final class ConstantsProject extends AbstractAndroidProject {
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock(true, 'mutual.aid.lib')
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(kotlinStdLib('implementation'))
         }
         lib.sources = libSource
@@ -57,6 +60,7 @@ final class ConstantsProject extends AbstractAndroidProject {
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock(true, 'mutual.aid.lib2')
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(kotlinStdLib('implementation'))
         }
         lib.sources = lib2Source
@@ -65,6 +69,7 @@ final class ConstantsProject extends AbstractAndroidProject {
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock(true, 'mutual.aid.libstar')
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(kotlinStdLib('implementation'))
         }
         lib.sources = libstarSource

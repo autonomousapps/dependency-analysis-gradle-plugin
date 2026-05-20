@@ -14,6 +14,7 @@ import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.ProjectAdvice
 import com.autonomousapps.utils.DebugAware
 
@@ -67,6 +68,7 @@ abstract class AbstractVariantProject extends AbstractAndroidProject {
         a.withBuildScript { bs ->
           bs.plugins(appliedPlugins)
           bs.android = defaultAndroidAppBlock()
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = dependencies
         }
       }.write()

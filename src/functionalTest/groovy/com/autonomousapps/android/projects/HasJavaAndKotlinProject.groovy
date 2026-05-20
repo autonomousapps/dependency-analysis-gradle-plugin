@@ -4,6 +4,7 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -30,6 +31,7 @@ final class HasJavaAndKotlinProject extends AbstractAndroidProject {
         a.withBuildScript { bs ->
           bs.plugins = androidLib(true)
           bs.android = defaultAndroidLibBlock(true)
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(
             // Used by Kotlin class
             commonsCollections('api'),

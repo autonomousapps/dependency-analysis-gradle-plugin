@@ -5,6 +5,7 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ProjectAdvice
@@ -43,6 +44,7 @@ final class DebugUsageProject extends AbstractAndroidProject {
         p.withBuildScript { bs ->
           bs.plugins = androidLib(true)
           bs.android = defaultAndroidLibBlock()
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(
             kotlinStdLib,
             junit('testImplementation'),

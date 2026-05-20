@@ -6,12 +6,12 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidStyleRes
-import com.autonomousapps.kit.gradle.Dependency
-import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.gradle.Dependency.debugImplementation
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.kotlinStdLib
 
@@ -30,18 +30,18 @@ final class LeakCanaryProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
-      .withAndroidSubproject('app') { subproject ->
-        subproject.sources = appSources()
-        subproject.styles = AndroidStyleRes.DEFAULT
-        subproject.colors = AndroidColorRes.DEFAULT
-
-        subproject.withBuildScript { buildScript ->
-          buildScript.plugins(androidApp())
-          buildScript.android = defaultAndroidAppBlock()
-          buildScript.dependencies(
+      .withAndroidSubproject('app') { app ->
+        app.sources = appSources()
+        app.styles = AndroidStyleRes.DEFAULT
+        app.colors = AndroidColorRes.DEFAULT
+        app.withBuildScript { bs ->
+          bs.plugins(androidApp())
+          bs.android = defaultAndroidAppBlock()
+          bs.kotlin = Kotlin.DEFAULT
+          bs.dependencies(
             kotlinStdLib('implementation'),
             appcompat('implementation'),
-            new Dependency('debugImplementation', "com.squareup.leakcanary:leakcanary-android:$LEAK_CANARY_VERSION"),
+            debugImplementation("com.squareup.leakcanary:leakcanary-android:$LEAK_CANARY_VERSION"),
           )
         }
       }

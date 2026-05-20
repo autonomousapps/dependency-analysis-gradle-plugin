@@ -7,6 +7,7 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -30,9 +31,8 @@ final class DataBindingProject extends AbstractAndroidProject {
         app.withBuildScript { bs ->
           bs.plugins = androidApp()
           bs.android = defaultAndroidAppBlock(true, 'com.example.app')
-          bs.dependencies(
-            appcompat('implementation'),
-          )
+          bs.kotlin = Kotlin.DEFAULT
+          bs.dependencies(appcompat('implementation'))
           bs.withGroovy('android.buildFeatures.dataBinding true')
         }
         app.sources = appSource
