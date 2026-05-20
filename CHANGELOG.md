@@ -1,5 +1,13 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.12.2
+* [fix]: The new "exceptions are special" (in v3.12.0) handling was over-eager and flagging things that only referenced 
+  exceptions. We only want to flag things that provide the exception types.
+* [fix]: `MutableSet<Usage>.simplify(visibility, bucket)` in `StandardTransform` wasn't properly handling the case when 
+  a usage was visible on both compile and runtime classpaths. In such a case, we can filter out all usages. 
+* [fix]: reason output said "implies implementation" when it should have been "implies runtimeOnly" in the android lint 
+  jar case.
+
 # Version 3.12.1
 * [fix]: don't suggest non-existent Android unit test variant in advice.
 
