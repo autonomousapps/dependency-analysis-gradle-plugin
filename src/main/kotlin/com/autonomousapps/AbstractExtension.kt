@@ -64,7 +64,7 @@ public abstract class AbstractExtension @Inject constructor(
 
   /**
    * Returns the per-variant outputs from the project-level type usage analysis.
-   * Keyed by variant name (e.g., "Main", "Debug", "Release").
+   * Keyed by variant name (e.g., "Main", "Debug", "Release", "DebugFlavor", etc.).
    */
   @Suppress("MemberVisibilityCanBePrivate") // explicit API
   public fun typeUsageOutputs(): MapProperty<String, RegularFile> = typeUsageOutputs

@@ -172,15 +172,15 @@ private class TypeUsageAnalyzer(
     }
 
     // Categorize dependencies
-    val internal = mutableMapOf<String, Int>()
-    val projectDeps = mutableMapOf<String, Map<String, Int>>()
-    val libraryDeps = mutableMapOf<String, Map<String, Int>>()
+    val internal = sortedMapOf<String, Int>()
+    val projectDeps = sortedMapOf<String, Map<String, Int>>()
+    val libraryDeps = sortedMapOf<String, Map<String, Int>>()
 
     usageMap.forEach { (coords, typeUsages) ->
       when (coords) {
         project.coordinates -> internal.putAll(typeUsages)
-        is ProjectCoordinates -> projectDeps[coords.identifier] = typeUsages
-        is ModuleCoordinates -> libraryDeps[coords.identifier] = typeUsages
+        is ProjectCoordinates -> projectDeps[coords.identifier] = typeUsages.toSortedMap()
+        is ModuleCoordinates -> libraryDeps[coords.identifier] = typeUsages.toSortedMap()
         else -> libraryDeps[coords.identifier] = typeUsages
       }
     }
