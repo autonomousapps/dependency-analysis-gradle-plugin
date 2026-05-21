@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.13.0
+* [feat]: new `computeTypeUsage<variant>` task generates usage report.
+* [fix]: when computing actual usages, actually look at the runtime graph.
+* [refactor]: use Graphs wrapper instead of Guava directly.
+
 # Version 3.12.2
 * [fix]: The new "exceptions are special" (in v3.12.0) handling was over-eager and flagging things that only referenced 
   exceptions. We only want to flag things that provide the exception types.
