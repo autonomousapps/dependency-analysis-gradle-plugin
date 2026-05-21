@@ -73,7 +73,12 @@ public abstract class AndroidScoreTask @Inject constructor(
       val usesAndroidClasses = project.usedNonAnnotationClasses.any { it.startsWith("android.") }
       val importsAndroidClasses = project.imports.any { it.startsWith("android.") }
       val hasAndroidDependencies = androidDependencies.isNotEmpty()
-      val hasBuildTypeSourceSplits = project.codeSource.any { !it.relativePath.startsWith("src/main") }
+      val hasBuildTypeSourceSplits = project.codeSource
+        // Exclude compiled code (which would be in a build dir, and thus not relevant to this question)
+        .filterNot { source -> source.relativePath.endsWith(".class") }
+        // This isn't very intelligent. Something better would involve checking if there's source code in each variant's
+        // dirs at an earlier stage. But that's a lot harder.
+        .any { source -> !source.relativePath.startsWith("src/main") }
 
       val score = AndroidScoreVariant(
         sourceKind = project.sourceKind,
