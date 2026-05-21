@@ -89,7 +89,7 @@ public abstract class ComputeUsagesTask @Inject constructor(
 
       it.buildPath.set(buildPath)
       it.graph.set(graph)
-      it.graph.set(graphRuntime)
+      it.graphRuntime.set(graphRuntime)
       it.declarations.set(declarations)
       it.dependencies.set(dependencies)
       it.syntheticProject.set(syntheticProject)
@@ -118,7 +118,7 @@ public abstract class ComputeUsagesTask @Inject constructor(
 
     private val buildPath = parameters.buildPath.get()
     private val graph = parameters.graph.fromJson<DependencyGraphView>()
-    private val graphRuntime = parameters.graph.fromJson<DependencyGraphView>()
+    private val graphRuntime = parameters.graphRuntime.fromJson<DependencyGraphView>()
     private val declarations = parameters.declarations.fromJsonSet<Declaration>()
     private val project = parameters.syntheticProject.fromJson<ProjectVariant>()
     private val dependencies = project.dependencies(parameters.dependencies.get())
