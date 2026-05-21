@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.android.utils.associateNotNull
 import com.autonomousapps.graph.Graphs.parents
 import com.autonomousapps.graph.Graphs.reachableNodes
+import com.autonomousapps.graph.Graphs.reachableNodesMatching
 import com.autonomousapps.graph.Graphs.root
 import com.autonomousapps.internal.binary.BinaryCompatibilityChecker
 import com.autonomousapps.internal.graph.maybeProjectCoordinates
@@ -20,7 +20,6 @@ import com.autonomousapps.model.internal.intermediates.DependencyTraceReport.Kin
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.visitor.GraphViewReader
 import com.autonomousapps.visitor.GraphViewVisitor
-import com.google.common.graph.Graphs
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
@@ -464,11 +463,9 @@ private class GraphVisitor(
     // collect all the dependencies associated with external supers
     // nb: we start by iterating over `supergraph.nodes()`, and then filtering, as that is _far more efficient_
     // then iterating over `externalSupers` and then calling `supergraph.nodes()` repeatedly: I have observed graphs
-    // with hundreds of thousands of nodes. This is why we use Guava directly here rather than going through our own
-    // Graphs wrapper. There's a yet-to-be-published update to the wrapper that does this for us.
-    val requiredExternalClasses = superGraph.nodes().asSequence()
-      .filter { superNode -> superNode.className in externalSupers }
-      .flatMap { superNode -> Graphs.reachableNodes(superGraph, superNode) }
+    // with hundreds of thousands of nodes.
+    val requiredExternalClasses = superGraph
+      .reachableNodesMatching { superNode -> superNode.className in externalSupers }
       .mapNotNull { superNode ->
         val deps = superNode.deps.filterToOrderedSet { dep ->
           // If dep has just one parent and it's the root, then we must retain that edge
