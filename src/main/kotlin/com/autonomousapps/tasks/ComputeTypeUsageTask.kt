@@ -35,9 +35,6 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
   }
 
   @get:Input
-  public abstract val projectPath: Property<String>
-
-  @get:Input
   public abstract val buildPath: Property<String>
 
   @get:PathSensitive(PathSensitivity.NONE)
@@ -63,7 +60,6 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
   @TaskAction
   public fun action() {
     workerExecutor.noIsolation().submit(ComputeTypeUsageAction::class.java) {
-      it.projectPath.set(projectPath)
       it.buildPath.set(buildPath)
       it.syntheticProject.set(syntheticProject)
       it.explodedJars.set(explodedJars)
@@ -75,7 +71,6 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
   }
 
   public interface ComputeTypeUsageParameters : WorkParameters {
-    public val projectPath: Property<String>
     public val buildPath: Property<String>
     public val syntheticProject: RegularFileProperty
     public val explodedJars: RegularFileProperty
@@ -86,6 +81,8 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
   }
 
   public abstract class ComputeTypeUsageAction : WorkAction<ComputeTypeUsageParameters> {
+
+    private val buildPath = parameters.buildPath.get()
 
     override fun execute() {
       val output = parameters.output.getAndDelete()
@@ -114,7 +111,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
 
       val map = mutableMapOf<String, Coordinates>()
       explodedJars.forEach { jar ->
-        val coordinates = jar.coordinates.normalized(parameters.buildPath.get())
+        val coordinates = jar.coordinates.normalized(buildPath)
         jar.binaryClasses.forEach { binaryClass ->
           map[binaryClass.className] = coordinates
         }
