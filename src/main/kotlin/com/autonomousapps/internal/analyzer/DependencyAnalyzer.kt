@@ -282,7 +282,6 @@ internal abstract class AbstractDependencyAnalyzer(
     dagpExtension: AbstractExtension,
   ): TaskProvider<ComputeTypeUsageTask> {
     return project.tasks.register("computeTypeUsage$taskNameSuffix", ComputeTypeUsageTask::class.java) { t ->
-      t.projectPath.set(project.path)
       t.buildPath.set(project.buildPath(compileConfigurationName))
       t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       t.explodedJars.set(explodeJarTask.flatMap { it.output })
