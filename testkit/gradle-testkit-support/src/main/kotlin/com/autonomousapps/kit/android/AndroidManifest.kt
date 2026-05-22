@@ -46,6 +46,21 @@ public class AndroidManifest(public val content: String) {
     )
 
     @JvmStatic
+    public fun appWithoutStyle(application: String): AndroidManifest = AndroidManifest(
+      """
+      |<?xml version="1.0" encoding="utf-8"?>
+      |<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+      |
+      |<application
+      |  android:allowBackup="true"
+      |  android:label="Test app"
+      |  android:name="$application">
+      |  </application>
+      |</manifest>
+      """.trimMargin()
+    )
+
+    @JvmStatic
     public fun appWithoutPackage(application: String? = null): AndroidManifest {
       return AndroidManifest(
         """

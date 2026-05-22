@@ -527,7 +527,7 @@ internal class ScribeTestKotlin {
             compileSdk = 34
             defaultConfig {
               applicationId = "com.example"
-              minSdk = 21
+              minSdk = 23
               targetSdk = 29
               versionCode = 1
               versionName = "1.0"
@@ -582,7 +582,7 @@ internal class ScribeTestKotlin {
             compileSdk = 34
             defaultConfig {
               applicationId = "com.example"
-              minSdk = 21
+              minSdk = 23
               targetSdk = 29
               versionCode = 1
               versionName = "1.0"

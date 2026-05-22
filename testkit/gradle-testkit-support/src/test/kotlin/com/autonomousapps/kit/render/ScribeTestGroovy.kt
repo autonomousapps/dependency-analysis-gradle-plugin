@@ -524,7 +524,7 @@ internal class ScribeTestGroovy {
             compileSdkVersion 34
             defaultConfig {
               applicationId 'com.example'
-              minSdkVersion 21
+              minSdkVersion 23
               targetSdkVersion 29
               versionCode 1
               versionName '1.0'
@@ -580,7 +580,7 @@ internal class ScribeTestGroovy {
             compileSdkVersion 34
             defaultConfig {
               applicationId 'com.example'
-              minSdkVersion 21
+              minSdkVersion 23
               targetSdkVersion 29
               versionCode 1
               versionName '1.0'

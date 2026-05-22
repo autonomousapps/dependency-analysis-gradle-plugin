@@ -877,11 +877,8 @@ private class GraphVisitor(
     capability: InlineMemberCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
-    val candidateImports = capability.inlineMembers.asSequence()
-      .flatMap { (pn, names) ->
-        listOf("$pn.*") + names.map { name -> "$pn.$name" }
-      }
-      .toSet()
+    val candidateImports = capability.inlineMembers
+      .flatMapToOrderedSet(InlineMemberCapability.InlineMember::candidateImports)
 
     val imports = context.project.imports.asSequence().filter { import ->
       candidateImports.contains(import)

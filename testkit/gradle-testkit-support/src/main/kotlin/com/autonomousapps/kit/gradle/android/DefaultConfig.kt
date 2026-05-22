@@ -125,7 +125,7 @@ public class DefaultConfig @JvmOverloads constructor(
     @JvmField
     public val DEFAULT_APP: DefaultConfig = DefaultConfig(
       applicationId = "com.example",
-      minSdkVersion = 21,
+      minSdkVersion = 23,
       targetSdkVersion = 29,
       versionCode = 1,
       versionName = "1.0",
@@ -133,7 +133,7 @@ public class DefaultConfig @JvmOverloads constructor(
 
     @JvmField
     public val DEFAULT_LIB: DefaultConfig = DefaultConfig(
-      minSdkVersion = 21,
+      minSdkVersion = 23,
       targetSdkVersion = 29,
       versionCode = 1,
       versionName = "1.0",
@@ -141,7 +141,7 @@ public class DefaultConfig @JvmOverloads constructor(
 
     @JvmField
     public val DEFAULT_TEST: DefaultConfig = DefaultConfig(
-      minSdkVersion = 21,
+      minSdkVersion = 23,
       targetSdkVersion = 29,
       versionCode = 1,
       versionName = "1.0",

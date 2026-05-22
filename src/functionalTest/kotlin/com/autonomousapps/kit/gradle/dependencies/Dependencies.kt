@@ -77,6 +77,32 @@ object Dependencies {
   }
 
   @JvmStatic
+  fun autoDagger(configuration: String): Dependency {
+    return provider.autoDagger(configuration)
+  }
+
+  @JvmStatic
+  fun autoDaggerApi(configuration: String): Dependency {
+    return provider.autoDaggerApi(configuration)
+  }
+
+  @JvmStatic
+  fun autoDaggerCompiler(configuration: String): Dependency {
+    return provider.autoDaggerCompiler(configuration)
+  }
+
+  @JvmStatic
+  fun hiltAndroid(configuration: String): Dependency {
+    return provider.hiltAndroid(configuration)
+  }
+
+  @JvmStatic
+  fun hiltAndroidCompiler(configuration: String): Dependency {
+    return provider.hiltAndroidCompiler(configuration)
+  }
+
+
+  @JvmStatic
   fun kotestAssertions(configuration: String): Dependency {
     return provider.kotestAssertions(configuration)
   }

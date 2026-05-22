@@ -86,9 +86,7 @@ public class GradleProperties(private val lines: MutableList<String>) {
     public fun minimalAndroidProperties(): GradleProperties = of(JVM_ARGS, USE_ANDROID_X, NON_TRANSITIVE_R)
 
     @JvmStatic
-    public fun enableConfigurationCache(): GradleProperties = of(
-      CONFIGURATION_CACHE_STABLE, CONFIGURATION_CACHE_UNSTABLE
-    )
+    public fun enableConfigurationCache(): GradleProperties = of(CONFIGURATION_CACHE_STABLE)
 
     @JvmStatic
     public fun enableIsolatedProjects(): GradleProperties = of(ISOLATED_PROJECTS_UNSTABLE)

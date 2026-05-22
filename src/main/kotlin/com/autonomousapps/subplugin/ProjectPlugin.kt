@@ -100,8 +100,10 @@ internal class ProjectPlugin(private val project: Project) {
   /** We only want to register the aggregation tasks if the by-variants tasks are registered. */
   private val aggregatorsRegistered = AtomicBoolean(false)
 
-  private val computeAdviceTask: TaskProvider<ComputeAdviceTask> =
-    project.tasks.register("computeAdvice", ComputeAdviceTask::class.java)
+  private val computeAdviceTask = project.tasks.register("computeAdvice", ComputeAdviceTask::class.java)
+  private val aggregateTypeUsageTask = project.tasks.register("aggregateTypeUsage", AggregateTypeUsageTask::class.java)
+  private val aggregatePublicTypesTask =
+    project.tasks.register("aggregatePublicTypes", AggregatePublicTypesTask::class.java)
 
   private lateinit var filterAdviceTask: TaskProvider<FilterAdviceTask>
   private lateinit var computeResolvedDependenciesTask: TaskProvider<ComputeResolvedDependenciesTask>
@@ -118,6 +120,10 @@ internal class ProjectPlugin(private val project: Project) {
   private var isAndroidProject = false
   private var isKmpProject = false
 
+  private val combinedGraphPublisher = interProjectPublisher(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.COMBINED_GRAPH,
+  )
   private val projectHealthPublisher = interProjectPublisher(
     project = project,
     artifactDescription = DagpArtifacts.Kind.PROJECT_HEALTH,
@@ -126,14 +132,19 @@ internal class ProjectPlugin(private val project: Project) {
     project = project,
     artifactDescription = DagpArtifacts.Kind.PROJECT_METADATA,
   )
+  private val publicClassesPublisher = interProjectPublisher(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.PUBLIC_CLASSES,
+  )
   private val resolvedDependenciesPublisher = interProjectPublisher(
     project = project,
     artifactDescription = DagpArtifacts.Kind.RESOLVED_DEPS,
   )
-  private val combinedGraphPublisher = interProjectPublisher(
+  private val typeUsagesPublisher = interProjectPublisher(
     project = project,
-    artifactDescription = DagpArtifacts.Kind.COMBINED_GRAPH,
+    artifactDescription = DagpArtifacts.Kind.TYPE_USAGE,
   )
+
 
   private val dslService = GlobalDslService.of(project)
 
@@ -975,6 +986,11 @@ internal class ProjectPlugin(private val project: Project) {
         ).toJson()
       }
     })
+    abiAnalysisTask?.let { task ->
+      aggregatePublicTypesTask.configure { t ->
+        t.abiReports.from(task.flatMap { it.output })
+      }
+    }
 
     val usagesExclusionsProvider = provider {
       with(dagpExtension.usageHandler.exclusionsHandler) {
@@ -1029,9 +1045,13 @@ internal class ProjectPlugin(private val project: Project) {
     val computeTypeUsageTask = dependencyAnalyzer.registerComputeTypeUsageTask(
       synthesizeProjectViewTask = synthesizeProjectViewTask,
       explodeJarTask = explodeJarTask,
+      synthesizeDependenciesTask = synthesizeDependenciesTask,
       dagpExtension = dagpExtension,
     )
     storeTypeUsageOutput(dependencyAnalyzer.taskNameSuffix, computeTypeUsageTask.flatMap { it.output })
+    aggregateTypeUsageTask.configure { t ->
+      t.typeUsageReports.from(computeTypeUsageTask.flatMap { it.output })
+    }
 
     // Null for JVM projects
     val androidScoreTask = dependencyAnalyzer.registerAndroidScoreTask(
@@ -1071,6 +1091,7 @@ internal class ProjectPlugin(private val project: Project) {
         outputPaths = paths
       )
     }
+
     computeAdviceTask.configure { t ->
       t.projectPath.set(theProjectPath)
       t.declarations.set(findDeclarationsTask.flatMap { it.output })
@@ -1086,6 +1107,15 @@ internal class ProjectPlugin(private val project: Project) {
       t.dependencyUsages.set(paths.dependencyUsagesPath)
       t.annotationProcessorUsages.set(paths.annotationProcessorUsagesPath)
       t.bundledTraces.set(paths.bundledTracesPath)
+    }
+
+    aggregateTypeUsageTask.configure { t ->
+      t.output.set(paths.aggregateTypeUsagePath)
+    }
+
+    aggregatePublicTypesTask.configure { t ->
+      t.projectPath.set(theProjectPath)
+      t.output.set(paths.publicTypesPath)
     }
 
     filterAdviceTask = tasks.register("filterAdvice", FilterAdviceTask::class.java) { t ->
@@ -1182,7 +1212,9 @@ internal class ProjectPlugin(private val project: Project) {
     combinedGraphPublisher.publish(mergeProjectGraphsTask.flatMap { it.output })
     projectHealthPublisher.publish(filterAdviceTask.flatMap { it.output })
     projectMetadataPublisher.publish(writeProjectMetadata.flatMap { it.output })
+    publicClassesPublisher.publish(aggregatePublicTypesTask.flatMap { it.output })
     resolvedDependenciesPublisher.publish(computeResolvedDependenciesTask.flatMap { it.output })
+    typeUsagesPublisher.publish(aggregateTypeUsageTask.flatMap { it.output })
   }
 
   private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("org.jetbrains.kotlin.kapt") }

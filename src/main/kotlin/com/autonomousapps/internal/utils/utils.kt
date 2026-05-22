@@ -32,61 +32,52 @@ internal fun DirectoryProperty.delete(): DirectoryProperty {
   return this
 }
 
-/**
- * Resolves the file from the property and deletes its contents, then returns the file.
- */
+/** Resolves the file from the property and deletes its contents, then returns the file. */
 internal fun RegularFileProperty.getAndDelete(): File {
   val file = get().asFile
   file.delete()
   return file
 }
 
-/**
- * Resolves the file from the provider and deletes its contents, then returns the file.
- */
+/** Resolves the file from the provider and deletes its contents, then returns the file. */
 internal fun Provider<RegularFile>.getAndDelete(): File {
   val file = get().asFile
   file.delete()
   return file
 }
 
-/**
- * Buffer reads of the nullable RegularFileProperty from disk to the set.
- */
+/** Buffer reads of the nullable RegularFileProperty from disk to the set. */
 internal inline fun <reified T> RegularFileProperty.fromNullableJsonSet(): Set<T> {
   return orNull?.fromJsonSet() ?: emptySet()
 }
 
-/**
- * Buffers reads of the RegularFileProperty from disk to the set.
- */
+/** Buffers reads of the RegularFileProperty from disk to the set. */
 internal inline fun <reified T> RegularFileProperty.fromJsonSet(
   compressed: Boolean = false,
 ): Set<T> = get().fromJsonSet(compressed)
 
-/**
- * Buffers reads of the RegularFile from disk to the set.
- */
+/** Buffers reads of the RegularFile from disk to the set. */
 internal inline fun <reified T> RegularFile.fromJsonSet(
+  compressed: Boolean = false,
+): Set<T> = asFile.fromJsonSet(compressed)
+
+/** Buffers reads of the RegularFile from disk to the set. */
+internal inline fun <reified T> File.fromJsonSet(
   compressed: Boolean = false,
 ): Set<T> {
   val source = if (compressed) {
-    GzipSource(asFile.source()).buffer()
+    GzipSource(source()).buffer()
   } else {
-    asFile.bufferRead()
+    bufferRead()
   }
 
   return source.use { getJsonSetAdapter<T>().fromJson(it)!! }
 }
 
-/**
- * Buffers reads of the RegularFileProperty from disk to the set.
- */
+/** Buffers reads of the RegularFileProperty from disk to the set. */
 internal inline fun <reified T> RegularFileProperty.fromJsonList(): List<T> = get().fromJsonList()
 
-/**
- * Buffers reads of the RegularFile from disk to the set.
- */
+/** Buffers reads of the RegularFile from disk to the set. */
 internal inline fun <reified T> RegularFile.fromJsonList(): List<T> {
   return asFile.bufferRead().use { reader ->
     getJsonListAdapter<T>().fromJson(reader)!!
@@ -117,38 +108,26 @@ internal inline fun <reified K, reified V> File.fromJsonMapSet(): Map<K, Set<V>>
   return bufferRead().fromJsonMapSet()
 }
 
-/**
- * Buffers reads of the RegularFileProperty from disk to the set.
- */
+/** Buffers reads of the RegularFileProperty from disk to the set. */
 internal inline fun <reified K, reified V> RegularFileProperty.fromJsonMap(): Map<K, V> = get().fromJsonMap()
 
-/**
- * Buffers reads of the RegularFile from disk to the set.
- */
+/** Buffers reads of the RegularFile from disk to the set. */
 internal inline fun <reified K, reified V> RegularFile.fromJsonMap(): Map<K, V> = asFile.fromJsonMap()
 
-/**
- * Buffers reads of the File from disk to the set.
- */
+/** Buffers reads of the File from disk to the set. */
 internal inline fun <reified K, reified V> File.fromJsonMap(): Map<K, V> {
   return bufferRead().use { reader ->
     getJsonMapAdapter<K, V>().fromJson(reader)!!
   }
 }
 
-/**
- * Buffer reads of the RegularFileProperty from disk to the set.
- */
+/** Buffer reads of the RegularFileProperty from disk to the set. */
 internal inline fun <reified T> RegularFileProperty.fromJson(): T = get().fromJson()
 
-/**
- * Buffer reads of the RegularFile from disk to the set.
- */
+/** Buffer reads of the RegularFile from disk to the set. */
 internal inline fun <reified T> RegularFile.fromJson(): T = asFile.fromJson()
 
-/**
- * Buffer reads of the File from disk to the set.
- */
+/** Buffer reads of the File from disk to the set. */
 internal inline fun <reified T> File.fromJson(): T {
   return bufferRead().use { reader ->
     getJsonAdapter<T>().fromJson(reader)!!

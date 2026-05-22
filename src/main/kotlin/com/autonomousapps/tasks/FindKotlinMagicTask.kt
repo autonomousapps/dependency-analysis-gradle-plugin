@@ -176,6 +176,11 @@ internal class KotlinMagicFinder(
       }
     }
 
+    // com/foo/BarKt.class -> com.foo.BarKt
+    fun className(entryName: String): String {
+      return entryName.replace('/', '.').substringBeforeLast(".class")
+    }
+
     val inlineMembers = mutableSetOf<InlineMemberCapability.InlineMember>()
     val typealiases = mutableSetOf<TypealiasCapability.Typealias>()
 
@@ -201,6 +206,7 @@ internal class KotlinMagicFinder(
             .forEach { (entry, kotlinMagic) ->
               if (kotlinMagic.inlineMembers != null) {
                 inlineMembers += InlineMemberCapability.InlineMember.newInstance(
+                  className = className(entry.name),
                   packageName = packageName(entry.name),
                   // Guaranteed to be non-empty
                   inlineMembers = kotlinMagic.inlineMembers
@@ -233,8 +239,12 @@ internal class KotlinMagicFinder(
           }
           .forEach { (classFile, kotlinMagic) ->
             if (kotlinMagic.inlineMembers != null) {
+              val packageName = packageName(Files.asPackagePath(classFile))
+              val className = packageName + classFile.name.substringBeforeLast(".class")
+
               inlineMembers += InlineMemberCapability.InlineMember.newInstance(
-                packageName = packageName(Files.asPackagePath(classFile)),
+                className = className,
+                packageName = packageName,
                 // Guaranteed to be non-empty
                 inlineMembers = kotlinMagic.inlineMembers
               )

@@ -66,6 +66,26 @@ class DependencyProvider(
     return Dependency(configuration, "org.conscrypt:conscrypt-openjdk-uber:2.4.0")
   }
 
+  fun autoDagger(configuration: String): Dependency {
+    return Dependency(configuration, "se.ansman.dagger.auto:android:2.1.0")
+  }
+
+  fun autoDaggerApi(configuration: String): Dependency {
+    return Dependency(configuration, "se.ansman.dagger.auto:android-api:2.1.0")
+  }
+
+  fun autoDaggerCompiler(configuration: String): Dependency {
+    return Dependency(configuration, "se.ansman.dagger.auto:compiler:2.1.0")
+  }
+
+  fun hiltAndroid(configuration: String): Dependency {
+    return Dependency(configuration, "com.google.dagger:hilt-android:2.59.2")
+  }
+
+  fun hiltAndroidCompiler(configuration: String): Dependency {
+    return Dependency(configuration, "com.google.dagger:hilt-android-compiler:2.59.2")
+  }
+
   fun kotestAssertions(configuration: String): Dependency {
     return Dependency(configuration, "io.kotest:kotest-assertions-core:4.6.0")
   }

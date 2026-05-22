@@ -226,17 +226,39 @@ internal data class InlineMemberCapability(
 
   @JsonClass(generateAdapter = false)
   data class InlineMember(
+    val className: String,
     val packageName: String,
     val inlineMembers: Set<String>,
   ) : Comparable<InlineMember> {
 
     companion object {
-      fun newInstance(packageName: String, inlineMembers: Set<String>): InlineMember {
-        return InlineMember(packageName, inlineMembers.toSortedSet().efficient())
+      fun newInstance(className: String, packageName: String, inlineMembers: Set<String>): InlineMember {
+        return InlineMember(
+          className = className,
+          packageName = packageName,
+          inlineMembers = inlineMembers.toSortedSet().efficient(),
+        )
       }
     }
 
-    override fun compareTo(other: InlineMember): Int = compareBy(InlineMember::packageName)
+    /**
+     * Returns the set of import statements most likely to reference the inline functions related to this instance.
+     * ```
+     * // 1
+     * import com.foo.myCoolFunction
+     *
+     * // 2
+     * import com.foo.*
+     * ```
+     */
+    fun candidateImports(): Set<String> {
+      // we like sorted sets because they're easier to debug
+      val candidateImports = sortedSetOf("$packageName.*")
+      return inlineMembers.mapTo(candidateImports) { name -> "$packageName.$name" }
+    }
+
+    override fun compareTo(other: InlineMember): Int = compareBy(InlineMember::className)
+      .thenBy(InlineMember::packageName)
       .thenBy(LexicographicIterableComparator()) { it.inlineMembers }
       .compare(this, other)
   }

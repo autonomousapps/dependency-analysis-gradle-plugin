@@ -5,10 +5,14 @@ package com.autonomousapps.model
 import com.squareup.moshi.JsonClass
 
 /**
- * Type usage information for a single project.
+ * Type usage information for a single source set/variant of a single project.
  *
  * This report shows which types (classes/interfaces) are used from each dependency,
  * enabling coupling analysis and complexity metrics.
+ *
+ * TODO(tsr): I think we should consider adding Android res usages here as well.
+ *
+ * @see [com.autonomousapps.model.internal.AggregateTypeUsageReport]
  */
 @JsonClass(generateAdapter = false)
 public data class ProjectTypeUsage(
@@ -34,15 +38,10 @@ public data class ProjectTypeUsage(
   /**
    * Returns true if there are no usages tracked.
    */
-  public fun isEmpty(): Boolean =
-    internal.isEmpty() &&
-    projectDependencies.isEmpty() &&
-    libraryDependencies.isEmpty()
+  public fun isEmpty(): Boolean = internal.isEmpty() && projectDependencies.isEmpty() && libraryDependencies.isEmpty()
 }
 
-/**
- * Summary statistics about type usage in a project.
- */
+/** Summary statistics about type usage in a project. */
 @JsonClass(generateAdapter = false)
 public data class TypeUsageSummary(
   /** Total number of unique types used (internal + external). */
