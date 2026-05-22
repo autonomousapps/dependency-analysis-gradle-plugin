@@ -4,6 +4,7 @@
 
 package com.autonomousapps.internal.analyzer
 
+import com.autonomousapps.AbstractExtension
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.opaqueComponentArtifacts
@@ -17,7 +18,6 @@ import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 
 /** Abstraction for differentiating between android-app, android-lib, and java-lib projects.  */
 internal interface DependencyAnalyzer {
@@ -78,9 +78,7 @@ internal interface DependencyAnalyzer {
   fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask>
   fun registerCodeSourceExploderTask(): TaskProvider<out CodeSourceExploderTask>
 
-  /**
-   * Computes how this project really uses its dependencies, without consideration for user reporting preferences.
-   */
+  /** Computes how this project really uses its dependencies, without consideration for user reporting preferences. */
   fun registerComputeUsagesTask(
     checkSuperClasses: Provider<Boolean>,
     checkBinaryCompat: Provider<Boolean>,
@@ -92,6 +90,13 @@ internal interface DependencyAnalyzer {
     duplicateClassesCompile: TaskProvider<DiscoverClasspathDuplicationTask>,
     duplicateClassesRuntime: TaskProvider<DiscoverClasspathDuplicationTask>,
   ): TaskProvider<ComputeUsagesTask>
+
+  /** Produces a report of the types, and their kinds (local, other project, external module) used by this project. */
+  fun registerComputeTypeUsageTask(
+    synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
+    explodeJarTask: TaskProvider<ExplodeJarTask>,
+    dagpExtension: AbstractExtension,
+  ): TaskProvider<ComputeTypeUsageTask>
 
   /** Discover duplicates on the compile classpath. */
   fun registerDiscoverClasspathDuplicationForCompileTask(
@@ -268,6 +273,26 @@ internal abstract class AbstractDependencyAnalyzer(
       t.duplicateClassesReports.add(duplicateClassesCompile.flatMap { it.output })
       t.duplicateClassesReports.add(duplicateClassesRuntime.flatMap { it.output })
       t.output.set(outputPaths.dependencyTraceReportPath)
+    }
+  }
+
+  final override fun registerComputeTypeUsageTask(
+    synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
+    explodeJarTask: TaskProvider<ExplodeJarTask>,
+    dagpExtension: AbstractExtension,
+  ): TaskProvider<ComputeTypeUsageTask> {
+    return project.tasks.register("computeTypeUsage$taskNameSuffix", ComputeTypeUsageTask::class.java) { t ->
+      t.projectPath.set(project.path)
+      t.buildPath.set(project.buildPath(compileConfigurationName))
+      t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
+      t.explodedJars.set(explodeJarTask.flatMap { it.output })
+
+      // Configuration from extension
+      t.excludedPackages.set(dagpExtension.typeUsageHandler.excludedPackages)
+      t.excludedTypes.set(dagpExtension.typeUsageHandler.excludedTypes)
+      t.excludedRegexPatterns.set(dagpExtension.typeUsageHandler.excludedRegexPatterns)
+
+      t.output.set(outputPaths.typeUsagePath)
     }
   }
 
