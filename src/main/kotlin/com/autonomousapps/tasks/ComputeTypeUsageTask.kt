@@ -2,19 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.strings.ensureSuffix
-import com.autonomousapps.internal.utils.bufferWriteJson
-import com.autonomousapps.internal.utils.fromJson
-import com.autonomousapps.internal.utils.fromJsonSet
-import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.ModuleCoordinates
-import com.autonomousapps.model.ProjectCoordinates
-import com.autonomousapps.model.ProjectTypeUsage
-import com.autonomousapps.model.TypeUsageSummary
-import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
+import com.autonomousapps.model.*
+import com.autonomousapps.model.internal.BinaryClassCapability
+import com.autonomousapps.model.internal.Dependency
+import com.autonomousapps.model.internal.InlineMemberCapability
 import com.autonomousapps.model.internal.ProjectVariant
+import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -45,6 +42,10 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
   @get:InputFile
   public abstract val explodedJars: RegularFileProperty
 
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputDirectory
+  public abstract val dependencies: DirectoryProperty
+
   @get:Input
   public abstract val excludedPackages: SetProperty<String>
 
@@ -63,6 +64,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
       it.buildPath.set(buildPath)
       it.syntheticProject.set(syntheticProject)
       it.explodedJars.set(explodedJars)
+      it.dependencies.set(dependencies)
       it.excludedPackages.set(excludedPackages)
       it.excludedTypes.set(excludedTypes)
       it.excludedRegexPatterns.set(excludedRegexPatterns)
@@ -74,6 +76,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
     public val buildPath: Property<String>
     public val syntheticProject: RegularFileProperty
     public val explodedJars: RegularFileProperty
+    public val dependencies: DirectoryProperty
     public val excludedPackages: SetProperty<String>
     public val excludedTypes: SetProperty<String>
     public val excludedRegexPatterns: ListProperty<String>
@@ -89,17 +92,18 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
 
       // 1. Load data
       val project = parameters.syntheticProject.fromJson<ProjectVariant>()
+      val dependencies = project.dependencies(parameters.dependencies.get())
       val classToCoords = buildClassIndex()
 
       // 2. Build filter
       val filter = TypeFilter(
         excludedPackages = parameters.excludedPackages.get(),
         excludedTypes = parameters.excludedTypes.get(),
-        excludedRegexPatterns = parameters.excludedRegexPatterns.get()
+        excludedRegexPatterns = parameters.excludedRegexPatterns.get(),
       )
 
       // 3. Analyze usage
-      val analyzer = TypeUsageAnalyzer(project, classToCoords, filter)
+      val analyzer = TypeUsageAnalyzer(project, classToCoords, filter, dependencies)
       val typeUsage = analyzer.analyze()
 
       // 4. Write output
@@ -125,9 +129,9 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
 private class TypeFilter(
   excludedPackages: Set<String>,
   val excludedTypes: Set<String>,
-  excludedRegexPatterns: List<String>
+  excludedRegexPatterns: List<String>,
 ) {
-  private val normalizedPackages = excludedPackages.map { it.ensureSuffix(".") }.toSet()
+  private val normalizedPackages = excludedPackages.mapToSet { it.ensureSuffix(".") }
   private val compiledPatterns = excludedRegexPatterns.map { it.toRegex() }
 
   fun shouldExclude(className: String): Boolean {
@@ -141,8 +145,10 @@ private class TypeFilter(
 private class TypeUsageAnalyzer(
   private val project: ProjectVariant,
   private val classToCoords: Map<String, Coordinates>,
-  private val filter: TypeFilter
+  private val filter: TypeFilter,
+  private val dependencies: Set<Dependency>,
 ) {
+
   fun analyze(): ProjectTypeUsage {
     val usageMap = mutableMapOf<Coordinates, MutableMap<String, Int>>()
     val unknown = mutableMapOf<String, Int>()
@@ -154,18 +160,22 @@ private class TypeUsageAnalyzer(
     project.codeSource.forEach { source ->
       val allUsedClasses = source.usedNonAnnotationClasses + source.usedAnnotationClasses
 
-      allUsedClasses.filter { !filter.shouldExclude(it) }.forEach { className ->
-        // Determine coordinates: check project classes first, then external
-        val coords = classToCoords[className]
+      allUsedClasses
+        // classes referenced via inline functions
+        .plus(findInlineClassNames(source.imports))
+        .filterNot(filter::shouldExclude)
+        .forEach { className ->
+          // Determine coordinates: check project classes first, then external
+          val coords = classToCoords[className]
 
-        if (coords != null || projectClasses.contains(className)) {
-          usageMap
-            .getOrPut(coords ?: project.coordinates) { mutableMapOf() }
-            .merge(className, 1, Int::plus)
-        } else {
-          unknown.merge(className, 1, Int::plus)
+          if (coords != null || projectClasses.contains(className)) {
+            usageMap
+              .getOrPut(coords ?: project.coordinates) { mutableMapOf() }
+              .merge(className, 1, Int::plus)
+          } else {
+            unknown.merge(className, 1, Int::plus)
+          }
         }
-      }
     }
 
     // Categorize dependencies
@@ -189,12 +199,91 @@ private class TypeUsageAnalyzer(
         totalFiles = project.codeSource.size,
         internalTypes = internal.size,
         projectDependencies = projectDeps.size,
-        libraryDependencies = libraryDeps.size
+        libraryDependencies = libraryDeps.size,
       ),
       internal = internal.toSortedMap(),
       projectDependencies = projectDeps.toSortedMap(),
       libraryDependencies = libraryDeps.toSortedMap(),
-      unknownDependencies = unknown.toSortedMap()
+      unknownDependencies = unknown.toSortedMap(),
     )
+  }
+
+  // dependency -> inline imports
+  private val inlineCache = mutableMapOf<Dependency, Set<Imports>>()
+
+  // mapping imports to their "Kt" class names
+  private fun findInlineClassNames(imports: Set<String>): Set<String> {
+    return dependencies
+      .flatMapToOrderedSet { dependency ->
+        getCacheEntry(dependency)
+          .filter { entry -> entry.candidateImports.any { it in imports } }
+          .mapToOrderedSet { entry -> entry.className }
+      }
+  }
+
+  private fun getCacheEntry(dependency: Dependency): Set<Imports> {
+    return inlineCache.getOrPut(dependency) {
+      val binaryEntries = dependency.findCapability<BinaryClassCapability>()?.let(Imports::of).orEmpty()
+      val inlineEntries = dependency.findCapability<InlineMemberCapability>()?.let(Imports::of).orEmpty()
+
+      binaryEntries + inlineEntries
+    }
+  }
+
+  /**
+   * Maps class names to import statements. Currently used for inline functions and source-retained annotations.
+   *
+   * For inline functions, given a source file `com/foo/Bar.kt`, which produces a class file `com/foo/Bar.class`:
+   * ```
+   * inline fun inlineFun1() { ... }
+   *
+   * inline fun inlineFun2() { ... }
+   * ```
+   *
+   * Imports in other sources files will look like:
+   * ```
+   * import com.foo.inlineFun1
+   * import com.foo.*
+   * ```
+   */
+  private data class Imports(
+    /** com.foo.BarKt */
+    val className: String,
+    /** list: `com.foo.inlineFun1`, `com.foo.inlineFun1`, `com.foo.SourceRetainedAnnotation`. */
+    val candidateImports: Set<String>,
+  ) : Comparable<Imports> {
+    override fun compareTo(other: Imports): Int {
+      return compareBy(Imports::className)
+        .thenBy(LexicographicIterableComparator()) { it.candidateImports }
+        .compare(this, other)
+    }
+
+    companion object {
+      fun of(inlineMember: InlineMemberCapability): Set<Imports> {
+        return inlineMember.inlineMembers.mapToOrderedSet(Imports::of)
+      }
+
+      fun of(inlineMember: InlineMemberCapability.InlineMember): Imports {
+        return Imports(
+          className = inlineMember.className,
+          candidateImports = inlineMember.candidateImports(),
+        )
+      }
+
+      fun of(binary: BinaryClassCapability): Set<Imports> {
+        return binary.classes.mapToOrderedSet { className ->
+          val candidateImports = if (className.contains('.')) {
+            sortedSetOf(className, className.substringBeforeLast('.') + ".*")
+          } else {
+            sortedSetOf(className)
+          }
+
+          Imports(
+            className = className,
+            candidateImports = candidateImports,
+          )
+        }
+      }
+    }
   }
 }

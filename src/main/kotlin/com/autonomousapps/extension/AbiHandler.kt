@@ -90,13 +90,13 @@ public abstract class ExclusionsHandler @Inject constructor(objects: ObjectFacto
   }
 
   /**
-   * Best-effort attempts to ignore generated code by ignoring any bytecode in classes annotated
-   * with an annotation ending in `Generated`. It's important to note that the standard
-   * `javax.annotation.Generated` (or its JDK9+ successor) does _not_ work with this due to it
-   * using `SOURCE` retention. It's recommended to use your own `Generated` annotation.
+   * Best-effort attempts to ignore generated code by ignoring any bytecode in classes annotated with an annotation
+   * containing `Generated`. It's important to note that the standard `javax.annotation.Generated` (or its JDK9+
+   * successor) does _not_ work with this due to it using `SOURCE` retention. It's recommended to use your own
+   * `Generated` annotation.
    */
   public fun ignoreGeneratedCode() {
-    excludeAnnotations(".*Generated")
+    excludeAnnotations(".*Generated.*")
   }
 
   /**

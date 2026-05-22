@@ -16,7 +16,6 @@ import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.nio.file.Paths
 import javax.inject.Inject
 
 @CacheableTask
@@ -179,38 +178,46 @@ private class SourceExploder(
     val destination = sortedSetOf<ExplodingSourceCode>()
     javaSourceFiles.mapTo(destination) { f ->
       val rel = relativize(f)
+      val sourceListener = SourceListener.parseSourceFile(f)
+      val pkg = packageFrom(sourceListener)
       ExplodingSourceCode(
         relativePath = rel,
-        className = canonicalClassName(rel),
+        className = canonicalClassName(pkg, f),
         kind = Kind.JAVA,
-        imports = SourceListener.parseSourceFileForImports(f)
+        imports = importsFrom(sourceListener),
       )
     }
     kotlinSourceFiles.mapTo(destination) { f ->
       val rel = relativize(f)
+      val sourceListener = SourceListener.parseSourceFile(f)
+      val pkg = packageFrom(sourceListener)
       ExplodingSourceCode(
         relativePath = rel,
-        className = canonicalClassName(rel),
+        className = canonicalClassName(pkg, f),
         kind = Kind.KOTLIN,
-        imports = SourceListener.parseSourceFileForImports(f)
+        imports = importsFrom(sourceListener),
       )
     }
     groovySourceFiles.mapTo(destination) { f ->
       val rel = relativize(f)
+      val sourceListener = SourceListener.parseSourceFile(f)
+      val pkg = packageFrom(sourceListener)
       ExplodingSourceCode(
         relativePath = rel,
-        className = canonicalClassName(rel),
+        className = canonicalClassName(pkg, f),
         kind = Kind.GROOVY,
-        imports = SourceListener.parseSourceFileForImports(f)
+        imports = importsFrom(sourceListener),
       )
     }
     scalaSourceFiles.mapTo(destination) { f ->
       val rel = relativize(f)
+      val sourceListener = SourceListener.parseSourceFile(f)
+      val pkg = packageFrom(sourceListener)
       ExplodingSourceCode(
         relativePath = rel,
-        className = canonicalClassName(rel),
+        className = canonicalClassName(pkg, f),
         kind = Kind.SCALA,
-        imports = SourceListener.parseSourceFileForImports(f)
+        imports = importsFrom(sourceListener),
       )
     }
 
@@ -219,13 +226,21 @@ private class SourceExploder(
 
   private fun relativize(file: File) = file.toRelativeString(projectDir)
 
-  private fun canonicalClassName(relativePath: String): String {
-    return Paths.get(relativePath)
-      // Hack to drop e.g. `src/main/java`. Would be better if a FileTree exposed that info.
-      .drop(3)
-      // com/example/Foo.java -> com.example.Foo.java
-      .joinToString(separator = ".")
-      // Drop file extension (.java, .kt, etc.) as well.
-      .substringBeforeLast('.')
+  private fun canonicalClassName(pkg: String?, file: File): String {
+    // Foo.java -> Foo
+    val name = file.name.substringBeforeLast('.')
+    return if (pkg != null) {
+      "$pkg.$name"
+    } else {
+      name
+    }
   }
+
+  /*
+   * nb: the "cannot access..." IDE error is incorrect. It's failing at something to do with shaded packages yet again.
+   * I put these functions down here to consolidate the errors.
+   */
+
+  private fun packageFrom(sourceListener: SourceListener): String? = sourceListener.packageDeclaration()
+  private fun importsFrom(sourceListener: SourceListener): Set<String> = sourceListener.imports()
 }

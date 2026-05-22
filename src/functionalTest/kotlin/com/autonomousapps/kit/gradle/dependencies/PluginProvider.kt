@@ -26,6 +26,7 @@ class PluginProvider(
   val androidLibId: String = "com.android.library"
   val androidTestId: String = "com.android.test"
   val androidLegacyKaptId: String = "com.android.legacy-kapt"
+  val androidAppNoApply: Plugin = Plugin(androidAppId, androidVersion, false)
   val androidApp: Plugin = Plugin(androidAppId, androidVersion)
   val androidAppNoVersion: Plugin = Plugin(androidAppId)
   val androidLibNoVersion: Plugin = Plugin(androidLibId)
@@ -37,6 +38,12 @@ class PluginProvider(
 
   /** Use this in subprojects. */
   val androidKmpLibNoVersion: Plugin = Plugin("com.android.kotlin.multiplatform.library")
+
+  val hiltNoApply: Plugin = Plugin("com.google.dagger.hilt.android", "2.59.2", false)
+  val hiltNoVersion: Plugin = Plugin("com.google.dagger.hilt.android")
+
+  val kspNoApply: Plugin = Plugin("com.google.devtools.ksp", "2.3.7", false)
+  val kspNoVersion: Plugin = Plugin("com.google.devtools.ksp")
 
   val kotlinJvm: Plugin = Plugin("org.jetbrains.kotlin.jvm", kotlinVersion)
   val kotlinJvmNoApply: Plugin = Plugin("org.jetbrains.kotlin.jvm", kotlinVersion, false)

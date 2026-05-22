@@ -16,9 +16,11 @@ internal interface DagpArtifacts : Named {
 
   enum class Kind : ArtifactDescription<DagpArtifacts> {
     COMBINED_GRAPH,
+    PUBLIC_CLASSES,
     PROJECT_HEALTH,
     PROJECT_METADATA,
     RESOLVED_DEPS,
+    TYPE_USAGE,
     ;
 
     override val attribute: Attribute<DagpArtifacts> = DAGP_ARTIFACTS_ATTRIBUTE

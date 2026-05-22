@@ -26,6 +26,12 @@ object Plugins {
   @JvmStatic val androidKmpLibNoVersion: Plugin = provider.androidKmpLibNoVersion
   @JvmStatic val androidTest: Plugin = provider.androidTestNoVersion
 
+  @JvmStatic val hiltNoApply: Plugin = provider.hiltNoApply
+  @JvmStatic val hiltNoVersion: Plugin = provider.hiltNoVersion
+
+  @JvmStatic val kspNoApply: Plugin = provider.kspNoApply
+  @JvmStatic val kspNoVersion: Plugin = provider.kspNoVersion
+
   @JvmStatic val javaTestFixtures: Plugin = provider.javaTestFixtures
 
   @JvmStatic val kotlinJvm: Plugin = provider.kotlinJvm

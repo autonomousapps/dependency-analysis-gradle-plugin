@@ -95,6 +95,7 @@ internal interface DependencyAnalyzer {
   fun registerComputeTypeUsageTask(
     synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
     explodeJarTask: TaskProvider<ExplodeJarTask>,
+    synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
     dagpExtension: AbstractExtension,
   ): TaskProvider<ComputeTypeUsageTask>
 
@@ -279,12 +280,14 @@ internal abstract class AbstractDependencyAnalyzer(
   final override fun registerComputeTypeUsageTask(
     synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
     explodeJarTask: TaskProvider<ExplodeJarTask>,
+    synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
     dagpExtension: AbstractExtension,
   ): TaskProvider<ComputeTypeUsageTask> {
     return project.tasks.register("computeTypeUsage$taskNameSuffix", ComputeTypeUsageTask::class.java) { t ->
       t.buildPath.set(project.buildPath(compileConfigurationName))
       t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       t.explodedJars.set(explodeJarTask.flatMap { it.output })
+      t.dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
 
       // Configuration from extension
       t.excludedPackages.set(dagpExtension.typeUsageHandler.excludedPackages)

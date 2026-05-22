@@ -69,6 +69,10 @@ abstract class AbstractAndroidProject extends AbstractProject {
     return isAtLeastAgp9 ? Plugins.androidLegacyKaptNoVersion : Plugins.kotlinKaptNoVersion
   }
 
+  protected List<Plugin> hilt() {
+    [plugins.hiltNoVersion, plugins.kspNoVersion]
+  }
+
   AbstractAndroidProject(String kotlinVersion, String agpVersion) {
     super(kotlinVersion, agpVersion)
 
@@ -115,7 +119,7 @@ abstract class AbstractAndroidProject extends AbstractProject {
       .withRootProject { root ->
         root.gradleProperties += GradleProperties.minimalAndroidProperties()
         root.withBuildScript { bs ->
-          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+          bs.plugins += plugins.androidAppNoApply
         }
       }
   }

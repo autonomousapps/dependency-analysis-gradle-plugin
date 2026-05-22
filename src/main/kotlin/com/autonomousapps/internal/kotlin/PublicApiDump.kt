@@ -66,10 +66,10 @@ internal fun getBinaryAPI(
       with(clazz) {
         val metadata = kotlinMetadata
 
-        val kmFunctions = when (val md = metadata) {
-          is KotlinClassMetadata.Class -> md.kmClass.functions
-          is KotlinClassMetadata.FileFacade -> md.kmPackage.functions
-          is KotlinClassMetadata.MultiFileClassPart -> md.kmPackage.functions
+        val kmFunctions = when (metadata) {
+          is KotlinClassMetadata.Class -> metadata.kmClass.functions
+          is KotlinClassMetadata.FileFacade -> metadata.kmPackage.functions
+          is KotlinClassMetadata.MultiFileClassPart -> metadata.kmPackage.functions
           else -> null
         }.orEmpty()
         val jvmFunctionMap = kmFunctions.filter { it.signature != null }.associateBy { it.signature!! }

@@ -86,6 +86,8 @@ internal class NoVariantOutputPaths(private val project: Project) {
   val resolvedDepsPath = file("$ROOT_DIR/resolved-dependencies-report.txt")
   val resolvedAllLibsVersionsTomlPath = file("$ROOT_DIR/resolvedAllLibs.versions.toml")
   val mergedProjectGraphPath = file("$ROOT_DIR/merged-project-graph.json")
+  val aggregateTypeUsagePath = file("$ROOT_DIR/type-usage.json")
+  val publicTypesPath = file("$ROOT_DIR/public-types.json")
 
   /*
    * Advice-related tasks.
@@ -114,6 +116,8 @@ internal class RootOutputPaths(private val project: Project) {
   val allLibsVersionsTomlPath = file("$ROOT_DIR/allLibs.versions.toml")
   val shouldFailPath = file("$ROOT_DIR/should-fail.txt")
 
+  val publicTypeUsagePath = file("$ROOT_DIR/public-type-usage-report.json")
+  val publicTypeUsageConsolePath = file("$ROOT_DIR/public-type-usage-report.txt")
   val workPlanDir = dir("$ROOT_DIR/work-plan")
 }
 
@@ -141,3 +145,4 @@ public fun getAllLibsVersionsTomlPath(): String = "$ROOT_DIR/allLibs.versions.to
 public fun getResolvedDependenciesReport(): String = "$ROOT_DIR/resolved-dependencies-report.txt"
 public fun getResolvedVersionsTomlPath(): String = "$ROOT_DIR/resolvedAllLibs.versions.toml"
 public fun getTypeUsagePath(variantName: String = "main"): String = "$ROOT_DIR/$variantName/type-usage.json"
+public fun getPublicTypeUsagePath(): String = "$ROOT_DIR/public-type-usage-report.json"
