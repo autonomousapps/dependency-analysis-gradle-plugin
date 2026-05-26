@@ -43,6 +43,8 @@ internal class ProjectHealthConsoleReportBuilderTest {
           api("com.project.c:1.0")
           implementation("com.project.a:1.0")
         
+        To apply dependency advice automatically, run `./gradlew :magic:fixDependencies`.
+
         For help understanding this report, please ask in #my-cool-slack-channel
       """.trimIndent()
     )
@@ -72,6 +74,8 @@ internal class ProjectHealthConsoleReportBuilderTest {
           api projects.sadRobot1.corePublic2 (was implementation)
           implementation projects.marvin (was api)
         
+        To apply dependency advice automatically, run `./gradlew :dummy:fixDependencies`.
+
         For help understanding this report, please ask in #my-cool-slack-channel
       """.trimIndent()
     )
@@ -101,6 +105,8 @@ internal class ProjectHealthConsoleReportBuilderTest {
           api(projects.sadRobot.internal) (was implementation)
           implementation(projects.marvin) (was api)
         
+        To apply dependency advice automatically, run `./gradlew :dummy:fixDependencies`.
+
         For help understanding this report, please ask in #my-cool-slack-channel
       """.trimIndent()
     )
@@ -129,6 +135,8 @@ internal class ProjectHealthConsoleReportBuilderTest {
           implementation("com.project.b:1.0") (was api)
           implementation("com.project.c:1.0") (was api)
         
+        To apply dependency advice automatically, run `./gradlew :dummy:fixDependencies`.
+
         For help understanding this report, please ask in #my-cool-slack-channel
       """.trimIndent()
     )
@@ -157,6 +165,8 @@ internal class ProjectHealthConsoleReportBuilderTest {
           api("com.project.c:1.0")
           implementation("com.project.a:1.0")
         
+        To apply dependency advice automatically, run `./gradlew :dummy:fixDependencies`.
+
         For help understanding this report, please ask in #my-cool-slack-channel
       """.trimIndent()
     )

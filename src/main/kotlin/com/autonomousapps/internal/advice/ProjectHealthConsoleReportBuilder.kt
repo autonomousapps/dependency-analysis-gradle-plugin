@@ -129,6 +129,7 @@ internal class ProjectHealthConsoleReportBuilder(
 
       appendModuleAdvice()
       appendWarnings()
+      appendFixDependenciesHelp()
       appendPostscript()
     }.trimEnd()
   }
@@ -211,6 +212,24 @@ internal class ProjectHealthConsoleReportBuilder(
 
     maybeAppendTwoLines()
     appendReproducibleNewLine(postscript.colorize(Colors.BOLD))
+  }
+
+  private fun StringBuilder.appendFixDependenciesHelp() {
+    // Only dependency advice can be applied automatically by fixDependencies.
+    if (projectAdvice.dependencyAdvice.isEmpty()) return
+
+    maybeAppendTwoLines()
+    append(
+      "To apply dependency advice automatically, run `./gradlew ${projectAdvice.fixDependenciesTaskPath()}`."
+    )
+  }
+
+  private fun ProjectAdvice.fixDependenciesTaskPath(): String {
+    return when {
+      projectPath == ":" -> ":fixDependencies"
+      projectPath.startsWith(":") -> "$projectPath:fixDependencies"
+      else -> ":$projectPath:fixDependencies"
+    }
   }
 
   private fun Set<ModuleAdvice>.hasPrintableAdvice(): Boolean {
