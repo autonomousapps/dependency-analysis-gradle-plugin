@@ -7,6 +7,7 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.model.internal.ProjectVariant
+import com.autonomousapps.model.source.AndroidSourceKind
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
@@ -75,9 +76,12 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
     }
 
     fun duplicates(): Set<DuplicateClass> {
+      val isAndroid = project.sourceKind is AndroidSourceKind
       return duplicatesMap.asMap()
         // Find all class files provided by more than one dependency
         .filterValues { it.size > 1 }
+        // R classes are duplicated by design; ignore them on Android.
+        .filterKeys { !isAndroid || !isAndroidRClass(it) }
         // only warn about duplicates if it's about a class that's actually used.
         .filterKeys {
           val fqcn = it.replace('/', '.').removeSuffix(".class")
@@ -111,4 +115,13 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
         .forEach { duplicatesMap.put(it, coordinates) }
     }
   }
+}
+
+/**
+ * Returns true if [classFile] (a `/`-delimited class file name, e.g. `androidx/appcompat/R$id.class`) is an Android
+ * `R` class. Android generates `R` and nested `R$*` classes into every module, so they're never actionable duplicates.
+ */
+internal fun isAndroidRClass(classFile: String): Boolean {
+  val simpleName = classFile.removeSuffix(".class").substringAfterLast('/')
+  return simpleName == "R" || simpleName.startsWith("R$")
 }
