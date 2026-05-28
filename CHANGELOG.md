@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.14.0
+* [feat]: new ':publicTypeUsage' task.
+* [fix]: `AndroidScore` should ignore class files when testing if a project has source splits.
+
 # Version 3.13.0
 * [feat]: new `computeTypeUsage<variant>` task generates usage report.
 * [fix]: when computing actual usages, actually look at the runtime graph.
