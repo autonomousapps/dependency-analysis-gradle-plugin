@@ -87,6 +87,7 @@ internal interface DependencyAnalyzer {
     findDeclarationsTask: TaskProvider<FindDeclarationsTask>,
     synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
     synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
+    findServiceLoadersTask: TaskProvider<FindServiceLoadersTask>,
     duplicateClassesCompile: TaskProvider<DiscoverClasspathDuplicationTask>,
     duplicateClassesRuntime: TaskProvider<DiscoverClasspathDuplicationTask>,
   ): TaskProvider<ComputeUsagesTask>
@@ -255,6 +256,7 @@ internal abstract class AbstractDependencyAnalyzer(
     findDeclarationsTask: TaskProvider<FindDeclarationsTask>,
     synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
     synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
+    findServiceLoadersTask: TaskProvider<FindServiceLoadersTask>,
     duplicateClassesCompile: TaskProvider<DiscoverClasspathDuplicationTask>,
     duplicateClassesRuntime: TaskProvider<DiscoverClasspathDuplicationTask>
   ): TaskProvider<ComputeUsagesTask> {
@@ -268,6 +270,7 @@ internal abstract class AbstractDependencyAnalyzer(
       t.graphRuntime.set(graphViewTask.flatMap { it.outputRuntime })
       t.declarations.set(findDeclarationsTask.flatMap { it.output })
       t.dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
+      t.serviceLoaders.set(findServiceLoadersTask.flatMap { it.output })
       t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       t.kapt.set(isKaptApplied)
       t.duplicateClassesReports.add(duplicateClassesCompile.flatMap { it.output })
@@ -426,11 +429,9 @@ internal abstract class AbstractDependencyAnalyzer(
 
   final override fun registerFindServiceLoadersTask(): TaskProvider<FindServiceLoadersTask> {
     return project.tasks.register("serviceLoader$taskNameSuffix", FindServiceLoadersTask::class.java) { t ->
-      // TODO(tsr): consider this. Wouldn't the runtime classpath be more appropriate for this task? Separate PR to test.
-      //  it.setCompileClasspath(configurations.getByName(dependencyAnalyzer.runtimeConfigurationName).artifactsFor(dependencyAnalyzer.attributeValueJar))
-      t.setCompileClasspath(
+      t.setClasspath(
         project.configurations
-          .getByName(compileConfigurationName)
+          .getByName(runtimeConfigurationName)
           .artifactsFor(attributeValueJar)
       )
       t.output.set(outputPaths.serviceLoaderDependenciesPath)

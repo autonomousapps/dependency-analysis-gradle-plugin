@@ -16,6 +16,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.BufferedReader
@@ -34,14 +35,23 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
     description = "Produces a report of all dependencies that include Java ServiceLoaders"
   }
 
-  private lateinit var compileClasspath: ArtifactCollection
+  private lateinit var classpath: ArtifactCollection
 
-  public fun setCompileClasspath(artifacts: ArtifactCollection) {
-    this.compileClasspath = artifacts
+  public fun setClasspath(artifacts: ArtifactCollection) {
+    this.classpath = artifacts
   }
 
   @Classpath
-  public fun getCompileClasspath(): FileCollection = compileClasspath.artifactFiles
+  public fun getClasspath(): FileCollection = classpath.artifactFiles
+
+  @Deprecated("Use setClasspath() instead.", ReplaceWith("setClasspath(artifacts)"))
+  public fun setCompileClasspath(artifacts: ArtifactCollection) {
+    setClasspath(artifacts)
+  }
+
+  @Deprecated("Use getClasspath() instead.", ReplaceWith("getClasspath()"))
+  @Internal
+  public fun getCompileClasspath(): FileCollection = getClasspath()
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
@@ -49,10 +59,9 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
   @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
-    // TODO(tsr): there's a bug here. If a service loader is coming from another subproject in the same build, then
-    //  compileClasspath contains a directory that includes only class files. It doesn't not contain any resources
-    //  files, which is where the service loader definition would be.
-    val serviceLoaders = compileClasspath
+    // ServiceLoader providers are a runtime capability, so this scans runtime artifacts rather than compile artifacts.
+    // Project jars may include service resources that are absent from compile-time class directories.
+    val serviceLoaders = classpath
       .filterNonGradle()
       .filter { it.file.name.endsWith(".jar") }
       .flatMapToSet { findServiceLoaders(it) }
@@ -64,39 +73,39 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
   // 1. META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory
   // 2. META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler
   private fun findServiceLoaders(artifact: ResolvedArtifactResult): Set<ServiceLoaderDependency> {
-    val zip = ZipFile(artifact.file)
+    return ZipFile(artifact.file).use { zip ->
+      zip.entries().asSequence()
+        .filter { it.name.startsWith(SERVICE_LOADER_PATH) }
+        .filterNot { it.name.startsWith(ANNOTATION_PROCESSOR_PATH) }
+        .filterNot { it.isDirectory }
+        .mapNotNull { serviceFile ->
+          val providerClasses = zip.getInputStream(serviceFile)
+            .bufferedReader().use(BufferedReader::readLines).asSequence()
+            // remove whitespace
+            .map(String::trim)
+            // remove blank lines
+            .filterNot(String::isBlank)
+            // ignore comments
+            .filter { !it.startsWith("#") }
+            .toSortedSet()
 
-    return zip.entries().asSequence()
-      .filter { it.name.startsWith(SERVICE_LOADER_PATH) }
-      .filterNot { it.name.startsWith(ANNOTATION_PROCESSOR_PATH) }
-      .filterNot { it.isDirectory }
-      .mapNotNull { serviceFile ->
-        val providerClasses = zip.getInputStream(serviceFile)
-          .bufferedReader().use(BufferedReader::readLines).asSequence()
-          // remove whitespace
-          .map(String::trim)
-          // remove blank lines
-          .filterNot(String::isBlank)
-          // ignore comments
-          .filter { !it.startsWith("#") }
-          .toSortedSet()
-
-        // Unclear why this would ever be empty.
-        // See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/780
-        if (providerClasses.isNotEmpty()) {
-          ServiceLoaderDependency.newInstance(
-            providerFile = serviceFile.name.removePrefix(SERVICE_LOADER_PATH),
-            providerClasses = providerClasses,
-            artifact = artifact
-          )
-        } else {
-          val contents = zip.getInputStream(serviceFile).bufferedReader().use(BufferedReader::readText)
-          logger.debug(
-            "${artifact.file.name} has a services file at path ${serviceFile.name}, but there are no services! " +
-              "File contents:\n<<$contents>>"
-          )
-          null
-        }
-      }.toSortedSet()
+          // Unclear why this would ever be empty.
+          // See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/780
+          if (providerClasses.isNotEmpty()) {
+            ServiceLoaderDependency.newInstance(
+              providerFile = serviceFile.name.removePrefix(SERVICE_LOADER_PATH),
+              providerClasses = providerClasses,
+              artifact = artifact
+            )
+          } else {
+            val contents = zip.getInputStream(serviceFile).bufferedReader().use(BufferedReader::readText)
+            logger.debug(
+              "${artifact.file.name} has a services file at path ${serviceFile.name}, but there are no services! " +
+                "File contents:\n<<$contents>>"
+            )
+            null
+          }
+        }.toSortedSet()
+    }
   }
 }

@@ -4,7 +4,9 @@ package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.AdvancedReflectionProject
 import com.autonomousapps.jvm.projects.ImplRuntimeTestImplConfusionProject
+import com.autonomousapps.jvm.projects.ProjectServiceLoaderProject
 import com.autonomousapps.jvm.projects.ReflectionProject
+import com.autonomousapps.jvm.projects.RuntimeOnlyServiceLoaderProject
 import com.autonomousapps.jvm.projects.TransitiveRuntimeProject
 import com.autonomousapps.utils.Colors
 
@@ -45,6 +47,36 @@ final class RuntimeOnlySpec extends AbstractJvmSpec {
   def "transitive dependencies with runtime capabilities are added directly (#gradleVersion)"() {
     given:
     def project = new TransitiveRuntimeProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  def "runtime-only transitive service loader dependencies are added directly (#gradleVersion)"() {
+    given:
+    def project = new RuntimeOnlyServiceLoaderProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
+
+    where:
+    gradleVersion << gradleVersions()
+  }
+
+  def "project service loader dependencies are runtime-only (#gradleVersion)"() {
+    given:
+    def project = new ProjectServiceLoaderProject()
     gradleProject = project.gradleProject
 
     when:
