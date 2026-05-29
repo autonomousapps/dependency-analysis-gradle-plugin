@@ -69,12 +69,31 @@ public abstract class FindKotlinMagicTask @Inject constructor(
 
   @TaskAction
   public fun action() {
+    // Pass the shared cache content to the work action, which requires serializable data only
+    val cache = inMemoryCacheProvider.get()
+    val seed = artifacts.fromJsonList<PhysicalArtifact>()
+      .mapNotNull { artifact ->
+        val key = artifact.file.absolutePath
+        cache.kotlinCapabilities(key)?.let { key to it }
+      }
+      .toMap()
+
+    val seedFile = File(temporaryDir, "kotlin-magic-cache-seed.json").apply { bufferWriteJsonMap(seed) }
+    val newEntriesFile = File(temporaryDir, "kotlin-magic-cache-new.json")
+
     workerExecutor.noIsolation().submit(Action::class.java) {
       it.artifacts.set(artifacts)
       it.inlineUsageReport.set(outputInlineMembers)
       it.typealiasReport.set(outputTypealiases)
       it.errorsReport.set(outputErrors)
-      it.inMemoryCacheProvider.set(inMemoryCacheProvider)
+      it.cacheSeed.set(seedFile)
+      it.newCacheEntries.set(newEntriesFile)
+    }
+
+    // Block so we can merge the worker's results back into the shared cache.
+    workerExecutor.await()
+    newEntriesFile.fromJsonMap<String, KotlinCapabilities>().forEach { (key, capabilities) ->
+      cache.inlineMembers(key, capabilities)
     }
   }
 
@@ -83,7 +102,12 @@ public abstract class FindKotlinMagicTask @Inject constructor(
     public val inlineUsageReport: RegularFileProperty
     public val typealiasReport: RegularFileProperty
     public val errorsReport: RegularFileProperty
-    public val inMemoryCacheProvider: Property<InMemoryCache>
+
+    /** [`Map<String, KotlinCapabilities>`][KotlinCapabilities] of already-cached results, keyed by artifact path. */
+    public val cacheSeed: RegularFileProperty
+
+    /** [`Map<String, KotlinCapabilities>`][KotlinCapabilities] of cache misses, for the task to merge back. */
+    public val newCacheEntries: RegularFileProperty
   }
 
   public abstract class Action : WorkAction<Parameters> {
@@ -96,7 +120,7 @@ public abstract class FindKotlinMagicTask @Inject constructor(
       val errorsReport = parameters.errorsReport.getAndDelete()
 
       val finder = KotlinMagicFinder(
-        inMemoryCache = parameters.inMemoryCacheProvider.get(),
+        seedCache = parameters.cacheSeed.fromJsonMap(),
         artifacts = parameters.artifacts.fromJsonList<PhysicalArtifact>(),
         errorsReport = errorsReport,
       )
@@ -105,6 +129,8 @@ public abstract class FindKotlinMagicTask @Inject constructor(
 
       inlineUsageReportFile.bufferWriteJsonSet(inlineMembers)
       typealiasReportFile.bufferWriteJsonSet(typealiases)
+
+      parameters.newCacheEntries.getAndDelete().bufferWriteJsonMap(finder.newEntries)
 
       if (finder.didWriteErrors) {
         logger.warn("There were errors during inline member analysis. See ${errorsReport.toPath().toUri()}")
@@ -117,7 +143,7 @@ public abstract class FindKotlinMagicTask @Inject constructor(
 }
 
 internal class KotlinMagicFinder(
-  private val inMemoryCache: InMemoryCache,
+  private val seedCache: Map<String, KotlinCapabilities>,
   artifacts: List<PhysicalArtifact>,
   private val errorsReport: File,
 ) {
@@ -128,6 +154,9 @@ internal class KotlinMagicFinder(
   val inlineMembers: Set<InlineMemberDependency>
   val typealiases: Set<TypealiasDependency>
 
+  /** [KotlinCapabilities] computed during this run (cache misses), keyed by artifact path, to merge into the cache. */
+  val newEntries: MutableMap<String, KotlinCapabilities> = LinkedHashMap()
+
   init {
     val inlineMembersMut = mutableSetOf<InlineMemberDependency>()
     val typealiasesMut = mutableSetOf<TypealiasDependency>()
@@ -136,7 +165,9 @@ internal class KotlinMagicFinder(
       .filter {
         it.isJar() || it.containsClassFiles()
       }.map { artifact ->
-        artifact to findKotlinMagic(artifact, artifact.mode)
+        val key = artifact.file.absolutePath
+        val capabilities = seedCache[key] ?: findKotlinMagic(artifact, artifact.mode).also { newEntries[key] = it }
+        artifact to capabilities
       }.forEach { (artifact, capabilities) ->
         if (capabilities.inlineMembers.isNotEmpty()) {
           inlineMembersMut += InlineMemberDependency.newInstance(artifact.coordinates, capabilities.inlineMembers)
@@ -165,9 +196,6 @@ internal class KotlinMagicFinder(
    * TODO(tsr): docs for the TypeAliasCapability portion of this.
    */
   private fun findKotlinMagic(artifact: PhysicalArtifact, mode: Mode): KotlinCapabilities {
-    val cached = findInCache(artifact)
-    if (cached != null) return cached
-
     fun packageName(fileLike: String): String {
       return if (fileLike.contains('/')) {
         // entry is in a package
@@ -264,20 +292,7 @@ internal class KotlinMagicFinder(
       }
     }
 
-    val kotlinCapabilities = KotlinCapabilities(inlineMembers, typealiases)
-
-    // cache
-    putInCache(artifact, kotlinCapabilities)
-
-    return kotlinCapabilities
-  }
-
-  private fun findInCache(artifact: PhysicalArtifact): KotlinCapabilities? {
-    return inMemoryCache.kotlinCapabilities(artifact.file.absolutePath)
-  }
-
-  private fun putInCache(artifact: PhysicalArtifact, capabilities: KotlinCapabilities) {
-    inMemoryCache.inlineMembers(artifact.file.absolutePath, capabilities)
+    return KotlinCapabilities(inlineMembers, typealiases)
   }
 
   /** Returned set is either null or non-empty. */
