@@ -147,7 +147,6 @@ internal class RootPlugin(private val project: Project) {
       t.shouldFail.set(generateBuildHealthTask.flatMap { it.outputFail })
       t.buildHealth.set(generateBuildHealthTask.flatMap { it.output })
       t.consoleReport.set(generateBuildHealthTask.flatMap { it.consoleOutput })
-      t.sarifReport.set(generateBuildHealthTask.flatMap { it.sarifOutput })
       t.printBuildHealth.set(dagpExtension.reportingHandler.printBuildHealth.orElse(printBuildHealth()))
       t.postscript.set(dagpExtension.reportingHandler.postscript)
     }
