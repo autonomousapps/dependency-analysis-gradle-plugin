@@ -1178,6 +1178,7 @@ isKaptApplied = isKaptApplied().orElse(isLegacyKaptApplied()),
     val generateProjectHealthReport =
       tasks.register("generateConsoleReport", GenerateProjectHealthReportTask::class.java) { t ->
         t.projectAdvice.set(filterAdviceTask.flatMap { it.output })
+        t.sourcedProjectAdvice.set(filterAdviceTask.flatMap { it.sourcedOutput })
         t.projectMetadata.set(writeProjectMetadata.flatMap { it.output })
         t.reportingConfig.set(dagpExtension.reportingHandler.config())
         t.dslKind.set(DslKind.from(buildFile))
@@ -1185,6 +1186,11 @@ isKaptApplied = isKaptApplied().orElse(isLegacyKaptApplied()),
         t.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
         t.useParenthesesForGroovy.set(dagpExtension.dependenciesHandler.useParenthesesForGroovy)
         t.output.set(paths.consoleReportPath)
+        t.sarifOutput.set(
+          dagpExtension.reportingHandler.sarifReport.flatMap { sarifReportEnabled ->
+            if (sarifReportEnabled) paths.sarifReportPath else null
+          }
+        )
       }
 
     tasks.register("projectHealth", ProjectHealthTask::class.java) { t ->

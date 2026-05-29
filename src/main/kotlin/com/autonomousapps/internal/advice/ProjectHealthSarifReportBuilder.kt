@@ -3,6 +3,7 @@
 package com.autonomousapps.internal.advice
 
 import com.autonomousapps.model.SourcedProjectAdvice
+import com.autonomousapps.model.internal.ProjectMetadata
 import com.autonomousapps.model.internal.ProjectType
 import io.github.detekt.sarif4k.*
 
