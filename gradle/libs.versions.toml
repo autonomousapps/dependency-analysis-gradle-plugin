@@ -32,10 +32,9 @@ kotlinRuntime = "2.1.21"
 kotlinForAndroidtests = "2.2.21"
 kotlinMetadata = "2.2.21"
 kotlinDokka = "2.2.0"
-# Cannot be called kotlin-editor as it causes `libs.versions.kotlin.get()` to fail
 # Keep on a release built with Kotlin <= 2.1 (0.18 is the latest; 0.20 breaks Gradle 8.x). See kotlin* note above.
-kotlineditor-core = "0.18"
-kotlineditor-relocated = "0.18.0"
+kotlin-editor-core = "0.18"
+kotlin-editor-relocated = "0.18.0"
 # 0.36.0 requires JDK 17
 mavenPublish = "0.35.0"
 metalava = "1.0.0-alpha14"
@@ -70,9 +69,9 @@ junit-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 junit-params = { module = "org.junit.jupiter:junit-jupiter-params" }
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlinGradlePlugin" }
 kotlinDokkaGradlePlugin = { module = "org.jetbrains.dokka-javadoc:org.jetbrains.dokka-javadoc.gradle.plugin", version.ref = "kotlinDokka" }
-kotlin-editor-core = { module = "app.cash.kotlin-editor:core", version.ref = "kotlineditor-core" }
-kotlin-editor-grammar = { module = "app.cash.kotlin-editor:grammar", version.ref = "kotlineditor-core" }
-kotlin-editor-relocated = { module = "com.autonomousapps:kotlin-editor-relocated", version.ref = "kotlineditor-relocated" }
+kotlin-editor-core = { module = "app.cash.kotlin-editor:core", version.ref = "kotlin-editor-core" }
+kotlin-editor-grammar = { module = "app.cash.kotlin-editor:grammar", version.ref = "kotlin-editor-core" }
+kotlin-editor-relocated = { module = "com.autonomousapps:kotlin-editor-relocated", version.ref = "kotlin-editor-relocated" }
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinGradlePlugin" }
 kotlin-multiplatform-gradle = { module = "org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin", version.ref = "kotlinGradlePlugin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlinRuntime" }
