@@ -7,9 +7,7 @@ import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.internal.PhysicalArtifact
-import com.autonomousapps.services.InMemoryCache
 import com.google.common.truth.Truth.assertThat
-import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -45,7 +43,7 @@ internal class JarExploderTest {
     val exploder = JarExploder(
       artifacts = listOf(artifact),
       androidLinters = emptySet(),
-      inMemoryCache = newInMemoryCache(),
+      seedCache = emptyMap(),
     )
 
     // Must not throw — the future-versioned class is skipped rather than handed to ASM.
@@ -55,15 +53,6 @@ internal class JarExploderTest {
     val classNames = exploded.first().binaryClasses.map { it.className }
     assertThat(classNames).contains("com.example.Foo")
     assertThat(classNames).doesNotContain("com.example.Future")
-  }
-
-  private fun newInMemoryCache(): InMemoryCache {
-    val project = ProjectBuilder.builder().build()
-    return project.gradle.sharedServices
-      .registerIfAbsent("inMemoryCache", InMemoryCache::class.java) {
-        it.parameters.cacheSize.set(-1L)
-      }
-      .get()
   }
 
   private fun ZipOutputStream.writeEntry(name: String, bytes: ByteArray) {

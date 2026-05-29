@@ -7,7 +7,7 @@ package com.autonomousapps.services
 import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.Flags.cacheSize
 import com.autonomousapps.model.internal.intermediates.producer.AnnotationProcessorDependency
-import com.autonomousapps.model.internal.intermediates.ExplodingJar
+import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import com.autonomousapps.tasks.KotlinCapabilities
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -32,13 +32,13 @@ public abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
     return builder.build()
   }
 
-  private val explodingJars: Cache<String, ExplodingJar> = newCache()
+  private val explodedJars: Cache<String, ExplodedJar> = newCache()
   private val kotlinCapabilities: Cache<String, KotlinCapabilities> = newCache()
   private val procs: Cache<String, AnnotationProcessorDependency> = newCache()
 
-  internal fun explodedJar(name: String): ExplodingJar? = explodingJars.asMap()[name]
-  internal fun explodedJars(name: String, explodingJar: ExplodingJar) {
-    explodingJars.asMap().putIfAbsent(name, explodingJar)
+  internal fun explodedJar(name: String): ExplodedJar? = explodedJars.asMap()[name]
+  internal fun explodedJars(name: String, explodedJar: ExplodedJar) {
+    explodedJars.asMap().putIfAbsent(name, explodedJar)
   }
 
   internal fun kotlinCapabilities(name: String): KotlinCapabilities? = kotlinCapabilities.asMap()[name]
