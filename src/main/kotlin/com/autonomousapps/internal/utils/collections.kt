@@ -28,6 +28,44 @@ internal fun Sequence<ResolvedArtifactResult>.filterNonGradle() = filterNot {
   it.id.componentIdentifier is OpaqueComponentIdentifier
 }
 
+private val CURRENT_JVM_FEATURE_VERSION = Runtime.version().feature()
+
+/**
+ * Matches a multi-release JAR versioned entry, e.g. `META-INF/versions/25/com/example/Foo.class`,
+ * capturing the targeted Java major version (`25` in this example). See
+ * [JEP 238](https://openjdk.org/jeps/238).
+ */
+private val MULTI_RELEASE_VERSION_REGEX = Regex("""(?:^|/)META-INF/versions/(\d+)/""")
+
+/**
+ * Returns `true` if [entryName] is a class from a multi-release JAR version directory
+ * (`META-INF/versions/<N>/...`) where `<N>` is higher than the major Java version currently running
+ * the analysis ([CURRENT_JVM_FEATURE_VERSION]).
+ *
+ * Such classes cannot influence the analysis result and could cause issues with the bundled ASM version.
+ * See [issue #1692](https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1692).
+ */
+internal fun isUnsupportedMultiReleaseClass(
+  entryName: String,
+  currentJvmMajor: Int = CURRENT_JVM_FEATURE_VERSION,
+): Boolean {
+  val version = MULTI_RELEASE_VERSION_REGEX.find(entryName)
+    ?.groupValues?.get(1)
+    ?.toIntOrNull()
+    ?: return false
+  return version > currentJvmMajor
+}
+
+private fun String.isAnalyzableClassFileName(): Boolean {
+  return endsWith(".class") && !endsWith("module-info.class") && !isUnsupportedMultiReleaseClass(this)
+}
+
+private fun File.isAnalyzableClassFile(): Boolean {
+  return extension == "class" &&
+    !name.endsWith("module-info.class") &&
+    !isUnsupportedMultiReleaseClass(invariantSeparatorsPath)
+}
+
 /**
  * Transforms a [ZipFile] into a collection of [ZipEntry]s, which contains only class files (and not
  * the module-info.class file).
@@ -38,21 +76,21 @@ internal fun ZipFile.asClassFiles(): Set<ZipEntry> {
 
 internal fun ZipFile.asSequenceOfClassFiles(): Sequence<ZipEntry> {
   return entries().asSequence().filter {
-    it.name.endsWith(".class") && !it.name.endsWith("module-info.class")
+    it.name.isAnalyzableClassFileName()
   }
 }
 
 /** Filters a collection of [ZipEntry]s to contain only class files (and not the module-info.class file). */
 internal fun Iterable<ZipEntry>.filterToSetOfClassFiles(): Set<ZipEntry> {
   return filterToSet {
-    it.name.endsWith(".class") && !it.name.endsWith("module-info.class")
+    it.name.isAnalyzableClassFileName()
   }
 }
 
 /** Filters a collection of [ZipEntry]s to contain only class files (and not the module-info.class file). */
 internal fun Iterable<ZipEntry>.asSequenceOfClassFiles(): Sequence<ZipEntry> {
   return asSequence().filter {
-    it.name.endsWith(".class") && !it.name.endsWith("module-info.class")
+    it.name.isAnalyzableClassFileName()
   }
 }
 
@@ -67,12 +105,12 @@ internal fun Collection<File>.asSequenceOfClassFiles(): Sequence<File> {
 }
 
 internal fun Sequence<File>.filterToClassFiles(): Sequence<File> {
-  return filter { it.extension == "class" && !it.name.endsWith("module-info.class") }
+  return filter { it.isAnalyzableClassFile() }
 }
 
 
 internal fun Iterable<File>.filterToClassFiles(): List<File> {
-  return filter { it.extension == "class" && !it.name.endsWith("module-info.class") }
+  return filter { it.isAnalyzableClassFile() }
 }
 
 /** Filters a [FileCollection] to contain only class files. */
