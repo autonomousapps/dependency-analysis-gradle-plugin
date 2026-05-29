@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.subplugin
 
@@ -39,6 +39,7 @@ internal class RootPlugin(private val project: Project) {
     }
   }
 
+
   private val adviceResolver = interProjectResolver(
     project = project,
     artifactDescription = DagpArtifacts.Kind.PROJECT_HEALTH,
@@ -51,9 +52,21 @@ internal class RootPlugin(private val project: Project) {
     project = project,
     artifactDescription = DagpArtifacts.Kind.COMBINED_GRAPH,
   )
+  private val projectMetadataResolver = interProjectResolver(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.PROJECT_METADATA,
+  )
+  private val publicClassesResolver = interProjectResolver(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.PUBLIC_CLASSES,
+  )
   private val resolvedDepsResolver = interProjectResolver(
     project = project,
     artifactDescription = DagpArtifacts.Kind.RESOLVED_DEPS,
+  )
+  private val typeUsagesResolver = interProjectResolver(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.TYPE_USAGE,
   )
 
   fun apply() = project.run {
@@ -94,78 +107,82 @@ internal class RootPlugin(private val project: Project) {
   private fun Project.configureRootProject() {
     val paths = RootOutputPaths(this)
 
-    val computeDuplicatesTask = tasks.register("computeDuplicateDependencies", ComputeDuplicateDependenciesTask::class.java) {
-      it.resolvedDependenciesReports.setFrom(resolvedDepsResolver.artifactFilesProvider())
-      it.output.set(paths.duplicateDependenciesPath)
+    val computeDuplicatesTask =
+      tasks.register("computeDuplicateDependencies", ComputeDuplicateDependenciesTask::class.java) { t ->
+        t.resolvedDependenciesReports.setFrom(resolvedDepsResolver.artifactFilesProvider())
+        t.output.set(paths.duplicateDependenciesPath)
+      }
+
+    tasks.register("printDuplicateDependencies", PrintDuplicateDependenciesTask::class.java) { t ->
+      t.duplicateDependenciesReport.set(computeDuplicatesTask.flatMap { it.output })
     }
 
-    tasks.register("printDuplicateDependencies", PrintDuplicateDependenciesTask::class.java) {
-      it.duplicateDependenciesReport.set(computeDuplicatesTask.flatMap { it.output })
+    tasks.register("computeAllDependencies", ComputeAllDependenciesTask::class.java) { t ->
+      t.resolvedDependenciesReports.setFrom(resolvedDepsResolver.artifactFilesProvider())
+      t.output.set(paths.allLibsVersionsTomlPath)
     }
 
-    tasks.register("computeAllDependencies", ComputeAllDependenciesTask::class.java) {
-      it.resolvedDependenciesReports.setFrom(resolvedDepsResolver.artifactFilesProvider())
-      it.output.set(paths.allLibsVersionsTomlPath)
-    }
+    val generateBuildHealthTask = tasks.register("generateBuildHealth", GenerateBuildHealthTask::class.java) { t ->
+      t.projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      t.sourcedProjectHealthReports.setFrom(sourcedAdviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      t.projectMetadataReports.setFrom(projectMetadataResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      t.reportingConfig.set(dagpExtension.reportingHandler.config())
+      t.projectCount.set(allprojects.size)
+      t.dslKind.set(DslKind.from(buildFile))
+      t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
+      t.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
+      t.useParenthesesForGroovy.set(dagpExtension.dependenciesHandler.useParenthesesForGroovy)
 
-    val generateBuildHealthTask = tasks.register("generateBuildHealth", GenerateBuildHealthTask::class.java) {
-      it.projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
-      it.sourcedProjectHealthReports.setFrom(sourcedAdviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
-      it.reportingConfig.set(dagpExtension.reportingHandler.config())
-      it.projectCount.set(allprojects.size)
-      it.dslKind.set(DslKind.from(buildFile))
-      it.dependencyMap.set(dagpExtension.dependenciesHandler.map)
-      it.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
-
-      it.output.set(paths.buildHealthPath)
-      it.consoleOutput.set(paths.consoleReportPath)
-      it.outputFail.set(paths.shouldFailPath)
-      it.sarifOutput.set(
+      t.output.set(paths.buildHealthPath)
+      t.consoleOutput.set(paths.consoleReportPath)
+      t.outputFail.set(paths.shouldFailPath)
+      t.sarifOutput.set(
         dagpExtension.reportingHandler.sarifReport.flatMap { sarifReportEnabled ->
           if (sarifReportEnabled) paths.sarifReportPath else null
         }
       )
     }
 
-    tasks.register("buildHealth", BuildHealthTask::class.java) {
-      it.shouldFail.set(generateBuildHealthTask.flatMap { it.outputFail })
-      it.buildHealth.set(generateBuildHealthTask.flatMap { it.output })
-      it.consoleReport.set(generateBuildHealthTask.flatMap { it.consoleOutput })
-      it.sarifReport.set(generateBuildHealthTask.flatMap { it.sarifOutput })
-      it.printBuildHealth.set(dagpExtension.reportingHandler.printBuildHealth.orElse(printBuildHealth()))
-      it.postscript.set(dagpExtension.reportingHandler.postscript)
+    tasks.register("buildHealth", BuildHealthTask::class.java) { t ->
+      t.shouldFail.set(generateBuildHealthTask.flatMap { it.outputFail })
+      t.buildHealth.set(generateBuildHealthTask.flatMap { it.output })
+      t.consoleReport.set(generateBuildHealthTask.flatMap { it.consoleOutput })
+      t.sarifReport.set(generateBuildHealthTask.flatMap { it.sarifOutput })
+      t.printBuildHealth.set(dagpExtension.reportingHandler.printBuildHealth.orElse(printBuildHealth()))
+      t.postscript.set(dagpExtension.reportingHandler.postscript)
     }
 
-    tasks.register("generateWorkPlan", GenerateWorkPlan::class.java) {
-      it.buildPath.set(buildPath(combinedGraphResolver.internal.name))
-      it.combinedProjectGraphs.setFrom(combinedGraphResolver.internal.map { it.artifactsFor("json").artifactFiles })
-      it.outputDirectory.set(paths.workPlanDir)
+    val generatePublicTypeUsages =
+      tasks.register("generatePublicTypeUsages", GeneratePublicTypeUsageTask::class.java) { t ->
+        t.publicClassesReports.from(publicClassesResolver.internal.map { it.artifactsFor("json").artifactFiles })
+        t.typeUsageReports.from(typeUsagesResolver.internal.map { it.artifactsFor("json").artifactFiles })
+        t.output.set(paths.publicTypeUsagePath)
+        t.outputConsole.set(paths.publicTypeUsageConsolePath)
+      }
+
+    tasks.register("publicTypeUsage", PublicTypeUsageTask::class.java) { t ->
+      t.consoleReport.set(generatePublicTypeUsages.flatMap { it.outputConsole })
+    }
+
+    tasks.register(
+      "generateWorkP      it.sarifReport.set(generateBuildHealthTask.flatMap { it.sarifOutput })\nlan",
+      GenerateWorkPlan::class.java
+    ) { t ->
+      t.buildPath.set(buildPath(combinedGraphResolver.internal.name))
+      t.combinedProjectGraphs.setFrom(combinedGraphResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      t.outputDirectory.set(paths.workPlanDir)
     }
 
     // Add a dependency from the root project to all projects (including itself).
-    val combinedGraphPublisher = interProjectPublisher(
-      project = this,
-      artifactDescription = DagpArtifacts.Kind.COMBINED_GRAPH,
-    )
-    val projectHealthPublisher = interProjectPublisher(
-      project = this,
-      artifactDescription = DagpArtifacts.Kind.PROJECT_HEALTH,
-    )
-    val sourcedProjectHealthPublisher = interProjectPublisher(
-      project = this,
-      artifactDescription = DagpArtifacts.Kind.SOURCED_PROJECT_HEALTH,
-    )
-    val resolvedDependenciesPublisher = interProjectPublisher(
-      project = this,
-      artifactDescription = DagpArtifacts.Kind.RESOLVED_DEPS,
-    )
+    val publishers = DagpArtifacts.Kind.entries.map { kind ->
+      interProjectPublisher(this, kind)
+    }
 
     allprojects.forEach { p ->
       dependencies.let { d ->
-        d.add(combinedGraphPublisher.declarableName, d.project(mapOf("path" to p.path)))
-        d.add(projectHealthPublisher.declarableName, d.project(mapOf("path" to p.path)))
-        d.add(sourcedProjectHealthPublisher.declarableName, d.project(mapOf("path" to p.path)))
-        d.add(resolvedDependenciesPublisher.declarableName, d.project(mapOf("path" to p.path)))
+        publishers.forEach { publisher ->
+          d.add(publisher.declarableName, d.project(mapOf("path" to p.path)))
+        }
       }
     }
   }

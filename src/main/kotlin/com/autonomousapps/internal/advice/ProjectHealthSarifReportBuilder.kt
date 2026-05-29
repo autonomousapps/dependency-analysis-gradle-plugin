@@ -3,6 +3,7 @@
 package com.autonomousapps.internal.advice
 
 import com.autonomousapps.model.SourcedProjectAdvice
+import com.autonomousapps.model.internal.ProjectType
 import io.github.detekt.sarif4k.*
 
 internal class ProjectHealthSarifReportBuilder(
@@ -15,7 +16,7 @@ internal class ProjectHealthSarifReportBuilder(
 
   val sarif: SarifSchema210
 
-  private val advicePrinter = AdvicePrinter(dslKind, dependencyMap, useTypesafeProjectAccessors)
+  private val advicePrinter = AdvicePrinter(dslKind, ProjectType.JVM, dependencyMap, useTypesafeProjectAccessors)
 
   init {
     val pluginResults = projectAdvices.flatMap { projectAdvice ->

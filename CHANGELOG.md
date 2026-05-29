@@ -1,5 +1,75 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.14.0
+* [feat]: new ':publicTypeUsage' task.
+* [fix]: `AndroidScore` should ignore class files when testing if a project has source splits.
+
+# Version 3.13.0
+* [feat]: new `computeTypeUsage<variant>` task generates usage report.
+* [fix]: when computing actual usages, actually look at the runtime graph.
+* [refactor]: use Graphs wrapper instead of Guava directly.
+
+# Version 3.12.2
+* [fix]: The new "exceptions are special" (in v3.12.0) handling was over-eager and flagging things that only referenced 
+  exceptions. We only want to flag things that provide the exception types.
+* [fix]: `MutableSet<Usage>.simplify(visibility, bucket)` in `StandardTransform` wasn't properly handling the case when 
+  a usage was visible on both compile and runtime classpaths. In such a case, we can filter out all usages. 
+* [fix]: reason output said "implies implementation" when it should have been "implies runtimeOnly" in the android lint 
+  jar case.
+
+# Version 3.12.1
+* [fix]: don't suggest non-existent Android unit test variant in advice.
+
+# Version 3.12.0
+* [feat]: exceptions are special. Exceptions get verified early by the JVM and so if a dependency is missing an 
+  exception's type from the runtime classpath, that can cause failures in the consumer at runtime.
+
+# Version 3.11.0
+* [fix]: when following a bundle rule, don't drop `api` dependencies.
+
+# Version 3.10.0
+* [feat]: Gradle plugin markers are the preferred way to depend on a plugin.
+* [feat]: Gradle plugin markers are part of an implicit bundle.
+* [fix]: handle `dependencies` blocks that have a single line.
+* [docs]: add 'partial analysis' section to readme.
+
+# Version 3.9.0
+* (Reverted) Compiled against Kotlin 2.3.20. Compiling against Kotlin 2.2.21 again, with language level 2.2.
+
+# Version 3.8.0
+* [feat]: record lambda in binaryClassAccesses.
+* [feat]: support analysis of a Gradle version catalog dependency.
+* [feat]: remove unused 'file' property.
+* Compiled against Kotlin 2.3.20.
+
+# Version 3.7.0
+* [feat]: Expose useParenthesesForGroovy configuration for Groovy DSL syntax control.
+* [fix]: fix regex for excluding all *Generated annotations.
+* [fix]: don't attempt to suggest upgrading an undeclared 'parent' dependency of a KMP dependency.
+* [fix]: the 'androidMain' source set is special.
+* [chore]: Compiled against Kotlin 2.2 and Gradle 9.4.1.
+* [chore]: add Code of Conduct.
+
+# Version 3.6.1
+* [Fix]: use compilation.disambiguatedName for crafting the task suffix.
+
+# Version 3.6.0
+* [Breaking]: min version of Android Gradle Plugin (AGP) is now 8.10.0.
+* [Feat]: support KMP projects with JVM targets.
+* [Feat]: support KMP projects with Android targets.
+* [Feat]: update console report to be more idiomatic for KMP.
+* [Feat]: implement ABI inclusions filter.
+* [Feat]: add lifecycle `resolveExternalDependencies` task.
+* [Fix]: improve `Class.forName` handling.
+* [Fix]: remove dependency to `javax.inject`.
+* [Fix]: potential resource leak in `JarExploder`.
+* [Fix]: duplicate class detection for annotations.
+* [Fix]: use latest-kotlin editor.
+* [Refactor]: move two `public` types to an internal package to exclude from published api, and exclude the 
+  `com.autonomousapps.model.internal` package from the published api.
+* [Refactor]: moved a lot of task-registration code into `AbstractDependencyAnalyzer`.
+* [Docs]: add link to maven-hijack blog post.
+
 # Version 3.5.1
 * [Fix]: don't try to process a non-match as a binary incompatibility.
 * [Fix]: use version catalog when applying the build-health plugin.

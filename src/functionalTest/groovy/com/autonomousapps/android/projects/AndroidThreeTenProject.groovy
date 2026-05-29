@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -9,6 +9,7 @@ import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -41,8 +42,9 @@ final class AndroidThreeTenProject extends AbstractAndroidProject {
         s.styles = AndroidStyleRes.DEFAULT
         s.colors = AndroidColorRes.DEFAULT
         s.withBuildScript { bs ->
-          bs.plugins = androidAppWithKotlin
+          bs.plugins = androidApp(true)
           bs.android = defaultAndroidAppBlock()
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [
             kotlinStdLib('implementation'),
             appcompat('implementation'),

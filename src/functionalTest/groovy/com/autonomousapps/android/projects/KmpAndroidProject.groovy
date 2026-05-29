@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -6,6 +6,7 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -27,8 +28,9 @@ final class KmpAndroidProject extends AbstractAndroidProject {
         app.manifest = AndroidManifest.simpleApp()
         app.sources = sourcesConsumer
         app.withBuildScript { bs ->
+          bs.plugins = androidApp(true)
           bs.android = defaultAndroidAppBlock()
-          bs.plugins = androidAppWithKotlin
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [
             // The artifact that is actually used is foundation-android
             implementation('androidx.compose.foundation:foundation:1.6.0-alpha06')

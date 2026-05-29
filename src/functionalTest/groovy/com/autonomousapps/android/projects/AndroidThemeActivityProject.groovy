@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -29,11 +29,12 @@ final class AndroidThemeActivityProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
-          bs.plugins = androidAppPlugin
+          bs.plugins = androidApp(false)
           bs.android = defaultAndroidAppBlock(false, 'com.consumer')
-          bs.dependencies = [
+          bs.dependencies(
             project('implementation', ':producer'),
-          ]
+            appcompat('implementation'),
+          )
         }
         consumer.styles = AndroidStyleRes.EMPTY
         consumer.manifest = AndroidManifest.of(
@@ -41,8 +42,7 @@ final class AndroidThemeActivityProject extends AbstractAndroidProject {
           <?xml version="1.0" encoding="utf-8"?>
           <manifest
             xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools"
-            package="com.consumer">
+            xmlns:tools="http://schemas.android.com/tools">
             <application>
               <activity
                 android:name=".MainActivity"
@@ -65,15 +65,14 @@ final class AndroidThemeActivityProject extends AbstractAndroidProject {
           )
         ]
       }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('producer') { producer ->
         producer.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
-          bs.dependencies = [
-            appcompat('implementation'),
-          ]
+          bs.dependencies(appcompat('implementation'))
         }
-        producer.manifest = AndroidManifest.defaultLib('com.example.producer')
+        producer.manifest = null
         producer.styles = AndroidStyleRes.of(
           '''\
           <?xml version="1.0" encoding="utf-8"?>
@@ -90,6 +89,5 @@ final class AndroidThemeActivityProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  final Set<ProjectAdvice> expectedBuildHealth =
-    emptyProjectAdviceFor(':consumer', ':producer')
+  final Set<ProjectAdvice> expectedBuildHealth = emptyProjectAdviceFor(':consumer', ':producer')
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.kotlin
 
@@ -66,10 +66,10 @@ internal fun getBinaryAPI(
       with(clazz) {
         val metadata = kotlinMetadata
 
-        val kmFunctions = when (val md = metadata) {
-          is KotlinClassMetadata.Class -> md.kmClass.functions
-          is KotlinClassMetadata.FileFacade -> md.kmPackage.functions
-          is KotlinClassMetadata.MultiFileClassPart -> md.kmPackage.functions
+        val kmFunctions = when (metadata) {
+          is KotlinClassMetadata.Class -> metadata.kmClass.functions
+          is KotlinClassMetadata.FileFacade -> metadata.kmPackage.functions
+          is KotlinClassMetadata.MultiFileClassPart -> metadata.kmPackage.functions
           else -> null
         }.orEmpty()
         val jvmFunctionMap = kmFunctions.filter { it.signature != null }.associateBy { it.signature!! }
@@ -161,6 +161,14 @@ internal fun List<ClassBinarySignature>.filterOutNonPublic(
 ): List<ClassBinarySignature> {
   val classByName = associateBy { it.name }
 
+  fun ClassBinarySignature.isIncluded(): Boolean {
+    return exclusions.includeAll() ||
+      exclusions.includesClass(canonicalName) ||
+      annotations.any(exclusions::includesAnnotation) ||
+      invisibleAnnotations.any(exclusions::includesAnnotation) ||
+      memberSignatures.any { it.annotations.any(exclusions::includesAnnotation) }
+  }
+
   // Library note - this function (plus the exclusions parameter above) are modified from the original
   // Kotlin sources this was borrowed from.
   fun ClassBinarySignature.isExcluded(): Boolean {
@@ -196,7 +204,7 @@ internal fun List<ClassBinarySignature>.filterOutNonPublic(
   }
 
   return filter {
-    !it.isExcluded() && it.isPublicAndAccessible()
+    it.isIncluded() && !it.isExcluded() && it.isPublicAndAccessible()
   }.map {
     it.flattenNonPublicBases()
   }.filterNot {

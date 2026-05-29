@@ -51,22 +51,24 @@ import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
 
 class ProducerPlugin : Plugin<Project> {
   override fun apply(target: Project): Unit = target.run {
-    val publisher = interProjectPublisher(
+    val publisher = interProjectPublisher( <1>
       project = this,
       artifactDescription = MyArtifacts.Kind.PROJECT_PATH,
     )
 
-    val publishPath = tasks.register("publishPath". PublishTask::class.java) { t ->
+    val publishPath = tasks.register("publishPath", PublishTask::class.java) { t -> <2>
       t.projectPath.set(target.path)
       t.output.set(layout.buildDirectory.file("path.txt"))
     }
 
-    publisher.publish(publishPath.flatMap { it.output })
+    publisher.publish(publishPath.flatMap { it.output }) <3>
   }
 }
 
+@CacheableTask
 abstract class PublishTask : DefaultTask() {
 
+  @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:Input
   abstract val projectPath: Property<String>
 
@@ -78,6 +80,10 @@ abstract class PublishTask : DefaultTask() {
   }
 }
 ----
+
+<1> Create the Publisher.
+<2> Register the task whose outputs you want to aggregate.
+<3> "Publish" that task's outputs via the (inter-project) Publisher.
 
 === Consumer-side (aggregator)
 
@@ -91,18 +97,29 @@ import com.autonomousapps.artifacts.Resolver.Companion.interProjectResolver
 
 class ConsumerPlugin : Plugin<Project> {
   override fun apply(target: Project): Unit = target.run {
-    val resolver = interProjectResolver(
+    val resolver = interProjectResolver( <1>
       project = this,
       artifactDescription = MyArtifacts.Kind.PROJECT_PATH,
     )
 
-    tasks.register("aggregate", AggregationTask::class.java) { t ->
+    tasks.register("aggregate", AggregationTask::class.java) { t -> <2>
       t.inputFiles.setFrom(resolver.artifactFilesProvider())
       t.output.set(layout.buildDirectory.file("paths.txt"))
     }
+
+    subprojects <3>
+      .asSequence()
+      .map { it.isolated } // Get the IsolatedProject view to ensure safe access
+      .forEach { p ->
+        dependencies.add(
+          resolver.declarable.name,
+          dependencies.project(mapOf("path" to p.path)),
+        )
+      }
   }
 }
 
+@CacheableTask
 abstract class AggregationTask : DefaultTask() {
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -121,7 +138,12 @@ abstract class AggregationTask : DefaultTask() {
 }
 ----
 
-We need to declare the dependencies.
+<1> Create the Resolver.
+<2> Register the aggregating task.
+<3> Optionally declare a dependency from the aggregating project on all of its subprojects. This is particularly useful
+    if the aggregating project is the root project and you want it to aggregate information across _all_ subprojects.
+
+We can also declare dependencies in the consumer's build script in an ad hoc way:
 
 .consumer.build.gradle.kts
 [source,kotlin]
@@ -131,9 +153,11 @@ plugins {
 }
 
 dependencies {
-  "projectPath"(project(":producer"))
+  "projectPath"(project(":producer")) <1>
 }
 ----
+<1> This configuration name is derived from the `MyArtifacts.Kind` enum value. E.g., `Kind.PROJECT_PATH` creates a
+    configuration named `"projectPath"`.
 
 And finally, the `ArtifactDescription` which defines the contract between producer and consumer.
 

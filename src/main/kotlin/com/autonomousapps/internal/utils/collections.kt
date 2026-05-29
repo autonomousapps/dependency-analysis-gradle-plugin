@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.utils
 
@@ -56,10 +56,20 @@ internal fun Iterable<ZipEntry>.asSequenceOfClassFiles(): Sequence<ZipEntry> {
   }
 }
 
+internal fun File.asSequenceOfClassFiles(): Sequence<File> {
+  check(isDirectory) { "Expected directory. Was '${absolutePath}'" }
+  return walkBottomUp().filter { it.isFile }.filterToClassFiles()
+}
+
 // Can't use Iterable<File> because of signature clash with Iterable<ZipEntry> above.
 internal fun Collection<File>.asSequenceOfClassFiles(): Sequence<File> {
-  return asSequence().filter { it.extension == "class" && !it.name.endsWith("module-info.class") }
+  return asSequence().filterToClassFiles()
 }
+
+internal fun Sequence<File>.filterToClassFiles(): Sequence<File> {
+  return filter { it.extension == "class" && !it.name.endsWith("module-info.class") }
+}
+
 
 internal fun Iterable<File>.filterToClassFiles(): List<File> {
   return filter { it.extension == "class" && !it.name.endsWith("module-info.class") }
@@ -134,6 +144,40 @@ internal inline fun <T, R : Any> Iterable<T>.mapNotNullToSet(transform: (T) -> R
 
 internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (T) -> R?): Set<R> {
   return mapNotNullTo(TreeSet(), transform)
+}
+
+internal inline fun <T, R : Any, V : Any> Iterable<T>.mapSecondNotNull(
+  transform: (T) -> Pair<R, V?>
+): List<Pair<R, V>> {
+  return mapNotNull {
+    val pair = transform(it)
+    if (pair.second != null) {
+      @Suppress("UNCHECKED_CAST")
+      pair as Pair<R, V>
+    } else {
+      null
+    }
+  }
+}
+
+internal inline fun <T, R : Any, V : Any> Sequence<T>.mapSecondNotNull(
+  crossinline transform: (T) -> Pair<R, V?>
+): Sequence<Pair<R, V>> {
+  return mapNotNull {
+    val pair = transform(it)
+    if (pair.second != null) {
+      @Suppress("UNCHECKED_CAST")
+      pair as Pair<R, V>
+    } else {
+      null
+    }
+  }
+}
+
+internal inline fun <T : Any, K : Any, V : Any> Sequence<T>.associateNotNull(
+  crossinline transform: (T) -> Pair<K, V>?
+): Map<K, V> {
+  return mapNotNull { transform(it) }.toMap()
 }
 
 /**

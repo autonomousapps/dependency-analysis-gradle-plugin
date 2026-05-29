@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -7,6 +7,7 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.android.TestFixturesOptions
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -41,10 +42,11 @@ final class TestFixturesUnusedDependencyProject extends AbstractAndroidProject {
         s.sources = libWithFixturesSources
         s.manifest = libraryManifest('lib.with.fixtures')
         s.withBuildScript { bs ->
-          bs.plugins = androidLibWithKotlin
+          bs.plugins = androidLib(true)
           bs.android = defaultAndroidLibBlock(true).tap {
             testFixturesOptions = new TestFixturesOptions(true)
           }
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [
             project("implementation", ":lib-test-utils"),
             project("testFixturesImplementation", ":lib-test-utils")

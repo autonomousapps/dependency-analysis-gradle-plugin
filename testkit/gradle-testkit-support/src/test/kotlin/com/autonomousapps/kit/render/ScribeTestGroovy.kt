@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.render
 
@@ -6,6 +6,8 @@ import com.autonomousapps.kit.GradleProject.DslKind
 import com.autonomousapps.kit.gradle.*
 import com.autonomousapps.kit.gradle.Dependency.Companion.implementation
 import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.gradle.android.CompileOptions
+import com.autonomousapps.kit.gradle.android.DefaultConfig
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -58,7 +60,11 @@ internal class ScribeTestGroovy {
     @Test fun `can render dependencyResolutionManagement block`() {
       // Given
       val repositories = Repositories(Repository.GOOGLE, Repository.MAVEN_CENTRAL)
-      val dependencyResolutionManagement = DependencyResolutionManagement(repositories)
+      val dependencyResolutionManagement = DependencyResolutionManagement.Builder()
+        .withRepositories(repositories)
+        .withRepositoriesMode(DependencyResolutionManagement.RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+        .withVersionCatalogs(VersionCatalogs.of(VersionCatalog("myLibs", "my-libs.versions.toml")))
+        .build()
 
       // When
       val text = dependencyResolutionManagement.render(scribe)
@@ -66,14 +72,20 @@ internal class ScribeTestGroovy {
       // Then
       assertThat(text).isEqualTo(
         """
-        dependencyResolutionManagement {
-          repositories {
-            google()
-            mavenCentral()
-          }
-        }
-        
-      """.trimIndent()
+          |dependencyResolutionManagement {
+          |  repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+          |  repositories {
+          |    google()
+          |    mavenCentral()
+          |  }
+          |  versionCatalogs {
+          |    myLibs {
+          |      from(files("my-libs.versions.toml"))
+          |    }
+          |  }
+          |}
+          |
+        """.trimMargin()
       )
     }
 
@@ -456,7 +468,10 @@ internal class ScribeTestGroovy {
       val version = "1.0"
       val dependencies = Dependencies(Dependency("api", ":magic"))
       val androidBlock = AndroidBlock(
-        namespace = "ankh.morpork"
+        namespace = "ankh.morpork",
+        compileSdkVersion = 34,
+        defaultConfig = DefaultConfig.DEFAULT_APP,
+        compileOptions = CompileOptions.DEFAULT,
       )
 
       val buildScript = BuildScript(
@@ -509,7 +524,7 @@ internal class ScribeTestGroovy {
             compileSdkVersion 34
             defaultConfig {
               applicationId 'com.example'
-              minSdkVersion 21
+              minSdkVersion 23
               targetSdkVersion 29
               versionCode 1
               versionName '1.0'
@@ -565,7 +580,7 @@ internal class ScribeTestGroovy {
             compileSdkVersion 34
             defaultConfig {
               applicationId 'com.example'
-              minSdkVersion 21
+              minSdkVersion 23
               targetSdkVersion 29
               versionCode 1
               versionName '1.0'

@@ -1,10 +1,11 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -37,11 +38,12 @@ final class AndroidAssetMutationProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
-      .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib') { lib ->
         lib.manifest = libraryManifest('com.example.lib')
         lib.withBuildScript { bs ->
-          bs.plugins(Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion)
+          bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(
             implementation(':assets'),
             commonsCollections('implementation'),
@@ -50,9 +52,9 @@ final class AndroidAssetMutationProject extends AbstractAndroidProject {
         }
         lib.sources = sources
       }
-      .withAndroidLibProject('assets', 'com.example.lib.assets') { assets ->
+      .withAndroidLibProject('assets') { assets ->
         assets.withBuildScript { bs ->
-          bs.plugins(Plugins.androidLib, Plugins.dependencyAnalysisNoVersion)
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')
         }
         assets.manifest = libraryManifest('com.example.lib.assets')

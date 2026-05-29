@@ -1,11 +1,12 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.gradle.Kotlin
+import com.autonomousapps.kit.gradle.JvmToolchain
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
@@ -26,10 +27,11 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
-      .withAndroidLibProject('consumer', 'com.example.consumer') { l ->
+      .withAndroidLibProject('consumer') { l ->
         l.withBuildScript { bs ->
-          bs.plugins = androidLibWithKotlin
+          bs.plugins = androidLib(true)
           bs.android = defaultAndroidLibBlock(true, 'com.example.consumer')
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [
             project('implementation', ':producer')
           ]
@@ -39,7 +41,9 @@ final class AndroidToJvmInlineProject extends AbstractAndroidProject {
       .withSubproject('producer') { l ->
         l.withBuildScript { bs ->
           bs.plugins = [Plugins.kotlinJvmNoVersion, Plugins.dependencyAnalysisNoVersion]
-          bs.kotlin = Kotlin.DEFAULT
+          bs.kotlinKmp { k ->
+            k.jvmToolchain = JvmToolchain.DEFAULT
+          }
         }
         l.sources = producerSources
       }

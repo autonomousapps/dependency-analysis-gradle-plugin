@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -7,7 +7,9 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -32,6 +34,8 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withRootProject { root ->
         root.withBuildScript { bs ->
+          bs.plugins += rootKapt
+
           if (excludeDataBinderMapper) {
             bs.withGroovy("""\
             dependencyAnalysis {
@@ -46,27 +50,20 @@ final class DataBindingUsagesExclusionsProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
-          bs.plugins = [
-            Plugins.androidApp,
-            Plugins.kotlinAndroidNoVersion,
-            Plugins.dependencyAnalysisNoVersion,
-          ]
+          bs.plugins(androidApp())
           bs.android = defaultAndroidAppBlock(true, 'com.example.app')
-          bs.dependencies = appDependencies
+          bs.kotlin = Kotlin.DEFAULT
+          bs.dependencies(appDependencies)
           bs.withGroovy('android.buildFeatures.dataBinding true')
         }
-        app.manifest = AndroidManifest.defaultLib('com.example.app')
+        app.manifest = AndroidManifest.appEmpty()
         app.sources = appSources
       }
-      .withAndroidLibProject('lib', 'com.example.lib') { lib ->
+      .withAndroidLibProject('lib') { lib ->
         lib.withBuildScript { bs ->
-          bs.plugins = [
-            Plugins.androidLib,
-            Plugins.kotlinAndroidNoVersion,
-            Plugins.kotlinKaptNoVersion,
-            Plugins.dependencyAnalysisNoVersion,
-          ]
+          bs.plugins(androidLib() + kapt())
           bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
+          bs.kotlin = Kotlin.DEFAULT
           bs.withGroovy('android.buildFeatures.dataBinding true')
         }
         lib.sources = libSources

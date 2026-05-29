@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.visitor
 
@@ -19,6 +19,7 @@ internal interface GraphViewVisitor {
     val project: ProjectVariant
     val dependencies: Set<Dependency>
     val graph: DependencyGraphView
+    val graphRuntime: DependencyGraphView
     val declarations: Set<Declaration>
     val duplicateClasses: Set<DuplicateClass>
 

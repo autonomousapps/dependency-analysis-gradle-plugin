@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage")
 
@@ -12,6 +12,7 @@ import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.model.internal.ProjectMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
@@ -35,6 +36,10 @@ public abstract class GenerateProjectHealthReportTask @Inject constructor(
   @get:InputFile
   public abstract val projectAdvice: RegularFileProperty
 
+  @get:PathSensitive(PathSensitivity.NONE)
+  @get:InputFile
+  public abstract val projectMetadata: RegularFileProperty
+
   // TODO(tsr): this shouldn't be a Property for Complicated Reasons
   @get:Nested
   public abstract val reportingConfig: Property<ReportingHandler.Config>
@@ -48,26 +53,33 @@ public abstract class GenerateProjectHealthReportTask @Inject constructor(
   @get:Input
   public abstract val useTypesafeProjectAccessors: Property<Boolean>
 
+  @get:Input
+  public abstract val useParenthesesForGroovy: Property<Boolean>
+
   @get:OutputFile
   public abstract val output: RegularFileProperty
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ProjectHealthAction::class.java) {
       it.advice.set(projectAdvice)
+      it.projectMetadata.set(projectMetadata)
       it.reportingConfig.set(reportingConfig)
       it.dslKind.set(dslKind)
       it.dependencyMap.set(dependencyMap)
       it.useTypesafeProjectAccessors.set(useTypesafeProjectAccessors)
+      it.useParenthesesForGroovy.set(useParenthesesForGroovy)
       it.output.set(output)
     }
   }
 
   public interface ProjectHealthParameters : WorkParameters {
     public val advice: RegularFileProperty
+    public val projectMetadata: RegularFileProperty
     public val reportingConfig: Property<ReportingHandler.Config>
     public val dslKind: Property<DslKind>
     public val dependencyMap: MapProperty<String, String>
     public val useTypesafeProjectAccessors: Property<Boolean>
+    public val useParenthesesForGroovy: Property<Boolean>
     public val output: RegularFileProperty
   }
 
@@ -77,12 +89,16 @@ public abstract class GenerateProjectHealthReportTask @Inject constructor(
       val output = parameters.output.getAndDelete()
 
       val projectAdvice = parameters.advice.fromJson<ProjectAdvice>()
+      val projectMetadata = parameters.projectMetadata.fromJson<ProjectMetadata>()
+
       val consoleText = ProjectHealthConsoleReportBuilder(
         projectAdvice = projectAdvice,
+        projectMetadata = projectMetadata,
         postscript = parameters.reportingConfig.get().getEffectivePostscript(projectAdvice.shouldFail),
         dslKind = parameters.dslKind.get(),
         dependencyMap = parameters.dependencyMap.get().toLambda(),
         useTypesafeProjectAccessors = parameters.useTypesafeProjectAccessors.get(),
+        useParenthesesForGroovy = parameters.useParenthesesForGroovy.get(),
       ).text
 
       output.writeText(consoleText)

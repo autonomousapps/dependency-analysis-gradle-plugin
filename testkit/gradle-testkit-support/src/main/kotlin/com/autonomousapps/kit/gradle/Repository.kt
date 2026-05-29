@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle
 
@@ -34,19 +34,21 @@ public sealed class Repository : Element.Line {
   }
 
   private data class Url(private val repoUrl: String) : Repository() {
-    override fun render(scribe: Scribe): String = scribe.line { s ->
+    override fun render(scribe: Scribe): String = when (scribe.dslKind) {
+      DslKind.GROOVY -> renderGroovy(scribe)
+      DslKind.KOTLIN -> renderKotlin(scribe)
+    }
+
+    private fun renderGroovy(scribe: Scribe): String = scribe.line { s ->
       s.append("maven { url = ")
-
-      // TODO(tsr): model
-      if (scribe.dslKind == DslKind.KOTLIN) {
-        s.append("uri(")
-      }
       s.appendQuoted(repoUrl)
-      if (scribe.dslKind == DslKind.KOTLIN) {
-        s.append(")")
-      }
-
       s.append(" }")
+    }
+
+    private fun renderKotlin(scribe: Scribe): String = scribe.line { s ->
+      s.append("maven(url = ")
+      s.appendQuoted(repoUrl)
+      s.append(")")
     }
   }
 

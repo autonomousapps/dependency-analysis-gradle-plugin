@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
@@ -62,38 +62,36 @@ internal class JarExploder(
 
     val visitors = when (mode) {
       Mode.ZIP -> {
-        val zip = ZipFile(artifact.file)
-        ktFiles = KtFile.fromZip(zip)
+        ZipFile(artifact.file).use { zip ->
+          ktFiles = KtFile.fromZip(zip)
 
-        zip.asSequenceOfClassFiles()
-          .map { classEntry ->
-            ClassNameAndAnnotationsVisitor(logger).apply {
-              val reader = zip.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
-              reader.accept(this, 0)
-            }
-          }
+          zip.asSequenceOfClassFiles()
+            .map { classEntry ->
+              ClassNameAndAnnotationsVisitor(logger).apply {
+                val reader = zip.getInputStream(classEntry).use { ClassReader(it.readBytes()) }
+                reader.accept(this, 0)
+              }
+            }.toList()
+        }
       }
 
       Mode.CLASSES -> {
         ktFiles = KtFile.fromDirectory(artifact.file)
 
-        artifact.file.walkBottomUp()
-          .filter { it.isFile && it.name.endsWith(".class") }
+        artifact.file.asSequenceOfClassFiles()
           .map { classFile ->
             ClassNameAndAnnotationsVisitor(logger).apply {
               val reader = classFile.inputStream().use { ClassReader(it.readBytes()) }
               reader.accept(this, 0)
             }
-          }
+          }.toList()
       }
     }
 
     val analyzedClasses = visitors.map { it.getAnalyzedClass() }
-      .filterNot {
-        // Filter out `java` packages, but not `javax`
-        it.className.startsWith("java.")
-      }
-      .toSortedSet()
+      // Filter out `java` packages, but not `javax`
+      .filterNot { it.className.startsWith("java.") }
+      .toSet()
 
     return ExplodingJar(
       analyzedClasses = analyzedClasses,

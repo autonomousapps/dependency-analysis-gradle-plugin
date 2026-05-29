@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
@@ -61,9 +61,10 @@ public abstract class GenerateWorkPlan : DefaultTask() {
     )
     val graphBuilder = newGraphBuilder<Coordinates>()
     combinedGraph.roots()
+      // No need for an edge to itself
       .filterNot { it.identifier == ":" }
-      .forEach { root ->
-        graphBuilder.putEdge(ProjectCoordinates(":", GradleVariantIdentification.EMPTY), root)
+      .forEach { otherRoot ->
+        graphBuilder.putEdge(rootProject, otherRoot)
       }
     val finalGraph = graphBuilder.build() + combinedGraph
 

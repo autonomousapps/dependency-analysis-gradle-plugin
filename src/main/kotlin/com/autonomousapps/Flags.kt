@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage", "SameParameterValue")
 
@@ -6,6 +6,7 @@ package com.autonomousapps
 
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.provider.Provider
 import java.util.*
 
 public object Flags {
@@ -85,8 +86,10 @@ public object Flags {
     }
   }
 
-  internal fun Project.checkBinaryCompat(): Boolean {
-    return getGradlePropForConfiguration(CHECK_BINARY_COMPAT, true)
+  internal fun Project.checkBinaryCompat(): Provider<Boolean> {
+    return providers.gradleProperty(CHECK_BINARY_COMPAT)
+      .map { it.toBoolean() }
+      .orElse(true)
   }
 
   private fun Project.getGradleOrSysProp(name: String, default: Boolean): Boolean {

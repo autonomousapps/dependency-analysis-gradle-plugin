@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -7,6 +7,7 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.*
 
@@ -25,29 +26,29 @@ final class KaptProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withRootProject { root ->
         root.withBuildScript { bs ->
+          bs.plugins += rootKapt
           bs.withGroovy("""
-          dependencyAnalysis {
-            issues {
-              all {
-                onRedundantPlugins {
-                  severity('fail')
-                  exclude('kotlin-kapt')
+            dependencyAnalysis {
+              issues {
+                all {
+                  onRedundantPlugins {
+                    severity('fail')
+                    exclude('kotlin-kapt', 'com.android.legacy-kapt')
+                  }
                 }
               }
             }
-          }
-        """)
+          """)
         }
       }
       .withAndroidSubproject('lib') { a ->
         a.sources = sources
         a.manifest = libraryManifest()
         a.withBuildScript { bs ->
-          bs.plugins =
-            [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.kotlinKaptNoVersion, Plugins
-              .dependencyAnalysisNoVersion]
+          bs.plugins(androidLib(true) + kapt())
           bs.android = defaultAndroidLibBlock(true)
-          bs.dependencies = dependencies
+          bs.kotlin = Kotlin.DEFAULT
+          bs.dependencies(dependencies)
         }
       }.write()
   }
@@ -66,6 +67,6 @@ final class KaptProject extends AbstractAndroidProject {
   private List<Dependency> dependencies = [
     appcompat("implementation"),
     dagger("androidTestImplementation"),
-    daggerCompiler("kaptAndroidTest")
+    daggerCompiler("kaptAndroidTest"),
   ]
 }

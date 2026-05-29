@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.parse
 
@@ -11,11 +11,18 @@ import com.autonomousapps.internal.grammar.SimpleParser
 import java.io.File
 import java.io.FileInputStream
 
+// nb: the "cannot access..." IDE error is incorrect. It's failing at something to do with shaded packages yet again.
 internal class SourceListener : SimpleBaseListener() {
 
+  private var packageDeclaration: String? = null
   private val imports = mutableSetOf<String>()
 
+  fun packageDeclaration(): String? = packageDeclaration
   fun imports(): Set<String> = imports
+
+  override fun enterPackageDeclaration(ctx: SimpleParser.PackageDeclarationContext?) {
+    packageDeclaration = ctx?.qualifiedName()?.text
+  }
 
   override fun enterImportDeclaration(ctx: SimpleParser.ImportDeclarationContext) {
     val qualifiedName = ctx.qualifiedName().text
@@ -29,10 +36,15 @@ internal class SourceListener : SimpleBaseListener() {
   }
 
   internal companion object {
+    fun parseSourceFile(file: File): SourceListener {
+      val parser = newSimpleParser(file)
+      return walkTree(parser)
+    }
+
     fun parseSourceFileForImports(file: File): Set<String> {
       val parser = newSimpleParser(file)
-      val importListener = walkTree(parser)
-      return importListener.imports()
+      val sourceListener = walkTree(parser)
+      return sourceListener.imports()
     }
 
     private fun newSimpleParser(file: File): SimpleParser {

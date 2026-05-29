@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
@@ -15,31 +15,27 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
 
   protected ProjectDirProvider androidProject = null
 
-  protected static final AGP_8_4 = AgpVersion.version('8.4.2')
-  protected static final AGP_8_5 = AgpVersion.version('8.5.2')
-  protected static final AGP_8_6 = AgpVersion.version('8.6.1')
-  protected static final AGP_8_7 = AgpVersion.version('8.7.3')
-  protected static final AGP_8_8 = AgpVersion.version('8.8.2')
-  protected static final AGP_8_9 = AgpVersion.version('8.9.3')
   protected static final AGP_8_10 = AgpVersion.version('8.10.1')
   protected static final AGP_8_11 = AgpVersion.version('8.11.1')
   protected static final AGP_8_12 = AgpVersion.version('8.12.2')
-  protected static final AGP_8_13 = AgpVersion.version('8.13.0')
+  protected static final AGP_8_13 = AgpVersion.version('8.13.2')
+  protected static final AGP_9_0 = AgpVersion.version('9.0.1')
+  protected static final AGP_9_1 = AgpVersion.version('9.1.0')
+  protected static final AGP_9_2 = AgpVersion.version('9.2.0-alpha04') // requires Gradle 9.5.0-milestone-5
 
-  protected static final AGP_LATEST = AGP_8_13
+  protected static final AGP_MIN = AGP_8_10
+  protected static final AGP_LATEST_STABLE = AGP_9_1
 
   /**
-   * TODO(tsr): this doc is perpetually out of date.
-   *
-   * {@code AGP_8_4} represents the minimum stable _tested_ version. {@code AGP_8_13} represents the maximum stable
+   * {@code AGP_MIN} represents the minimum stable _tested_ version. {@code AGP_LATEST} represents the maximum stable
    * _tested_ version. DAGP may work with other versions of AGP, but they aren't tested, primarily for CI performance
    * reasons.
    *
    * @see <a href="https://maven.google.com/web/index.html?#com.android.tools.build:gradle">AGP releases</a>
    */
   protected static final SUPPORTED_AGP_VERSIONS = [
-    AGP_8_4,
-    AGP_8_13,
+    AGP_MIN,
+    AGP_LATEST_STABLE,
   ]
 
   protected static List<AgpVersion> agpVersions(AgpVersion minAgpVersion = AgpVersion.AGP_MIN) {

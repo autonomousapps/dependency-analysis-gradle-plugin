@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 @file:Suppress("HasPlatformType")
 
@@ -50,6 +50,7 @@ internal class OutputPaths(
   val explodingBytecodePath = file("${intermediatesDir}/exploding-bytecode.json")
   val syntheticProjectPath = file("${intermediatesDir}/synthetic-project.json")
   val dependencyTraceReportPath = file("${variantDirectory}/dependency-trace-report.json")
+  val typeUsagePath = file("${variantDirectory}/type-usage.json")
   val androidScorePath = file("${variantDirectory}/android-score.json")
 
   /*
@@ -85,6 +86,8 @@ internal class NoVariantOutputPaths(private val project: Project) {
   val resolvedDepsPath = file("$ROOT_DIR/resolved-dependencies-report.txt")
   val resolvedAllLibsVersionsTomlPath = file("$ROOT_DIR/resolvedAllLibs.versions.toml")
   val mergedProjectGraphPath = file("$ROOT_DIR/merged-project-graph.json")
+  val aggregateTypeUsagePath = file("$ROOT_DIR/type-usage.json")
+  val publicTypesPath = file("$ROOT_DIR/public-types.json")
 
   /*
    * Advice-related tasks.
@@ -98,6 +101,7 @@ internal class NoVariantOutputPaths(private val project: Project) {
   val filteredAdvicePath = file("$ROOT_DIR/final-advice.json")
   val filteredSourcedAdvicePath = file("$ROOT_DIR/final-sourced-advice.json")
   val consoleReportPath = file("$ROOT_DIR/project-health-report.txt")
+  val projectMetadataPath = file("$ROOT_DIR/project-metadata.json")
 }
 
 /**
@@ -115,6 +119,8 @@ internal class RootOutputPaths(private val project: Project) {
   val shouldFailPath = file("$ROOT_DIR/should-fail.txt")
   val sarifReportPath = file("$ROOT_DIR/build-health-report.sarif")
 
+  val publicTypeUsagePath = file("$ROOT_DIR/public-type-usage-report.json")
+  val publicTypeUsageConsolePath = file("$ROOT_DIR/public-type-usage-report.txt")
   val workPlanDir = dir("$ROOT_DIR/work-plan")
 }
 
@@ -134,7 +140,12 @@ internal class RedundantSubPluginOutputPaths(private val project: Project) {
 public fun getAdvicePathV2(): String = "$ROOT_DIR/final-advice.json"
 public fun getAggregateAdvicePathV2(): String = "$ROOT_DIR/final-advice.json"
 public fun getFinalAdvicePathV2(): String = "$ROOT_DIR/build-health-report.json"
+public fun getExplodedJarsPathV2(variantName: String): String =
+  "$ROOT_DIR/$variantName/intermediates/exploded-jars.json.gz"
+
 public fun getDuplicateDependenciesReport(): String = "$ROOT_DIR/duplicate-dependencies-report.json"
 public fun getAllLibsVersionsTomlPath(): String = "$ROOT_DIR/allLibs.versions.toml"
 public fun getResolvedDependenciesReport(): String = "$ROOT_DIR/resolved-dependencies-report.txt"
 public fun getResolvedVersionsTomlPath(): String = "$ROOT_DIR/resolvedAllLibs.versions.toml"
+public fun getTypeUsagePath(variantName: String = "main"): String = "$ROOT_DIR/$variantName/type-usage.json"
+public fun getPublicTypeUsagePath(): String = "$ROOT_DIR/public-type-usage-report.json"

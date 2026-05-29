@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -8,8 +8,8 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.android.AndroidBlock
-import com.autonomousapps.kit.gradle.dependencies.PluginProvider
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 
 abstract class AbstractAndroidProject extends AbstractProject {
@@ -18,13 +18,60 @@ abstract class AbstractAndroidProject extends AbstractProject {
   private static final DEFAULT_LIB_NAMESPACE = 'com.example.lib'
   private static final DEFAULT_TEST_NAMESPACE = 'com.example.test'
 
-  protected final androidAppPlugin = [Plugins.androidApp, Plugins.dependencyAnalysisNoVersion]
-  protected final androidLibPlugin = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
-  protected final androidAppWithKotlin = [Plugins.androidApp, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
-  protected final androidLibWithKotlin = [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
-
   protected final String agpVersion
   protected final AgpVersion version
+  protected final boolean isLessThanAgp9 = AgpVersion.version(agpVersion) < AgpVersion.version('9.0.0')
+  protected final boolean isAtLeastAgp9 = !isLessThanAgp9
+
+  protected final Plugin rootKapt = new Plugin(Plugins.legacyKaptId, agpVersion, false)
+
+  protected List<Plugin> androidApp(boolean withKotlin = true) {
+    if (isAtLeastAgp9) {
+      [Plugins.androidApp, Plugins.dependencyAnalysisNoVersion]
+    } else if (withKotlin) {
+      [Plugins.androidApp, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
+    } else {
+      [Plugins.androidApp, Plugins.dependencyAnalysisNoVersion]
+    }
+  }
+
+  protected List<Plugin> androidAppWithVersions(boolean withKotlin = true) {
+    if (isAtLeastAgp9) {
+      [plugins.androidApp, Plugins.dependencyAnalysisNoVersion]
+    } else if (withKotlin) {
+      [plugins.androidApp, plugins.kotlinAndroid, Plugins.dependencyAnalysisNoVersion]
+    } else {
+      [plugins.androidApp, Plugins.dependencyAnalysisNoVersion]
+    }
+  }
+
+  protected List<Plugin> androidLib(boolean withKotlin = true) {
+    if (isAtLeastAgp9) {
+      [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
+    } else if (withKotlin) {
+      [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
+    } else {
+      [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
+    }
+  }
+
+  protected List<Plugin> androidTest(boolean withKotlin = true) {
+    if (isAtLeastAgp9) {
+      [Plugins.androidTest, Plugins.dependencyAnalysisNoVersion]
+    } else if (withKotlin) {
+      [Plugins.androidTest, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion]
+    } else {
+      [Plugins.androidTest, Plugins.dependencyAnalysisNoVersion]
+    }
+  }
+
+  protected Plugin kapt() {
+    return isAtLeastAgp9 ? Plugins.androidLegacyKaptNoVersion : Plugins.kotlinKaptNoVersion
+  }
+
+  protected List<Plugin> hilt() {
+    [plugins.hiltNoVersion, plugins.kspNoVersion]
+  }
 
   AbstractAndroidProject(String kotlinVersion, String agpVersion) {
     super(kotlinVersion, agpVersion)
@@ -41,14 +88,14 @@ abstract class AbstractAndroidProject extends AbstractProject {
     boolean withKotlin = true,
     String namespace = DEFAULT_APP_NAMESPACE
   ) {
-    return AndroidBlock.defaultAndroidAppBlock(withKotlin, defaultAppNamespace(namespace))
+    return AndroidBlock.defaultAndroidAppBlock(withKotlin, namespace)
   }
 
   protected AndroidBlock defaultAndroidLibBlock(
     boolean withKotlin = true,
     String namespace = DEFAULT_LIB_NAMESPACE
   ) {
-    return AndroidBlock.defaultAndroidLibBlock(withKotlin, defaultLibNamespace(namespace))
+    return AndroidBlock.defaultAndroidLibBlock(withKotlin, namespace)
   }
 
   protected AndroidBlock defaultAndroidTestBlock(
@@ -56,7 +103,7 @@ abstract class AbstractAndroidProject extends AbstractProject {
     boolean withKotlin = true,
     String namespace = DEFAULT_TEST_NAMESPACE
   ) {
-    return AndroidBlock.defaultAndroidTestBlock(targetProjectPath, withKotlin, defaultLibNamespace(namespace))
+    return AndroidBlock.defaultAndroidTestBlock(targetProjectPath, withKotlin, namespace)
   }
 
   protected AndroidManifest appManifest(String namespace = DEFAULT_APP_NAMESPACE) {
@@ -67,20 +114,12 @@ abstract class AbstractAndroidProject extends AbstractProject {
     return null
   }
 
-  private String defaultAppNamespace(String namespace) {
-    return namespace
-  }
-
-  private String defaultLibNamespace(String namespace) {
-    return namespace
-  }
-
   protected GradleProject.Builder newAndroidGradleProjectBuilder(String agpVersion) {
     return newGradleProjectBuilder()
       .withRootProject { root ->
         root.gradleProperties += GradleProperties.minimalAndroidProperties()
         root.withBuildScript { bs ->
-          bs.buildscript = BuildscriptBlock.defaultAndroidBuildscriptBlock(agpVersion)
+          bs.plugins += plugins.androidAppNoApply
         }
       }
   }

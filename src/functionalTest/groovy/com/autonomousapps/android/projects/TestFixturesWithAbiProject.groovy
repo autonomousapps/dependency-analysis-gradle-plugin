@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -37,7 +37,7 @@ final class TestFixturesWithAbiProject extends AbstractAndroidProject {
         s.sources = libWithFixturesSources
         s.manifest = libraryManifest('lib.with.fixtures')
         s.withBuildScript { bs ->
-          bs.plugins = androidLibWithKotlin
+          bs.plugins = androidLib(true)
           bs.android = defaultAndroidLibBlock(true).tap {
             testFixturesOptions = new TestFixturesOptions(true)
           }

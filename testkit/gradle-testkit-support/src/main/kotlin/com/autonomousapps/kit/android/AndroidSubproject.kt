@@ -1,12 +1,14 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.android
 
 import com.autonomousapps.kit.File
 import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.Subproject
 import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 
 public class AndroidSubproject(
   name: String,
@@ -24,7 +26,7 @@ public class AndroidSubproject(
   buildScript = buildScript,
   sources = sources,
   files = files,
-  variant = variant
+  variant = variant,
 ) {
 
   public class Builder {
@@ -55,7 +57,7 @@ public class AndroidSubproject(
     private fun defaultBuildScriptBuilder(): BuildScript.Builder {
       return BuildScript.Builder().apply {
         plugins = mutableListOf()
-        android = AndroidBlock.defaultAndroidAppBlock(false)
+        android = AndroidBlock.defaultAndroidAppBlock()
         dependencies = mutableListOf()
         additions = ""
       }
@@ -70,7 +72,27 @@ public class AndroidSubproject(
     }
 
     public fun build(): AndroidSubproject {
-      val name = name ?: error("'name' must not be null")
+      val name = name
+        // Allow users to specify a name like ":lib" even though internally we don't want the colon prefix.
+        ?.removePrefix(":")
+        ?: error("'name' must not be null")
+
+      if (name.isBlank()) {
+        error("'name' must not be blank")
+      }
+
+      // Update the `kotlin{}` block if there's any Kotlin source and the block hasn't already been set.
+//      val hasKotlin = sources.any { s -> s.sourceType == SourceType.KOTLIN }
+//
+//      // TODO(tsr): this is bad. Users may fully configure their Kotlin options in plugins and will not want crap
+//      //  littering their build scripts.
+//      if (hasKotlin && buildScript.kotlin == null) {
+//        // mutates buildScript
+//        withBuildScript {
+//          kotlin = Kotlin.DEFAULT
+//        }
+//      }
+
       return AndroidSubproject(
         name = name,
         variant = variant,
@@ -81,7 +103,7 @@ public class AndroidSubproject(
         strings = strings,
         colors = colors,
         layouts = layouts,
-        files = files
+        files = files,
       )
     }
   }

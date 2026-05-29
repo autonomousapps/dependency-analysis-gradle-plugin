@@ -1,8 +1,10 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
 import com.autonomousapps.AdviceHelper
+import com.autonomousapps.android.projects.AutoValueProjectUsedByKapt
+import com.autonomousapps.android.projects.DaggerKaptProject
 import com.autonomousapps.android.projects.KaptProject
 import com.autonomousapps.fixtures.*
 
@@ -14,16 +16,14 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
 
   def "kapt is not redundant when there are used procs (#gradleVersion AGP #agpVersion)"() {
     given:
-    def project = new AutoValueProjectUsedByKapt(agpVersion)
-    androidProject = project.newProject()
+    def project = new AutoValueProjectUsedByKapt(agpVersion, AutoValueProjectUsedByKapt.Spec.KAPT_SOURCE)
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, androidProject, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    def actualAdvice = androidProject.buildHealthFor(project.rootSpec).first().pluginAdvice
-    def expectedAdvice = project.expectedAdviceForRoot
-    assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -31,18 +31,14 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
 
   def "kapt is redundant when no procs are used (#gradleVersion AGP #agpVersion)"() {
     given:
-    def project = new KaptIsRedundantWithUnusedProcsProject(agpVersion)
-    androidProject = project.newProject()
+    def project = new AutoValueProjectUsedByKapt(agpVersion, AutoValueProjectUsedByKapt.Spec.NO_KAPT_SOURCE)
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, androidProject, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    def actualAdvice = androidProject.buildHealthFor(project.rootSpec)
-      .find { it.projectPath == ":app" }
-      .pluginAdvice
-    def expectedAdvice = project.expectedAdvice
-    assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -50,18 +46,14 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
 
   def "kapt is redundant when no procs are declared (#gradleVersion AGP #agpVersion)"() {
     given:
-    def project = new KaptIsRedundantProject(agpVersion)
-    androidProject = project.newProject()
+    def project = new AutoValueProjectUsedByKapt(agpVersion, AutoValueProjectUsedByKapt.Spec.NO_KAPT_DECLARATIONS)
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, androidProject, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    def actualAdvice = androidProject.buildHealthFor(project.rootSpec)
-      .find { it.projectPath == ":app" }
-      .pluginAdvice
-    def expectedAdvice = project.expectedAdvice
-    assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -85,33 +77,16 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  def "autovalue is used with kapt (#gradleVersion AGP #agpVersion)"() {
-    given:
-    def project = new AutoValueProjectUsedByKapt(agpVersion)
-    androidProject = project.newProject()
-
-    when:
-    build(gradleVersion, androidProject, 'buildHealth')
-
-    then:
-    assertThat(androidProject.adviceFor(project.appSpec)).containsExactlyElementsIn(project.expectedAdviceForApp)
-
-    where:
-    [gradleVersion, agpVersion] << gradleAgpMatrix()
-  }
-
   def "dagger is unused with kapt (#gradleVersion AGP #agpVersion)"() {
     given:
-    def project = new DaggerProjectUnusedByKapt(agpVersion)
-    androidProject = project.newProject()
+    def project = new DaggerKaptProject(agpVersion, DaggerKaptProject.Spec.NO_KAPT_SOURCE)
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, androidProject, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    def actualAdvice = androidProject.adviceFor(project.appSpec)
-    def expectedAdvice = project.expectedAdviceForApp
-    assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -119,15 +94,14 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
 
   def "dagger is used with kapt on method (#gradleVersion AGP #agpVersion)"() {
     given:
-    def project = new DaggerProjectUsedByKaptForMethod(agpVersion)
-    androidProject = project.newProject()
+    def project = new DaggerKaptProject(agpVersion, DaggerKaptProject.Spec.KAPT_SOURCE_METHOD)
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, androidProject, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    def actualAdvice = androidProject.adviceFor(project.appSpec)
-    assertThat(actualAdvice).containsExactlyElementsIn(project.expectedAdviceForApp)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -135,16 +109,14 @@ final class AnnotationProcessorSpec extends AbstractAndroidSpec {
 
   def "dagger is used with kapt on class (#gradleVersion AGP #agpVersion)"() {
     given:
-    def project = new DaggerProjectUsedByKaptForClass(agpVersion)
-    androidProject = project.newProject()
+    def project = new DaggerKaptProject(agpVersion, DaggerKaptProject.Spec.KAPT_SOURCE_CLASS)
+    gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, androidProject, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
-    def actualAdvice = androidProject.adviceFor(project.appSpec)
-    def expectedAdvice = project.expectedAdviceForApp
-    assertThat(actualAdvice).containsExactlyElementsIn(expectedAdvice)
+    assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

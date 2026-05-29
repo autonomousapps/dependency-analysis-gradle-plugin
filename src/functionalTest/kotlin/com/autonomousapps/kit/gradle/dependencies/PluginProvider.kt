@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle.dependencies
 
@@ -25,16 +25,44 @@ class PluginProvider(
   val androidAppId: String = "com.android.application"
   val androidLibId: String = "com.android.library"
   val androidTestId: String = "com.android.test"
+  val androidLegacyKaptId: String = "com.android.legacy-kapt"
+  val androidAppNoApply: Plugin = Plugin(androidAppId, androidVersion, false)
   val androidApp: Plugin = Plugin(androidAppId, androidVersion)
   val androidAppNoVersion: Plugin = Plugin(androidAppId)
   val androidLibNoVersion: Plugin = Plugin(androidLibId)
   val androidTestNoVersion: Plugin = Plugin(androidTestId)
+  val androidLegacyKaptNoVersion: Plugin = Plugin(androidLegacyKaptId)
+
+  /** Use this in the root project. */
+  val androidKmpLibNoApply: Plugin = Plugin("com.android.kotlin.multiplatform.library", androidVersion, false)
+
+  /** Use this in subprojects. */
+  val androidKmpLibNoVersion: Plugin = Plugin("com.android.kotlin.multiplatform.library")
+
+  val hiltNoApply: Plugin = Plugin("com.google.dagger.hilt.android", "2.59.2", false)
+  val hiltNoVersion: Plugin = Plugin("com.google.dagger.hilt.android")
+
+  val kspNoApply: Plugin = Plugin("com.google.devtools.ksp", "2.3.7", false)
+  val kspNoVersion: Plugin = Plugin("com.google.devtools.ksp")
 
   val kotlinJvm: Plugin = Plugin("org.jetbrains.kotlin.jvm", kotlinVersion)
   val kotlinJvmNoApply: Plugin = Plugin("org.jetbrains.kotlin.jvm", kotlinVersion, false)
   val kotlinAndroid: Plugin = Plugin("org.jetbrains.kotlin.android", kotlinVersion)
   val kotlinAndroidNoVersion: Plugin = Plugin("org.jetbrains.kotlin.android")
   val kotlinJvmNoVersion: Plugin = Plugin("org.jetbrains.kotlin.jvm")
+
+  /** Use this in the root project. */
+  val kotlinMultiplatformNoApply: Plugin = Plugin("org.jetbrains.kotlin.multiplatform", kotlinVersion, false)
+
+  /** Use this in the root project. */
+  val androidKmpRootPlugins: List<Plugin> = listOf(
+    dependencyAnalysis,
+    kotlinMultiplatformNoApply,
+    androidKmpLibNoApply,
+  )
+
+  /** Use this in subprojects. */
+  val kotlinMultiplatformNoVersion: Plugin = Plugin("org.jetbrains.kotlin.multiplatform")
   val kotlinKaptNoVersion: Plugin = Plugin("org.jetbrains.kotlin.kapt")
 
   val springBoot: Plugin = Plugin("org.springframework.boot", springBootVersion)

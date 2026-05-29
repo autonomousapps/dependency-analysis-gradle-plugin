@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage")
 
@@ -150,34 +150,6 @@ internal class KotlinMagicFinder(
     typealiases = typealiasesMut
   }
 
-  // private fun analyzeDependencies(): Set<InlineMemberDependency> {
-  //   val inlineMembers = mutableSetOf<InlineMemberDependency>()
-  //   val typealiases = mutableSetOf<TypealiasDependency>()
-  //
-  //   artifacts.asSequence()
-  //     .filter {
-  //       it.isJar() || it.containsClassFiles()
-  //     }.map { artifact ->
-  //       artifact to findKotlinMagic(artifact, artifact.mode)
-  //     }.forEach { (artifact, capabilities) ->
-  //       if (capabilities.inlineMembers.isNotEmpty()) {
-  //         inlineMembers += InlineMemberDependency(artifact.coordinates, capabilities.inlineMembers)
-  //       }
-  //       if (capabilities.typealiases.isNotEmpty()) {
-  //         typealiases += TypealiasDependency(artifact.coordinates, capabilities.typealiases)
-  //       }
-  //     }
-  //
-  //   // return artifacts.asSequence()
-  //   //   .filter {
-  //   //     it.isJar() || it.containsClassFiles()
-  //   //   }.map { artifact ->
-  //   //     artifact to findKotlinMagic(artifact, artifact.mode)
-  //   //   }.map { (artifact, capabilities) ->
-  //   //     InlineMemberDependency(artifact.coordinates, inlineMembers)
-  //   //   }.toSortedSet()
-  // }
-
   /**
    * Returns either an empty set, if there are no inline members, or a set of [InlineMemberCapability.InlineMember]s
    * (import candidates). E.g.:
@@ -204,44 +176,51 @@ internal class KotlinMagicFinder(
       }
     }
 
+    // com/foo/BarKt.class -> com.foo.BarKt
+    fun className(entryName: String): String {
+      return entryName.replace('/', '.').substringBeforeLast(".class")
+    }
+
     val inlineMembers = mutableSetOf<InlineMemberCapability.InlineMember>()
     val typealiases = mutableSetOf<TypealiasCapability.Typealias>()
 
     when (mode) {
       Mode.ZIP -> {
-        val zipFile = ZipFile(artifact.file)
-        val entries = zipFile.entries().toList()
-        // Only look at jars that have actual Kotlin classes in them
-        if (entries.none { it.name.endsWith(".kotlin_module") }) {
-          return KotlinCapabilities.EMPTY
+        ZipFile(artifact.file).use { zipFile ->
+          val entries = zipFile.entries().toList()
+          // Only look at jars that have actual Kotlin classes in them
+          if (entries.none { it.name.endsWith(".kotlin_module") }) {
+            return KotlinCapabilities.EMPTY
+          }
+
+          entries.asSequenceOfClassFiles()
+            .mapNotNull { entry ->
+              // TODO an entry with `META-INF/proguard/androidx-annotations.pro`
+              val kotlinMagic = readClass(
+                zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) },
+                entry.toString()
+              ) ?: return@mapNotNull null
+
+              entry to kotlinMagic
+            }
+            .forEach { (entry, kotlinMagic) ->
+              if (kotlinMagic.inlineMembers != null) {
+                inlineMembers += InlineMemberCapability.InlineMember.newInstance(
+                  className = className(entry.name),
+                  packageName = packageName(entry.name),
+                  // Guaranteed to be non-empty
+                  inlineMembers = kotlinMagic.inlineMembers
+                )
+              }
+
+              if (kotlinMagic.typealiases != null) {
+                typealiases += TypealiasCapability.Typealias.newInstance(
+                  packageName = packageName(entry.name),
+                  typealiases = kotlinMagic.typealiases
+                )
+              }
+            }
         }
-
-        entries.asSequenceOfClassFiles()
-          .mapNotNull { entry ->
-            // TODO an entry with `META-INF/proguard/androidx-annotations.pro`
-            val kotlinMagic = readClass(
-              zipFile.getInputStream(entry).use { ClassReader(it.readBytes()) },
-              entry.toString()
-            ) ?: return@mapNotNull null
-
-            entry to kotlinMagic
-          }
-          .forEach { (entry, kotlinMagic) ->
-            if (kotlinMagic.inlineMembers != null) {
-              inlineMembers += InlineMemberCapability.InlineMember.newInstance(
-                packageName = packageName(entry.name),
-                // Guaranteed to be non-empty
-                inlineMembers = kotlinMagic.inlineMembers
-              )
-            }
-
-            if (kotlinMagic.typealiases != null) {
-              typealiases += TypealiasCapability.Typealias.newInstance(
-                packageName = packageName(entry.name),
-                typealiases = kotlinMagic.typealiases
-              )
-            }
-          }
       }
 
       Mode.CLASSES -> {
@@ -249,8 +228,7 @@ internal class KotlinMagicFinder(
           return KotlinCapabilities.EMPTY
         }
 
-        artifact.file.walkBottomUp()
-          .filter { it.isFile && it.name.endsWith(".class") }
+        artifact.file.asSequenceOfClassFiles()
           .mapNotNull { classFile ->
             val kotlinMagic = readClass(
               classFile.inputStream().use { ClassReader(it.readBytes()) },
@@ -261,8 +239,12 @@ internal class KotlinMagicFinder(
           }
           .forEach { (classFile, kotlinMagic) ->
             if (kotlinMagic.inlineMembers != null) {
+              val packageName = packageName(Files.asPackagePath(classFile))
+              val className = packageName + classFile.name.substringBeforeLast(".class")
+
               inlineMembers += InlineMemberCapability.InlineMember.newInstance(
-                packageName = packageName(Files.asPackagePath(classFile)),
+                className = className,
+                packageName = packageName,
                 // Guaranteed to be non-empty
                 inlineMembers = kotlinMagic.inlineMembers
               )

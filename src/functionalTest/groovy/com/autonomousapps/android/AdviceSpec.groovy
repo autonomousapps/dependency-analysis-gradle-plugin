@@ -1,11 +1,10 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AdviceFilterProject
 import org.intellij.lang.annotations.Language
 
-import static com.autonomousapps.kit.truth.TestKitTruth.assertThat as assertThatResult
 import static com.autonomousapps.utils.Runner.build
 import static com.autonomousapps.utils.Runner.buildAndFail
 import static com.google.common.truth.Truth.assertThat
@@ -40,19 +39,17 @@ final class AdviceSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
-    then: 'core tasks ran and were successful'
-    assertThatResult(result).with {
-      task(':buildHealth').failed()
-    }
-
-    and: 'app advice does not include excludes'
+    then:
     def buildHealth = project.actualBuildHealth()
     def appAdvice = buildHealth.find { it.projectPath == ':app' }.dependencyAdvice
     assertThat(appAdvice)
       .containsExactlyElementsIn(project.expectedAppAdvice(
-        project.removeLibAndroid, project.removeCommonsIo
+        project.removeLibAndroid, project.removeCommonsIo,
+        // This is being filtered out by `RuntimeOnlyFilter` because it's still being brought in transitively by
+        // :lib_android.
+        project.addKotlinxCoroutinesAndroid, project.addKotlinxCoroutinesAndroidAgp9,
       ))
 
     where:
@@ -86,17 +83,13 @@ final class AdviceSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
-    then: 'core tasks ran and were successful'
-    assertThatResult(result).with {
-      task(':buildHealth').failed()
-    }
-
-    and: 'app advice does not include excludes'
+    then:
     def buildHealth = project.actualBuildHealth()
     def appAdvice = buildHealth.find { it.projectPath == ':app' }.dependencyAdvice
-    assertThat(appAdvice).containsExactlyElementsIn(project.expectedAppAdvice(project.addCommonsCollections))
+    assertThat(appAdvice)
+      .containsExactlyElementsIn(project.expectedAppAdvice(project.addCommonsCollections))
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -133,25 +126,19 @@ final class AdviceSpec extends AbstractAndroidSpec {
     def result = buildAndFail(
       gradleVersion, gradleProject.rootDir,
       'buildHealth',
-      'lib_android:reason', '--id', 'androidx.transition:transition:1.0.1',
+      'lib_android:reason', '--id', 'androidx.transition:transition:',
     )
 
-    then: 'core tasks ran and were successful'
-    assertThatResult(result).with {
-      task(':buildHealth').failed()
-    }
+    then:
     def buildHealth = project.actualBuildHealth()
-
-    and: 'app advice does not include excludes'
     def appAdvice = buildHealth.find { it.projectPath == ':app' }.dependencyAdvice
     assertThat(appAdvice)
       .containsExactlyElementsIn(project.expectedAppAdvice())
 
     and: 'lib_android advice does not include excludes'
     def libAndroidAdvice = buildHealth.find { it.projectPath == ':lib_android' }.dependencyAdvice
-    assertThat(libAndroidAdvice)
-      .containsExactlyElementsIn(project.expectedLibAndroidAdvice(project.changeAppcompat))
-    assertThat(result.output).contains('* Accessed 1 time by reflection: (1) androidx.fragment:fragment:1.1.0 in class androidx.fragment.app.FragmentTransition: androidx.transition.FragmentTransitionSupport (implies runtimeOnly).')
+    assertThat(libAndroidAdvice).containsExactlyElementsIn(project.expectedLibAndroidAdvice())
+    assertThat(result.output).contains('* Accessed 1 time by reflection: (1) androidx.fragment:fragment:1.5.4 in class androidx.fragment.app.FragmentTransition: androidx.transition.FragmentTransitionSupport (implies runtimeOnly).')
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -179,18 +166,13 @@ final class AdviceSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
-    then: 'core tasks ran and were successful'
-    assertThatResult(result).with {
-      task(':buildHealth').succeeded()
-    }
+    then:
     def buildHealth = project.actualBuildHealth()
-
-    and: 'lib_android advice does not include excludes'
     def libAndroidAdvice = buildHealth.find { it.projectPath == ':lib_android' }.dependencyAdvice
     assertThat(libAndroidAdvice)
-      .containsExactlyElementsIn(project.expectedLibAndroidAdvice(project.changeAndroidxAnnotation))
+      .containsExactlyElementsIn(project.expectedLibAndroidAdvice())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -202,7 +184,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
     def extension = """\
       dependencyAnalysis {
         issues {
-          project(':lib_android') {
+          project(':app') {
             onRuntimeOnly {
               severity 'fail'
               exclude 'nl.littlerobots.rxlint:rxlint'
@@ -218,18 +200,13 @@ final class AdviceSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
-    then: 'core tasks ran and were successful'
-    assertThatResult(result).with {
-      task(':buildHealth').succeeded()
-    }
+    then:
     def buildHealth = project.actualBuildHealth()
-
-    and: 'lib_android advice does not include excludes'
-    def libAndroidAdvice = buildHealth.find { it.projectPath == ':lib_android' }.dependencyAdvice
+    def libAndroidAdvice = buildHealth.find { it.projectPath == ':app' }.dependencyAdvice
     assertThat(libAndroidAdvice)
-      .containsExactlyElementsIn(project.expectedLibAndroidAdvice(project.changeRxlint))
+      .containsExactlyElementsIn(project.expectedAppAdvice(project.changeRxlint))
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -256,15 +233,10 @@ final class AdviceSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    buildAndFail(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
-    then: 'core tasks ran and were successful'
-    assertThatResult(result).with {
-      task(':buildHealth').failed()
-    }
+    then:
     def buildHealth = project.actualBuildHealth()
-
-    and: 'lib_jvm advice does not include excludes'
     def libJvmAdvice = buildHealth.find { it.projectPath == ':lib_jvm' }.dependencyAdvice
     assertThat(libJvmAdvice).containsExactlyElementsIn(project.expectedLibJvmAdvice())
 

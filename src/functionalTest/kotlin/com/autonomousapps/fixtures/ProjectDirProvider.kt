@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.fixtures
 
@@ -26,19 +26,6 @@ interface ProjectDirProvider {
       .fromJson<ProjectAdvice>()
       .dependencyAdvice
   }
-
-  fun removeAdviceFor(spec: ModuleSpec): Set<String> {
-    return removeAdviceFor(spec.name)
-  }
-
-  fun removeAdviceFor(moduleName: String): Set<String> {
-    return adviceFor(moduleName).asSequence()
-      .filter { it.isRemove() }
-      .map { it.coordinates.identifier }
-      .toSortedSet()
-  }
-
-  fun buildHealthFor(spec: ModuleSpec): Set<ProjectAdvice> = buildHealthFor(spec.name)
 
   fun buildHealthFor(moduleName: String): Set<ProjectAdvice> {
     return buildHealthForV2(moduleName)

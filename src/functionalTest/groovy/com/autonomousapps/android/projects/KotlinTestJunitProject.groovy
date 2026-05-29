@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -7,6 +7,7 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidStyleRes
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -33,11 +34,12 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
         subproject.styles = AndroidStyleRes.DEFAULT
         subproject.colors = AndroidColorRes.DEFAULT
         subproject.withBuildScript { bs ->
-          bs.plugins = androidAppWithKotlin
+          bs.plugins = androidApp(true)
           bs.android = defaultAndroidAppBlock()
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [
             kotlinTestJunit,
-            junit('androidTestImplementation'),
+//            junit('androidTestImplementation'),
             appcompat('implementation'),
           ]
         }
@@ -76,6 +78,8 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
+  // The advice changed when I added a default bundle in Dependencies handler named `__kotlin-test-junit`. Leaving this
+  // commented out, instead of deleting, in case I change my mind.
   private static Set<Advice> changeKotlinTestJunit() {
     return [Advice.ofChange(
       moduleCoordinates(kotlinTestJunit),
@@ -85,7 +89,8 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
   }
 
   private static ProjectAdvice app() {
-    projectAdviceForDependencies(':app', changeKotlinTestJunit())
+//    projectAdviceForDependencies(':app', changeKotlinTestJunit())
+    emptyProjectAdviceFor(':app')
   }
 
   Set<ProjectAdvice> expectedBuildHealth = [app()]

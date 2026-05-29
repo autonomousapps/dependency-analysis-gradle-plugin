@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle
 
@@ -9,7 +9,7 @@ import org.intellij.lang.annotations.Language
  * [version catalog file](https://docs.gradle.org/current/userguide/platforms.html#sub::toml-dependencies-format).
  */
 public class VersionCatalogFile(
-  @Language("toml") public var content: String,
+  @param:Language("toml") public var content: String,
 ) {
 
   public companion object {

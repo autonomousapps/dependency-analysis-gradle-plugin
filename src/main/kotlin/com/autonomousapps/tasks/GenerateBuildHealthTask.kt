@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
@@ -21,6 +21,7 @@ import com.autonomousapps.model.BuildHealth.AndroidScoreMetrics
 import com.autonomousapps.model.ProjectAdvice
 import com.autonomousapps.model.SourcedProjectAdvice
 import io.github.detekt.sarif4k.SarifSerializer
+import com.autonomousapps.model.internal.ProjectMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -43,6 +44,10 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
   @get:InputFiles
   public abstract val sourcedProjectHealthReports: ConfigurableFileCollection
 
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val projectMetadataReports: ConfigurableFileCollection
+
   // TODO(tsr): this shouldn't be a Property for Complicated Reasons
   @get:Nested
   public abstract val reportingConfig: Property<ReportingHandler.Config>
@@ -59,6 +64,9 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
 
   @get:Input
   public abstract val useTypesafeProjectAccessors: Property<Boolean>
+
+  @get:Input
+  public abstract val useParenthesesForGroovy: Property<Boolean>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
@@ -90,6 +98,9 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
     val androidMetricsBuilder = AndroidScoreMetrics.Builder()
 
     val advice = projectHealthReports.files.map { it.fromJson<ProjectAdvice>() }
+    val metadata = projectMetadataReports.files.asSequence()
+      .map { it.fromJson<ProjectMetadata>() }
+      .associateBy { it.projectPath }
 
     if (isFunctionallyEmpty(advice)) {
       logger.warn(
@@ -110,16 +121,21 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
             consoleOutput.appendText("\n\n")
           }
 
+          val projectMetadata = metadata[projectAdvice.projectPath]
+            ?: error("Missing metadata for '${projectAdvice.projectPath}'.")
+
           shouldFail = shouldFail || projectAdvice.shouldFail
 
           // console report
           val report = ProjectHealthConsoleReportBuilder(
             projectAdvice = projectAdvice,
+            projectMetadata = projectMetadata,
             // For buildHealth, we want to include the postscript only once.
             postscript = "",
             dslKind = dslKind.get(),
             dependencyMap = dependencyMap.get().toLambda(),
             useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
+            useParenthesesForGroovy = useParenthesesForGroovy.get(),
           ).text
           val projectPath = if (projectAdvice.projectPath == ":") "root project" else projectAdvice.projectPath
           consoleOutput.appendText("Advice for ${projectPath}\n$report")

@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.artifacts
 
@@ -16,9 +16,12 @@ internal interface DagpArtifacts : Named {
 
   enum class Kind : ArtifactDescription<DagpArtifacts> {
     COMBINED_GRAPH,
+    PUBLIC_CLASSES,
     PROJECT_HEALTH,
     SOURCED_PROJECT_HEALTH,
+    PROJECT_METADATA,
     RESOLVED_DEPS,
+    TYPE_USAGE,
     ;
 
     override val attribute: Attribute<DagpArtifacts> = DAGP_ARTIFACTS_ATTRIBUTE

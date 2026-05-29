@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle.dependencies
 
@@ -29,16 +29,6 @@ object Dependencies {
   @JvmStatic
   fun kotlinStdLib(configuration: String): Dependency {
     return provider.kotlinStdLib(configuration)
-  }
-
-  @JvmStatic
-  fun kotlinStdlibJdk8(configuration: String): Dependency {
-    return provider.kotlinStdlibJdk8(configuration)
-  }
-
-  @JvmStatic
-  fun kotlinStdlibJdk7(configuration: String): Dependency {
-    return provider.kotlinStdlibJdk7(configuration)
   }
 
   @JvmStatic
@@ -87,23 +77,34 @@ object Dependencies {
   }
 
   @JvmStatic
+  fun autoDagger(configuration: String): Dependency {
+    return provider.autoDagger(configuration)
+  }
+
+  @JvmStatic
+  fun autoDaggerApi(configuration: String): Dependency {
+    return provider.autoDaggerApi(configuration)
+  }
+
+  @JvmStatic
+  fun autoDaggerCompiler(configuration: String): Dependency {
+    return provider.autoDaggerCompiler(configuration)
+  }
+
+  @JvmStatic
+  fun hiltAndroid(configuration: String): Dependency {
+    return provider.hiltAndroid(configuration)
+  }
+
+  @JvmStatic
+  fun hiltAndroidCompiler(configuration: String): Dependency {
+    return provider.hiltAndroidCompiler(configuration)
+  }
+
+
+  @JvmStatic
   fun kotestAssertions(configuration: String): Dependency {
     return provider.kotestAssertions(configuration)
-  }
-
-  @JvmStatic
-  fun moshi(configuration: String): Dependency {
-    return provider.moshi(configuration)
-  }
-
-  @JvmStatic
-  fun moshiKotlin(configuration: String): Dependency {
-    return provider.moshiKotlin(configuration)
-  }
-
-  @JvmStatic
-  fun moshiAdapters(configuration: String): Dependency {
-    return provider.moshiAdapters(configuration)
   }
 
   @JvmStatic
@@ -134,11 +135,6 @@ object Dependencies {
   @JvmStatic
   fun androidxAnnotations(configuration: String): Dependency {
     return provider.androidxAnnotations(configuration)
-  }
-
-  @JvmStatic
-  fun composeMultiplatformRuntime(configuration: String): Dependency {
-    return provider.composeMultiplatformRuntime(configuration)
   }
 
   @JvmStatic

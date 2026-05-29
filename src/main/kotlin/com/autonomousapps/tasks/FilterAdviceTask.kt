@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
@@ -304,24 +304,6 @@ public abstract class FilterAdviceTask @Inject constructor(
       }
     }
 
-    private fun Sequence<Advice>.filterDataBinding(): Sequence<Advice> {
-      return if (dataBindingEnabled) filterNot {
-        databindingDependencies.contains(it.coordinates.identifier)
-      }
-      else this
-    }
-
-    private fun Sequence<Advice>.filterViewBinding(): Sequence<Advice> {
-      return if (viewBindingEnabled) filterNot {
-        viewBindingDependencies.contains(it.coordinates.identifier)
-      }
-      else this
-    }
-
-    private fun Sequence<Advice>.filterRedundantRuntimeOnlyAdvice(): Sequence<Advice> {
-      return RuntimeOnlyFilter(dependencyGraph, buildPath).simplify(this)
-    }
-
     private fun Sequence<DuplicateClass>.filterOf(
       behaviorSpec: Pair<Behavior, List<Behavior>>,
     ): Sequence<DuplicateClass> {
@@ -353,6 +335,24 @@ public abstract class FilterAdviceTask @Inject constructor(
       }
     }
 
+    private fun Sequence<Advice>.filterDataBinding(): Sequence<Advice> {
+      return if (dataBindingEnabled) filterNot {
+        dataBindingDependencies.contains(it.coordinates.identifier)
+      }
+      else this
+    }
+
+    private fun Sequence<Advice>.filterViewBinding(): Sequence<Advice> {
+      return if (viewBindingEnabled) filterNot {
+        viewBindingDependencies.contains(it.coordinates.identifier)
+      }
+      else this
+    }
+
+    private fun Sequence<Advice>.filterRedundantRuntimeOnlyAdvice(): Sequence<Advice> {
+      return RuntimeOnlyFilter(dependencyGraph, buildPath).simplify(this)
+    }
+
     private fun Set<Advice>.addLineNumbers(buildFileLines: List<String>): Set<SourcedAdvice> = map { advice ->
       val lineNumber = buildFileLines
         .indexOfFirst { buildFileLine -> buildFileLine.contains(advice.coordinates.identifier) }
@@ -369,14 +369,24 @@ public abstract class FilterAdviceTask @Inject constructor(
   }
 
   private companion object {
-    val databindingDependencies = listOf(
+    /** https://mvnrepository.com/artifact/androidx.databinding/databinding-ktx/8.10.1/dependencies */
+    val dataBindingDependencies = listOf(
+      "androidx.annotation:annotation",
+
       "androidx.databinding:databinding-adapters",
-      "androidx.databinding:databinding-runtime",
       "androidx.databinding:databinding-common",
       "androidx.databinding:databinding-compiler",
-      "androidx.databinding:databinding-ktx"
+      "androidx.databinding:databinding-ktx",
+      "androidx.databinding:databinding-runtime",
+
+      "androidx.lifecycle:lifecycle-livedata",
+      "androidx.lifecycle:lifecycle-process",
+      "androidx.lifecycle:lifecycle-runtime-ktx",
+      "androidx.lifecycle:lifecycle-service",
+      "androidx.lifecycle:lifecycle-viewmodel",
     )
 
+    /** https://mvnrepository.com/artifact/androidx.databinding/viewbinding/8.10.1/dependencies */
     val viewBindingDependencies = listOf(
       "androidx.databinding:viewbinding"
     )

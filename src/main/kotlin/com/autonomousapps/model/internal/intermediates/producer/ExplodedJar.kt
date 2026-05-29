@@ -1,13 +1,14 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates.producer
 
+import com.autonomousapps.internal.utils.LexicographicIterableComparator
+import com.autonomousapps.internal.utils.MapSetComparator
 import com.autonomousapps.internal.utils.ifNotEmpty
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.*
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
 import com.squareup.moshi.JsonClass
-import java.io.File
 
 /**
  * A library or project, along with the set of classes declared by, and other information contained within, this
@@ -16,37 +17,46 @@ import java.io.File
 @JsonClass(generateAdapter = false)
 internal data class ExplodedJar(
   override val coordinates: Coordinates,
-  val jarFile: File,
 
   /**
    * True if this dependency contains only annotations. False otherwise.
    */
   val isAnnotations: Boolean = false,
+
   /**
    * The set of classes that are service providers (they extend [java.security.Provider]). May be
    * empty.
    */
   val securityProviders: Set<String> = emptySet(),
+
   /**
    * Android Lint registry, if there is one. May be null.
    */
   val androidLintRegistry: String? = null,
+
   /**
    * True if this component contains _only_ an Android Lint jar/registry. If this is true,
    * [androidLintRegistry] must be non-null.
    */
   val isLintJar: Boolean = false,
+
   /**
    * The classes (with binary member signatures) provided by this library.
    */
   val binaryClasses: Set<BinaryClass>,
+
   /**
    * A map of each class declared by this library to the set of constants it defines. The latter may
    * be empty for any given declared class.
    */
   val constants: Map<String, Set<Constant>>,
+
   /** Map of class names to the reflective accesses they make (using [Class.forName]). May be empty. */
   val reflectiveAccesses: Map<String, Set<String>>,
+
+  /** Map of class names to the exceptions they handle. Does not include standard Java exceptions. May be empty. */
+  val exceptions: Map<String, Set<String>>,
+
   /**
    * All the "Kt" files within this component.
    */
@@ -58,7 +68,6 @@ internal data class ExplodedJar(
     exploding: ExplodingJar,
   ) : this(
     coordinates = artifact.coordinates,
-    jarFile = artifact.file,
     isAnnotations = exploding.isCompileOnlyCandidate,
     securityProviders = exploding.securityProviders,
     androidLintRegistry = exploding.androidLintRegistry,
@@ -66,13 +75,22 @@ internal data class ExplodedJar(
     binaryClasses = exploding.binaryClasses,
     constants = exploding.constants,
     reflectiveAccesses = exploding.reflectiveAccesses,
+    exceptions = exploding.exceptions,
     ktFiles = exploding.ktFiles
   )
 
   override fun compareTo(other: ExplodedJar): Int {
-    return coordinates.compareTo(other.coordinates).let {
-      if (it == 0) jarFile.compareTo(other.jarFile) else it
-    }
+    return compareBy(ExplodedJar::coordinates)
+      .thenBy(ExplodedJar::isAnnotations)
+      .thenComparing(compareBy<ExplodedJar, String?>(nullsFirst()) { it.androidLintRegistry })
+      .thenBy(ExplodedJar::isLintJar)
+      .thenBy(LexicographicIterableComparator()) { it.securityProviders }
+      .thenBy(LexicographicIterableComparator()) { it.binaryClasses }
+      .thenBy(LexicographicIterableComparator()) { it.ktFiles }
+      .thenBy(MapSetComparator()) { it.constants }
+      .thenBy(MapSetComparator()) { it.reflectiveAccesses }
+      .thenBy(MapSetComparator()) { it.exceptions }
+      .compare(this, other)
   }
 
   init {
@@ -86,6 +104,7 @@ internal data class ExplodedJar(
     capabilities += InferredCapability(isAnnotations)
     binaryClasses.ifNotEmpty { capabilities += BinaryClassCapability.newInstance(it) }
     constants.ifNotEmpty { capabilities += ConstantCapability.newInstance(it, ktFiles) }
+    exceptions.ifNotEmpty { capabilities += ExceptionCapability.newInstance(it) }
     securityProviders.ifNotEmpty { capabilities += SecurityProviderCapability.newInstance(it) }
     androidLintRegistry?.let { capabilities += AndroidLinterCapability(it, isLintJar) }
     return capabilities

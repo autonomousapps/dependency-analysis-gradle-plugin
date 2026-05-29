@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps
 
@@ -6,6 +6,8 @@ import com.autonomousapps.extension.AbiHandler
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.extension.ProjectIssueHandler
 import com.autonomousapps.extension.ReportingHandler
+
+import com.autonomousapps.extension.TypeUsageHandler
 import org.gradle.api.Action
 import org.gradle.api.Project
 import javax.naming.OperationNotSupportedException
@@ -57,6 +59,11 @@ public abstract class DependencyAnalysisSubExtension(
   /** Customize issue reports. See [ReportingHandler] for more information. */
   public fun reporting(action: Action<ReportingHandler>) {
     action.execute(reportingHandler)
+  }
+
+  /** Customize type usage analysis filtering. See [TypeUsageHandler] for more information. */
+  public fun typeUsage(action: Action<TypeUsageHandler>) {
+    action.execute(typeUsageHandler)
   }
 
   internal companion object {

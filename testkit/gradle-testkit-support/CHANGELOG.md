@@ -1,5 +1,25 @@
 Gradle TestKit Support Changelog
 
+# Version 0.26
+* [Feat]: new factory method on `VersionCatalogs` to simplify creation.
+* [Feat]: improve `repository` rendering for Kotlin DSL.
+* [Feat]: add more default Gradle properties to `GradleProperties`.
+
+# Version 0.25
+* [Feat]: `DependencyResolutionManagement` can specify `repositoriesMode` and `versionCatalogs`.
+
+# Version 0.24
+* [Feat]: simplify defaults for Android library projects and AndroidBlock element.
+
+# Version 0.23
+* [Feat]: add support for KMP DSL constructs.
+* [Feat]: add support for Android KMP lib constructs.
+* [Feat]: add factory to `TestFixturesOptions`.
+* [Feat]: `Imports` implements new interface `Element.MultiLine`. `GroupVersion` now does as well.
+* [Feat]: `Source` factories recognize annotation classes automatically.
+* [Feat]: kotlin.jvm is above kotlin.anroidLibrary.
+* Compiled against Kotlin 2.2 and Gradle 9.4.1.
+
 # Version 0.22
 * [Feat]: expose `pluginManagement.repositories.repositories`.
 
@@ -12,6 +32,7 @@ Gradle TestKit Support Changelog
 # Version 0.19
 * [Feat]: Add `onPlatform()` and `onEnforcedPlatform()` convenience functions to `Dependency`.
 * [Feat]: Build with Gradle 9.0.0, change API to non-nullable.
+* [Feat]: infer package and classname when possible, when building `kit.Source`.
 
 # Version 0.18
 * [New]: support passing custom environments to testkit. Add docs.

@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.utils.project
 
@@ -14,7 +14,7 @@ internal fun Project.buildPath(configurationName: String): Provider<String> {
   return if (GradleVersions.isAtLeastGradle910) {
     provider { gradle.buildPath }
   } else {
-    return buildPath(configurations.named(configurationName))
+    buildPath(configurations.named(configurationName))
   }
 }
 

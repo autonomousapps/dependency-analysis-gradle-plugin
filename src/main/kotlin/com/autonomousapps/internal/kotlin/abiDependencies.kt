@@ -1,8 +1,9 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.kotlin
 
 import com.autonomousapps.internal.AbiExclusions
+import com.autonomousapps.internal.ClassNames
 import com.autonomousapps.internal.ClassNames.canonicalize
 import com.autonomousapps.internal.utils.DESC_REGEX
 import com.autonomousapps.internal.utils.allItems
@@ -64,7 +65,7 @@ private fun List<ClassBinarySignature>.explodedAbi(
         sourceFile = classSignature.sourceFile,
         exposedClasses = exposedClasses.asSequence()
           // We don't report that the JDK is part of the ABI
-          .filterNot { it.startsWith("java/") }
+          .filterNot(ClassNames::isCoreJava)
           .map { canonicalize(it) }
           .toSortedSet(),
       )

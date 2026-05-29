@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
@@ -52,6 +52,6 @@ final class DuplicateDependencyVersionsSpec extends AbstractAndroidSpec {
       .contains(project.expectedOutput)
 
     where:
-    [gradleVersion, agpVersion] << multivariableDataPipe([GRADLE_LATEST], [AGP_8_4.version])
+    [gradleVersion, agpVersion] << multivariableDataPipe([GRADLE_LATEST], [AGP_8_13.version])
   }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.render
 
@@ -6,6 +6,8 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.gradle.*
 import com.autonomousapps.kit.gradle.Dependency.Companion.implementation
 import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.gradle.android.CompileOptions
+import com.autonomousapps.kit.gradle.android.DefaultConfig
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -46,7 +48,7 @@ internal class ScribeTestKotlin {
         repositories {
           google()
           mavenCentral()
-          maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") }
+          maven(url = "https://central.sonatype.com/repository/maven-snapshots/")
         }
         
       """.trimIndent()
@@ -58,7 +60,11 @@ internal class ScribeTestKotlin {
     @Test fun `can render dependencyResolutionManagement block`() {
       // Given
       val repositories = Repositories(Repository.GOOGLE, Repository.MAVEN_CENTRAL)
-      val dependencyResolutionManagement = DependencyResolutionManagement(repositories)
+      val dependencyResolutionManagement = DependencyResolutionManagement.Builder()
+        .withRepositories(repositories)
+        .withRepositoriesMode(DependencyResolutionManagement.RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+        .withVersionCatalogs(VersionCatalogs.of(VersionCatalog("my-libs", "my-libs.versions.toml")))
+        .build()
 
       // When
       val text = dependencyResolutionManagement.render(scribe)
@@ -66,14 +72,20 @@ internal class ScribeTestKotlin {
       // Then
       assertThat(text).isEqualTo(
         """
-        dependencyResolutionManagement {
-          repositories {
-            google()
-            mavenCentral()
-          }
-        }
-        
-      """.trimIndent()
+          |dependencyResolutionManagement {
+          |  repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+          |  repositories {
+          |    google()
+          |    mavenCentral()
+          |  }
+          |  versionCatalogs {
+          |    create("my-libs") {
+          |      from(files("my-libs.versions.toml"))
+          |    }
+          |  }
+          |}
+          |
+        """.trimMargin()
       )
     }
 
@@ -113,7 +125,7 @@ internal class ScribeTestKotlin {
         
         pluginManagement {
           repositories {
-            maven { url = uri("") }
+            maven(url = "")
             gradlePluginPortal()
             mavenCentral()
             google()
@@ -397,7 +409,7 @@ internal class ScribeTestKotlin {
         """
           buildscript {
             repositories {
-              maven { url = uri("") }
+              maven(url = "")
               gradlePluginPortal()
               mavenCentral()
               google()
@@ -457,7 +469,10 @@ internal class ScribeTestKotlin {
       val version = "1.0"
       val dependencies = Dependencies(Dependency("api", ":magic"))
       val androidBlock = AndroidBlock(
-        namespace = "ankh.morpork"
+        namespace = "ankh.morpork",
+        compileSdkVersion = 34,
+        defaultConfig = DefaultConfig.DEFAULT_APP,
+        compileOptions = CompileOptions.DEFAULT,
       )
 
       val buildScript = BuildScript(
@@ -488,7 +503,7 @@ internal class ScribeTestKotlin {
           
           buildscript {
             repositories {
-              maven { url = uri("") }
+              maven(url = "")
               gradlePluginPortal()
               mavenCentral()
               google()
@@ -512,7 +527,7 @@ internal class ScribeTestKotlin {
             compileSdk = 34
             defaultConfig {
               applicationId = "com.example"
-              minSdk = 21
+              minSdk = 23
               targetSdk = 29
               versionCode = 1
               versionName = "1.0"
@@ -567,7 +582,7 @@ internal class ScribeTestKotlin {
             compileSdk = 34
             defaultConfig {
               applicationId = "com.example"
-              minSdk = 21
+              minSdk = 23
               targetSdk = 29
               versionCode = 1
               versionName = "1.0"

@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit
 
@@ -98,6 +98,7 @@ public class RootProject(
      */
     public fun withVersionCatalog(file: File) {
       withFile(file)
+      // TODO(tsr): wire this file into DependencyResolutionManagement.versionCatalogs directly
     }
 
     public fun withFile(path: String, content: String) {

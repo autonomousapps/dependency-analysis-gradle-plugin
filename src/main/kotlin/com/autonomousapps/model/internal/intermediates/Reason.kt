@@ -1,15 +1,15 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates
 
 import com.autonomousapps.internal.strings.slashy
 import com.autonomousapps.internal.utils.capitalizeSafely
+import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.AndroidResSource
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import com.autonomousapps.model.internal.intermediates.producer.Constant
 import com.autonomousapps.model.internal.intermediates.producer.Member
-import com.autonomousapps.model.internal.intermediates.producer.ReflectingDependency
 import com.autonomousapps.model.internal.intermediates.producer.ReflectingDependency.ReflectiveAccess
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
@@ -168,6 +168,37 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String = "implementation"
   }
 
+  @TypeLabel("exceptions")
+  @JsonClass(generateAdapter = false)
+  data class Exceptions(override val reason: String) : Reason(reason) {
+    constructor(users: Map<Coordinates, Map<String, Set<String>>>) : this(
+      buildReason(asReason(users), "Has exceptions referenced", Kind.Exception)
+    )
+
+    override val configurationName: String = "runtimeOnly"
+
+    private companion object {
+      /**
+       * Ends up looking like
+       * ```
+       * * Referenced 1 time by another dependency: (1) ':producer': (a) [org.json.JSONException] by class mutual.aid.producer.Producer (implies runtimeOnly).
+       * ```
+       * See `ExceptionsAreSpecialSpec`.
+       */
+      fun asReason(users: Map<Coordinates, Map<String, Set<String>>>): Collection<String> {
+        return users.entries.mapIndexed { i, user ->
+          val uses = user.value.entries
+            .mapIndexed { j, entry ->
+              "(${'a' + j}) ${entry.value} by class ${entry.key}"
+            }
+            .joinToString(separator = ", ")
+
+          "(${i + 1}) '${user.key.gav()}': $uses"
+        }
+      }
+    }
+  }
+
   @TypeLabel("impl")
   @JsonClass(generateAdapter = false)
   data class Impl(override val reason: String) : Reason(reason) {
@@ -237,7 +268,7 @@ internal sealed class Reason(open val reason: String) {
   @TypeLabel("lint")
   @JsonClass(generateAdapter = false)
   data class LintJar(override val reason: String) : Reason(reason) {
-    override val configurationName: String = "implementation"
+    override val configurationName: String = "runtimeOnly"
 
     internal companion object {
       fun of(lintRegistry: String) = LintJar(
@@ -420,6 +451,7 @@ private enum class Kind(
   Annotation("annotation", "annotations"),
   Class("class", "classes"),
   Constant("constant", "constants"),
+  Exception("time by another dependency", "times by other dependencies"),
   InlineMember("inline member", "inline members"),
   LintRegistry("lint registry", "lint registries"),
   NativeBinary("native binary", "native binaries"),

@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.utils.strings
 
@@ -31,4 +31,8 @@ internal fun String.replaceExceptLast(oldValue: String, newValue: String, ignore
   } while (occurrenceIndex > 0 && occurrenceIndex != lastIndex)
 
   return stringBuilder.append(this, i, length).toString()
+}
+
+internal fun String.ensureSuffix(suffix: String): String {
+  return if (endsWith(suffix)) this else "$this$suffix"
 }

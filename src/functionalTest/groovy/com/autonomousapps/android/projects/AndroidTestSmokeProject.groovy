@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -8,6 +8,7 @@ import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -30,29 +31,30 @@ final class AndroidTestSmokeProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
-      .withAndroidSubproject('app') { subproject ->
-        subproject.sources = appSources()
-        subproject.styles = AndroidStyleRes.DEFAULT
-        subproject.colors = AndroidColorRes.DEFAULT
-
-        subproject.withBuildScript { buildScript ->
-          buildScript.plugins(Plugins.androidApp, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion)
-          buildScript.android = defaultAndroidAppBlock()
-          buildScript.dependencies(
+      .withAndroidSubproject('app') { app ->
+        app.sources = appSources()
+        app.styles = AndroidStyleRes.DEFAULT
+        app.colors = AndroidColorRes.DEFAULT
+        app.withBuildScript { bs ->
+          bs.plugins(androidApp())
+          bs.android = defaultAndroidAppBlock()
+          bs.kotlin = Kotlin.DEFAULT
+          bs.dependencies(
             kotlinStdLib('implementation'),
             appcompat('implementation'),
             junit('implementation'),
           )
         }
       }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('benchmark') { test ->
         test.sources = androidBenchmarkSources
-        test.manifest = AndroidManifest.defaultLib('com.example.test')
-
-        test.withBuildScript { buildScript ->
-          buildScript.plugins(Plugins.androidTest, Plugins.kotlinAndroidNoVersion, Plugins.dependencyAnalysisNoVersion)
-          buildScript.android = defaultAndroidTestBlock(':app', true)
-          buildScript.dependencies(okHttp)
+        test.manifest = null
+        test.withBuildScript { bs ->
+          bs.plugins(androidTest())
+          bs.android = defaultAndroidTestBlock(':app', true)
+          bs.kotlin = Kotlin.DEFAULT
+          bs.dependencies(okHttp)
         }
       }
       .write()
@@ -84,9 +86,7 @@ final class AndroidTestSmokeProject extends AbstractAndroidProject {
         class Lib {
           val buffer = Buffer()
         }'''.stripIndent()
-    )
-      .withPath('com.example', 'Lib')
-      .build()
+    ).build()
   ]
 
   Set<ProjectAdvice> actualBuildHealth() {

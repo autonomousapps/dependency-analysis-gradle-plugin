@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -29,7 +29,7 @@ final class AndroidThemeProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder(agpVersion)
       .withAndroidSubproject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
-          bs.plugins = androidAppPlugin
+          bs.plugins = androidApp(false)
           bs.android = defaultAndroidAppBlock(false, 'com.consumer')
           bs.dependencies = [
             project('implementation', ':producer'),
@@ -48,15 +48,16 @@ final class AndroidThemeProject extends AbstractAndroidProject {
           </manifest>'''.stripIndent()
         )
       }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('producer') { producer ->
         producer.withBuildScript { bs ->
-          bs.plugins = androidLibPlugin
+          bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
           bs.dependencies = [
             appcompat('implementation'),
           ]
         }
-        producer.manifest = AndroidManifest.defaultLib('com.example.producer')
+        producer.manifest = null
         producer.styles = AndroidStyleRes.of(
           '''\
           <?xml version="1.0" encoding="utf-8"?>

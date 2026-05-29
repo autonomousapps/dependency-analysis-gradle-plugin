@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -26,18 +26,18 @@ final class TransitiveVariantRuntimeProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
-      .withAndroidLibProject('consumer', 'com.example.consumer') { s ->
+      .withAndroidLibProject('consumer') { s ->
         s.manifest = libraryManifest()
         s.withBuildScript { bs ->
-          bs.plugins(androidLibPlugin)
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
           bs.dependencies(unused)
         }
       }
-      .withAndroidLibProject('unused', 'com.example.unused') { s ->
+      .withAndroidLibProject('unused') { s ->
         s.manifest = libraryManifest()
         s.withBuildScript { bs ->
-          bs.plugins(androidLibPlugin)
+          bs.plugins(androidLib(false))
           bs.android = defaultAndroidLibBlock(false, 'com.example.unused')
           bs.dependencies(conscryptUber)
         }

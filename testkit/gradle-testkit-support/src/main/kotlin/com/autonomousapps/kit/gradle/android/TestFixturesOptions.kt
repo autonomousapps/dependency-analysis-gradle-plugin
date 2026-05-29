@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle.android
 
@@ -16,4 +16,9 @@ public class TestFixturesOptions(
   }
 
   override val name: String = "testFixtures"
+
+  public companion object {
+    @JvmStatic
+    public fun enabled(): TestFixturesOptions = TestFixturesOptions(true)
+  }
 }

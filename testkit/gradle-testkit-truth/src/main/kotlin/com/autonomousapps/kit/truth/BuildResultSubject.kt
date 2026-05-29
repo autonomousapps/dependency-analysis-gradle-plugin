@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.truth
 
@@ -8,8 +8,6 @@ import com.google.common.truth.Fact.simpleFact
 import com.google.common.truth.FailureMetadata
 import com.google.common.truth.IterableSubject
 import com.google.common.truth.StringSubject
-import com.google.common.truth.Subject
-import com.google.common.truth.Subject.Factory
 import com.google.common.truth.Truth.assertAbout
 import com.google.errorprone.annotations.CanIgnoreReturnValue
 import org.gradle.testkit.runner.BuildResult

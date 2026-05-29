@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit
 
@@ -15,8 +15,7 @@ internal class AndroidManifestTest {
     assertThat(manifest.toString()).isEqualTo(
       """
       <?xml version="1.0" encoding="utf-8"?>
-      <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.example">
+      <manifest xmlns:android="http://schemas.android.com/apk/res/android">
       
       <application
         android:allowBackup="true"

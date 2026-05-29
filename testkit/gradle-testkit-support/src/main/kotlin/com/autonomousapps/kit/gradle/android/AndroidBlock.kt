@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle.android
 
@@ -18,12 +18,11 @@ import org.intellij.lang.annotations.Language
  */
 public class AndroidBlock @JvmOverloads constructor(
   public var namespace: String? = null,
-  public var compileSdkVersion: Int = 34,
-  public var defaultConfig: DefaultConfig = DefaultConfig.DEFAULT_APP,
+  public var compileSdkVersion: Int? = null,
+  public var defaultConfig: DefaultConfig? = null,
   public var buildTypes: BuildTypes? = null,
-  public var compileOptions: CompileOptions = CompileOptions.DEFAULT,
+  public var compileOptions: CompileOptions? = null,
   public var testFixturesOptions: TestFixturesOptions? = null,
-  public var kotlinOptions: KotlinOptions? = null,
   /** Used by `com.android.test` projects */
   public var targetProjectPath: String? = null,
   public var additions: String = "",
@@ -53,14 +52,15 @@ public class AndroidBlock @JvmOverloads constructor(
         it.append("'")
       }
     }
-    s.line {
-      it.append("compileSdkVersion ")
-      it.append(compileSdkVersion)
+    if (compileSdkVersion != null) {
+      s.line {
+        it.append("compileSdkVersion ")
+        it.append(compileSdkVersion)
+      }
     }
-    defaultConfig.render(s)
+    defaultConfig?.render(s)
     buildTypes?.render(s)
-    compileOptions.render(s)
-    kotlinOptions?.render(s)
+    compileOptions?.render(s)
     testFixturesOptions?.render(s)
 
     if (additions.isNotBlank()) {
@@ -86,14 +86,15 @@ public class AndroidBlock @JvmOverloads constructor(
         it.append("\"")
       }
     }
-    s.line {
-      it.append("compileSdk = ")
-      it.append(compileSdkVersion)
+    if (compileSdkVersion != null) {
+      s.line {
+        it.append("compileSdk = ")
+        it.append(compileSdkVersion)
+      }
     }
-    defaultConfig.render(s)
+    defaultConfig?.render(s)
     buildTypes?.render(s)
-    compileOptions.render(s)
-    kotlinOptions?.render(s)
+    compileOptions?.render(s)
 
     if (additions.isNotBlank()) {
       if (usesGroovy) {
@@ -109,7 +110,6 @@ public class AndroidBlock @JvmOverloads constructor(
     public var defaultConfig: DefaultConfig = DefaultConfig.DEFAULT_APP
     public var buildTypes: BuildTypes? = null
     public var compileOptions: CompileOptions = CompileOptions.DEFAULT
-    public var kotlinOptions: KotlinOptions? = null
 
     public var additions: String = ""
     private var usesGroovy = false
@@ -132,13 +132,16 @@ public class AndroidBlock @JvmOverloads constructor(
         defaultConfig = defaultConfig,
         buildTypes = buildTypes,
         compileOptions = compileOptions,
-        kotlinOptions = kotlinOptions,
         additions = additions,
       )
     }
   }
 
   public companion object {
+    @JvmStatic
+    public fun ofNamespace(namespace: String): AndroidBlock = AndroidBlock(namespace = namespace)
+
+    @Deprecated("Use the constructor")
     @JvmOverloads
     @JvmStatic
     public fun defaultAndroidAppBlock(
@@ -146,10 +149,12 @@ public class AndroidBlock @JvmOverloads constructor(
       namespace: String? = null,
     ): AndroidBlock = AndroidBlock(
       namespace = namespace,
+      compileSdkVersion = 34,
       defaultConfig = DefaultConfig.DEFAULT_APP,
-      kotlinOptions = if (isKotlinApplied) KotlinOptions.DEFAULT else null
+      compileOptions = CompileOptions.DEFAULT,
     )
 
+    @Deprecated("Use the constructor")
     @JvmOverloads
     @JvmStatic
     public fun defaultAndroidLibBlock(
@@ -157,10 +162,12 @@ public class AndroidBlock @JvmOverloads constructor(
       namespace: String? = null,
     ): AndroidBlock = AndroidBlock(
       namespace = namespace,
+      compileSdkVersion = 34,
       defaultConfig = DefaultConfig.DEFAULT_LIB,
-      kotlinOptions = if (isKotlinApplied) KotlinOptions.DEFAULT else null
+      compileOptions = CompileOptions.DEFAULT,
     )
 
+    @Deprecated("Use the constructor")
     @JvmOverloads
     @JvmStatic
     public fun defaultAndroidTestBlock(
@@ -169,9 +176,10 @@ public class AndroidBlock @JvmOverloads constructor(
       namespace: String? = null,
     ): AndroidBlock = AndroidBlock(
       namespace = namespace,
+      compileSdkVersion = 34,
       targetProjectPath = targetProjectPath,
       defaultConfig = DefaultConfig.DEFAULT_TEST,
-      kotlinOptions = if (isKotlinApplied) KotlinOptions.DEFAULT else null
+      compileOptions = CompileOptions.DEFAULT,
     )
   }
 }

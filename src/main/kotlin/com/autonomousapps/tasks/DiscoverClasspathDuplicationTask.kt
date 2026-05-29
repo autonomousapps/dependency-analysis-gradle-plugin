@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
@@ -79,7 +79,10 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
         // Find all class files provided by more than one dependency
         .filterValues { it.size > 1 }
         // only warn about duplicates if it's about a class that's actually used.
-        .filterKeys { it.replace('/', '.').removeSuffix(".class") in project.usedClasses }
+        .filterKeys {
+          val fqcn = it.replace('/', '.').removeSuffix(".class")
+          fqcn in project.usedClasses || fqcn in project.usedAnnotationClassesBySrc
+        }
         // filter out "duplicates" where the GAV is identical. This can be an issue with, say, Kotlin, which adds
         // variants of the same dependency with different capabilities. Not user-actionable.
         // E.g., "org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.1.20" is the GAV for both of:

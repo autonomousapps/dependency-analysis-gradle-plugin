@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -6,7 +6,7 @@ import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
-import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -29,12 +29,19 @@ final class DaggerProject extends AbstractAndroidProject {
 
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.plugins += rootKapt
+        }
+      }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject(projectName) { s ->
-        s.manifest = AndroidManifest.defaultLib('com.example.lib')
+        s.manifest = null
         s.sources = sources
         s.withBuildScript { bs ->
           bs.android = defaultAndroidLibBlock(true)
-          bs.plugins = [Plugins.androidLib, Plugins.kotlinAndroidNoVersion, Plugins.kotlinKaptNoVersion, Plugins.dependencyAnalysisNoVersion]
+          bs.kotlin = Kotlin.DEFAULT
+          bs.plugins(androidLib() + kapt())
           bs.dependencies = [
             javaxInject('api'),
             dagger('api'),
@@ -43,7 +50,8 @@ final class DaggerProject extends AbstractAndroidProject {
             daggerAndroidCompiler('kapt'),
           ]
         }
-      }.write()
+      }
+      .write()
   }
 
   private List<Source> sources = [

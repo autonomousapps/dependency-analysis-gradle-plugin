@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -8,6 +8,7 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.android.TestFixturesOptions
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
@@ -31,38 +32,40 @@ final class TestFixturesDuplicatedWithMainProject extends AbstractAndroidProject
         r.gradleProperties = GradleProperties.minimalAndroidProperties() +
           "android.experimental.enableTestFixturesKotlinSupport=true"
       }
-      .withSubproject('lib-test-utils') { s ->
-        s.sources = libTestUtilsSources
+      .withAndroidSubproject('app') { s ->
+        s.sources = sourcesWithTestFixtures
+        s.manifest = AndroidManifest.appEmpty()
         s.withBuildScript { bs ->
-          bs.plugins = kotlin
+          bs.plugins(androidApp(true))
+          bs.android = defaultAndroidAppBlock(true,"com.example.app").tap {
+            testFixturesOptions = TestFixturesOptions.enabled()
+          }
+          bs.kotlin = Kotlin.DEFAULT
+          bs.dependencies(
+            project("implementation", ":lib-test-utils"),
+            project("testFixturesImplementation", ":lib-test-utils"),
+          )
         }
       }
       .withAndroidSubproject('lib') { s ->
         s.sources = sourcesWithTestFixtures
         s.manifest = libraryManifest('lib.with.fixtures')
         s.withBuildScript { bs ->
-          bs.plugins = androidLibWithKotlin
+          bs.plugins(androidLib(true))
           bs.android = defaultAndroidLibBlock(true).tap {
-            testFixturesOptions = new TestFixturesOptions(true)
+            testFixturesOptions = TestFixturesOptions.enabled()
           }
-          bs.dependencies = [
+          bs.kotlin = Kotlin.DEFAULT
+          bs.dependencies(
             project("implementation", ":lib-test-utils"),
-            project("testFixturesImplementation", ":lib-test-utils")
-          ]
+            project("testFixturesImplementation", ":lib-test-utils"),
+          )
         }
       }
-      .withAndroidSubproject('app') { s ->
-        s.sources = sourcesWithTestFixtures
-        s.manifest = AndroidManifest.defaultLib('com.example.app')
+      .withSubproject('lib-test-utils') { s ->
+        s.sources = libTestUtilsSources
         s.withBuildScript { bs ->
-          bs.plugins = androidAppWithKotlin
-          bs.android = defaultAndroidAppBlock(true,"com.example.app").tap {
-            testFixturesOptions = new TestFixturesOptions(true)
-          }
-          bs.dependencies = [
-            project("implementation", ":lib-test-utils"),
-            project("testFixturesImplementation", ":lib-test-utils")
-          ]
+          bs.plugins(kotlin)
         }
       }
       .write()

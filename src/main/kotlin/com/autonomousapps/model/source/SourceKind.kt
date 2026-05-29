@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.source
 
@@ -6,6 +6,7 @@ import com.autonomousapps.internal.utils.capitalizeSafely
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 import org.gradle.api.tasks.SourceSet
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import java.io.Serializable
 
 /**
@@ -18,15 +19,19 @@ import java.io.Serializable
  */
 @JsonClass(generateAdapter = false, generator = "sealed:type")
 public sealed class SourceKind : Comparable<SourceKind>, Serializable {
-  /** Variant name for Android, or source set name for JVM. */
+  /** Variant name for Android, or source set name for JVM or KMP. */
   public abstract val name: String
 
   /** MAIN, TEST, ANDROID_TEST, CUSTOM_JVM */
   public abstract val kind: String
 
+  /** The name of the compile classpath configuration. */
   public abstract val compileClasspathName: String
+
+  /** The name of the runtime classpath configuration. */
   public abstract val runtimeClasspathName: String
 
+  /** Typically just `this` However, in the case of [AndroidSourceKind], strips the variant (flavor/buildType) away. */
   internal abstract fun base(): SourceKind
 
   /**
@@ -112,7 +117,7 @@ public data class AndroidSourceKind(
   }
 
   override fun compareTo(other: SourceKind): Int {
-    if (other is JvmSourceKind) return -1
+    if (other !is AndroidSourceKind) return -1
 
     return compareBy(SourceKind::name)
       .thenBy(SourceKind::kind)
@@ -214,17 +219,12 @@ public data class JvmSourceKind(
 ) : SourceKind(), Serializable {
 
   override fun base(): JvmSourceKind = this
-
-  override fun runtimeMatches(classpaths: Collection<String>): Boolean {
-    return runtimeClasspathName in classpaths
-  }
-
-  override fun sourceSetMatches(sourceSetName: String): Boolean {
-    return sourceSetName == name
-  }
+  override fun runtimeMatches(classpaths: Collection<String>): Boolean = runtimeClasspathName in classpaths
+  override fun sourceSetMatches(sourceSetName: String): Boolean = sourceSetName == name
 
   override fun compareTo(other: SourceKind): Int {
     if (other is AndroidSourceKind) return 1
+    if (other is KmpSourceKind) return -1
 
     return compareBy(SourceKind::name)
       .thenBy(SourceKind::kind)
@@ -254,6 +254,82 @@ public data class JvmSourceKind(
           "runtimeClasspath"
         } else {
           "${sourceSetName}RuntimeClasspath"
+        },
+      )
+    }
+  }
+}
+
+@TypeLabel("kmp")
+@JsonClass(generateAdapter = false)
+public data class KmpSourceKind(
+  override val name: String,
+  override val kind: String,
+  override val compileClasspathName: String,
+  override val runtimeClasspathName: String,
+) : SourceKind(), Serializable {
+
+  override fun base(): KmpSourceKind = this
+  override fun runtimeMatches(classpaths: Collection<String>): Boolean = runtimeClasspathName in classpaths
+  override fun sourceSetMatches(sourceSetName: String): Boolean = sourceSetName == name
+
+  override fun compareTo(other: SourceKind): Int {
+    if (other !is KmpSourceKind) return 1
+
+    return compareBy(SourceKind::name)
+      .thenBy(SourceKind::kind)
+      .thenBy(SourceKind::compileClasspathName)
+      .thenBy(SourceKind::runtimeClasspathName)
+      .compare(this, other)
+  }
+
+  internal companion object {
+    // standard Android source sets are:
+    // 1. androidMain
+    // 2. androidHostTest   // unit tests
+    // 3. androidDeviceTest // instrumented tests
+    const val ANDROID_MAIN_NAME = "androidMain"
+    const val COMMON_MAIN_NAME = "commonMain"
+    const val COMMON_TEST_NAME = "commonTest"
+    const val JVM_MAIN_NAME = "jvmMain"
+    const val JVM_TEST_NAME = "jvmTest"
+
+    val JVM_MAIN = of(JVM_MAIN_NAME)
+    val JVM_TEST = of(JVM_TEST_NAME)
+
+    fun of(compilation: KotlinCompilation<*>): KmpSourceKind {
+      val runtimeClasspathName = compilation.runtimeDependencyConfigurationName
+        ?: error("Kotlin compilation ${compilation.name} has null 'runtimeDependencyConfigurationName'")
+
+      return KmpSourceKind(
+        name = compilation.defaultSourceSet.name,
+        // Always custom
+        kind = CUSTOM_JVM_KIND,
+        compileClasspathName = compilation.compileDependencyConfigurationName,
+        runtimeClasspathName = runtimeClasspathName,
+      )
+    }
+
+    fun of(sourceSetName: String): KmpSourceKind {
+      return KmpSourceKind(
+        name = sourceSetName,
+        // Always custom
+        kind = CUSTOM_JVM_KIND,
+        compileClasspathName = when (sourceSetName) {
+          // jvmMain => jvmCompileClasspath (jvmMain is special)
+          JVM_MAIN_NAME -> "jvmCompileClasspath"
+          // androidMain => androidCompileClasspath (androidMain is special)
+          ANDROID_MAIN_NAME -> "androidCompileClasspath"
+          // jvmTest => jvmTestCompileClasspath
+          else -> "${sourceSetName}CompileClasspath"
+        },
+        runtimeClasspathName = when (sourceSetName) {
+          // jvmMain => jvmRuntimeClasspath (jvmMain is special)
+          JVM_MAIN_NAME -> "jvmRuntimeClasspath"
+          // androidMain => androidRuntimeClasspath (androidMain is special)
+          ANDROID_MAIN_NAME -> "androidRuntimeClasspath"
+          // jvmTest => jvmTestRuntimeClasspath
+          else -> "${sourceSetName}RuntimeClasspath"
         },
       )
     }

@@ -1,10 +1,9 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.truth.artifact
 
 import com.autonomousapps.kit.truth.AbstractSubject
 import com.google.common.truth.*
-import com.google.common.truth.Subject.Factory
 import com.google.errorprone.annotations.CanIgnoreReturnValue
 import java.nio.charset.Charset
 import java.nio.file.Path

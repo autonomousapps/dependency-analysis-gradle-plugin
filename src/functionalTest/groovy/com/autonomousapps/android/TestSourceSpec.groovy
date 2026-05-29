@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
@@ -29,7 +29,7 @@ final class TestSourceSpec extends AbstractAndroidSpec {
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 
-  def "kotlin-test-junit should be androidTestRuntimeOnly (#gradleVersion AGP #agpVersion)"() {
+  def "kotlin-test-junit is in a bundle with junit (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new KotlinTestJunitProject(agpVersion as String)
     gradleProject = project.gradleProject

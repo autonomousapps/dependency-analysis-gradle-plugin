@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle.dependencies
 
@@ -10,14 +10,6 @@ class DependencyProvider(
 ) {
 
   private val pluginUnderTestVersion = AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION
-
-  /*
-   * Common configurations. TODO(tsr): add later.
-   */
-
-  /*
-   * Frequently-used dependencies.
-   */
 
   fun dagp(configurationName: String): Dependency {
     return Dependency(
@@ -36,14 +28,6 @@ class DependencyProvider(
 
   fun kotlinStdLib(configuration: String): Dependency {
     return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-  }
-
-  fun kotlinStdlibJdk8(configuration: String): Dependency {
-    return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-  }
-
-  fun kotlinStdlibJdk7(configuration: String): Dependency {
-    return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion")
   }
 
   fun kotlinTestJunit(configuration: String): Dependency {
@@ -82,20 +66,28 @@ class DependencyProvider(
     return Dependency(configuration, "org.conscrypt:conscrypt-openjdk-uber:2.4.0")
   }
 
+  fun autoDagger(configuration: String): Dependency {
+    return Dependency(configuration, "se.ansman.dagger.auto:android:2.1.0")
+  }
+
+  fun autoDaggerApi(configuration: String): Dependency {
+    return Dependency(configuration, "se.ansman.dagger.auto:android-api:2.1.0")
+  }
+
+  fun autoDaggerCompiler(configuration: String): Dependency {
+    return Dependency(configuration, "se.ansman.dagger.auto:compiler:2.1.0")
+  }
+
+  fun hiltAndroid(configuration: String): Dependency {
+    return Dependency(configuration, "com.google.dagger:hilt-android:2.59.2")
+  }
+
+  fun hiltAndroidCompiler(configuration: String): Dependency {
+    return Dependency(configuration, "com.google.dagger:hilt-android-compiler:2.59.2")
+  }
+
   fun kotestAssertions(configuration: String): Dependency {
     return Dependency(configuration, "io.kotest:kotest-assertions-core:4.6.0")
-  }
-
-  fun moshi(configuration: String): Dependency {
-    return Dependency(configuration, "com.squareup.moshi:moshi:1.14.0")
-  }
-
-  fun moshiKotlin(configuration: String): Dependency {
-    return Dependency(configuration, "com.squareup.moshi:moshi-kotlin:1.14.0")
-  }
-
-  fun moshiAdapters(configuration: String): Dependency {
-    return Dependency(configuration, "com.squareup.moshi:moshi-adapters:1.14.0")
   }
 
   fun okio(configuration: String): Dependency {
@@ -115,15 +107,11 @@ class DependencyProvider(
   }
 
   fun appcompat(configuration: String): Dependency {
-    return Dependency(configuration, "androidx.appcompat:appcompat:1.1.0")
+    return Dependency(configuration, "androidx.appcompat:appcompat:1.7.1")
   }
 
   fun androidxAnnotations(configuration: String): Dependency {
-    return Dependency(configuration, "androidx.annotation:annotation:1.1.0")
-  }
-
-  fun composeMultiplatformRuntime(configuration: String): Dependency {
-    return Dependency(configuration, "org.jetbrains.compose.runtime:runtime:1.0.1")
+    return Dependency(configuration, "androidx.annotation:annotation:1.9.1")
   }
 
   fun composeMultiplatformFoundation(configuration: String): Dependency {
@@ -131,15 +119,15 @@ class DependencyProvider(
   }
 
   fun coreKtx(configuration: String): Dependency {
-    return Dependency(configuration, "androidx.core:core-ktx:1.1.0")
+    return Dependency(configuration, "androidx.core:core-ktx:1.13.1")
   }
 
   fun core(configuration: String): Dependency {
-    return Dependency(configuration, "androidx.core:core:1.1.0")
+    return Dependency(configuration, "androidx.core:core:1.13.1")
   }
 
   fun navUiKtx(configuration: String): Dependency {
-    return Dependency(configuration, "androidx.navigation:navigation-ui-ktx:2.1.0")
+    return Dependency(configuration, "androidx.navigation:navigation-ui-ktx:2.9.7")
   }
 
   fun constraintLayout(configuration: String): Dependency {
@@ -191,17 +179,17 @@ class DependencyProvider(
   }
 
   fun kotlinxCoroutinesAndroid(configuration: String): Dependency {
-    return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
+    return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
   }
 
   @JvmOverloads
   fun kotlinxCoroutinesCore(configuration: String, target: String = ""): Dependency {
-    return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-core$target:1.6.0")
+    return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-core$target:1.7.3")
   }
 
   @JvmOverloads
   fun kotlinxCoroutinesTest(configuration: String, target: String = ""): Dependency {
-    return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-test$target:1.6.0")
+    return Dependency(configuration, "org.jetbrains.kotlinx:kotlinx-coroutines-test$target:1.7.3")
   }
 
   @JvmOverloads

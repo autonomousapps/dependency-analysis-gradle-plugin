@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.advice.truth
 
@@ -8,7 +8,6 @@ import com.autonomousapps.model.ModuleAdvice
 import com.autonomousapps.model.ProjectAdvice
 import com.google.common.truth.*
 import com.google.common.truth.Fact.simpleFact
-import com.google.common.truth.Subject.Factory
 import com.google.common.truth.Truth.assertAbout
 
 class BuildHealthSubject private constructor(
@@ -71,13 +70,6 @@ class BuildHealthSubject private constructor(
       .containsExactlyEntriesIn(expected.associate { it.projectPath to it.dependencyAdvice })
   }
 
-  fun containsExactlyDependencyAdviceIn(expected: Map<String, Set<Advice>>): Ordered {
-    if (actual == null) failWithActual(simpleFact("build health was null"))
-    return assertThat(actual)
-      .comparingElementsUsing(DEPENDENCY_EQUIVALENCE)
-      .containsExactlyElementsIn(pairs(expected))
-  }
-  
   fun isEquivalentIgnoringModuleAdviceAndWarnings(expected: Iterable<ProjectAdvice>) {
     if (actual == null) failWithActual(simpleFact("build health was null"))
     assertThat(actual)
@@ -89,16 +81,6 @@ class BuildHealthSubject private constructor(
     assertThat(actual)
       .comparingElementsUsing(SHOULD_FAIL_EQUIVALENCE)
       .containsExactlyElementsIn(expected.map { it.projectPath to it.shouldFail })
-  }
-
-  fun containsExactlyModuleAdviceIn(expected: Iterable<ProjectAdvice>): Ordered {
-    if (actual == null) failWithActual(simpleFact("build health was null"))
-    assertThat(actual)
-      .comparingElementsUsing(SHOULD_FAIL_EQUIVALENCE)
-      .containsExactlyElementsIn(expected.map { it.projectPath to it.shouldFail })
-    return assertThat(actual)
-      .comparingElementsUsing(MODULE_EQUIVALENCE)
-      .containsExactlyElementsIn(pairs(expected) { it.moduleAdvice })
   }
 
   fun containsExactlyModuleAdviceIn(expected: Map<String, Set<ModuleAdvice>>): Ordered {

@@ -1,12 +1,10 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.graph.supers
 
 import com.autonomousapps.internal.graph.newGraphBuilder
-import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.BinaryClassCapability
 import com.autonomousapps.model.internal.Dependency
-import com.autonomousapps.visitor.GraphViewVisitor
 import com.google.common.graph.Graph
 
 /** Builds a [`Graph<SuperNode>`][Graph]. */

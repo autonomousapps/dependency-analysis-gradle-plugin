@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -24,15 +24,11 @@ final class DebugVariantIgnoredProject extends AbstractVariantProject {
 
   @Override
   protected GradleProperties getProjectGradleProperties() {
-    return super.getProjectGradleProperties() + GradleProperties.of(
-      "$Flags.ANDROID_IGNORED_VARIANTS=debug"
-    )
+    return super.getProjectGradleProperties() + GradleProperties.of("$Flags.ANDROID_IGNORED_VARIANTS=debug")
   }
 
   @Override
   Set<ProjectAdvice> expectedBuildHealth() {
-    return [
-      projectAdviceForDependencies(':app', appAdvice)
-    ]
+    return [projectAdviceForDependencies(':app', appAdvice)]
   }
 }

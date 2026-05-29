@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -41,11 +41,12 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
 
     private GradleProject build() {
       return newAndroidGradleProjectBuilder(agpVersion)
+      // TODO(tsr): use withAndroidLibProject() instead
         .withAndroidSubproject('proj') { s ->
           s.sources = sources
-          s.manifest = AndroidManifest.defaultLib('com.example.proj')
+          s.manifest = null
           s.withBuildScript { bs ->
-            bs.plugins = androidLibPlugin
+            bs.plugins = androidLib(false)
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
             bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
             bs.withGroovy("""\
@@ -104,14 +105,19 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
       this.gradleProject = build()
     }
 
+    boolean isLessThanAgp9() {
+      return isLessThanAgp9
+    }
+
     private GradleProject build() {
       return newAndroidGradleProjectBuilder(agpVersion)
+      // TODO(tsr): use withAndroidLibProject() instead
         .withAndroidSubproject('proj') { s ->
           s.sources = sources
           s.colors = AndroidColorRes.DEFAULT
-          s.manifest = AndroidManifest.defaultLib('com.example.proj')
+          s.manifest = null
           s.withBuildScript { bs ->
-            bs.plugins = androidLibPlugin
+            bs.plugins = androidLib(false)
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
             bs.dependencies = [okHttp, junit]
           }
@@ -174,11 +180,12 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
 
     private GradleProject build() {
       return newAndroidGradleProjectBuilder(agpVersion)
+      // TODO(tsr): use withAndroidLibProject() instead
         .withAndroidSubproject('proj') { s ->
           s.sources = sources
-          s.manifest = AndroidManifest.defaultLib('com.example.proj')
+          s.manifest = null
           s.withBuildScript { bs ->
-            bs.plugins = androidLibPlugin
+            bs.plugins = androidLib(false)
             bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
           }
         }

@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 @file:Suppress("UnstableApiUsage")
 
@@ -119,7 +119,7 @@ internal class JavaWithoutAbiAnalyzer(
   sourceKind: SourceKind,
 ) : JvmAnalyzer(
   project = project,
-  sourceSet = JavaSourceSet(sourceSet, sourceKind),
+  sourceSet = JavaSourceSet(project, sourceSet, sourceKind),
   hasAbi = false
 )
 
@@ -130,7 +130,7 @@ internal class JavaWithAbiAnalyzer(
   hasAbi: Boolean,
 ) : JvmAnalyzer(
   project = project,
-  sourceSet = JavaSourceSet(sourceSet, sourceKind),
+  sourceSet = JavaSourceSet(project, sourceSet, sourceKind),
   hasAbi = hasAbi
 )
 
@@ -141,7 +141,7 @@ internal abstract class KotlinJvmAnalyzer(
   hasAbi: Boolean,
 ) : JvmAnalyzer(
   project = project,
-  sourceSet = KotlinSourceSet(sourceSet, sourceKind),
+  sourceSet = KotlinSourceSet(project, sourceSet, sourceKind),
   hasAbi = hasAbi
 )
 

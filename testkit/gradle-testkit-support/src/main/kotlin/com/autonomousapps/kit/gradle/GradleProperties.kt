@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle
 
@@ -39,11 +39,17 @@ public class GradleProperties(private val lines: MutableList<String>) {
 
     public const val NON_TRANSITIVE_R: String = "android.nonTransitiveRClass=true"
 
+    /** Enable the build cache. */
+    public const val BUILD_CACHE: String = "org.gradle.caching=true"
+
     /** Enable the configuration cache, pre-Gradle 8. */
     public const val CONFIGURATION_CACHE_UNSTABLE: String = "org.gradle.unsafe.configuration-cache=true"
 
     /** Enable the configuration cache, Gradle 8+. */
     public const val CONFIGURATION_CACHE_STABLE: String = "org.gradle.configuration-cache=true"
+
+    /** Enable parallel store and load for configuration cache entries, from Gradle 8.11. */
+    public const val CONFIGURATION_CACHE_PARALLEL: String = "org.gradle.configuration-cache.parallel=true"
 
     /**
      * Enable isolated projects, pre-Gradle 9.
@@ -51,6 +57,9 @@ public class GradleProperties(private val lines: MutableList<String>) {
      * @see <a href="https://docs.gradle.org/nightly/userguide/isolated_projects.html">Isolated Projects</a>
      */
     public const val ISOLATED_PROJECTS_UNSTABLE: String = "org.gradle.unsafe.isolated-projects=true"
+
+    /** Enable parallel builds. */
+    public const val PARALLEL: String = "org.gradle.parallel=true"
 
     /**
      * Disable the behavior of the Kotlin Gradle Plugin that adds the stdlib as an `api` dependency by default.
@@ -77,9 +86,7 @@ public class GradleProperties(private val lines: MutableList<String>) {
     public fun minimalAndroidProperties(): GradleProperties = of(JVM_ARGS, USE_ANDROID_X, NON_TRANSITIVE_R)
 
     @JvmStatic
-    public fun enableConfigurationCache(): GradleProperties = of(
-      CONFIGURATION_CACHE_STABLE, CONFIGURATION_CACHE_UNSTABLE
-    )
+    public fun enableConfigurationCache(): GradleProperties = of(CONFIGURATION_CACHE_STABLE)
 
     @JvmStatic
     public fun enableIsolatedProjects(): GradleProperties = of(ISOLATED_PROJECTS_UNSTABLE)

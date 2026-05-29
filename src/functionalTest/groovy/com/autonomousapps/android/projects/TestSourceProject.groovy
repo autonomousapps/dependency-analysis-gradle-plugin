@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -10,6 +10,7 @@ import com.autonomousapps.kit.android.AndroidManifest
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.dependencies.Plugins
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -34,8 +35,9 @@ final class TestSourceProject extends AbstractAndroidProject {
         subproject.styles = AndroidStyleRes.DEFAULT
         subproject.colors = AndroidColorRes.DEFAULT
         subproject.withBuildScript { bs ->
-          bs.plugins = androidAppWithKotlin
+          bs.plugins = androidApp(true)
           bs.android = defaultAndroidAppBlock()
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [
             kotlinStdLib('implementation'),
             appcompat('implementation'),
@@ -43,12 +45,14 @@ final class TestSourceProject extends AbstractAndroidProject {
           ]
         }
       }
+    // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('lib') { subproject ->
         subproject.sources = androidLibSources
-        subproject.manifest = AndroidManifest.defaultLib('my.android.lib')
+        subproject.manifest = null
         subproject.withBuildScript { bs ->
-          bs.plugins = androidLibWithKotlin
+          bs.plugins = androidLib(true)
           bs.android = defaultAndroidLibBlock(true, 'my.android.lib')
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [junit('implementation')]
         }
       }

@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal
 
@@ -176,6 +176,24 @@ internal data class ConstantCapability(
   }
 }
 
+@TypeLabel("exception")
+@JsonClass(generateAdapter = false)
+internal data class ExceptionCapability(
+  /** Map of class names to the exceptions they handle. Does not include standard Java exceptions. */
+  val exceptions: Map<String, Set<String>>,
+) : Capability() {
+
+  companion object {
+    fun newInstance(exceptions: Map<String, Set<String>>): ExceptionCapability {
+      return ExceptionCapability(exceptions.toSortedMap().efficient())
+    }
+  }
+
+  override fun merge(other: Capability): Capability {
+    return newInstance(exceptions + (other as ExceptionCapability).exceptions)
+  }
+}
+
 @TypeLabel("inferred")
 @JsonClass(generateAdapter = false)
 internal data class InferredCapability(
@@ -208,17 +226,39 @@ internal data class InlineMemberCapability(
 
   @JsonClass(generateAdapter = false)
   data class InlineMember(
+    val className: String,
     val packageName: String,
     val inlineMembers: Set<String>,
   ) : Comparable<InlineMember> {
 
     companion object {
-      fun newInstance(packageName: String, inlineMembers: Set<String>): InlineMember {
-        return InlineMember(packageName, inlineMembers.toSortedSet().efficient())
+      fun newInstance(className: String, packageName: String, inlineMembers: Set<String>): InlineMember {
+        return InlineMember(
+          className = className,
+          packageName = packageName,
+          inlineMembers = inlineMembers.toSortedSet().efficient(),
+        )
       }
     }
 
-    override fun compareTo(other: InlineMember): Int = compareBy(InlineMember::packageName)
+    /**
+     * Returns the set of import statements most likely to reference the inline functions related to this instance.
+     * ```
+     * // 1
+     * import com.foo.myCoolFunction
+     *
+     * // 2
+     * import com.foo.*
+     * ```
+     */
+    fun candidateImports(): Set<String> {
+      // we like sorted sets because they're easier to debug
+      val candidateImports = sortedSetOf("$packageName.*")
+      return inlineMembers.mapTo(candidateImports) { name -> "$packageName.$name" }
+    }
+
+    override fun compareTo(other: InlineMember): Int = compareBy(InlineMember::className)
+      .thenBy(InlineMember::packageName)
       .thenBy(LexicographicIterableComparator()) { it.inlineMembers }
       .compare(this, other)
   }

@@ -1,4 +1,4 @@
-// Copyright (c) 2025. Tony Robalik.
+// Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android.projects
 
@@ -9,6 +9,7 @@ import com.autonomousapps.kit.android.AndroidColorRes
 import com.autonomousapps.kit.android.AndroidLayout
 import com.autonomousapps.kit.android.AndroidStyleRes
 import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.kotlin.Kotlin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -35,14 +36,15 @@ final class ServiceLoaderProject extends AbstractAndroidProject {
   @SuppressWarnings('DuplicatedCode')
   private GradleProject build() {
     return newAndroidGradleProjectBuilder(agpVersion)
-      .withAndroidSubproject('app') { a ->
-        a.sources = sources
-        a.styles = AndroidStyleRes.DEFAULT
-        a.colors = AndroidColorRes.DEFAULT
-        a.layouts = layouts
-        a.withBuildScript { bs ->
-          bs.plugins = androidAppWithKotlin
+      .withAndroidSubproject('app') { app ->
+        app.sources = sources
+        app.styles = AndroidStyleRes.DEFAULT
+        app.colors = AndroidColorRes.DEFAULT
+        app.layouts = layouts
+        app.withBuildScript { bs ->
+          bs.plugins = androidApp(true)
           bs.android = defaultAndroidAppBlock()
+          bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = dependencies
         }
       }
