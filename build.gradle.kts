@@ -74,6 +74,8 @@ buildConfig {
 
   buildConfigField("String", "GRADLE_MIN_VERSION", libs.versions.gradle.version.min.map { "\"$it\"" })
   buildConfigField("String", "GRADLE_MAX_VERSION", libs.versions.gradle.version.max.map { "\"$it\"" })
+  // The kotlin-metadata-jvm version supplied to classloader-isolated workers (see issue 1671). Not bundled in the jar.
+  buildConfigField("String", "KOTLIN_METADATA_VERSION", libs.versions.kotlinMetadata.map { "\"$it\"" })
 }
 
 val main = sourceSets["main"]
@@ -133,9 +135,11 @@ dependencies {
   implementation(libs.moshi.kotlin)
   implementation(libs.moshix.sealed.reflect)
   implementation(libs.okio)
-  implementation(libs.kotlin.metadata.jvm) {
+
+  compileOnly(libs.kotlin.metadata.jvm) {
     // Trying to get support for analyzing K2.2 projects without bumping our stdlib
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+    because("Will be provided at runtime only to the worker action classpath, so there is no upgrade of Kotlin on the plugin classpath")
   }
   implementation(libs.caffeine) {
     because("High performance, concurrent cache")

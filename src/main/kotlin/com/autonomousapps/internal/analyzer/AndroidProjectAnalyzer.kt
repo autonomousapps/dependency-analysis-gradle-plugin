@@ -5,6 +5,7 @@
 package com.autonomousapps.internal.analyzer
 
 import com.autonomousapps.internal.ArtifactAttributes
+import com.autonomousapps.internal.KotlinMetadataClasspath
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
 import com.autonomousapps.internal.artifactsFor
@@ -196,6 +197,7 @@ internal class AndroidLibAnalyzer(
 
     return project.tasks.register("abiAnalysis$taskNameSuffix", AbiAnalysisTask::class.java) {
       it.exclusions.set(abiExclusions)
+      it.kotlinMetadataClasspath.setFrom(KotlinMetadataClasspath.of(project))
       it.output.set(outputPaths.abiAnalysisPath)
       it.abiDump.set(outputPaths.abiDumpPath)
     }.also { provider ->
