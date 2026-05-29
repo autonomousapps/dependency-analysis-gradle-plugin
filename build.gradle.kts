@@ -213,7 +213,7 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
   jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:MaxMetaspaceSize=1g")
 
   systemProperty("com.autonomousapps.quick", "${quickTest()}")
-  systemProperty("com.autonomousapps.test.versions.kotlin", libs.versions.kotlin.get())
+  systemProperty("com.autonomousapps.test.versions.kotlin", libs.versions.kotlinGradlePlugin.get())
   systemProperty("com.autonomousapps.test.versions.kotlin.later", libs.versions.kotlinForAndroidtests.get())
 
   beforeTest(closureOf<TestDescriptor> {
