@@ -13,7 +13,9 @@ internal class KotlinConfigurer(private val project: Project) {
 
   private val versionCatalog = project.extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
   private val javaTarget = versionCatalog.findVersion("javaTarget").orElseThrow().requiredVersion
-  private val kotlin = versionCatalog.findVersion("kotlin").get().requiredVersion
+
+  /** Version of the bundled `kotlin-stdlib*`/`kotlin-reflect`. Capped for Gradle 8.x compatibility (see `libs.versions.toml`). */
+  private val kotlinRuntime = versionCatalog.findVersion("kotlinRuntime").get().requiredVersion
   private val kotlinLanguageVersion = versionCatalog.findVersion("kotlinLanguageVersion").get().requiredVersion
     .toKotlinVersion()
 
@@ -28,7 +30,8 @@ internal class KotlinConfigurer(private val project: Project) {
   private fun Project.configureKotlinExtension() {
     project.extensions.getByType(KotlinJvmProjectExtension::class.java).run {
       explicitApi()
-      coreLibrariesVersion = kotlin
+      // Bundled stdlib is capped for Gradle 8.x compatibility; compile against that same API level.
+      coreLibrariesVersion = kotlinRuntime
     }
   }
 
@@ -48,7 +51,14 @@ internal class KotlinConfigurer(private val project: Project) {
     }
   }
 
-  /** @see <a href="https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1537#issuecomment-3293306966">Issue 1537</a> */
+  /**
+   * Pin the bundled Kotlin runtime libraries (`kotlin-stdlib*`, `kotlin-reflect`) to [kotlinRuntime]. These end up on
+   * DAGP's shaded runtime classpath, so their binary-metadata version must stay readable by the oldest supported
+   * Gradle's Kotlin DSL script compiler.
+   *
+   * @see <a href="https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1537#issuecomment-3293306966">Issue 1537</a>
+   * @see <a href="https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1671">Issue 1671</a>
+   */
   private fun Project.configureKotlinVersion() {
     configurations.configureEach { c ->
       if (c.isCanBeResolved) {
@@ -56,9 +66,12 @@ internal class KotlinConfigurer(private val project: Project) {
           r.eachDependency { details ->
             val requested = details.requested
 
-            if (requested.group == "org.jetbrains.kotlin" && requested.name.startsWith("kotlin-stdlib")) {
-              details.useVersion(kotlin)
-              details.because("Downgrading the stdlib for enhanced compatibility")
+            if (
+              requested.group == "org.jetbrains.kotlin" &&
+              (requested.name.startsWith("kotlin-stdlib") || requested.name == "kotlin-reflect")
+            ) {
+              details.useVersion(kotlinRuntime)
+              details.because("Downgrading the Kotlin runtime libraries for enhanced compatibility (issues 1537, 1671)")
             }
           }
         }
