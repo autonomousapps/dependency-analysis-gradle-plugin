@@ -45,6 +45,10 @@ public abstract class FindKotlinMagicTask @Inject constructor(
   @get:Classpath
   public abstract val compileClasspath: ConfigurableFileCollection
 
+  /** `kotlin-metadata-jvm`, added to the isolated worker classpath. */
+  @get:Classpath
+  public abstract val kotlinMetadataClasspath: ConfigurableFileCollection
+
   /** [PhysicalArtifact]s used to compile this project. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFile
@@ -81,7 +85,10 @@ public abstract class FindKotlinMagicTask @Inject constructor(
     val seedFile = File(temporaryDir, "kotlin-magic-cache-seed.json").apply { bufferWriteJsonMap(seed) }
     val newEntriesFile = File(temporaryDir, "kotlin-magic-cache-new.json")
 
-    workerExecutor.noIsolation().submit(Action::class.java) {
+    workerExecutor.classLoaderIsolation {
+      // kotlin-metadata-jvm is not on the main plugin classpath (issue 1671); add it for the isolated worker only.
+      it.classpath.from(kotlinMetadataClasspath)
+    }.submit(Action::class.java) {
       it.artifacts.set(artifacts)
       it.inlineUsageReport.set(outputInlineMembers)
       it.typealiasReport.set(outputTypealiases)

@@ -5,6 +5,7 @@
 package com.autonomousapps.internal.analyzer
 
 import com.autonomousapps.AbstractExtension
+import com.autonomousapps.internal.KotlinMetadataClasspath
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.opaqueComponentArtifacts
@@ -409,6 +410,7 @@ internal abstract class AbstractDependencyAnalyzer(
       )
       t.physicalArtifacts.set(artifactsReport.flatMap { it.output })
       androidLintTask?.let { t2 -> t.androidLinters.set(t2.flatMap { it.output }) }
+      t.kotlinMetadataClasspath.setFrom(KotlinMetadataClasspath.of(project))
 
       t.output.set(outputPaths.explodedJarsPath)
     }
@@ -423,6 +425,7 @@ internal abstract class AbstractDependencyAnalyzer(
           .artifactFiles
       )
       t.artifacts.set(artifactsReport.flatMap { it.output })
+      t.kotlinMetadataClasspath.setFrom(KotlinMetadataClasspath.of(project))
       t.outputInlineMembers.set(outputPaths.inlineUsagePath)
       t.outputTypealiases.set(outputPaths.typealiasUsagePath)
       t.outputErrors.set(outputPaths.inlineUsageErrorsPath)

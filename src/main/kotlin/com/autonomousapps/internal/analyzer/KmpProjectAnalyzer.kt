@@ -3,6 +3,7 @@
 package com.autonomousapps.internal.analyzer
 
 import com.autonomousapps.internal.ArtifactAttributes
+import com.autonomousapps.internal.KotlinMetadataClasspath
 import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.capitalizeSafely
@@ -62,6 +63,7 @@ internal class KmpProjectAnalyzer(
     return project.tasks.register("abiAnalysis$taskNameSuffix", AbiAnalysisTask::class.java) {
       it.classes.setFrom(sourceSet.classesDirs)
       it.exclusions.set(abiExclusions)
+      it.kotlinMetadataClasspath.setFrom(KotlinMetadataClasspath.of(project))
       it.output.set(outputPaths.abiAnalysisPath)
       it.abiDump.set(outputPaths.abiDumpPath)
     }

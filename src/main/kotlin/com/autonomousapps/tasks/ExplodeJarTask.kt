@@ -42,6 +42,10 @@ public abstract class ExplodeJarTask @Inject constructor(
   @get:Classpath
   public abstract val compileClasspath: ConfigurableFileCollection
 
+  /** `kotlin-metadata-jvm`, added to the isolated worker classpath. */
+  @get:Classpath
+  public abstract val kotlinMetadataClasspath: ConfigurableFileCollection
+
   /** [`Set<PhysicalArtifact>`][com.autonomousapps.model.internal.PhysicalArtifact]. */
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFile
@@ -70,7 +74,10 @@ public abstract class ExplodeJarTask @Inject constructor(
     val seedFile = File(temporaryDir, "exploded-jars-cache-seed.json").apply { bufferWriteJsonMap(seed) }
     val newEntriesFile = File(temporaryDir, "exploded-jars-cache-new.json")
 
-    workerExecutor.noIsolation().submit(ExplodeJarWorkAction::class.java) {
+    workerExecutor.classLoaderIsolation {
+      // kotlin-metadata-jvm is not on the main plugin classpath (issue 1671); add it for the isolated worker only.
+      it.classpath.from(kotlinMetadataClasspath)
+    }.submit(ExplodeJarWorkAction::class.java) {
       it.physicalArtifacts.set(physicalArtifacts)
       it.androidLinters.set(androidLinters)
       it.output.set(output)
