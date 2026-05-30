@@ -20,6 +20,7 @@ import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
+import java.util.*
 import javax.inject.Inject
 
 @CacheableTask
@@ -161,19 +162,21 @@ private class TypeUsageAnalyzer(
       val allUsedClasses = source.usedNonAnnotationClasses + source.usedAnnotationClasses
 
       allUsedClasses
-        // classes referenced via inline functions
-        .plus(findInlineClassNames(source.imports))
+        // classes referenced via inline functions, etc.
+        .plus(findUsedImports(source.imports))
         .filterNot(filter::shouldExclude)
-        .forEach { className ->
+        // Probably from the imports
+        .filterNot { typeName -> typeName == "null" }
+        .forEach { typeName ->
           // Determine coordinates: check project classes first, then external
-          val coords = classToCoords[className]
+          val coords = classToCoords[typeName]
 
-          if (coords != null || projectClasses.contains(className)) {
+          if (coords != null || projectClasses.contains(typeName)) {
             usageMap
               .getOrPut(coords ?: project.coordinates) { mutableMapOf() }
-              .merge(className, 1, Int::plus)
+              .merge(typeName, 1, Int::plus)
           } else {
-            unknown.merge(className, 1, Int::plus)
+            unknown.merge(typeName, 1, Int::plus)
           }
         }
     }
@@ -208,21 +211,23 @@ private class TypeUsageAnalyzer(
     )
   }
 
-  // dependency -> inline imports
-  private val inlineCache = mutableMapOf<Dependency, Set<Imports>>()
+  // dependency -> imports
+  private val importsCache = mutableMapOf<String, Set<Imports>>()
 
   // mapping imports to their "Kt" class names
-  private fun findInlineClassNames(imports: Set<String>): Set<String> {
+  private fun findUsedImports(imports: Set<String>): Set<String> {
     return dependencies
       .flatMapToOrderedSet { dependency ->
         getCacheEntry(dependency)
+          .asSequence()
           .filter { entry -> entry.candidateImports.any { it in imports } }
-          .mapToOrderedSet { entry -> entry.className }
+          .mapTo(TreeSet()) { entry -> entry.className }
       }
   }
 
   private fun getCacheEntry(dependency: Dependency): Set<Imports> {
-    return inlineCache.getOrPut(dependency) {
+    // We use the String coordinates as the map key because `dependency.hashCode()` is EXTREMELY expensive.
+    return importsCache.getOrPut(dependency.coordinates.gav()) {
       val binaryEntries = dependency.findCapability<BinaryClassCapability>()?.let(Imports::of).orEmpty()
       val inlineEntries = dependency.findCapability<InlineMemberCapability>()?.let(Imports::of).orEmpty()
 
