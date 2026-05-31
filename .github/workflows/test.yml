@@ -79,6 +79,15 @@ jobs:
       - name: Execute JVM functional tests
         run: './gradlew :functionalTest -DfuncTest.package=jvm -DfuncTest.quick'
 
+      # Temporary to help debug "only fails on CI". https://github.com/autonomousapps/dependency-analysis-gradle-plugin/pull/1719
+      # https://github.com/actions/upload-artifact
+      # https://docs.github.com/en/actions/reference/workflows-and-actions/expressions
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # 7.0.1
+        if: failure()
+        with:
+          name: functional-tests-jvm
+          path: build/functionalTest/
+
       - name: Execute Android functional tests
         run: './gradlew :functionalTest -DfuncTest.package=android -DfuncTest.quick'
 
