@@ -1021,7 +1021,6 @@ internal class ProjectPlugin(private val project: Project) {
       findDeclarationsTask = findDeclarationsTask,
       synthesizeProjectViewTask = synthesizeProjectViewTask,
       synthesizeDependenciesTask = synthesizeDependenciesTask,
-      findServiceLoadersTask = findServiceLoadersTask,
       duplicateClassesCompile = duplicateClassesCompile,
       duplicateClassesRuntime = duplicateClassesRuntime,
     )

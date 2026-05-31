@@ -146,17 +146,17 @@ internal data class ProjectVariant(
       .flatMapToOrderedSet { it.imports }
   }
 
-  internal fun dependencies(
-    dependenciesDir: Directory,
-    additionalClasspath: Set<Coordinates> = emptySet(),
-  ): Set<Dependency> {
-    return (classpath + annotationProcessors + additionalClasspath).map {
-      val file = dependenciesDir.file(it.toFileName())
-      if (file.asFile.exists()) {
-        file.fromJson<Dependency>()
-      } else {
-        error("No file ${it.toFileName()}")
+  internal fun dependencies(dependenciesDir: Directory): Set<Dependency> {
+    return classpath.asSequence()
+      .plus(annotationProcessors)
+      .map {
+        val file = dependenciesDir.file(it.toFileName())
+        if (file.asFile.exists()) {
+          file.fromJson<Dependency>()
+        } else {
+          error("No file ${it.toFileName()}")
+        }
       }
-    }.toSet()
+      .toSet()
   }
 }

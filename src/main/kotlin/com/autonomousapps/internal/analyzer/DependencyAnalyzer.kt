@@ -87,7 +87,6 @@ internal interface DependencyAnalyzer {
     findDeclarationsTask: TaskProvider<FindDeclarationsTask>,
     synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
     synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
-    findServiceLoadersTask: TaskProvider<FindServiceLoadersTask>,
     duplicateClassesCompile: TaskProvider<DiscoverClasspathDuplicationTask>,
     duplicateClassesRuntime: TaskProvider<DiscoverClasspathDuplicationTask>,
   ): TaskProvider<ComputeUsagesTask>
@@ -256,7 +255,6 @@ internal abstract class AbstractDependencyAnalyzer(
     findDeclarationsTask: TaskProvider<FindDeclarationsTask>,
     synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
     synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
-    findServiceLoadersTask: TaskProvider<FindServiceLoadersTask>,
     duplicateClassesCompile: TaskProvider<DiscoverClasspathDuplicationTask>,
     duplicateClassesRuntime: TaskProvider<DiscoverClasspathDuplicationTask>
   ): TaskProvider<ComputeUsagesTask> {
@@ -270,7 +268,6 @@ internal abstract class AbstractDependencyAnalyzer(
       t.graphRuntime.set(graphViewTask.flatMap { it.outputRuntime })
       t.declarations.set(findDeclarationsTask.flatMap { it.output })
       t.dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
-      t.serviceLoaders.set(findServiceLoadersTask.flatMap { it.output })
       t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       t.kapt.set(isKaptApplied)
       t.duplicateClassesReports.add(duplicateClassesCompile.flatMap { it.output })
@@ -429,7 +426,12 @@ internal abstract class AbstractDependencyAnalyzer(
 
   final override fun registerFindServiceLoadersTask(): TaskProvider<FindServiceLoadersTask> {
     return project.tasks.register("serviceLoader$taskNameSuffix", FindServiceLoadersTask::class.java) { t ->
-      t.setClasspath(
+      t.setCompileClasspath(
+        project.configurations
+          .getByName(compileConfigurationName)
+          .artifactsFor(attributeValueJar)
+      )
+      t.setRuntimeClasspath(
         project.configurations
           .getByName(runtimeConfigurationName)
           .artifactsFor(attributeValueJar)

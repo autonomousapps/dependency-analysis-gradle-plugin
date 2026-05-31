@@ -11,12 +11,12 @@ import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.internal.intermediates.producer.ServiceLoaderDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.BufferedReader
@@ -35,23 +35,22 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
     description = "Produces a report of all dependencies that include Java ServiceLoaders"
   }
 
-  private lateinit var classpath: ArtifactCollection
+  private lateinit var compileClasspath: ArtifactCollection
+  private lateinit var runtimeClasspath: ArtifactCollection
 
-  public fun setClasspath(artifacts: ArtifactCollection) {
-    this.classpath = artifacts
+  public fun setCompileClasspath(artifacts: ArtifactCollection) {
+    this.compileClasspath = artifacts
   }
 
   @Classpath
-  public fun getClasspath(): FileCollection = classpath.artifactFiles
+  public fun getCompileClasspath(): FileCollection = compileClasspath.artifactFiles
 
-  @Deprecated("Use setClasspath() instead.", ReplaceWith("setClasspath(artifacts)"))
-  public fun setCompileClasspath(artifacts: ArtifactCollection) {
-    setClasspath(artifacts)
+  public fun setRuntimeClasspath(artifacts: ArtifactCollection) {
+    this.runtimeClasspath = artifacts
   }
 
-  @Deprecated("Use getClasspath() instead.", ReplaceWith("getClasspath()"))
-  @Internal
-  public fun getCompileClasspath(): FileCollection = getClasspath()
+  @Classpath
+  public fun getRuntimeClasspath(): FileCollection = runtimeClasspath.artifactFiles
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
@@ -59,10 +58,12 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
   @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
-    // ServiceLoader providers are a runtime capability, so this scans runtime artifacts rather than compile artifacts.
-    // Project jars may include service resources that are absent from compile-time class directories.
-    val serviceLoaders = classpath
-      .filterNonGradle()
+    // Module jars are scanned from the compile classpath to preserve existing advice behavior. Project dependencies may
+    // appear there as resource-less class directories, so scan their runtime jars as well.
+    val serviceLoaderArtifacts = compileClasspath.filterNonGradle() +
+      runtimeClasspath.filterNonGradle().filter { it.id.componentIdentifier is ProjectComponentIdentifier }
+
+    val serviceLoaders = serviceLoaderArtifacts
       .filter { it.file.name.endsWith(".jar") }
       .flatMapToSet { findServiceLoaders(it) }
 

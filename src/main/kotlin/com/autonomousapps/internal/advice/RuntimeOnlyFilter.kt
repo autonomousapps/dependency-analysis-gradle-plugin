@@ -11,7 +11,6 @@ import com.autonomousapps.internal.utils.mutPartitionOf
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.DependencyGraphView
-import com.autonomousapps.model.source.SourceKind
 
 /**
  * Only permit add-runtimeOnly advice when there's also advice to remove a declaration that had been providing that
@@ -42,7 +41,6 @@ internal class RuntimeOnlyFilter(
       { it.isAnyRemove() },
       { it.isAddToRuntimeOnly() },
     )
-    val runtimeVisibleAdvice = simplifiedAdvice.filter { it.isRuntimeVisible() }
 
     // If there is no advice to remove anything, then as an optimization we can drop all the add-to-runtimeOnly advice.
     if (removes.isEmpty()) {
@@ -72,20 +70,10 @@ internal class RuntimeOnlyFilter(
           // Now, see if any of those direct nodes are being removed
           val matches = removes.filterToSet { remove -> directs.anyMatch(remove) }
 
-          // The removed direct node might also be replaced by advice that still brings this runtime dependency
-          // transitively, such as a plugin marker replacing an intermediate project dependency.
-          val hasReplacement = runtimeVisibleAdvice.any { replacement ->
-            if (!replacement.isRuntimeVisibleTo(graph.sourceKind)) return@any false
-
-            graph.graph.nodes().matching(replacement)?.let { node ->
-              graph.graph.reachableNodes(node).anyMatch(runtimeOnly)
-            } == true
-          }
-
           // TODO(tsr): androidTest... doesn't extend from test source. Double-check various assumptions about this.
           // If ALL the direct nodes are being removed, then we can keep the runtimeOnly advice. Otherwise, remove it.
           val bothEmpty = matches.isEmpty() && directs.isEmpty()
-          if (hasReplacement || bothEmpty || matches.size != directs.size) {
+          if (bothEmpty || matches.size != directs.size) {
             simplifiedAdvice.remove(runtimeOnly)
           }
         }
@@ -97,38 +85,5 @@ internal class RuntimeOnlyFilter(
   // We can't match directly on Coordinates, since Advice.coordinates is not GradleVariantIdentification-aware.
   private fun Set<Coordinates>.anyMatch(other: Advice): Boolean {
     return any { it.normalizedIdentifier(buildPath) == other.coordinates.normalizedIdentifier(buildPath) }
-  }
-
-  private fun Set<Coordinates>.matching(other: Advice): Coordinates? {
-    return firstOrNull { it.normalizedIdentifier(buildPath) == other.coordinates.normalizedIdentifier(buildPath) }
-  }
-
-  private fun Advice.isRuntimeVisible(): Boolean {
-    if (isAddToRuntimeOnly()) return false
-
-    if (!isAnyAdd() && !isAnyChange()) return false
-
-    return toConfiguration?.let {
-      it.endsWith("api", ignoreCase = true)
-        || it.endsWith("implementation", ignoreCase = true)
-        || it.endsWith("runtimeOnly", ignoreCase = true)
-    } == true
-  }
-
-  private fun Advice.isRuntimeVisibleTo(sourceKind: SourceKind): Boolean {
-    if (!isRuntimeVisible()) return false
-
-    val sourceSetName = DependencyScope.sourceSetName(toConfiguration!!) ?: return false
-    if (sourceKind.sourceSetMatches(sourceSetName)) return true
-
-    return sourceSetName == SourceKind.MAIN_NAME && sourceKind.kind in MAIN_VISIBLE_TO_RUNTIME_SOURCE_KINDS
-  }
-
-  private companion object {
-    private val MAIN_VISIBLE_TO_RUNTIME_SOURCE_KINDS = setOf(
-      SourceKind.TEST_KIND,
-      SourceKind.ANDROID_TEST_FIXTURES_KIND,
-      SourceKind.ANDROID_TEST_KIND,
-    )
   }
 }

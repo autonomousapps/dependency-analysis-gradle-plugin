@@ -18,7 +18,6 @@ import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.DependencyTraceReport
 import com.autonomousapps.model.internal.intermediates.DependencyTraceReport.Kind
 import com.autonomousapps.model.internal.intermediates.Reason
-import com.autonomousapps.model.internal.intermediates.producer.ServiceLoaderDependency
 import com.autonomousapps.visitor.GraphViewReader
 import com.autonomousapps.visitor.GraphViewVisitor
 import org.gradle.api.DefaultTask
@@ -70,10 +69,6 @@ public abstract class ComputeUsagesTask @Inject constructor(
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  public abstract val serviceLoaders: RegularFileProperty
-
-  @get:PathSensitive(PathSensitivity.NONE)
-  @get:InputFile
   public abstract val syntheticProject: RegularFileProperty
 
   @get:Input
@@ -96,7 +91,6 @@ public abstract class ComputeUsagesTask @Inject constructor(
       it.graphRuntime.set(graphRuntime)
       it.declarations.set(declarations)
       it.dependencies.set(dependencies)
-      it.serviceLoaders.set(serviceLoaders)
       it.syntheticProject.set(syntheticProject)
       it.kapt.set(kapt)
       it.duplicateClassesReports.set(duplicateClassesReports)
@@ -113,7 +107,6 @@ public abstract class ComputeUsagesTask @Inject constructor(
     public val graphRuntime: RegularFileProperty
     public val declarations: RegularFileProperty
     public val dependencies: DirectoryProperty
-    public val serviceLoaders: RegularFileProperty
     public val syntheticProject: RegularFileProperty
     public val kapt: Property<Boolean>
     public val duplicateClassesReports: ListProperty<RegularFile>
@@ -127,13 +120,7 @@ public abstract class ComputeUsagesTask @Inject constructor(
     private val graphRuntime = parameters.graphRuntime.fromJson<DependencyGraphView>()
     private val declarations = parameters.declarations.fromJsonSet<Declaration>()
     private val project = parameters.syntheticProject.fromJson<ProjectVariant>()
-    private val runtimeServiceLoaderCoordinates = parameters.serviceLoaders
-      .fromJsonSet<ServiceLoaderDependency>()
-      .mapToSet { it.coordinates }
-    private val dependencies = project.dependencies(
-      dependenciesDir = parameters.dependencies.get(),
-      additionalClasspath = runtimeServiceLoaderCoordinates,
-    )
+    private val dependencies = project.dependencies(parameters.dependencies.get())
     private val duplicateClasses =
       parameters.duplicateClassesReports.get().asSequence()
         .flatMap { it.fromJsonSet<DuplicateClass>() }
@@ -362,8 +349,6 @@ private class GraphVisitor(
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
     } else if (hasReferencedExceptionType) {
       isUnusedCandidate = false
-      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
-    } else if (hasServiceLoader) {
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.RUNTIME_ONLY
     } else if (noRealCapabilities(dependency)) {
       isUnusedCandidate = true
