@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.14.1
+* [fix]: resolve performance issue with `computeTypeUsage`.
+* [fix]: `JarExploder` should ignore some MRJar content.
+
 # Version 3.14.0
 * [feat]: new ':publicTypeUsage' task.
 * [fix]: `AndroidScore` should ignore class files when testing if a project has source splits.
