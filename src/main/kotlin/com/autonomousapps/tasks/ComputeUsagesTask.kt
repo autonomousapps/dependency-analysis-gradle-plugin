@@ -528,8 +528,13 @@ private class GraphVisitor(
     typealiasCapability: TypealiasCapability,
     context: GraphViewVisitor.Context,
   ): Boolean {
-    val fqnTypealiases = typealiasCapability.typealiases.flatMapToSet { ta ->
-      ta.typealiases.map { "${ta.packageName}.${it.name}" }
+    val fqnTypealiases = typealiasCapability.typealiases.flatMapToOrderedSet { ta ->
+      ta.typealiases.flatMap {
+        listOf(
+          "${ta.packageName}.${it.name}",
+          "${ta.alternatePackageName}.${it.name}",
+        )
+      }
     }
 
     val usedClasses = context.project.usedClasses.asSequence().filter { usedClass ->

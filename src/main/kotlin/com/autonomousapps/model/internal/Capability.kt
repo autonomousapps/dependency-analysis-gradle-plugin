@@ -57,7 +57,7 @@ internal data class AndroidManifestCapability(
 
     companion object {
       internal fun of(mapKey: String): Component {
-        return values().find {
+        return entries.find {
           it.mapKey == mapKey
         } ?: error("Could not find Manifest.Component for $mapKey")
       }
@@ -282,13 +282,35 @@ internal data class TypealiasCapability(
 
   @JsonClass(generateAdapter = false)
   data class Typealias(
+    /** The actual package visible from the class file. */
     val packageName: String,
+    /**
+     * From `Metadata.packageName`, visible from the `.kotlin_module` header. E.g., kotlin-test-junit5 has an
+     * AnnotationsKt file with this:
+     * ```
+     * @file:JvmPackageName("kotlin.test.junit5.annotations")
+     * package kotlin.test
+     *
+     * public actual typealias Test = org.junit.jupiter.api.Test
+     * ```
+     * Which is obviously insane. Nonetheless, this class essentially has two packages. In user code, you would have:
+     * ```
+     * import kotlin.test.Test
+     *
+     * class MyTest {
+     *   @Test fun test() { ... }
+     * }
+     * ```
+     * So, to detect that `kotlin.test.Test` maps to `kotlin.test.junit5.annotations` (_which is what's in the
+     * bytecode_), we keep track of both package names.
+     */
+    val alternatePackageName: String,
     val typealiases: Set<Alias>,
   ) : Comparable<Typealias> {
 
     companion object {
-      fun newInstance(packageName: String, typealiases: Set<Alias>): Typealias {
-        return Typealias(packageName, typealiases.toSortedSet().efficient())
+      fun newInstance(packageName: String, alternatePackageName: String, typealiases: Set<Alias>): Typealias {
+        return Typealias(packageName, alternatePackageName, typealiases.toSortedSet().efficient())
       }
     }
 

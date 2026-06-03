@@ -60,12 +60,7 @@ final class SimpleKmpSpec extends AbstractKmpSpec {
           androidMain.dependencies {
             api("${AndroidTargetProject.CAFFEINE}")
           }
-          
-        These transitive dependencies should be declared directly:
-          androidHostTest.dependencies {
-            implementation("${AndroidTargetProject.KOTLIN_TEST}")
-          }
-        
+                  
         Existing dependencies which should be modified to be as indicated:
           commonMain.dependencies {
             api("${AndroidTargetProject.OKIO}") (was commonMainImplementation)
@@ -95,12 +90,7 @@ final class SimpleKmpSpec extends AbstractKmpSpec {
           androidMain.dependencies {
             api("${AndroidAndJvmProject.CAFFEINE}")
           }
-        
-        These transitive dependencies should be declared directly:
-          androidHostTest.dependencies {
-            implementation("${AndroidAndJvmProject.KOTLIN_TEST}")
-          }
-        
+                
         Existing dependencies which should be modified to be as indicated:
           commonMain.dependencies {
             api("${AndroidAndJvmProject.OKIO}") (was commonMainImplementation)

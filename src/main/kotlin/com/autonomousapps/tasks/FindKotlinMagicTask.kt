@@ -15,8 +15,6 @@ import com.autonomousapps.model.internal.TypealiasCapability
 import com.autonomousapps.model.internal.intermediates.producer.InlineMemberDependency
 import com.autonomousapps.model.internal.intermediates.producer.TypealiasDependency
 import com.autonomousapps.services.InMemoryCache
-import kotlin.metadata.*
-import kotlin.metadata.jvm.KotlinClassMetadata
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -28,6 +26,8 @@ import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.zip.ZipFile
 import javax.inject.Inject
+import kotlin.metadata.*
+import kotlin.metadata.jvm.KotlinClassMetadata
 
 @CacheableTask
 public abstract class FindKotlinMagicTask @Inject constructor(
@@ -69,7 +69,7 @@ public abstract class FindKotlinMagicTask @Inject constructor(
 
   @TaskAction
   public fun action() {
-    workerExecutor.noIsolation().submit(FindKotlinMagicWorkAction::class.java) {
+    workerExecutor.noIsolation().submit(Action::class.java) {
       it.artifacts.set(artifacts)
       it.inlineUsageReport.set(outputInlineMembers)
       it.typealiasReport.set(outputTypealiases)
@@ -78,7 +78,7 @@ public abstract class FindKotlinMagicTask @Inject constructor(
     }
   }
 
-  public interface FindKotlinMagicParameters : WorkParameters {
+  public interface Parameters : WorkParameters {
     public val artifacts: RegularFileProperty
     public val inlineUsageReport: RegularFileProperty
     public val typealiasReport: RegularFileProperty
@@ -86,7 +86,7 @@ public abstract class FindKotlinMagicTask @Inject constructor(
     public val inMemoryCacheProvider: Property<InMemoryCache>
   }
 
-  public abstract class FindKotlinMagicWorkAction : WorkAction<FindKotlinMagicParameters> {
+  public abstract class Action : WorkAction<Parameters> {
 
     private val logger = getLogger<FindKotlinMagicTask>()
 
@@ -161,6 +161,8 @@ internal class KotlinMagicFinder(
    * ```
    * An import statement with either of those would import the `kotlin.jdk7.use()` inline function, contributed by the
    * "org.jetbrains.kotlin:kotlin-stdlib-jdk7" module.
+   *
+   * TODO(tsr): docs for the TypeAliasCapability portion of this.
    */
   private fun findKotlinMagic(artifact: PhysicalArtifact, mode: Mode): KotlinCapabilities {
     val cached = findInCache(artifact)
@@ -216,6 +218,7 @@ internal class KotlinMagicFinder(
               if (kotlinMagic.typealiases != null) {
                 typealiases += TypealiasCapability.Typealias.newInstance(
                   packageName = packageName(entry.name),
+                  alternatePackageName = kotlinMagic.packageName,
                   typealiases = kotlinMagic.typealiases
                 )
               }
@@ -253,6 +256,7 @@ internal class KotlinMagicFinder(
             if (kotlinMagic.typealiases != null) {
               typealiases += TypealiasCapability.Typealias.newInstance(
                 packageName = packageName(Files.asPackagePath(classFile)),
+                alternatePackageName = kotlinMagic.packageName,
                 typealiases = kotlinMagic.typealiases
               )
             }
@@ -281,6 +285,7 @@ internal class KotlinMagicFinder(
     val metadataVisitor = KotlinMetadataVisitor(logger)
     classReader.accept(metadataVisitor, 0)
 
+    var packageName: String = ""
     var inlineMembers: Set<String>? = null
     var typealiases: Set<TypealiasCapability.Typealias.Alias>? = null
 
@@ -290,8 +295,11 @@ internal class KotlinMagicFinder(
       // file compiled by a "very old" version of Kotlin.
       // See https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1035
       // See https://youtrack.jetbrains.com/issue/KT-60870
-      val metadata = try {
-        KotlinClassMetadata.readLenient(header.build())
+      val kotlinClassMetadata = try {
+        val metadata = header.build()
+        packageName = metadata.packageName // can be empty
+
+        KotlinClassMetadata.readLenient(metadata)
       } catch (_: IllegalArgumentException) {
         logger.debug("Can't read class file '$classFile'")
         errorsReport.appendText("Can't read class file '$classFile'\n")
@@ -299,20 +307,20 @@ internal class KotlinMagicFinder(
         return null
       }
 
-      when (metadata) {
+      when (kotlinClassMetadata) {
         is KotlinClassMetadata.Class -> {
-          inlineMembers = inlineMembers(metadata.kmClass)
-          typealiases = typealiases(metadata.kmClass)
+          inlineMembers = inlineMembers(kotlinClassMetadata.kmClass)
+          typealiases = typealiases(kotlinClassMetadata.kmClass)
         }
 
         is KotlinClassMetadata.FileFacade -> {
-          inlineMembers = inlineMembers(metadata.kmPackage)
-          typealiases = typealiases(metadata.kmPackage)
+          inlineMembers = inlineMembers(kotlinClassMetadata.kmPackage)
+          typealiases = typealiases(kotlinClassMetadata.kmPackage)
         }
 
         is KotlinClassMetadata.MultiFileClassPart -> {
-          inlineMembers = inlineMembers(metadata.kmPackage)
-          typealiases = typealiases(metadata.kmPackage)
+          inlineMembers = inlineMembers(kotlinClassMetadata.kmPackage)
+          typealiases = typealiases(kotlinClassMetadata.kmPackage)
         }
 
         is KotlinClassMetadata.SyntheticClass -> logger.debug("Ignoring SyntheticClass $classFile")
@@ -323,15 +331,14 @@ internal class KotlinMagicFinder(
 
     // It's part of the contract to never return an empty set
     return KotlinMagic(
+      packageName = packageName,
       inlineMembers = inlineMembers?.ifEmpty { null },
       typealiases = typealiases?.ifEmpty { null },
     )
-
-    // It's part of the contract to never return an empty set
-    // return inlineMembers?.ifEmpty { null }
   }
 
   private class KotlinMagic(
+    val packageName: String,
     val inlineMembers: Set<String>?,
     val typealiases: Set<TypealiasCapability.Typealias.Alias>?,
   )
