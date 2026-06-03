@@ -111,6 +111,7 @@ public abstract class ExplodeJarTask @Inject constructor(
 
     override fun execute() {
       val output = parameters.output.getAndDelete()
+      val newCacheEntries = parameters.newCacheEntries.getAndDelete()
 
       val exploder = JarExploder(
         artifacts = parameters.physicalArtifacts.fromJsonList(),
@@ -120,7 +121,7 @@ public abstract class ExplodeJarTask @Inject constructor(
       val explodedJars = exploder.explodedJars()
 
       output.bufferWriteJsonSet(explodedJars, compress = true)
-      parameters.newCacheEntries.getAndDelete().bufferWriteJsonMap(exploder.newEntries)
+      newCacheEntries.bufferWriteJsonMap(exploder.newEntries)
     }
   }
 }
