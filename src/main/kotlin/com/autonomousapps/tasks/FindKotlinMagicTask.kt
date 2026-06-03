@@ -125,6 +125,7 @@ public abstract class FindKotlinMagicTask @Inject constructor(
       val inlineUsageReportFile = parameters.inlineUsageReport.getAndDelete()
       val typealiasReportFile = parameters.typealiasReport.getAndDelete()
       val errorsReport = parameters.errorsReport.getAndDelete()
+      val newCacheEntries = parameters.newCacheEntries.getAndDelete()
 
       val finder = KotlinMagicFinder(
         seedCache = parameters.cacheSeed.fromJsonMap(),
@@ -137,7 +138,7 @@ public abstract class FindKotlinMagicTask @Inject constructor(
       inlineUsageReportFile.bufferWriteJsonSet(inlineMembers)
       typealiasReportFile.bufferWriteJsonSet(typealiases)
 
-      parameters.newCacheEntries.getAndDelete().bufferWriteJsonMap(finder.newEntries)
+      newCacheEntries.bufferWriteJsonMap(finder.newEntries)
 
       if (finder.didWriteErrors) {
         logger.warn("There were errors during inline member analysis. See ${errorsReport.toPath().toUri()}")
