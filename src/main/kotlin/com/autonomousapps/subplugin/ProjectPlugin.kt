@@ -14,6 +14,7 @@ import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
 import com.autonomousapps.internal.AbiExclusions
+import com.autonomousapps.internal.KotlinMetadataClasspath
 import com.autonomousapps.internal.NoVariantOutputPaths
 import com.autonomousapps.internal.UsagesExclusions
 import com.autonomousapps.internal.advice.DslKind
@@ -155,6 +156,8 @@ internal class ProjectPlugin(private val project: Project) {
       logger.info("Skipping dependency analysis of project '$path'. Does not match regex '$projectPathRegex'.")
       return
     }
+
+    KotlinMetadataClasspath.register(this)
 
     // Hydrate dependencies map with version catalog entries
     dslService.get().withVersionCatalogs(this)
