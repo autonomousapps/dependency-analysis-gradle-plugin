@@ -2,9 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
+import com.autonomousapps.artifacts.dependencyScopeConfiguration
+import com.autonomousapps.artifacts.resolvableConfiguration
+import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ExternalModuleDependency
-import org.gradle.api.file.FileCollection
 
 /**
  * The classpath supplied to DAGP's classloader-isolated workers that read Kotlin metadata (`FindKotlinMagicTask`,
@@ -23,15 +26,14 @@ internal object KotlinMetadataClasspath {
 
   private const val CONFIGURATION_NAME = "dependencyAnalysisKotlinMetadata"
 
-  /** Returns the (idempotently created) resolvable configuration as a [FileCollection] suitable for a task input. */
-  fun of(project: Project): FileCollection {
-    project.configurations.findByName(CONFIGURATION_NAME)?.let { return it }
-
-    return project.configurations.create(CONFIGURATION_NAME) { c ->
-      c.isCanBeResolved = true
-      c.isCanBeConsumed = false
-      c.description = "kotlin-metadata-jvm, supplied to classloader-isolated DAGP workers."
-      c.defaultDependencies { deps ->
+  /**
+   * Registers the dependency-scope and resolvable configurations for this project. Must be called once at plugin-apply
+   * time, before any task that calls [of] is registered.
+   */
+  fun register(project: Project) {
+    val scope = project.dependencyScopeConfiguration(CONFIGURATION_NAME)
+    scope.configure { configuration ->
+      configuration.defaultDependencies { deps ->
         val dep = project.dependencies.create(
           "org.jetbrains.kotlin:kotlin-metadata-jvm:${BuildConfig.KOTLIN_METADATA_VERSION}"
         ) as ExternalModuleDependency
@@ -40,5 +42,13 @@ internal object KotlinMetadataClasspath {
         deps.add(dep)
       }
     }
+    project.resolvableConfiguration("${CONFIGURATION_NAME}Classpath", scope) { c ->
+      c.description = "kotlin-metadata-jvm, supplied to classloader-isolated DAGP workers."
+    }
+  }
+
+  /** Returns the resolvable configuration as a lazy provider suitable for a task input. */
+  fun of(project: Project): NamedDomainObjectProvider<out Configuration> {
+    return project.configurations.named("${CONFIGURATION_NAME}Classpath")
   }
 }
