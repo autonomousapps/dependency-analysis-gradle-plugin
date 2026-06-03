@@ -30,6 +30,10 @@ class DependencyProvider(
     return Dependency(configuration, "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
   }
 
+  fun kotlinTest(configuration: String): Dependency {
+    return Dependency(configuration, "org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
+  }
+
   fun kotlinTestJunit(configuration: String): Dependency {
     return Dependency(configuration, "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
   }

@@ -95,10 +95,14 @@ public abstract class DependenciesHandler @Inject constructor(objects: ObjectFac
     bundle("__kotlin-stdlib") {
       it.include(".*kotlin-stdlib.*")
     }
-    // The kotlin plugin is automatically adding another variant of the kotlin-test dependency, which can show up as
-    // unused with no way to opt out.
+    // The `@kotlin.test.Test` annotation is provided by the `org.jetbrains.kotlin:kotlin-test-junit5` artifact, but
+    // users are expected to declare `org.jetbrains.kotlin:kotlin-test` (or `kotlin("test")`), which is a KMP lib with
+    // many variants.
     bundle("__kotlin-test") {
-      it.includeDependency("org.jetbrains.kotlin:kotlin-test")
+      it.primary("org.jetbrains.kotlin:kotlin-test")
+      it.includeDependency("org.jetbrains.kotlin:kotlin-test-junit5")
+      it.includeDependency("org.jetbrains.kotlin:kotlin-test-junit")
+      it.includeDependency("org.junit.jupiter:junit-jupiter-api")
     }
     // kotlin-test-junit provides junit, and Kotlin projects expect to declare the former.
     bundle("__kotlin-test-junit") {

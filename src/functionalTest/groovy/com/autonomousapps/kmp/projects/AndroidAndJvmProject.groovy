@@ -18,7 +18,6 @@ final class AndroidAndJvmProject extends AbstractProject {
   private static final String KOTLIN_VERSION = '2.2.21'
 
   static final String CAFFEINE = 'com.github.ben-manes.caffeine:caffeine:3.2.3'
-  static final String KOTLIN_TEST = "org.jetbrains.kotlin:kotlin-test:$KOTLIN_VERSION"
   static final String KOTLINX_COROUTINES_CORE = 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'
   static final String OKIO = 'com.squareup.okio:okio:3.16.4'
 
@@ -269,8 +268,6 @@ final class AndroidAndJvmProject extends AbstractProject {
     Advice.ofRemove(moduleCoordinates(CAFFEINE), 'androidMainApi'),
     // commonMainApi("com.squareup.okio:okio:3.16.4") (was commonMainImplementation)
     Advice.ofChange(moduleCoordinates(OKIO), 'commonMainImplementation', 'commonMainApi'),
-    // androidHostTestImplementation("org.jetbrains.kotlin:kotlin-test:2.2.21")
-    Advice.ofAdd(moduleCoordinates(KOTLIN_TEST), 'androidHostTestImplementation')
   ]
 
   //  Advice(com.squareup.okio:okio:3.16.4), fromConfiguration=commonMainImplementation, toConfiguration=commonMainApi),

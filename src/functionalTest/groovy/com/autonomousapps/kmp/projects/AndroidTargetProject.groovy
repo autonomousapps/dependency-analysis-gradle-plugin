@@ -17,7 +17,6 @@ final class AndroidTargetProject extends AbstractProject {
   private static final String KOTLIN_VERSION = '2.2.21'
 
   static final String CAFFEINE = 'com.github.ben-manes.caffeine:caffeine:3.2.3'
-  static final String KOTLIN_TEST = "org.jetbrains.kotlin:kotlin-test:$KOTLIN_VERSION"
   static final String OKIO = 'com.squareup.okio:okio:3.16.4'
 
   final GradleProject gradleProject
@@ -177,8 +176,6 @@ final class AndroidTargetProject extends AbstractProject {
     Advice.ofRemove(moduleCoordinates(CAFFEINE), 'androidMainApi'),
     // commonMainApi("com.squareup.okio:okio:3.16.4") (was commonMainImplementation)
     Advice.ofChange(moduleCoordinates(OKIO), 'commonMainImplementation', 'commonMainApi'),
-    // androidHostTestImplementation("org.jetbrains.kotlin:kotlin-test:2.2.21")
-    Advice.ofAdd(moduleCoordinates(KOTLIN_TEST), 'androidHostTestImplementation')
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [
