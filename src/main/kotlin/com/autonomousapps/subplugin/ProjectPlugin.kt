@@ -1151,11 +1151,7 @@ internal class ProjectPlugin(private val project: Project) {
       t.output.set(paths.filteredAdvicePath)
       t.sourcedOutput.set(paths.filteredSourcedAdvicePath)
       t.enableSarifReporting.set(dagpExtension.reportingHandler.sarifReport)
-      t.dependencyMap.set(
-        objects.newInstance(DependenciesHandler::class.java).apply {
-          withVersionCatalogs(project)
-        }.map
-      )
+      t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
       t.rootFolder.set(project.layout.settingsDirectory.asFile)
     }
 
