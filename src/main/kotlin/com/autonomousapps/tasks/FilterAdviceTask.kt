@@ -308,6 +308,24 @@ public abstract class FilterAdviceTask @Inject constructor(
       }
     }
 
+    private fun Sequence<Advice>.filterDataBinding(): Sequence<Advice> {
+      return if (dataBindingEnabled) filterNot {
+        dataBindingDependencies.contains(it.coordinates.identifier)
+      }
+      else this
+    }
+
+    private fun Sequence<Advice>.filterViewBinding(): Sequence<Advice> {
+      return if (viewBindingEnabled) filterNot {
+        viewBindingDependencies.contains(it.coordinates.identifier)
+      }
+      else this
+    }
+
+    private fun Sequence<Advice>.filterRedundantRuntimeOnlyAdvice(): Sequence<Advice> {
+      return RuntimeOnlyFilter(dependencyGraph, buildPath).simplify(this)
+    }
+
     private fun Sequence<DuplicateClass>.filterOf(
       behaviorSpec: Pair<Behavior, List<Behavior>>,
     ): Sequence<DuplicateClass> {
@@ -337,24 +355,6 @@ public abstract class FilterAdviceTask @Inject constructor(
       return filterNot { duplicateClass ->
         (byGlobal(duplicateClass) || bySourceSets(duplicateClass))
       }
-    }
-
-    private fun Sequence<Advice>.filterDataBinding(): Sequence<Advice> {
-      return if (dataBindingEnabled) filterNot {
-        dataBindingDependencies.contains(it.coordinates.identifier)
-      }
-      else this
-    }
-
-    private fun Sequence<Advice>.filterViewBinding(): Sequence<Advice> {
-      return if (viewBindingEnabled) filterNot {
-        viewBindingDependencies.contains(it.coordinates.identifier)
-      }
-      else this
-    }
-
-    private fun Sequence<Advice>.filterRedundantRuntimeOnlyAdvice(): Sequence<Advice> {
-      return RuntimeOnlyFilter(dependencyGraph, buildPath).simplify(this)
     }
 
     private fun Set<Advice>.addLineNumbers(buildFileLines: List<String>): Set<SourcedAdvice> = map { advice ->
