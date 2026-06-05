@@ -132,7 +132,7 @@ public abstract class GenerateProjectHealthReportTask @Inject constructor(
         val sourcedAdvice = parameters.sourcedAdvice.fromJson<SourcedProjectAdvice>()
         val sarifText = ProjectHealthSarifReportBuilder(
           listOf(sourcedAdvice),
-          parameters.dslKind.get(),
+          dslKind,
           dependencyMap,
           useTypesafeProjectAccessors
         ).sarif
