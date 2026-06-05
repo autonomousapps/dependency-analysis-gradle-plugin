@@ -259,9 +259,9 @@ public abstract class FilterAdviceTask @Inject constructor(
           warning = filteredAdvice.warning,
           shouldFail = filteredAdvice.shouldFail,
           dependencyAdvice = sourcedAdvice,
-          projectBuildFile = parameters.buildFile.orNull?.asFile
-            ?.relativeTo(parameters.rootFolder.get().asFile)
-            ?.path,
+          projectBuildFile = parameters.buildFile.get().asFile
+            .relativeTo(parameters.rootFolder.get().asFile)
+            .path,
         )
         sourcedOutput.bufferWriteJson(sourcedFilteredAdvice)
       }

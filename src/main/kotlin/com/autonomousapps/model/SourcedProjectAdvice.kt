@@ -13,5 +13,5 @@ public data class SourcedProjectAdvice(
   val warning: Warning = Warning.empty(),
   /** True if there is any advice in a category for which the user has declared they want the build to fail. */
   val shouldFail: Boolean = false,
-  val projectBuildFile: String? = null,
+  val projectBuildFile: String,
 )

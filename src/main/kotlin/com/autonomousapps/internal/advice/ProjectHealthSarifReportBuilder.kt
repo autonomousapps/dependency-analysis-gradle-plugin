@@ -3,7 +3,6 @@
 package com.autonomousapps.internal.advice
 
 import com.autonomousapps.model.SourcedProjectAdvice
-import com.autonomousapps.model.internal.ProjectMetadata
 import com.autonomousapps.model.internal.ProjectType
 import io.github.detekt.sarif4k.*
 
@@ -22,13 +21,11 @@ internal class ProjectHealthSarifReportBuilder(
   init {
     val pluginResults = projectAdvices.flatMap { projectAdvice ->
       projectAdvice.pluginAdvice.map { advice ->
-        val location = projectAdvice.projectBuildFile?.let { buildFile ->
-          Location(
-            physicalLocation = PhysicalLocation(
-              artifactLocation = ArtifactLocation(uri = buildFile),
-            ),
-          )
-        }
+        val location = Location(
+          physicalLocation = PhysicalLocation(
+            artifactLocation = ArtifactLocation(uri = projectAdvice.projectBuildFile),
+          ),
+        )
 
         Result(
           locations = listOfNotNull(location),
@@ -84,18 +81,16 @@ internal class ProjectHealthSarifReportBuilder(
           }
         }
 
-        val location = projectAdvice.projectBuildFile?.let { buildFile ->
-          Location(
-            physicalLocation = PhysicalLocation(
-              artifactLocation = ArtifactLocation(uri = buildFile),
-              region =
-                Region(
-                  startLine = sourcedAdvice.buildFileDeclarationLineNumber?.toLong(),
-                  endLine = sourcedAdvice.buildFileDeclarationLineNumber?.toLong(),
-                )
-            ),
-          )
-        }
+        val location = Location(
+          physicalLocation = PhysicalLocation(
+            artifactLocation = ArtifactLocation(uri = projectAdvice.projectBuildFile),
+            region =
+              Region(
+                startLine = sourcedAdvice.buildFileDeclarationLineNumber?.toLong(),
+                endLine = sourcedAdvice.buildFileDeclarationLineNumber?.toLong(),
+              )
+          ),
+        )
 
         Result(
           locations = listOfNotNull(location),
