@@ -129,10 +129,6 @@ internal class ProjectPlugin(private val project: Project) {
     project = project,
     artifactDescription = DagpArtifacts.Kind.PROJECT_HEALTH,
   )
-  private val sourcedProjectHealthPublisher = interProjectPublisher(
-    project = project,
-    artifactDescription = DagpArtifacts.Kind.SOURCED_PROJECT_HEALTH,
-  )
   private val projectMetadataPublisher = interProjectPublisher(
     project = project,
     artifactDescription = DagpArtifacts.Kind.PROJECT_METADATA,
@@ -145,6 +141,11 @@ internal class ProjectPlugin(private val project: Project) {
     project = project,
     artifactDescription = DagpArtifacts.Kind.RESOLVED_DEPS,
   )
+  private val sourcedProjectHealthPublisher = interProjectPublisher(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.SOURCED_PROJECT_HEALTH,
+  )
+
   private val typeUsagesPublisher = interProjectPublisher(
     project = project,
     artifactDescription = DagpArtifacts.Kind.TYPE_USAGE,

@@ -44,10 +44,6 @@ internal class RootPlugin(private val project: Project) {
     project = project,
     artifactDescription = DagpArtifacts.Kind.PROJECT_HEALTH,
   )
-  private val sourcedAdviceResolver = interProjectResolver(
-    project = project,
-    artifactDescription = DagpArtifacts.Kind.SOURCED_PROJECT_HEALTH,
-  )
   private val combinedGraphResolver = interProjectResolver(
     project = project,
     artifactDescription = DagpArtifacts.Kind.COMBINED_GRAPH,
@@ -63,6 +59,10 @@ internal class RootPlugin(private val project: Project) {
   private val resolvedDepsResolver = interProjectResolver(
     project = project,
     artifactDescription = DagpArtifacts.Kind.RESOLVED_DEPS,
+  )
+  private val sourcedAdviceResolver = interProjectResolver(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.SOURCED_PROJECT_HEALTH,
   )
   private val typeUsagesResolver = interProjectResolver(
     project = project,
