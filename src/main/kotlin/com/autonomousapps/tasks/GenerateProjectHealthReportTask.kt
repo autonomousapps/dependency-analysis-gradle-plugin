@@ -12,7 +12,6 @@ import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
 import com.autonomousapps.internal.advice.ProjectHealthSarifReportBuilder
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.getAndDeleteNullable
 import com.autonomousapps.model.ProjectAdvice
 import com.autonomousapps.model.SourcedProjectAdvice
 import com.autonomousapps.model.internal.ProjectMetadata
@@ -69,8 +68,10 @@ public abstract class GenerateProjectHealthReportTask @Inject constructor(
   public abstract val output: RegularFileProperty
 
   @get:OutputFile
-  @get:Optional
   public abstract val sarifOutput: RegularFileProperty
+
+  @get:Input
+  public abstract val enableSarifReporting: Property<Boolean>
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(ProjectHealthAction::class.java) {
@@ -84,6 +85,7 @@ public abstract class GenerateProjectHealthReportTask @Inject constructor(
       it.useParenthesesForGroovy.set(useParenthesesForGroovy)
       it.output.set(output)
       it.sarifOutput.set(sarifOutput)
+      it.enableSarifReporting.set(enableSarifReporting)
     }
   }
 
@@ -98,6 +100,7 @@ public abstract class GenerateProjectHealthReportTask @Inject constructor(
     public val useParenthesesForGroovy: Property<Boolean>
     public val output: RegularFileProperty
     public val sarifOutput: RegularFileProperty
+    public val enableSarifReporting: Property<Boolean>
   }
 
   public abstract class ProjectHealthAction : WorkAction<ProjectHealthParameters> {
@@ -124,8 +127,8 @@ public abstract class GenerateProjectHealthReportTask @Inject constructor(
 
       output.writeText(consoleText)
 
-      val sarifOutput = parameters.sarifOutput.getAndDeleteNullable()
-      if (sarifOutput != null) {
+      if (parameters.enableSarifReporting.get()) {
+        val sarifOutput = parameters.sarifOutput.getAndDelete()
         val sourcedAdvice = parameters.sourcedAdvice.fromJson<SourcedProjectAdvice>()
         val sarifText = ProjectHealthSarifReportBuilder(
           listOf(sourcedAdvice),

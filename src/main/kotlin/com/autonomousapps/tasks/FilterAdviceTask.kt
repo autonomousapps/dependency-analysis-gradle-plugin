@@ -12,7 +12,6 @@ import com.autonomousapps.internal.advice.SeverityHandler
 import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.getAndDeleteNullable
 import com.autonomousapps.internal.utils.readLines
 import com.autonomousapps.model.*
 import com.autonomousapps.model.internal.DependencyGraphView
@@ -20,13 +19,13 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
-import org.gradle.api.provider.MapProperty
 
 @CacheableTask
 public abstract class FilterAdviceTask @Inject constructor(
@@ -93,8 +92,10 @@ public abstract class FilterAdviceTask @Inject constructor(
   public abstract val output: RegularFileProperty
 
   @get:OutputFile
-  @get:Optional
   public abstract val sourcedOutput: RegularFileProperty
+
+  @get:Input
+  public abstract val enableSarifReporting: Property<Boolean>
 
   @get:Input
   public abstract val dependencyMap: MapProperty<String, String>
@@ -123,6 +124,7 @@ public abstract class FilterAdviceTask @Inject constructor(
       it.moduleStructureBehavior.set(moduleStructureBehavior)
       it.output.set(output)
       it.sourcedOutput.set(sourcedOutput)
+      it.enableSarifReporting.set(enableSarifReporting)
       it.rootFolder.set(rootFolder)
       it.buildFile.set(buildFile)
       it.dependencyMap = dependencyMap.get()
@@ -147,6 +149,7 @@ public abstract class FilterAdviceTask @Inject constructor(
     public val moduleStructureBehavior: Property<Behavior>
     public val output: RegularFileProperty
     public val sourcedOutput: RegularFileProperty
+    public val enableSarifReporting: Property<Boolean>
     public val buildFile: RegularFileProperty
     public var dependencyMap: Map<String, String>
     public val rootFolder: RegularFileProperty
@@ -183,7 +186,6 @@ public abstract class FilterAdviceTask @Inject constructor(
 
     override fun execute() {
       val output = parameters.output.getAndDelete()
-      val sourcedOutput = parameters.sourcedOutput.getAndDeleteNullable()
 
       val projectAdvice = parameters.projectAdvice.fromJson<ProjectAdvice>()
       val dependencyAdvice: Set<Advice> = projectAdvice.dependencyAdvice.asSequence()
@@ -248,7 +250,9 @@ public abstract class FilterAdviceTask @Inject constructor(
 
       output.bufferWriteJson(filteredAdvice)
 
-      if (sourcedOutput != null) {
+      if (parameters.enableSarifReporting.get()) {
+        val sourcedOutput = parameters.sourcedOutput.getAndDelete()
+
         val buildFileLines = parameters.buildFile.readLines()
         val sourcedAdvice = dependencyAdvice.addLineNumbers(buildFileLines)
 

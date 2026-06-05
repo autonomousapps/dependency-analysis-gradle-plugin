@@ -46,14 +46,6 @@ internal fun Provider<RegularFile>.getAndDelete(): File {
   return file
 }
 
-/** Resolves the file from the property (if it is declared) and deletes its contents, then returns the file. */
-internal fun RegularFileProperty.getAndDeleteNullable(): File? {
-  val file = orNull?.asFile
-  file?.delete()
-  return file
-}
-
-
 /** Buffer reads of the nullable RegularFileProperty from disk to the set. */
 internal inline fun <reified T> RegularFileProperty.fromNullableJsonSet(): Set<T> {
   return orNull?.fromJsonSet() ?: emptySet()

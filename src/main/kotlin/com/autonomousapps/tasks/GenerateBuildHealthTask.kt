@@ -14,14 +14,13 @@ import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.getAndDeleteNullable
 import com.autonomousapps.model.AndroidScore
 import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.BuildHealth.AndroidScoreMetrics
 import com.autonomousapps.model.ProjectAdvice
 import com.autonomousapps.model.SourcedProjectAdvice
-import io.github.detekt.sarif4k.SarifSerializer
 import com.autonomousapps.model.internal.ProjectMetadata
+import io.github.detekt.sarif4k.SarifSerializer
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -78,14 +77,15 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
   public abstract val outputFail: RegularFileProperty
 
   @get:OutputFile
-  @get:Optional
   public abstract val sarifOutput: RegularFileProperty
+
+  @get:Input
+  public abstract val enableSarifReporting: Property<Boolean>
 
   @TaskAction public fun action() {
     val output = output.getAndDelete()
     val consoleOutput = consoleOutput.getAndDelete()
     val outputFail = outputFail.getAndDelete()
-    val sarifOutput = sarifOutput.getAndDeleteNullable()
 
     var didWrite = false
     var shouldFail = false
@@ -191,7 +191,8 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
       }
     }
 
-    if (sarifOutput != null) {
+    if (enableSarifReporting.get()) {
+      val sarifOutput = sarifOutput.getAndDelete()
       val sourcedAdvice = sourcedProjectHealthReports.files.map { it.fromJson<SourcedProjectAdvice>() }
 
       val sarifReport = ProjectHealthSarifReportBuilder(

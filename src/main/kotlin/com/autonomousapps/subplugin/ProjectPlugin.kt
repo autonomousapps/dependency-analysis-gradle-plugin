@@ -13,7 +13,6 @@ import com.autonomousapps.Flags.checkBinaryCompat
 import com.autonomousapps.Flags.projectPathRegex
 import com.autonomousapps.Flags.shouldAnalyzeTests
 import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
-import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.AbiExclusions
 import com.autonomousapps.internal.NoVariantOutputPaths
 import com.autonomousapps.internal.UsagesExclusions
@@ -1073,9 +1072,7 @@ internal class ProjectPlugin(private val project: Project) {
       androidScoreTask?.let { a -> t.androidScoreReports.add(a.flatMap { it.output }) }
     }
     filterAdviceTask.configure { t ->
-      if (dagpExtension.reportingHandler.sarifReport.get()) {
-        t.buildFile.set(project.buildFile)
-      }
+      t.buildFile.set(project.buildFile)
       t.buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
       t.dependencyGraphViews.add(graphViewTask.flatMap { it.output })
       t.dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
@@ -1152,15 +1149,8 @@ internal class ProjectPlugin(private val project: Project) {
 
       // ...and produces this output.
       t.output.set(paths.filteredAdvicePath)
-      t.sourcedOutput.set(
-        dagpExtension.reportingHandler.sarifReport.flatMap { enableSarifReport ->
-          if (enableSarifReport) {
-            paths.filteredSourcedAdvicePath
-          } else {
-            provider<RegularFile> { null }
-          }
-        }
-      )
+      t.sourcedOutput.set(paths.filteredSourcedAdvicePath)
+      t.enableSarifReporting.set(dagpExtension.reportingHandler.sarifReport)
       t.dependencyMap.set(
         objects.newInstance(DependenciesHandler::class.java).apply {
           withVersionCatalogs(project)
@@ -1186,11 +1176,8 @@ internal class ProjectPlugin(private val project: Project) {
         t.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
         t.useParenthesesForGroovy.set(dagpExtension.dependenciesHandler.useParenthesesForGroovy)
         t.output.set(paths.consoleReportPath)
-        t.sarifOutput.set(
-          dagpExtension.reportingHandler.sarifReport.flatMap { sarifReportEnabled ->
-            if (sarifReportEnabled) paths.sarifReportPath else null
-          }
-        )
+        t.sarifOutput.set(paths.sarifReportPath)
+        t.enableSarifReporting.set(dagpExtension.reportingHandler.sarifReport)
       }
 
     tasks.register("projectHealth", ProjectHealthTask::class.java) { t ->
@@ -1241,9 +1228,7 @@ internal class ProjectPlugin(private val project: Project) {
     // Publish our artifacts
     combinedGraphPublisher.publish(mergeProjectGraphsTask.flatMap { it.output })
     projectHealthPublisher.publish(filterAdviceTask.flatMap { it.output })
-    if (dagpExtension.reportingHandler.sarifReport.get()) {
-      sourcedProjectHealthPublisher.publish(filterAdviceTask.flatMap { it.sourcedOutput })
-    }
+    sourcedProjectHealthPublisher.publish(filterAdviceTask.flatMap { it.sourcedOutput })
     projectMetadataPublisher.publish(writeProjectMetadata.flatMap { it.output })
     publicClassesPublisher.publish(aggregatePublicTypesTask.flatMap { it.output })
     resolvedDependenciesPublisher.publish(computeResolvedDependenciesTask.flatMap { it.output })
