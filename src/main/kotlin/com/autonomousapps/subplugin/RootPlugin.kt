@@ -160,10 +160,7 @@ internal class RootPlugin(private val project: Project) {
       t.consoleReport.set(generatePublicTypeUsages.flatMap { it.outputConsole })
     }
 
-    tasks.register(
-      "generateWorkP      it.sarifReport.set(generateBuildHealthTask.flatMap { it.sarifOutput })\nlan",
-      GenerateWorkPlan::class.java
-    ) { t ->
+    tasks.register("generateWorkPlan", GenerateWorkPlan::class.java) { t ->
       t.buildPath.set(buildPath(combinedGraphResolver.internal.name))
       t.combinedProjectGraphs.setFrom(combinedGraphResolver.internal.map { it.artifactsFor("json").artifactFiles })
       t.outputDirectory.set(paths.workPlanDir)
