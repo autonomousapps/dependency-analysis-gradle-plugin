@@ -897,9 +897,9 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     dependencyAnalyzer.registerDominatorTreeTasks(
-            artifactsReportCompile = artifactsReport,
-            artifactsReportRuntime = artifactsReportRuntime,
-            graphViewTask = graphViewTask,
+      artifactsReportCompile = artifactsReport,
+      artifactsReportRuntime = artifactsReportRuntime,
+      graphViewTask = graphViewTask,
     )
 
     dependencyAnalyzer.registerGenerateProjectGraphTasks(mergeProjectGraphsTask)
@@ -1008,16 +1008,16 @@ internal class ProjectPlugin(private val project: Project) {
 
     // Synthesizes the above into a single view of this project's usages.
     val synthesizeProjectViewTask = dependencyAnalyzer.registerSynthesizeProjectViewTask(
-        graphViewTask,
-        declaredProcsTask,
-        explodeBytecodeTask,
-        explodeCodeSourceTask,
-        usagesExclusionsProvider,
-        artifactsReport,
-        abiAnalysisTask,
-        explodeXmlSourceTask,
-        explodeAssetSourceTask,
-      )
+      graphViewTask,
+      declaredProcsTask,
+      explodeBytecodeTask,
+      explodeCodeSourceTask,
+      usagesExclusionsProvider,
+      artifactsReport,
+      abiAnalysisTask,
+      explodeXmlSourceTask,
+      explodeAssetSourceTask,
+    )
 
     // Discover duplicates on compile and runtime classpaths
     val duplicateClassesCompile =
@@ -1038,7 +1038,7 @@ internal class ProjectPlugin(private val project: Project) {
     val computeUsagesTask = dependencyAnalyzer.registerComputeUsagesTask(
       checkSuperClasses = dagpExtension.usageHandler.analysisHandler.checkSuperClasses,
       checkBinaryCompat = checkBinaryCompat(),
-isKaptApplied = isKaptApplied().orElse(isLegacyKaptApplied()),
+      isKaptApplied = isKaptApplied().orElse(isLegacyKaptApplied()),
       graphViewTask = graphViewTask,
       findDeclarationsTask = findDeclarationsTask,
       synthesizeProjectViewTask = synthesizeProjectViewTask,
@@ -1169,12 +1169,11 @@ isKaptApplied = isKaptApplied().orElse(isLegacyKaptApplied()),
       t.rootFolder.set(project.layout.settingsDirectory.asFile)
     }
 
-    val writeProjectMetadata = tasks.register("writeProjectMetadata", WriteProjectMetadataTask::class.java) {
-        t ->
-        t.projectPath.set(theProjectPath)
-        t.projectType.set(projectType)
-        t.output.set(paths.projectMetadataPath)
-      }
+    val writeProjectMetadata = tasks.register("writeProjectMetadata", WriteProjectMetadataTask::class.java) { t ->
+      t.projectPath.set(theProjectPath)
+      t.projectType.set(projectType)
+      t.output.set(paths.projectMetadataPath)
+    }
 
     val generateProjectHealthReport =
       tasks.register("generateConsoleReport", GenerateProjectHealthReportTask::class.java) { t ->
@@ -1213,12 +1212,12 @@ isKaptApplied = isKaptApplied().orElse(isLegacyKaptApplied()),
 
     tasks.register("fixDependencies", RewriteTask::class.java) { t ->
       t.buildScript.set(buildFile)
-        t.projectAdvice.set(filterAdviceTask.flatMap { it.output })
+      t.projectAdvice.set(filterAdviceTask.flatMap { it.output })
       t.projectMetadata.set(writeProjectMetadata.flatMap { it.output })
-        t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
+      t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
       t.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
       t.useParenthesesForGroovy.set(dagpExtension.dependenciesHandler.useParenthesesForGroovy)
-      }
+    }
 
     resolveExternalDependenciesTask = tasks.register("resolveExternalDependencies")
 
