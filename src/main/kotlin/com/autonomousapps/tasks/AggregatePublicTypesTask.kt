@@ -24,7 +24,6 @@ public abstract class AggregatePublicTypesTask @Inject constructor(
 ) : DefaultTask() {
 
   init {
-    group = "Writes report of all public classes across all variants or source sets in this project"
     description = "Writes report of all public classes across all variants or source sets in this project"
   }
 
