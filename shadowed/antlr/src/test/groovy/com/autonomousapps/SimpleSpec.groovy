@@ -133,6 +133,29 @@ final class SimpleSpec extends Specification {
     assertThat(imports).containsExactly("java.util.concurrent.atomic.AtomicBoolean")
   }
 
+  def "can find imports in Kotlin file with @file:OptIn(ExperimentalRxStateApi::class) annotation"() {
+    given:
+    def sourceFile = dir.resolve('temp.kt').toFile()
+    sourceFile << """\
+      @file:OptIn(ExperimentalRxStateApi::class)
+      
+      package com.hello
+      
+      import java.util.concurrent.atomic.AtomicBoolean
+      
+      fun method(): Boolean {
+        return AtomicBoolean().get()
+      }
+    """.stripMargin()
+
+    when:
+    def imports = parseSourceFileForImports(sourceFile)
+
+    then:
+    assertThat(imports.size()).isEqualTo(1)
+    assertThat(imports).containsExactly("java.util.concurrent.atomic.AtomicBoolean")
+  }
+
   def "can find imports in Kotlin file with aliases "() {
     given:
     def sourceFile = dir.resolve('temp.kt').toFile()
