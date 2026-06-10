@@ -2,6 +2,7 @@ Release procedure for dependency-analysis-android-gradle-plugin
 
 1. Update CHANGELOG
 1. Update README if needed
+1. Double-check API with `./gradlew :updateApi`.
 1. Bump version number in `gradle.properties` to next stable version (use semantic versioning: x.y.z)
    _with_ the `-SNAPSHOT` suffix (we publish a snapshot first for smoke testing).
 1. Publish the snapshot to Maven Central: `./gradlew :publishEverywhere`
