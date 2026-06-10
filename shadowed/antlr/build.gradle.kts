@@ -6,7 +6,7 @@ plugins {
   id("groovy")
 }
 
-version = "${libs.versions.antlr.base.get()}.0"
+version = "${libs.versions.antlr.base.get()}.1"
 
 // https://docs.gradle.org/current/userguide/antlr_plugin.html
 // https://discuss.gradle.org/t/using-gradle-2-10s-antlr-plugin-to-import-an-antlr-4-lexer-grammar-into-another-grammar/14970/6

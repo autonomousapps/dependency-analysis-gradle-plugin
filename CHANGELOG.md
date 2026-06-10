@@ -1,5 +1,12 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.15.0
+* [feat]: support AGP 9.2.0.
+* [fix]: don't report Android R classes as classpath duplicates.
+* [fix]: track multiple package names from libs that provide type aliases, and enhance default kotlin-lib bundle.
+* [fix]: update metadata of `:aggregatePublicTypesTask` to move `group` to `description`.
+* [fix]: simple grammar supports another kind of file-level annotation. (Updated `com.autonomousapps:antlr` to latest.)
+
 # Version 3.14.1
 * [fix]: resolve performance issue with `computeTypeUsage`.
 * [fix]: `JarExploder` should ignore some MRJar content.
