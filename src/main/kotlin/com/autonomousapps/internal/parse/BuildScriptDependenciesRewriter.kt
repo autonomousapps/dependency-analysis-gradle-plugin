@@ -8,6 +8,7 @@ import com.autonomousapps.model.Advice
 import java.io.File
 
 internal interface BuildScriptDependenciesRewriter {
+  fun hasChanges(): Boolean
   fun rewritten(): String
 
   companion object {

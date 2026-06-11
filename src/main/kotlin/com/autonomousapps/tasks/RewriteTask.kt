@@ -63,12 +63,6 @@ public abstract class RewriteTask : DefaultTask() {
     val buildScript = buildScript.get().asFile
 
     val isUpgrade = upgrade.getOrElse(false)
-    if (isUpgrade) {
-      logger.quiet("Fixing dependencies for ${buildScript.path}. Upgrades only.")
-    } else {
-      logger.quiet("Fixing dependencies for ${buildScript.path}.")
-    }
-
     val dslKind = DslKind.from(buildScript)
     val projectAdvice = projectAdvice.fromJson<ProjectAdvice>()
     val projectMetadata = projectMetadata.fromJson<ProjectMetadata>()
@@ -88,41 +82,46 @@ public abstract class RewriteTask : DefaultTask() {
       reversedDependencyMap = createReversedDependencyMap(map, useTypesafeProjectAccessors.get())
     )
 
-    try {
-      val newText = rewriter.rewritten()
-      buildScript.writeText(newText)
-    } catch (e: BuildScriptParseException) {
-      logger.warn("Can't fix dependencies for '${projectAdvice.projectPath}': ${e.localizedMessage}")
+    if (rewriter.hasChanges()) {
+      try {
+        val suffix = if (isUpgrade) " Upgrades only." else ""
+        logger.quiet("Fixing dependencies for ${buildScript.path}.$suffix")
+
+        val newText = rewriter.rewritten()
+        buildScript.writeText(newText)
+      } catch (e: BuildScriptParseException) {
+        logger.warn("Can't fix dependencies for '${projectAdvice.projectPath}': ${e.localizedMessage}")
+      }
     }
   }
 
   /**
    * Creates a reversed dependency map that properly handles type-safe project accessors.
    */
-   private fun createReversedDependencyMap(
-     map: Map<String, String>, 
-     useTypesafeProjectAccessors: Boolean
-   ): (String) -> String {
-     val reversedMap = map.reversed()
-     
-     return { identifier ->
-       // First try the regular reversed map
-       reversedMap[identifier] ?: 
-       // If not found and this looks like a type-safe project accessor, try to reverse it
-       if (useTypesafeProjectAccessors && identifier.startsWith("projects.")) {
-         // Convert "projects.common.viewmodels" to ":common:viewmodels" 
-         val projectPath = identifier.removePrefix("projects.")
-           .replace(Regex("([a-z])([A-Z])")) { matchResult ->
-             "${matchResult.groupValues[1]}-${matchResult.groupValues[2].lowercase()}"
-           }
-           .replace(".", ":")
-         ":$projectPath"
-       } else {
-         // Default to returning the identifier as-is
-         identifier
-       }
-     }
-   }
+  private fun createReversedDependencyMap(
+    map: Map<String, String>,
+    useTypesafeProjectAccessors: Boolean
+  ): (String) -> String {
+    val reversedMap = map.reversed()
+
+    return { identifier ->
+      // First try the regular reversed map
+      reversedMap[identifier] ?:
+      // If not found and this looks like a type-safe project accessor, try to reverse it
+      if (useTypesafeProjectAccessors && identifier.startsWith("projects.")) {
+        // Convert "projects.common.viewmodels" to ":common:viewmodels"
+        val projectPath = identifier.removePrefix("projects.")
+          .replace(Regex("([a-z])([A-Z])")) { matchResult ->
+            "${matchResult.groupValues[1]}-${matchResult.groupValues[2].lowercase()}"
+          }
+          .replace(".", ":")
+        ":$projectPath"
+      } else {
+        // Default to returning the identifier as-is
+        identifier
+      }
+    }
+  }
 
   private fun Set<Advice>.filtered(isUpgrade: Boolean): Set<Advice> =
     if (!isUpgrade) this
