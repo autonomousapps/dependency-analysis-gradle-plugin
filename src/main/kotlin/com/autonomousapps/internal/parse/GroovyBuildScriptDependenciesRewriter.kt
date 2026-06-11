@@ -10,6 +10,7 @@ import com.autonomousapps.grammar.gradle.GradleScriptLexer
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.antlr.v4.runtime.*
 import com.autonomousapps.internal.antlr.v4.runtime.tree.ParseTreeWalker
+import com.autonomousapps.internal.cash.grammar.kotlindsl.parse.Rewriter
 import com.autonomousapps.internal.parse.GroovyBuildScriptDependenciesRewriter.CtxDependency.DependencyKind
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.filterToSet
@@ -21,7 +22,7 @@ import java.nio.file.StandardOpenOption
 
 internal class GroovyBuildScriptDependenciesRewriter private constructor(
   private val tokens: CommonTokenStream,
-  private val rewriter: TokenStreamRewriter,
+  private val rewriter: TrackingRewriter,
   private val errorListener: RewriterErrorListener,
   private val printer: AdvicePrinter,
   private val advice: Set<Advice>,
@@ -74,6 +75,8 @@ internal class GroovyBuildScriptDependenciesRewriter private constructor(
 
   private var hasDependenciesBlock = false
   private var inBuildscriptBlock = false
+
+  override fun hasChanges(): Boolean = rewriter.hasChanges
 
   @Throws(BuildScriptParseException::class)
   override fun rewritten(): String {
@@ -207,7 +210,7 @@ internal class GroovyBuildScriptDependenciesRewriter private constructor(
       val walker = ParseTreeWalker()
       val listener = GroovyBuildScriptDependenciesRewriter(
         tokens = tokens,
-        rewriter = TokenStreamRewriter(tokens),
+        rewriter = TrackingRewriter(Rewriter(tokens)),
         errorListener = errorListener,
         printer = advicePrinter,
         advice = advice,

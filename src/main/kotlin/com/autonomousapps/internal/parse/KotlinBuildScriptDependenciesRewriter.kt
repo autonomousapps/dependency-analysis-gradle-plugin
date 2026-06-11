@@ -41,7 +41,7 @@ internal class KotlinBuildScriptDependenciesRewriter(
   private val reversedDependencyMap: (String) -> String,
 ) : BuildScriptDependenciesRewriter, KotlinParserBaseListener() {
 
-  private val rewriter = Rewriter(tokens)
+  private val rewriter = TrackingRewriter(Rewriter(tokens))
   private val indent = Whitespace.computeIndent(tokens, input)
 
   private val adviceFinder = AdviceFinder(advice, reversedDependencyMap)
@@ -53,6 +53,9 @@ internal class KotlinBuildScriptDependenciesRewriter(
 
   private var hasDependenciesBlock = false
   private var inBuildscriptBlock = false
+
+  /** Returns true if there are any changes. */
+  override fun hasChanges(): Boolean = rewriter.hasChanges
 
   /**
    * Returns build script with advice applied.
