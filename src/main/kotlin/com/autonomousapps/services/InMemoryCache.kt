@@ -4,7 +4,6 @@
 
 package com.autonomousapps.services
 
-import com.autonomousapps.DependencyAnalysisPlugin
 import com.autonomousapps.Flags.cacheSize
 import com.autonomousapps.model.internal.intermediates.producer.AnnotationProcessorDependency
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
@@ -59,38 +58,25 @@ public abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
     // To share service across the whole build tree - https://github.com/gradle/gradle/issues/14697
     private fun Gradle.rootBuild(): Gradle = parent?.rootBuild() ?: this
 
-    /**
-     * Determines the build on which to register the service. In a composite build, the root build is used to share the
-     * cache across builds if the root build used that same classloader for loading the plugin as the current build.
-     * See: https://github.com/gradle/gradle/issues/17559
-     */
-    private fun Project.serviceHoldingBuild(): Gradle {
-      val thisBuild = gradle
-      val rootBuild = thisBuild.rootBuild()
-
-      if (thisBuild == rootBuild) {
-        return thisBuild
+    private fun Gradle.registerService(cacheSize: Long): Provider<InMemoryCache> = sharedServices
+      .registerIfAbsent(SHARED_SERVICES_IN_MEMORY_CACHE, InMemoryCache::class.java) {
+        it.parameters.cacheSize.set(cacheSize)
       }
 
-      val thisPluginInstance = thisBuild.rootProject.plugins.findPlugin(DependencyAnalysisPlugin.ID)
-      val rootPluginInstance = rootBuild.rootProject.plugins.findPlugin(DependencyAnalysisPlugin.ID)
+    fun register(property: Property<InMemoryCache>, project: Project) {
+      val cacheSize = project.cacheSize(DEFAULT_CACHE_VALUE)
 
-      if (thisPluginInstance == null || rootPluginInstance == null) {
-        return thisBuild
-      }
-
-      return if (thisPluginInstance::class.java == rootPluginInstance::class.java) {
-        rootBuild // shared cache in the root if plugin was loaded with same classloader
-      } else {
-        thisBuild
+      // In a composite build, the root build is used to share the cache across builds if the root build used
+      // the same classloader for loading the plugin as the current build.
+      // See: https://github.com/gradle/gradle/issues/17559
+      val rootService = project.gradle.rootBuild().registerService(cacheSize)
+      try {
+        property.set(rootService)
+      } catch (_: IllegalArgumentException) {
+        // Root service is not of valid type as it was loaded with a different classloader.
+        // Fall back to an isolated service.
+        property.set(project.gradle.registerService(cacheSize))
       }
     }
-
-    fun register(project: Project): Provider<InMemoryCache> = project
-      .serviceHoldingBuild()
-      .sharedServices
-      .registerIfAbsent(SHARED_SERVICES_IN_MEMORY_CACHE, InMemoryCache::class.java) {
-        it.parameters.cacheSize.set(project.cacheSize(DEFAULT_CACHE_VALUE))
-      }
   }
 }
