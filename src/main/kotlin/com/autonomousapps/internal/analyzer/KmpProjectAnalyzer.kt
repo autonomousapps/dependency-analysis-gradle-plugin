@@ -69,7 +69,7 @@ internal class KmpProjectAnalyzer(
 
   override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> {
     return project.tasks.register("findDeclaredProcs$taskNameSuffix", FindDeclaredProcsTask::class.java) {
-      it.inMemoryCacheProvider.set(InMemoryCache.register(project))
+      InMemoryCache.register(it.inMemoryCacheProvider, project)
       kaptConf()?.let { configuration ->
         it.setKaptArtifacts(configuration.incoming.artifacts)
       }

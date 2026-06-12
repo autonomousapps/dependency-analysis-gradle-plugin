@@ -399,7 +399,7 @@ internal abstract class AbstractDependencyAnalyzer(
     androidLintTask: TaskProvider<FindAndroidLinters>?,
   ): TaskProvider<ExplodeJarTask> {
     return project.tasks.register("explodeJar$taskNameSuffix", ExplodeJarTask::class.java) { t ->
-      t.inMemoryCache.set(InMemoryCache.register(project))
+      InMemoryCache.register(t.inMemoryCache, project)
       t.compileClasspath.setFrom(
         project.configurations.getByName(compileConfigurationName)
           .artifactsFor(attributeValueJar)
@@ -414,7 +414,7 @@ internal abstract class AbstractDependencyAnalyzer(
 
   final override fun registerFindKotlinMagicTask(artifactsReport: TaskProvider<ArtifactsReportTask>): TaskProvider<FindKotlinMagicTask> {
     return project.tasks.register("findKotlinMagic$taskNameSuffix", FindKotlinMagicTask::class.java) { t ->
-      t.inMemoryCacheProvider.set(InMemoryCache.register(project))
+      InMemoryCache.register(t.inMemoryCacheProvider, project)
       t.compileClasspath.setFrom(
         project.configurations.getByName(compileConfigurationName)
           .artifactsFor(attributeValueJar)
@@ -527,7 +527,7 @@ internal abstract class AbstractDependencyAnalyzer(
       "synthesizeDependencies$taskNameSuffix",
       SynthesizeDependenciesTask::class.java
     ) { t ->
-      t.inMemoryCache.set(InMemoryCache.register(project))
+
       t.projectPath.set(project.path)
       t.compileDependencies.set(graphViewTask.flatMap { it.outputNodes })
       t.physicalArtifacts.set(artifactsReport.flatMap { it.output })
