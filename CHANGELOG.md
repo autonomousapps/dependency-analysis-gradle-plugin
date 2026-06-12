@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.16.0 (unreleased)
+* [feat]: only emit 'Fixing dependencies for...' if the build script is being rewritten.
+* [fix]: test against AGP 9.2.1 and update `AGP_MAX` to 9.2.1.
+
 # Version 3.15.0
 * [feat]: support AGP 9.2.0.
 * [fix]: don't report Android R classes as classpath duplicates.
