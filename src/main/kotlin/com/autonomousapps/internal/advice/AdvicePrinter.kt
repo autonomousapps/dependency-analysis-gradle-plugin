@@ -20,6 +20,37 @@ internal class AdvicePrinter(
   private companion object {
     val PROJECT_PATH_PATTERN = "[-_][a-z0-9]".toRegex()
 
+    val kotlinHardKeywords = listOf(
+      "as",
+      "break",
+      "class",
+      "continue",
+      "do",
+      "else",
+      "false",
+      "for",
+      "fun",
+      "if",
+      "in",
+      "interface",
+      "is",
+      "null",
+      "object",
+      "package",
+      "return",
+      "super",
+      "this",
+      "throw",
+      "true",
+      "try",
+      "typealias",
+      "typeof",
+      "val",
+      "var",
+      "when",
+      "while",
+    )
+
     fun String.kebabOrSnakeToCamelCase(): String {
       return replace(PROJECT_PATH_PATTERN) {
         it.value.last().uppercaseChar().toString()
@@ -84,7 +115,7 @@ internal class AdvicePrinter(
   private fun getProjectFormat(quotedDep: String): String {
     return if (useTypesafeProjectAccessors) {
       if (dslKind == DslKind.KOTLIN) {
-        "projects${quotedDep.replace(':', '.').replace("\"", "").kebabOrSnakeToCamelCase()}"
+        "projects${quotedDep.replace("\"", "").split(':').joinToString(".") { if (it in kotlinHardKeywords) "`$it`" else it }.kebabOrSnakeToCamelCase()}"
       } else {
         "projects${quotedDep.replace(':', '.').replace("'", "").kebabOrSnakeToCamelCase()}"
       }

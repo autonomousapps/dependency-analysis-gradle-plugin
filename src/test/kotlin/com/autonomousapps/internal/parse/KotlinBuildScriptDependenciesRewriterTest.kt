@@ -4,6 +4,7 @@ package com.autonomousapps.internal.parse
 
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.advice.DslKind
+import com.autonomousapps.internal.squareup.cash.grammar.KotlinParser
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
@@ -151,6 +152,7 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
       Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
       Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
       Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
+      Advice.ofAdd(Coordinates.of(":interface"), "api"),
     )
 
     // When
@@ -191,6 +193,7 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
           implementation("heart:of-gold:1.+")
           compileOnly(projects.marvin)
           runtimeOnly(projects.sadRobot)
+          api(projects.`interface`)
         }
 
         println("hello, world!")
