@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
+import com.autonomousapps.internal.squareup.cash.grammar.KotlinParser
 import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
@@ -25,6 +26,10 @@ internal class AdvicePrinter(
         it.value.last().uppercaseChar().toString()
       }
     }
+
+    val kotlinReservedKeywords = List(KotlinParser.VOCABULARY.maxTokenType) { KotlinParser.VOCABULARY.getLiteralName(it) }
+      .filterNotNull()
+      .map { it.removeSurrounding("'") }
   }
 
   fun line(configuration: String, printableIdentifier: String, was: String = ""): String {
@@ -84,7 +89,7 @@ internal class AdvicePrinter(
   private fun getProjectFormat(quotedDep: String): String {
     return if (useTypesafeProjectAccessors) {
       if (dslKind == DslKind.KOTLIN) {
-        "projects${quotedDep.replace(':', '.').replace("\"", "").kebabOrSnakeToCamelCase()}"
+        "projects${quotedDep.replace("\"", "").split(':').joinToString(".") { if (it in kotlinReservedKeywords) "`$it`" else it }.kebabOrSnakeToCamelCase()}"
       } else {
         "projects${quotedDep.replace(':', '.').replace("'", "").kebabOrSnakeToCamelCase()}"
       }
