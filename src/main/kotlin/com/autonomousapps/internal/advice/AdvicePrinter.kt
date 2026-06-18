@@ -27,9 +27,10 @@ internal class AdvicePrinter(
       }
     }
 
-    val kotlinReservedKeywords = List(KotlinParser.VOCABULARY.maxTokenType) { KotlinParser.VOCABULARY.getLiteralName(it) }
-      .filterNotNull()
-      .map { it.removeSurrounding("'") }
+    val kotlinReservedKeywords = listOf(
+      "class",
+      "interface",
+    )
   }
 
   fun line(configuration: String, printableIdentifier: String, was: String = ""): String {
