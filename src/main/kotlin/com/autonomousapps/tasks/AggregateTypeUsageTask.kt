@@ -45,7 +45,8 @@ public abstract class AggregateTypeUsageTask @Inject constructor(
     public val output: RegularFileProperty
   }
 
-  public interface Action : WorkAction<Parameters> {
+  // Must be an abstract class under kotlinLanguageVersion 2.1 (jvm-default=disable) as required by Gradle 8.11.1 ("Cannot have abstract method execute()").
+  public abstract class Action : WorkAction<Parameters> {
     override fun execute() {
       val output = parameters.output.getAndDelete()
 

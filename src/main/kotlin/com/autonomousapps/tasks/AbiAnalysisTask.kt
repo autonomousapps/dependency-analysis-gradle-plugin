@@ -35,6 +35,10 @@ public abstract class AbiAnalysisTask @Inject constructor(
   @get:InputFiles
   public abstract val classes: ConfigurableFileCollection
 
+  /** `kotlin-metadata-jvm`, added to the isolated worker classpath. */
+  @get:Classpath
+  public abstract val kotlinMetadataClasspath: ConfigurableFileCollection
+
   @get:Optional
   @get:Input
   public abstract val exclusions: Property<String>
@@ -47,7 +51,10 @@ public abstract class AbiAnalysisTask @Inject constructor(
 
   @TaskAction
   public fun action() {
-    workerExecutor.noIsolation().submit(AbiAnalysisWorkAction::class.java) {
+    workerExecutor.classLoaderIsolation {
+      // kotlin-metadata-jvm is not on the main plugin classpath (issue 1671); add it for the isolated worker only.
+      it.classpath.from(kotlinMetadataClasspath)
+    }.submit(AbiAnalysisWorkAction::class.java) {
       // JVM projects
       it.classFiles.setFrom(classes.asFileTree.filterToClassFiles().files)
       // Android projects

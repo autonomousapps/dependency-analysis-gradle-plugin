@@ -11,17 +11,19 @@ import com.autonomousapps.model.internal.PhysicalArtifact.Mode
 import com.autonomousapps.model.internal.intermediates.producer.AndroidLinterDependency
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
-import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.ExplodeJarTask
 import java.util.zip.ZipFile
 
 internal class JarExploder(
   private val artifacts: List<PhysicalArtifact>,
   private val androidLinters: Set<AndroidLinterDependency>,
-  private val inMemoryCache: InMemoryCache
+  private val seedCache: Map<String, ExplodedJar>,
 ) {
 
   private val logger = getLogger<ExplodeJarTask>()
+
+  /** [ExplodedJar]s computed during this run (cache misses), keyed by artifact path, to merge back into the cache. */
+  val newEntries: MutableMap<String, ExplodedJar> = LinkedHashMap()
 
   fun explodedJars(): Set<ExplodedJar> {
     return artifacts.asSequence()
@@ -34,16 +36,23 @@ internal class JarExploder(
 
   private fun Sequence<PhysicalArtifact>.toExplodedJars(): Set<ExplodedJar> =
     map { artifact ->
-      val explodedJar = if (artifact.isJar()) {
-        explode(artifact, Mode.ZIP)
-      } else {
-        explode(artifact, Mode.CLASSES)
-      }
+      val key = artifact.file.absolutePath
+      // A cache hit reuses the file-content-derived analysis, but the cached ExplodedJar also carries the coordinates
+      // of whichever artifact first populated this path in the build-scoped cache. Rebind to THIS artifact's identity;
+      // otherwise a file shared by two dependencies (e.g. a classifier/capability variant resolved by multiple
+      // projects) leaks the other's coordinates and produces wrong advice.
+      seedCache[key]?.copy(coordinates = artifact.coordinates) ?: run {
+        val explodingJar = if (artifact.isJar()) {
+          explode(artifact, Mode.ZIP)
+        } else {
+          explode(artifact, Mode.CLASSES)
+        }
 
-      ExplodedJar(
-        artifact = artifact,
-        exploding = explodedJar
-      )
+        ExplodedJar(
+          artifact = artifact,
+          exploding = explodingJar
+        ).also { newEntries[key] = it }
+      }
     }.toSortedSet()
 
   /**
@@ -55,9 +64,6 @@ internal class JarExploder(
    * get jars, but now we get class files).
    */
   private fun explode(artifact: PhysicalArtifact, mode: Mode): ExplodingJar {
-    val entry = findInCache(artifact)
-    if (entry != null) return entry
-
     val ktFiles: Set<KtFile>
 
     val visitors = when (mode) {
@@ -97,15 +103,7 @@ internal class JarExploder(
       analyzedClasses = analyzedClasses,
       ktFiles = ktFiles,
       androidLintRegistry = findAndroidLinter(artifact)
-    ).also { putInCache(artifact, it) }
-  }
-
-  private fun findInCache(artifact: PhysicalArtifact): ExplodingJar? {
-    return inMemoryCache.explodedJar(artifact.file.absolutePath)
-  }
-
-  private fun putInCache(artifact: PhysicalArtifact, explodingJar: ExplodingJar) {
-    inMemoryCache.explodedJars(artifact.file.absolutePath, explodingJar)
+    )
   }
 
   private fun findAndroidLinter(physicalArtifact: PhysicalArtifact): String? {
