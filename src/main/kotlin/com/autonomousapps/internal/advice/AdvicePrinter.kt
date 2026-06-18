@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
-import com.autonomousapps.internal.squareup.cash.grammar.KotlinParser
 import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
@@ -21,16 +20,42 @@ internal class AdvicePrinter(
   private companion object {
     val PROJECT_PATH_PATTERN = "[-_][a-z0-9]".toRegex()
 
+    val kotlinHardKeywords = listOf(
+      "as",
+      "break",
+      "class",
+      "continue",
+      "do",
+      "else",
+      "false",
+      "for",
+      "fun",
+      "if",
+      "in",
+      "interface",
+      "is",
+      "null",
+      "object",
+      "package",
+      "return",
+      "super",
+      "this",
+      "throw",
+      "true",
+      "try",
+      "typealias",
+      "typeof",
+      "val",
+      "var",
+      "when",
+      "while",
+    )
+
     fun String.kebabOrSnakeToCamelCase(): String {
       return replace(PROJECT_PATH_PATTERN) {
         it.value.last().uppercaseChar().toString()
       }
     }
-
-    val kotlinReservedKeywords = listOf(
-      "class",
-      "interface",
-    )
   }
 
   fun line(configuration: String, printableIdentifier: String, was: String = ""): String {
@@ -90,7 +115,7 @@ internal class AdvicePrinter(
   private fun getProjectFormat(quotedDep: String): String {
     return if (useTypesafeProjectAccessors) {
       if (dslKind == DslKind.KOTLIN) {
-        "projects${quotedDep.replace("\"", "").split(':').joinToString(".") { if (it in kotlinReservedKeywords) "`$it`" else it }.kebabOrSnakeToCamelCase()}"
+        "projects${quotedDep.replace("\"", "").split(':').joinToString(".") { if (it in kotlinHardKeywords) "`$it`" else it }.kebabOrSnakeToCamelCase()}"
       } else {
         "projects${quotedDep.replace(':', '.').replace("'", "").kebabOrSnakeToCamelCase()}"
       }
