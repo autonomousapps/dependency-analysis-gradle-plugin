@@ -42,8 +42,9 @@ public class JarSubject private constructor(
         failWithActual(Fact.simpleFact("No resource found at '$path' in '$actual'"))
       }
 
-      val tempDir = Files.createTempDirectory(null)
-      Files.copy(resource, tempDir.resolve(path), StandardCopyOption.REPLACE_EXISTING)
+      val target = Files.createTempDirectory(null).resolve(path)
+      Files.createDirectories(target.parent)
+      Files.copy(resource, target, StandardCopyOption.REPLACE_EXISTING)
     }
 
     return PathSubject.assertThat(tempResource)
