@@ -94,12 +94,15 @@ internal class NoVariantOutputPaths(private val project: Project) {
    */
 
   val unfilteredAdvicePath = file("$ROOT_DIR/unfiltered-advice.json")
+  val unfilteredSourcedAdvicePath = file("$ROOT_DIR/unfiltered-sourced-advice.json")
   val bundledTracesPath = file("$ROOT_DIR/bundled-traces.json")
   val dependencyUsagesPath = file("$ROOT_DIR/usages-dependencies.json")
   val annotationProcessorUsagesPath = file("$ROOT_DIR/usages-annotation-processors.json")
   val filteredAdvicePath = file("$ROOT_DIR/final-advice.json")
+  val filteredSourcedAdvicePath = file("$ROOT_DIR/final-sourced-advice.json")
   val consoleReportPath = file("$ROOT_DIR/project-health-report.txt")
   val projectMetadataPath = file("$ROOT_DIR/project-metadata.json")
+  val sarifReportPath = file("$ROOT_DIR/build-health-report.sarif")
 }
 
 /**
@@ -115,6 +118,7 @@ internal class RootOutputPaths(private val project: Project) {
   val consoleReportPath = file("$ROOT_DIR/build-health-report.txt")
   val allLibsVersionsTomlPath = file("$ROOT_DIR/allLibs.versions.toml")
   val shouldFailPath = file("$ROOT_DIR/should-fail.txt")
+  val sarifReportPath = file("$ROOT_DIR/build-health-report.sarif")
 
   val publicTypeUsagePath = file("$ROOT_DIR/public-type-usage-report.json")
   val publicTypeUsageConsolePath = file("$ROOT_DIR/public-type-usage-report.txt")

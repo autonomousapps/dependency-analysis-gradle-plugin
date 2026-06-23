@@ -6,6 +6,8 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import javax.inject.Inject
+import org.gradle.api.file.RegularFileProperty
+import org.jetbrains.kotlin.konan.file.File
 
 /**
  * Customize issue reports.
@@ -31,6 +33,9 @@ public abstract class ReportingHandler @Inject constructor(private val objects: 
   // value of the Gradle property, which itself supplies a default value.
   internal val printBuildHealth: Property<Boolean> = objects.property(Boolean::class.java)
 
+  internal val sarifReport: Property<Boolean> = objects.property(Boolean::class.java)
+    .convention(false)
+
   /**
    * Whether to always include the postscript, or only when the report includes failure-level issues.
    */
@@ -55,6 +60,14 @@ public abstract class ReportingHandler @Inject constructor(private val objects: 
   public fun printBuildHealth(printBuildHealth: Boolean) {
     this.printBuildHealth.set(printBuildHealth)
     this.printBuildHealth.disallowChanges()
+  }
+
+  /**
+   * Whether to generate a .sarif file report
+   */
+  public fun sarifReport(report: Boolean) {
+    this.sarifReport.set(report)
+    this.sarifReport.disallowChanges()
   }
 
   internal fun config(): Config {

@@ -447,7 +447,7 @@ internal class StandardTransform(
           advice += Advice.ofChange(
             coordinates = theRemove.coordinates,
             fromConfiguration = theRemove.fromConfiguration!!,
-            toConfiguration = theAdd.toConfiguration!!
+            toConfiguration = theAdd.toConfiguration!!,
           )
         }
     }

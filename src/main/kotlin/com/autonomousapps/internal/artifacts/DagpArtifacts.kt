@@ -16,10 +16,11 @@ internal interface DagpArtifacts : Named {
 
   enum class Kind : ArtifactDescription<DagpArtifacts> {
     COMBINED_GRAPH,
-    PUBLIC_CLASSES,
     PROJECT_HEALTH,
     PROJECT_METADATA,
+    PUBLIC_CLASSES,
     RESOLVED_DEPS,
+    SOURCED_PROJECT_HEALTH,
     TYPE_USAGE,
     ;
 

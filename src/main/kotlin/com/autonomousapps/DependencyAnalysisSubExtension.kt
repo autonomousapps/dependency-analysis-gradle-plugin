@@ -5,6 +5,7 @@ package com.autonomousapps
 import com.autonomousapps.extension.AbiHandler
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.extension.ProjectIssueHandler
+
 import com.autonomousapps.extension.TypeUsageHandler
 import org.gradle.api.Action
 import org.gradle.api.Project

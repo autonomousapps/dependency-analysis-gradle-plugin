@@ -142,6 +142,7 @@ dependencies {
   }
   implementation(libs.relocated.antlr)
   implementation(libs.relocated.asm)
+  implementation(libs.sarif4k)
 
   runtimeOnly(libs.kotlin.reflect) {
     because("For Kotlin ABI analysis")

@@ -137,6 +137,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
   public interface ComputeAdviceParameters : WorkParameters {
     public val projectPath: Property<String>
     public val buildPath: Property<String>
+
     public val dependencyUsageReports: ListProperty<RegularFile>
     public val dependencyGraphViews: ListProperty<RegularFile>
     public val androidScoreReports: ListProperty<RegularFile>
@@ -167,6 +168,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
 
       val projectPath = parameters.projectPath.get()
       val buildPath = parameters.buildPath.get()
+
       val declarations = parameters.declarations.fromJsonSet<Declaration>().toSortedSet()
       val dependencyGraph = DependencyGraphView.asMap(parameters.dependencyGraphViews)
       val androidScore = parameters.androidScoreReports.get()
