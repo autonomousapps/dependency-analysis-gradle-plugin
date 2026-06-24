@@ -6,6 +6,7 @@ import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.UsageContainer
 import com.autonomousapps.internal.advice.KmpCommonDependencies
+import com.autonomousapps.internal.android.ProductFlavor
 import com.autonomousapps.internal.transform.StandardTransform
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
@@ -84,6 +85,12 @@ public abstract class ComputeAdviceTask @Inject constructor(
   @get:Input
   public abstract val legacyKapt: Property<Boolean>
 
+  @get:Input
+  public abstract val buildTypes: SetProperty<String>
+
+  @get:Input
+  public abstract val productFlavors: SetProperty<ProductFlavor>
+
   @get:Optional
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
@@ -120,6 +127,8 @@ public abstract class ComputeAdviceTask @Inject constructor(
       it.bundles.set(bundles)
       it.supportedSourceSets.set(supportedSourceSets)
       it.explicitSourceSets.set(explicitSourceSets)
+      it.buildTypes.set(buildTypes)
+      it.productFlavors.set(productFlavors)
       it.ignoreKtx.set(ignoreKtx)
       it.projectType.set(projectType)
       it.kapt.set(kapt)
@@ -144,6 +153,8 @@ public abstract class ComputeAdviceTask @Inject constructor(
     public val bundles: Property<DependenciesHandler.SerializableBundles>
     public val supportedSourceSets: SetProperty<String>
     public val explicitSourceSets: SetProperty<String>
+    public val buildTypes: SetProperty<String>
+    public val productFlavors: SetProperty<ProductFlavor>
     public val ignoreKtx: Property<Boolean>
     public val projectType: Property<ProjectType>
     public val kapt: Property<Boolean>
@@ -189,7 +200,12 @@ public abstract class ComputeAdviceTask @Inject constructor(
       val isKaptApplied = parameters.kapt.get()
       val isLegacyKaptApplied = parameters.legacyKapt.get()
       val ignoreKtx = parameters.ignoreKtx.get()
-      val configurationNames = ConfigurationNames(projectType, supportedSourceSets)
+      val configurationNames = ConfigurationNames(
+        projectType = projectType,
+        supportedSourceSetNames = supportedSourceSets,
+        buildTypes = parameters.buildTypes.get(),
+        productFlavors = parameters.productFlavors.get(),
+      )
 
       val bundles = Bundles.of(
         projectPath = projectPath,

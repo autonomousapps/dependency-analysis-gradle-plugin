@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.declaration
 
-import com.autonomousapps.model.internal.ProjectType
+import com.autonomousapps.internal.android.ProductFlavor
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.flatMapToOrderedSet
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.source.AndroidSourceKind
 import com.autonomousapps.model.source.JvmSourceKind
 import com.autonomousapps.model.source.KmpSourceKind
@@ -14,6 +15,10 @@ import com.autonomousapps.model.source.SourceKind
 internal class ConfigurationNames(
   val projectType: ProjectType,
   private val supportedSourceSetNames: Set<String>,
+  // Will be empty for non-Android projects
+  private val buildTypes: Set<String>,
+  // Will be empty for non-Android projects
+  private val productFlavors: Set<ProductFlavor>,
 ) {
 
   private companion object {
@@ -134,7 +139,7 @@ internal class ConfigurationNames(
    * Infers a [SourceKind] from a [configurationName]. Will return null if the `sourceKind` to which the configuration
    * belongs is not in [supportedSourceSetNames].
    */
-  internal fun sourceKindFrom(
+  fun sourceKindFrom(
     configurationName: String,
     hasCustomSourceSets: Boolean,
   ): SourceKind? {
@@ -184,6 +189,13 @@ internal class ConfigurationNames(
     } else {
       candidate
     }
+  }
+
+  fun findProductFlavorFrom(configurationName: String): String? {
+    return productFlavors
+      .filter { configurationName.startsWith(it.flavorName) }
+      .maxByOrNull { it.flavorName.length }
+      ?.flavorName
   }
 
   private fun findSourceKind(

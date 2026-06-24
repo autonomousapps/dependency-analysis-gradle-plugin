@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
-import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.*
 import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import com.autonomousapps.model.internal.declaration.Declaration
@@ -39,9 +39,16 @@ class BundlesTest {
       "main",
       "debug",
       "test",
-    )
+    ),
+    buildTypes = emptySet(),
+    productFlavors = emptySet(),
   )
-  private val jvmConfigurationNames = ConfigurationNames(ProjectType.JVM, setOf("main", "test"))
+  private val jvmConfigurationNames = ConfigurationNames(
+    projectType = ProjectType.JVM,
+    supportedSourceSetNames = setOf("main", "test"),
+    buildTypes = emptySet(),
+    productFlavors = emptySet(),
+  )
   private val kmpConfigurationNames = ConfigurationNames(
     projectType = ProjectType.KMP,
     supportedSourceSetNames = setOf(
@@ -50,6 +57,8 @@ class BundlesTest {
       "jvmMain",
       "jvmTest",
     ),
+    buildTypes = emptySet(),
+    productFlavors = emptySet(),
   )
 
   @Nested inner class DefaultBundles {

@@ -44,6 +44,8 @@ internal class DeclarationsContainerTest {
     val configurationNames = ConfigurationNames(
       projectType = ProjectType.KMP,
       supportedSourceSetNames = supportedSourceSetNames,
+      buildTypes = emptySet(),
+      productFlavors = emptySet(),
     )
     val container = DeclarationContainer.of(configurations, configurationNames, true)
 
