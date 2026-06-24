@@ -10,7 +10,12 @@ import spock.lang.Specification
 class BucketSpec extends Specification {
 
   private Set<String> supportedSourceSetNames = ["main", "test", "debug", "release", "releaseFlavor", "debugFlavor"]
-  private ConfigurationNames configurationNames = new ConfigurationNames(ProjectType.JVM, supportedSourceSetNames)
+  private ConfigurationNames configurationNames = new ConfigurationNames(
+    ProjectType.JVM,
+    supportedSourceSetNames,
+    Collections.emptySet(),
+    Collections.emptySet(),
+  )
 
   def "can compute bucket from configuration (#configurationName => #bucket)"() {
     expect:

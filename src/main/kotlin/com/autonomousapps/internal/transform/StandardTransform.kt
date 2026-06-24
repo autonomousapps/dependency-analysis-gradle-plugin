@@ -425,19 +425,22 @@ internal class StandardTransform(
   }
 
   /**
-   * Simply advice by transforming matching pairs of add-advice and remove-advice into a single change-advice. In
-   * addition, strip advice that would add redundant declarations in related source sets, or which would upgrade test
+   * Simply advice by transforming matching pairs of add-advice and remove-advice into a single change-advice. Also
+   * strips out confusing and verbose advice to change/add dependencies for the same product flavor.
+   *
+   * In addition, strip advice that would add redundant declarations in related source sets, or which would upgrade test
    * dependencies.
    */
   private fun simplify(advice: MutableSet<Advice>): Set<Advice> {
-    val (add, remove) = advice.mutPartitionOf(
+    val (add, remove, change) = advice.mutPartitionOf(
       { it.isAdd() || it.isCompileOnly() },
-      { it.isRemove() || it.isRemoveCompileOnly() }
+      { it.isRemove() || it.isRemoveCompileOnly() },
+      { it.isAnyChange() },
     )
 
     add.forEach { theAdd ->
       remove
-        .find { it.coordinates == theAdd.coordinates }
+        .find { theRemove -> theRemove.coordinates == theAdd.coordinates }
         ?.let { theRemove ->
           // Replace add + remove => change.
           advice -= theAdd
@@ -450,6 +453,49 @@ internal class StandardTransform(
             toConfiguration = theAdd.toConfiguration!!
           )
         }
+    }
+
+    // Look for conflicting advice relating to Android product flavors.
+    // Previously if we had a declaration like `fireImplementation("foo")` (with product flavors "fire" and "water"),
+    // then we'd erroneously advise changing that to `fireDebugImplementation`. There was also a transient advice to ADD
+    // to `fireReleaseImplementation`, but that got filtered out by `isDeclaredInRelatedSourceSet()` below. Together,
+    // those two pieces of advice are nonsensical. This was happening due to missing support for product flavors. The
+    // block below handles this by checking change/add advice to see if they're for the same source kind and product
+    // flavor and, if so, removing them.
+    // See `ProductFlavorsSpec`.
+    if (projectType == ProjectType.ANDROID) {
+      change.forEach { theChange ->
+        val configurationName = theChange.fromConfiguration!!
+        val theChangeSourceKind = configurationNames
+          .sourceKindFrom(configurationName, false)
+          // We only care about the `kind` (MAIN, TEST, etc.), not full equality of SourceKind.
+          ?.kind
+        // If it's null, can't make a reasonable equality check, so exit.
+          ?: return@forEach
+
+        val theChangeFlavor = configurationNames.findProductFlavorFrom(configurationName)
+
+        var removed = false
+        add.asSequence()
+          .filter { theAdd -> theAdd.coordinates == theChange.coordinates }
+          .filter { theAdd ->
+            val theAddSourceKind = configurationNames.sourceKindFrom(theAdd.toConfiguration!!, false)?.kind
+            theAddSourceKind == theChangeSourceKind
+          }
+          .filter { theAdd ->
+            val theAddFlavor = configurationNames.findProductFlavorFrom(theAdd.toConfiguration!!)
+            theChangeFlavor == theAddFlavor
+          }
+          .forEach { theAdd ->
+            removed = true
+            advice -= theAdd
+          }
+
+        if (removed) {
+          advice -= theChange
+          change -= theChange
+        }
+      }
     }
 
     // In some cases, a dependency might be non-transitive but still not be "declared" in a build script. For example, a

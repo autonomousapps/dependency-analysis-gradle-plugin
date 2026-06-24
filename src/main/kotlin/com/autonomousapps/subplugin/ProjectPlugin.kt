@@ -19,6 +19,7 @@ import com.autonomousapps.internal.UsagesExclusions
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.analyzer.*
 import com.autonomousapps.internal.android.AgpVersion
+import com.autonomousapps.internal.android.ProductFlavor
 import com.autonomousapps.internal.artifacts.DagpArtifacts
 import com.autonomousapps.internal.utils.addAll
 import com.autonomousapps.internal.utils.log
@@ -116,6 +117,9 @@ internal class ProjectPlugin(private val project: Project) {
 
   private val isDataBindingEnabled = project.objects.property(Boolean::class.java).convention(false)
   private val isViewBindingEnabled = project.objects.property(Boolean::class.java).convention(false)
+
+  private val buildTypes = project.objects.setProperty(String::class.java).convention(emptySet())
+  private val productFlavors = project.objects.setProperty(ProductFlavor::class.java).convention(emptySet())
 
   private var isAndroidProject = false
   private var isKmpProject = false
@@ -305,6 +309,8 @@ internal class ProjectPlugin(private val project: Project) {
 
     androidComponents.onVariants { variant ->
       if (variant.name !in ignoredVariantNames) {
+        rememberVariantParts(variant)
+
         val mainSourceSets = variant.sources
 
         val unitTest = if (shouldAnalyzeTests() && variant is HasUnitTest) {
@@ -405,6 +411,8 @@ internal class ProjectPlugin(private val project: Project) {
 
     androidComponents.onVariants { variant ->
       if (variant.name !in ignoredVariantNames) {
+        rememberVariantParts(variant)
+
         val mainSourceSets = variant.sources
 
         val unitTest = if (shouldAnalyzeTests() && variant is HasUnitTest) {
@@ -509,6 +517,8 @@ internal class ProjectPlugin(private val project: Project) {
 
     androidComponents.onVariants { variant ->
       if (variant.name !in ignoredVariantNames) {
+        rememberVariantParts(variant)
+
         val mainSourceSets = variant.sources
 
         // nb: com.android.test projects have no test nor androidTest source.
@@ -532,6 +542,13 @@ internal class ProjectPlugin(private val project: Project) {
           analyzeDependencies(dependencyAnalyzer)
         }
       }
+    }
+  }
+
+  private fun rememberVariantParts(variant: ComponentIdentity) {
+    variant.buildType?.let { buildTypes.add(it) }
+    variant.productFlavors.forEach { (dimension, flavorName) ->
+      productFlavors.add(ProductFlavor(dimension, flavorName))
     }
   }
 
@@ -1064,8 +1081,13 @@ internal class ProjectPlugin(private val project: Project) {
       t.dependencyGraphViews.add(graphViewTask.flatMap { it.output })
       t.dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
       t.dependencyUsageReports.add(computeUsagesTask.flatMap { it.output })
+
+      // Android stuff
       androidScoreTask?.let { a -> t.androidScoreReports.add(a.flatMap { it.output }) }
+      t.buildTypes.set(buildTypes)
+      t.productFlavors.set(productFlavors)
     }
+
     filterAdviceTask.configure { t ->
       t.buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
       t.dependencyGraphViews.add(graphViewTask.flatMap { it.output })
@@ -1088,6 +1110,8 @@ internal class ProjectPlugin(private val project: Project) {
         project = project,
         projectType = projectType,
         supportedSourceSetNames = supportedSourceSetNames,
+        buildTypes = buildTypes,
+        productFlavors = productFlavors,
         outputPaths = paths
       )
     }

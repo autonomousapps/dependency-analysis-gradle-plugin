@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.declaration
 
+import com.autonomousapps.internal.android.ProductFlavor
 import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.source.AndroidSourceKind
 import com.autonomousapps.model.source.JvmSourceKind
@@ -28,7 +29,12 @@ internal class ConfigurationNamesTest {
       "androidTestDebug", "androidTestRelease",
       "androidTestFlavorRelease",
     )
-    private val configurationNames = ConfigurationNames(projectType, supportedSourceSets)
+    private val configurationNames = ConfigurationNames(
+      projectType = projectType,
+      supportedSourceSetNames = supportedSourceSets,
+      buildTypes = setOf("debug", "release"),
+      productFlavors = setOf(ProductFlavor("flav", "flavor")),
+    )
 
     @ParameterizedTest(name = "{0} => {1}")
     @CsvSource(
@@ -161,6 +167,23 @@ internal class ConfigurationNamesTest {
     fun `knows what a dependency bucket is`(configuration: String, isDependencyBucket: Boolean) {
       assertThat(configurationNames.isDependencyBucket(configuration)).isEqualTo(isDependencyBucket)
     }
+
+    @ParameterizedTest(name = "{0} => {1}")
+    @CsvSource(
+      value = [
+        "flavorReleaseAnnotationProcessor, flavor",
+        "flavorDebugImplementation, flavor",
+        "flavorReleaseApi, flavor",
+        "flavorAnnotationProcessor, flavor",
+        // Note that this is a gap in the implementation. We are choosing not to support flavor-specific values of kapt.
+        "kaptFlavorDebug, null",
+      ],
+      nullValues = ["null"],
+    )
+    fun `can get flavor from configuration name`(configuration: String, flavorName: String?) {
+      val actual = configurationNames.findProductFlavorFrom(configuration)
+      assertThat(actual).isEqualTo(flavorName)
+    }
   }
 
   @Nested
@@ -173,7 +196,12 @@ internal class ConfigurationNamesTest {
       "extra",
       "functionalTest"
     )
-    private val configurationNames = ConfigurationNames(projectType, supportedSourceSets)
+    private val configurationNames = ConfigurationNames(
+      projectType = projectType,
+      supportedSourceSetNames = supportedSourceSets,
+      buildTypes = emptySet(),
+      productFlavors = emptySet(),
+    )
 
     @ParameterizedTest(name = "{0} => {1}")
     @CsvSource(
@@ -279,7 +307,12 @@ internal class ConfigurationNamesTest {
       "androidDeviceTest",
       "androidHostTest",
     )
-    private val configurationNames = ConfigurationNames(projectType, supportedSourceSets)
+    private val configurationNames = ConfigurationNames(
+      projectType = projectType,
+      supportedSourceSetNames = supportedSourceSets,
+      buildTypes = emptySet(),
+      productFlavors = emptySet(),
+    )
 
     @ParameterizedTest(name = "{0} => {1}")
     @CsvSource(
