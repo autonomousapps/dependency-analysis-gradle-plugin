@@ -1,8 +1,13 @@
 Dependency Analysis Plugin Changelog
 
-# Version 3.16.0 (unreleased)
+# Version 3.16.0
 * [feat]: only emit 'Fixing dependencies for...' if the build script is being rewritten.
 * [fix]: test against AGP 9.2.1 and update `AGP_MAX` to 9.2.1.
+* [fix]: make InMemoryCache compatible with isolated projects.
+* [fix]: escape Kotlin reserved keywords when using project accessors.
+* [fix]: improve handling of Android product flavors.
+* [fix]: improve handling of Android build types.
+* [maint]: update kotlin-editor-relocated to latest.
 
 # Version 3.15.0
 * [feat]: support AGP 9.2.0.
