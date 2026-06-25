@@ -30,6 +30,8 @@ internal class GraphViewBuilder(
   private val componentFilter: (ResolvedDependencyResult) -> Boolean = {
     !localOnly || it.selected.id is ProjectComponentIdentifier
   }
+  private val comparator = compareBy<Pair<ResolvedDependencyResult, Coordinates>> { it.second.javaClass.simpleName }
+    .thenComparing { pair -> pair.second.identifier }
 
   init {
     val rootId = root.rootCoordinates()
@@ -56,21 +58,18 @@ internal class GraphViewBuilder(
       .filter(componentFilter)
       // AGP adds all runtime dependencies as constraints to the compile classpath, and these show
       // up in the resolution result. Filter them out.
-      .filterNot { it.isConstraint }
+      .filterNot(ResolvedDependencyResult::isConstraint)
       // For similar reasons as above
-      .filterNot { it.isJavaPlatform() }
+      .filterNot(ResolvedDependencyResult::isJavaPlatform)
       // Sometimes there is a self-dependency?
       .filterNot { it.toCoordinates() == rootId }
-      .map {
+      .map { result ->
         // Might be from an included build, in which case the coordinates reflect the _requested_ dependency instead of
         // the _resolved_ dependency.
-        Pair(it, it.toCoordinates())
+        Pair(result, result.toCoordinates())
       }
       // make reproducible output friendly to compare between executions
-      .sortedWith(
-        compareBy<Pair<ResolvedDependencyResult, Coordinates>> { pair -> pair.second.javaClass.simpleName }
-          .thenComparing { pair -> pair.second.identifier }
-      )
+      .sortedWith(comparator)
       .forEach { (dependencyResult, depId) ->
         // add an edge
         graphBuilder.putEdge(rootId, depId)
