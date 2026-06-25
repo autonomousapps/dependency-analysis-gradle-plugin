@@ -65,13 +65,7 @@ internal inline fun <reified T> RegularFile.fromJsonSet(
 internal inline fun <reified T> File.fromJsonSet(
   compressed: Boolean = false,
 ): Set<T> {
-  val source = if (compressed) {
-    GzipSource(source()).buffer()
-  } else {
-    bufferRead()
-  }
-
-  return source.use { getJsonSetAdapter<T>().fromJson(it)!! }
+  return bufferRead(compressed).use { getJsonSetAdapter<T>().fromJson(it)!! }
 }
 
 /** Buffers reads of the RegularFileProperty from disk to the set. */
@@ -122,14 +116,20 @@ internal inline fun <reified K, reified V> File.fromJsonMap(): Map<K, V> {
 }
 
 /** Buffer reads of the RegularFileProperty from disk to the set. */
-internal inline fun <reified T> RegularFileProperty.fromJson(): T = get().fromJson()
+internal inline fun <reified T> RegularFileProperty.fromJson(
+  compressed: Boolean = false,
+): T = get().fromJson(compressed)
 
 /** Buffer reads of the RegularFile from disk to the set. */
-internal inline fun <reified T> RegularFile.fromJson(): T = asFile.fromJson()
+internal inline fun <reified T> RegularFile.fromJson(
+  compressed: Boolean = false,
+): T = asFile.fromJson(compressed)
 
 /** Buffer reads of the File from disk to the set. */
-internal inline fun <reified T> File.fromJson(): T {
-  return bufferRead().use { reader ->
+internal inline fun <reified T> File.fromJson(
+  compressed: Boolean = false,
+): T {
+  return bufferRead(compressed).use { reader ->
     getJsonAdapter<T>().fromJson(reader)!!
   }
 }
@@ -140,7 +140,15 @@ internal fun RegularFile.readLines(): List<String> = asFile.readLines()
 
 internal fun RegularFileProperty.readText(): String = get().asFile.readText()
 
-private fun File.bufferRead(): BufferedSource = source().buffer()
+private fun File.bufferRead(
+  compressed: Boolean = false,
+): BufferedSource {
+  return if (compressed) {
+    GzipSource(source()).buffer()
+  } else {
+    source().buffer()
+  }
+}
 
 internal fun String.capitalizeSafely(): String {
   return replaceFirstChar(Char::uppercase)

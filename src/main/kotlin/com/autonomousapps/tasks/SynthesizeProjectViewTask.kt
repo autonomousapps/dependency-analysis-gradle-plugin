@@ -264,7 +264,7 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
         excludedIdentifiers = excludedIdentifiers,
       )
 
-      output.bufferWriteJson(projectVariant)
+      output.bufferWriteJson(projectVariant, compress = true)
     }
 
     private fun CodeSource.excludeUsages(usagesExclusions: UsagesExclusions): CodeSource {
