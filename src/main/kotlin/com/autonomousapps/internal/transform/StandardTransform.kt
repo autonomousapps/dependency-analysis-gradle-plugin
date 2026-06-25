@@ -438,21 +438,60 @@ internal class StandardTransform(
       { it.isAnyChange() },
     )
 
-    add.forEach { theAdd ->
-      remove
-        .find { theRemove -> theRemove.coordinates == theAdd.coordinates }
-        ?.let { theRemove ->
-          // Replace add + remove => change.
-          advice -= theAdd
+    // TODO: cleanup
+//    add.forEach { theAdd ->
+//      remove
+//        .find { theRemove -> theRemove.coordinates == theAdd.coordinates }
+//        ?.let { theRemove ->
+//          // Replace add + remove => change.
+//          advice -= theAdd
+//          advice -= theRemove
+//          remove -= theRemove
+//
+//          advice += Advice.ofChange(
+//            coordinates = theRemove.coordinates,
+//            fromConfiguration = theRemove.fromConfiguration!!,
+//            toConfiguration = theAdd.toConfiguration!!
+//          )
+//        }
+//    }
+
+    // debugImplementation -> null
+    remove.forEach { theRemove ->
+      // null -> fireDebugRuntimeOnly, null -> waterDebugRuntimeOnly
+      val adds = add.filterToSet { theAdd -> theAdd.coordinates == theRemove.coordinates }
+      if (adds.size > 1) {
+        // Android product flavors / build types
+        val toConfiguration = configurationNames.findSimplifiedToConfiguration(
+          fromConfiguration = theRemove.fromConfiguration!!,
+          toConfigurations = adds.mapToSet { it.toConfiguration!! },
+        )
+
+        if (toConfiguration != null) {
+          advice.removeAll(adds)
           advice -= theRemove
           remove -= theRemove
 
           advice += Advice.ofChange(
             coordinates = theRemove.coordinates,
-            fromConfiguration = theRemove.fromConfiguration!!,
-            toConfiguration = theAdd.toConfiguration!!
+            fromConfiguration = theRemove.fromConfiguration,
+            toConfiguration = toConfiguration,
           )
         }
+      } else if (adds.size == 1) {
+        // JVM case
+        val theAdd = adds.single()
+
+        advice -= theAdd
+        advice -= theRemove
+        remove -= theRemove
+
+        advice += Advice.ofChange(
+          coordinates = theRemove.coordinates,
+          fromConfiguration = theRemove.fromConfiguration!!,
+          toConfiguration = theAdd.toConfiguration!!
+        )
+      }
     }
 
     // Look for conflicting advice relating to Android product flavors or build types.

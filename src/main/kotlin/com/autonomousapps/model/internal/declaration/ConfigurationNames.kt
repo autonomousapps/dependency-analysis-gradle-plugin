@@ -5,6 +5,7 @@ package com.autonomousapps.model.internal.declaration
 import com.autonomousapps.internal.android.ProductFlavor
 import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.flatMapToOrderedSet
+import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.source.AndroidSourceKind
 import com.autonomousapps.model.source.JvmSourceKind
@@ -203,6 +204,39 @@ internal class ConfigurationNames(
       // debugImplementation or flavorDebugImplementation
       .filter { configurationName.startsWith(it) || configurationName.contains(it.replaceFirstChar(Char::uppercase)) }
       .maxByOrNull { it.length }
+  }
+
+  fun findSimplifiedToConfiguration(fromConfiguration: String, toConfigurations: Set<String>): String? {
+    val removeFlavor = findProductFlavorFrom(fromConfiguration)
+    val removeBuildType = findBuildTypeFrom(fromConfiguration)
+
+    val addFlavors = toConfigurations.mapToSet { findProductFlavorFrom(it) }
+    val addBuildTypes = toConfigurations.mapToSet { findBuildTypeFrom(it) }
+
+    val prefix = if (removeFlavor != null) {
+      // If there's only one add-flavor and it's equal to the remove-flavor
+      if (removeFlavor == addFlavors.singleOrNull()) {
+        removeFlavor
+      } else {
+        null
+      }
+    } else if (removeBuildType != null) {
+      // If there's only one add-buildType and it's equal to the remove-buildType
+      if (removeBuildType == addBuildTypes.singleOrNull()) {
+        removeBuildType
+      } else {
+        null
+      }
+    } else {
+      null
+    }
+
+    return if (prefix != null) {
+      val bucket = Bucket.of(toConfigurations.first(), this).value
+      "$prefix${bucket.replaceFirstChar(Char::uppercase)}"
+    } else {
+      null
+    }
   }
 
   private fun findSourceKind(

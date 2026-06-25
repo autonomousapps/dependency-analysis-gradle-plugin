@@ -5,13 +5,15 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.kit.gradle.dependencies.Dependencies
+import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.AdviceHelper.*
 
 final class ProductFlavorsAndBuildTypesProject extends AbstractAndroidProject {
 
+  private static final CONSCRYPT = Dependencies.conscryptUber('debugImplementation')
   private static final DEBUG = new Dependency('debugImplementation', ':debug')
   private static final FIRE = new Dependency('fireImplementation', ':fire')
   private static final FIRE_DEBUG = new Dependency('fireDebugImplementation', ':firedebug')
@@ -31,7 +33,7 @@ final class ProductFlavorsAndBuildTypesProject extends AbstractAndroidProject {
         consumer.withBuildScript { bs ->
           bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
-          bs.dependencies(DEBUG, FIRE, FIRE_DEBUG)
+          bs.dependencies(CONSCRYPT, DEBUG, FIRE, FIRE_DEBUG)
           bs.withGroovy(
             '''\
             android {
@@ -167,8 +169,12 @@ final class ProductFlavorsAndBuildTypesProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
+  private final Set<Advice> consumerAdvice = [
+    Advice.ofChange(moduleCoordinates(CONSCRYPT), CONSCRYPT.configuration, 'debugRuntimeOnly')
+  ]
+
   final Set<ProjectAdvice> expectedBuildHealth = [
-    emptyProjectAdviceFor(':consumer'),
+    projectAdviceForDependencies(':consumer', consumerAdvice),
     emptyProjectAdviceFor(':debug'),
     emptyProjectAdviceFor(':fire'),
     emptyProjectAdviceFor(':firedebug'),
