@@ -438,24 +438,6 @@ internal class StandardTransform(
       { it.isAnyChange() },
     )
 
-    // TODO: cleanup
-//    add.forEach { theAdd ->
-//      remove
-//        .find { theRemove -> theRemove.coordinates == theAdd.coordinates }
-//        ?.let { theRemove ->
-//          // Replace add + remove => change.
-//          advice -= theAdd
-//          advice -= theRemove
-//          remove -= theRemove
-//
-//          advice += Advice.ofChange(
-//            coordinates = theRemove.coordinates,
-//            fromConfiguration = theRemove.fromConfiguration!!,
-//            toConfiguration = theAdd.toConfiguration!!
-//          )
-//        }
-//    }
-
     // debugImplementation -> null
     remove.forEach { theRemove ->
       // null -> fireDebugRuntimeOnly, null -> waterDebugRuntimeOnly
