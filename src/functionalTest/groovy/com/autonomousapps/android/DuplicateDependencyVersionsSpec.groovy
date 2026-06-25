@@ -22,18 +22,18 @@ final class DuplicateDependencyVersionsSpec extends AbstractAndroidSpec {
 
     then: 'app resolved dependencies'
     assertThat(project.actualResolvedDependenciesFor('app'))
-      .containsExactlyElementsIn(project.expectedResolvedDependenciesForApp)
+      .containsExactlyElementsIn(project.expectedResolvedDependenciesForApp(agpVersion))
       .inOrder()
-    assertThat(project.actualResolvedAllLibsFor('app')).isEqualTo(project.expectedResolvedAllLibsForApp)
+    assertThat(project.actualResolvedAllLibsFor('app')).isEqualTo(project.expectedResolvedAllLibsForApp())
 
     and: 'lib1 resolved dependencies'
     assertThat(project.actualResolvedDependenciesFor('lib1'))
-      .containsExactlyElementsIn(project.expectedResolvedDependenciesForLib1)
+      .containsExactlyElementsIn(project.expectedResolvedDependenciesForLib1())
       .inOrder()
 
     and: 'lib2 resolved dependencies'
     assertThat(project.actualResolvedDependenciesFor('lib2'))
-      .containsExactlyElementsIn(project.expectedResolvedDependenciesForLib2)
+      .containsExactlyElementsIn(project.expectedResolvedDependenciesForLib2())
       .inOrder()
 
     and: 'jvm-lib resolved dependencies'
@@ -52,6 +52,6 @@ final class DuplicateDependencyVersionsSpec extends AbstractAndroidSpec {
       .contains(project.expectedOutput)
 
     where:
-    [gradleVersion, agpVersion] << multivariableDataPipe([GRADLE_LATEST], [AGP_8_13.version])
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 }
