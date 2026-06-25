@@ -455,14 +455,14 @@ internal class StandardTransform(
         }
     }
 
-    // Look for conflicting advice relating to Android product flavors.
+    // Look for conflicting advice relating to Android product flavors or build types.
     // Previously if we had a declaration like `fireImplementation("foo")` (with product flavors "fire" and "water"),
     // then we'd erroneously advise changing that to `fireDebugImplementation`. There was also a transient advice to ADD
     // to `fireReleaseImplementation`, but that got filtered out by `isDeclaredInRelatedSourceSet()` below. Together,
     // those two pieces of advice are nonsensical. This was happening due to missing support for product flavors. The
     // block below handles this by checking change/add advice to see if they're for the same source kind and product
     // flavor and, if so, removing them.
-    // See `ProductFlavorsSpec`.
+    // See `ProductFlavorsAndBuildTypesSpec`.
     if (projectType == ProjectType.ANDROID) {
       change.forEach { theChange ->
         val configurationName = theChange.fromConfiguration!!
@@ -474,6 +474,7 @@ internal class StandardTransform(
           ?: return@forEach
 
         val theChangeFlavor = configurationNames.findProductFlavorFrom(configurationName)
+        val theChangeBuildType = configurationNames.findBuildTypeFrom(configurationName)
 
         var removed = false
         add.asSequence()
@@ -483,8 +484,14 @@ internal class StandardTransform(
             theAddSourceKind == theChangeSourceKind
           }
           .filter { theAdd ->
-            val theAddFlavor = configurationNames.findProductFlavorFrom(theAdd.toConfiguration!!)
-            theChangeFlavor == theAddFlavor
+            val toConfiguration = theAdd.toConfiguration!!
+            val theAddFlavor = configurationNames.findProductFlavorFrom(toConfiguration)
+            val sameFlavor = theChangeFlavor == theAddFlavor
+
+            val theAddBuildType = configurationNames.findBuildTypeFrom(toConfiguration)
+            val sameBuildType = theChangeBuildType == theAddBuildType
+
+            sameFlavor || (theChangeFlavor == null && sameBuildType)
           }
           .forEach { theAdd ->
             removed = true

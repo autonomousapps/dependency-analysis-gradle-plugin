@@ -2,18 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
-import com.autonomousapps.android.projects.ProductFlavorsProject
+import com.autonomousapps.android.projects.ProductFlavorsAndBuildTypesProject
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.kit.GradleBuilder.build
 import static com.google.common.truth.Truth.assertAbout
 
 @SuppressWarnings('GroovyAssignabilityCheck')
-class ProductFlavorsSpec extends AbstractAndroidSpec {
+class ProductFlavorsAndBuildTypesSpec extends AbstractAndroidSpec {
 
-  def "plugin accounts for android resource usage (#gradleVersion AGP #agpVersion)"() {
+  def "doesn't provide confusing advice regarding flavors and build types (#gradleVersion AGP #agpVersion)"() {
     given:
-    def project = new ProductFlavorsProject(agpVersion)
+    def project = new ProductFlavorsAndBuildTypesProject(agpVersion)
     gradleProject = project.gradleProject
 
     when:

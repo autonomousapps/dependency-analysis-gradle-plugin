@@ -184,6 +184,24 @@ internal class ConfigurationNamesTest {
       val actual = configurationNames.findProductFlavorFrom(configuration)
       assertThat(actual).isEqualTo(flavorName)
     }
+
+    @ParameterizedTest(name = "{0} => {1}")
+    @CsvSource(
+      value = [
+        "flavorReleaseAnnotationProcessor, release",
+        "flavorDebugImplementation, debug",
+        "flavorReleaseApi, release",
+        // Staging is not actually a build type
+        "flavorStagingAnnotationProcessor, null",
+        // This works by accident
+        "kaptFlavorDebug, debug",
+      ],
+      nullValues = ["null"],
+    )
+    fun `can get build type from configuration name`(configuration: String, buildType: String?) {
+      val actual = configurationNames.findBuildTypeFrom(configuration)
+      assertThat(actual).isEqualTo(buildType)
+    }
   }
 
   @Nested

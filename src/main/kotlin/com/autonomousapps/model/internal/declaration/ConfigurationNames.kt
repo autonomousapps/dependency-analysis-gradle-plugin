@@ -198,6 +198,13 @@ internal class ConfigurationNames(
       ?.flavorName
   }
 
+  fun findBuildTypeFrom(configurationName: String): String? {
+    return buildTypes
+      // debugImplementation or flavorDebugImplementation
+      .filter { configurationName.startsWith(it) || configurationName.contains(it.replaceFirstChar(Char::uppercase)) }
+      .maxByOrNull { it.length }
+  }
+
   private fun findSourceKind(
     variantSlug: String,
     hasCustomSourceSets: Boolean,

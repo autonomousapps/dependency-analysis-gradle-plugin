@@ -10,15 +10,16 @@ import com.autonomousapps.model.ProjectAdvice
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 
-final class ProductFlavorsProject extends AbstractAndroidProject {
+final class ProductFlavorsAndBuildTypesProject extends AbstractAndroidProject {
 
+  private static final DEBUG = new Dependency('debugImplementation', ':debug')
   private static final FIRE = new Dependency('fireImplementation', ':fire')
   private static final FIRE_DEBUG = new Dependency('fireDebugImplementation', ':firedebug')
 
   final GradleProject gradleProject
   private final String agpVersion
 
-  ProductFlavorsProject(String agpVersion) {
+  ProductFlavorsAndBuildTypesProject(String agpVersion) {
     super(agpVersion)
     this.agpVersion = agpVersion
     this.gradleProject = build()
@@ -30,7 +31,7 @@ final class ProductFlavorsProject extends AbstractAndroidProject {
         consumer.withBuildScript { bs ->
           bs.plugins = androidLib(false)
           bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
-          bs.dependencies(FIRE, FIRE_DEBUG)
+          bs.dependencies(DEBUG, FIRE, FIRE_DEBUG)
           bs.withGroovy(
             '''\
             android {
@@ -58,6 +59,15 @@ final class ProductFlavorsProject extends AbstractAndroidProject {
         consumer.sources = consumerSources()
         consumer.manifest = libraryManifest('com.example.consumer')
       }
+    // build types
+      .withSubproject('debug') { lib ->
+        lib.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
+        lib.sources = debugSources()
+      }
+
+    // product flavors
       .withSubproject('fire') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = javaLibrary
@@ -77,6 +87,19 @@ final class ProductFlavorsProject extends AbstractAndroidProject {
     [
       Source.java(
         '''\
+          package com.example.consumer.debug;
+          
+          import com.example.debug.Debug;
+          
+          public class ConsumerDebug {
+            private Debug debug = new Debug();
+          }
+        '''.stripIndent()
+      )
+        .withSourceSet('debug')
+        .build(),
+      Source.java(
+        '''\
           package com.example.consumer;
           
           import com.example.fire.Fire;
@@ -90,17 +113,29 @@ final class ProductFlavorsProject extends AbstractAndroidProject {
         .build(),
       Source.java(
         '''\
-          package com.example.consumer.debug;
+          package com.example.consumer.firedebug;
           
           import com.example.firedebug.FireDebug;
           
-          public class ConsumerDebug {
-            private FireDebug fire = new FireDebug();
+          public class ConsumerFireDebug {
+            private FireDebug fireDebug = new FireDebug();
           }
         '''.stripIndent()
       )
         .withSourceSet('fireDebug')
         .build(),
+    ]
+  }
+
+  private static List<Source> debugSources() {
+    [
+      Source.java(
+        '''\
+          package com.example.debug;
+          
+          public class Debug {}
+        '''.stripIndent()
+      ).build(),
     ]
   }
 
@@ -131,9 +166,10 @@ final class ProductFlavorsProject extends AbstractAndroidProject {
   Set<ProjectAdvice> actualBuildHealth() {
     return actualProjectAdvice(gradleProject)
   }
-  
+
   final Set<ProjectAdvice> expectedBuildHealth = [
     emptyProjectAdviceFor(':consumer'),
+    emptyProjectAdviceFor(':debug'),
     emptyProjectAdviceFor(':fire'),
     emptyProjectAdviceFor(':firedebug'),
   ]
