@@ -119,7 +119,7 @@ public abstract class ComputeUsagesTask @Inject constructor(
     private val graph = parameters.graph.fromJson<DependencyGraphView>()
     private val graphRuntime = parameters.graphRuntime.fromJson<DependencyGraphView>()
     private val declarations = parameters.declarations.fromJsonSet<Declaration>()
-    private val project = parameters.syntheticProject.fromJson<ProjectVariant>()
+    private val project = parameters.syntheticProject.fromJson<ProjectVariant>(compressed = true)
     private val dependencies = project.dependencies(parameters.dependencies.get())
     private val duplicateClasses =
       parameters.duplicateClassesReports.get().asSequence()

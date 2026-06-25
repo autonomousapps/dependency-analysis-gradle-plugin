@@ -48,7 +48,7 @@ internal class OutputPaths(
   val dependenciesDir = dir("${variantDirectory}/dependencies")
   val explodedSourcePath = file("${intermediatesDir}/exploded-source.json")
   val explodingBytecodePath = file("${intermediatesDir}/exploding-bytecode.json")
-  val syntheticProjectPath = file("${intermediatesDir}/synthetic-project.json")
+  val syntheticProjectPath = file("${intermediatesDir}/synthetic-project.json.gz")
   val dependencyTraceReportPath = file("${variantDirectory}/dependency-trace-report.json")
   val typeUsagePath = file("${variantDirectory}/type-usage.json")
   val androidScorePath = file("${variantDirectory}/android-score.json")

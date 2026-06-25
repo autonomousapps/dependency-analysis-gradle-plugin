@@ -92,7 +92,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
       val output = parameters.output.getAndDelete()
 
       // 1. Load data
-      val project = parameters.syntheticProject.fromJson<ProjectVariant>()
+      val project = parameters.syntheticProject.fromJson<ProjectVariant>(compressed = true)
       val dependencies = project.dependencies(parameters.dependencies.get())
       val classToCoords = buildClassIndex()
 

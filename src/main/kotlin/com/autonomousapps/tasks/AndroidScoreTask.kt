@@ -53,7 +53,7 @@ public abstract class AndroidScoreTask @Inject constructor(
 
   public abstract class Action : WorkAction<Parameters> {
 
-    private val project = parameters.syntheticProject.fromJson<ProjectVariant>()
+    private val project = parameters.syntheticProject.fromJson<ProjectVariant>(compressed = true)
     private val dependencies = project.dependencies(parameters.dependencies.get())
 
     override fun execute() {

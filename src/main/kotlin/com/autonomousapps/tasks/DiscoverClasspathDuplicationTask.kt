@@ -53,7 +53,7 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
   @TaskAction public fun action() {
     val output = output.getAndDelete()
 
-    val project = syntheticProject.fromJson<ProjectVariant>()
+    val project = syntheticProject.fromJson<ProjectVariant>(compressed = true)
     val duplicates = ClasspathAnalyzer(project, classpathName.get(), classpath).duplicates()
 
     output.writeText(duplicates.toJson())

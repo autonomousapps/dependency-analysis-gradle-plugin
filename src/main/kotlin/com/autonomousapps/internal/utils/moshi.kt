@@ -172,10 +172,21 @@ public inline fun <reified T> File.bufferWriteJsonSet(
  * By default, the output is compacted.
  *
  * @param obj The object to write to file
+ * @param compress Whether to compress output with gzip.
  * @param indent The indent to control how the result is formatted
  */
-public inline fun <reified T> File.bufferWriteJson(obj: T, indent: String = noJsonIndent) {
-  JsonWriter.of(sink().buffer()).use { writer ->
+public inline fun <reified T> File.bufferWriteJson(
+  obj: T,
+  compress: Boolean = false,
+  indent: String = noJsonIndent,
+) {
+  val buffer = if (compress) {
+    GzipSink(sink()).buffer()
+  } else {
+    sink().buffer()
+  }
+
+  JsonWriter.of(buffer).use { writer ->
     getJsonAdapter<T>().indent(indent).toJson(writer, obj)
   }
 }
