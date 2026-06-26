@@ -61,6 +61,8 @@ private const val ANDROID_TEST_PLUGIN = "com.android.test"
  */
 private const val ANDROID_KMP_LIBRARY_PLUGIN = "com.android.kotlin.multiplatform.library"
 
+private const val deleteme = "delete me"
+
 private val ANDROID_PLUGINS = listOf(
   ANDROID_APP_PLUGIN,
   ANDROID_LIBRARY_PLUGIN,
