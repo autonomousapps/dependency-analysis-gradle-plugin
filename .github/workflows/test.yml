@@ -58,44 +58,45 @@ jobs:
         with:
           add-job-summary-as-pr-comment: 'on-failure'
 
-      - name: Execute buildHealth for build-logic
-        run: './gradlew -p build-logic/ buildHealth'
+      - parallel:
+          - name: Execute buildHealth for build-logic
+            run: './gradlew -p build-logic/ buildHealth'
 
-      - name: Execute check (build-logic)
-        run: './gradlew -p build-logic/ check'
+          - name: Execute check (build-logic)
+            run: './gradlew -p build-logic/ check'
 
-      - name: Execute buildHealth for main project
-        run: './gradlew buildHealth'
+          - name: Execute buildHealth for main project
+            run: './gradlew buildHealth'
 
-      - name: Execute buildHealth for testkit project
-        run: './gradlew -p testkit/ buildHealth'
+          - name: Execute buildHealth for testkit project
+            run: './gradlew -p testkit/ buildHealth'
 
-      - name: Execute check (non-functional tests)
-        run: './gradlew check -s -x :functionalTest'
+          - name: Execute check (non-functional tests)
+            run: './gradlew check -s -x :functionalTest'
 
-      - name: Execute check (testkit)
-        run: './gradlew -p testkit/ check'
+          - name: Execute check (testkit)
+            run: './gradlew -p testkit/ check'
 
-      - name: Execute JVM functional tests
-        run: './gradlew :functionalTest -DfuncTest.package=jvm -DfuncTest.quick'
+          - name: Execute JVM functional tests
+            run: './gradlew :functionalTest -DfuncTest.package=jvm -DfuncTest.quick'
 
-      # Temporary to help debug "only fails on CI". https://github.com/autonomousapps/dependency-analysis-gradle-plugin/pull/1719
-      # https://github.com/actions/upload-artifact
-      # https://docs.github.com/en/actions/reference/workflows-and-actions/expressions
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # 7.0.1
-        if: failure()
-        with:
-          name: functional-tests-jvm
-          path: build/functionalTest/
+#      # Temporary to help debug "only fails on CI". https://github.com/autonomousapps/dependency-analysis-gradle-plugin/pull/1719
+#      # https://github.com/actions/upload-artifact
+#      # https://docs.github.com/en/actions/reference/workflows-and-actions/expressions
+#      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # 7.0.1
+#        if: failure()
+#        with:
+#          name: functional-tests-jvm
+#          path: build/functionalTest/
 
-      - name: Execute Android functional tests
-        run: './gradlew :functionalTest -DfuncTest.package=android -DfuncTest.quick'
+          - name: Execute Android functional tests
+            run: './gradlew :functionalTest -DfuncTest.package=android -DfuncTest.quick'
 
-      - name: Execute KMP functional tests
-        run: './gradlew :functionalTest -DfuncTest.package=kmp -DfuncTest.quick'
+          - name: Execute KMP functional tests
+            run: './gradlew :functionalTest -DfuncTest.package=kmp -DfuncTest.quick'
 
-      - name: Check API
-        run: './gradlew :checkApi'
+          - name: Check API
+            run: './gradlew :checkApi'
 
       - name: Publish snapshot
         if: github.repository == 'autonomousapps/dependency-analysis-gradle-plugin' && github.ref == 'refs/heads/main'
