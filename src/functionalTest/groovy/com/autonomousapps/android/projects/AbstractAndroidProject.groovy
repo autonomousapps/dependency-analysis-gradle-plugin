@@ -110,6 +110,10 @@ abstract class AbstractAndroidProject extends AbstractProject {
     return AndroidManifest.appWithoutPackage(namespace)
   }
 
+  protected AndroidManifest appEmpty() {
+    return AndroidManifest.appEmpty()
+  }
+
   protected AndroidManifest libraryManifest(String namespace = DEFAULT_LIB_NAMESPACE) {
     return null
   }
