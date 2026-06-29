@@ -38,7 +38,7 @@ public class AndroidSubproject(
     public var styles: AndroidStyleRes? = null
     public var strings: AndroidStringRes? = null
     public var colors: AndroidColorRes? = null
-    public var layouts: List<AndroidLayout>? = null
+    public var layouts: MutableList<AndroidLayout> = mutableListOf()
     public val files: MutableList<File> = mutableListOf()
 
     // sub-builders
@@ -61,6 +61,10 @@ public class AndroidSubproject(
         dependencies = mutableListOf()
         additions = ""
       }
+    }
+
+    public fun layouts(vararg layouts: AndroidLayout) {
+      this.layouts.addAll(layouts.toMutableList())
     }
 
     public fun withFile(path: String, content: String) {
