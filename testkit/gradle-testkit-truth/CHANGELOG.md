@@ -1,6 +1,6 @@
 Gradle TestKit Support Changelog
 
-# Unreleased
+# Version 1.7.1
 * [fix] `JarSubject.resource()` no longer fails with `NoSuchFileException` for entries in nested paths (e.g. `META-INF/services/...`).
 
 # Version 1.7.0
