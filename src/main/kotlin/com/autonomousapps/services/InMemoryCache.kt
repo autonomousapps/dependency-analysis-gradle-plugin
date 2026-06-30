@@ -24,16 +24,15 @@ public abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
   }
 
   private val cacheSize = parameters.cacheSize.get()
+  private val effectiveCacheSize: Long = if (cacheSize < 0) 300L else cacheSize
 
-  private inline fun <reified K : Any, reified V> newCache(maxSize: Long = cacheSize): Cache<K, V> {
-    val builder = Caffeine.newBuilder()
-    if (maxSize >= 0) builder.maximumSize(maxSize)
-    return builder.build()
+  private inline fun <reified K : Any, reified V> newCache(maxSize: Long = effectiveCacheSize): Cache<K, V> {
+    return Caffeine.newBuilder().maximumSize(maxSize).build()
   }
 
   private val expensiveJars: Cache<String, ExpensiveJar> = newCache()
   private val kotlinCapabilities: Cache<String, KotlinCapabilities> = newCache()
-  private val procs: Cache<String, AnnotationProcessorDependency> = newCache()
+  private val procs: Cache<String, AnnotationProcessorDependency> = newCache(50L.coerceAtMost(effectiveCacheSize))
 
   internal fun expensiveJar(name: String): ExpensiveJar? = expensiveJars.asMap()[name]
   internal fun expensiveJars(name: String, expensiveJar: ExpensiveJar) {
