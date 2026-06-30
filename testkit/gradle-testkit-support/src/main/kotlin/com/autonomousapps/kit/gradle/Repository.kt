@@ -23,17 +23,56 @@ import com.autonomousapps.kit.render.escape
  * // 2
  * maven(url = "https://repo.spring.io/release")
  * mavenCentral()
+ *
+ * // 3
+ * exclusiveContent {
+ *   forRepository {
+ *     maven(url = "https://repo.spring.io/release")
+ *   }
+ *   filter {
+ *     includeGroup("...")
+ *   }
+ * }
  * ```
  */
-public sealed class Repository : Element.Line {
+public sealed class Repository : Repositories.Element {
 
-  private data class Method(private val repoCall: String) : Repository() {
+  public data class ExclusiveContent(
+    private val repo: Repository,
+    private val filters: List<String>,
+  ) : Repository(), Element.Block {
+
+    override val name: String = "exclusiveContent"
+
+    override fun render(scribe: Scribe): String {
+      return scribe.block(this) { s ->
+        s.block("forRepository") { s ->
+          repo.render(s)
+        }
+        s.block("filter") { s ->
+          filters.forEach { filter ->
+            s.line { it.append(filter) }
+          }
+        }
+      }
+    }
+  }
+
+  public data class FlatDir(private val repoUrl: String) : Repository(), Element.Line {
+    override fun render(scribe: Scribe): String = scribe.line { s ->
+      s.append("flatDir { ")
+      s.appendQuoted(repoUrl)
+      s.append(" }")
+    }
+  }
+
+  public data class Method(private val repoCall: String) : Repository(), Element.Line {
     override fun render(scribe: Scribe): String = scribe.line { s ->
       s.append(repoCall)
     }
   }
 
-  private data class Url(private val repoUrl: String) : Repository() {
+  public data class Url(private val repoUrl: String) : Repository(), Element.Line {
     override fun render(scribe: Scribe): String = when (scribe.dslKind) {
       DslKind.GROOVY -> renderGroovy(scribe)
       DslKind.KOTLIN -> renderKotlin(scribe)
@@ -49,14 +88,6 @@ public sealed class Repository : Element.Line {
       s.append("maven(url = ")
       s.appendQuoted(repoUrl)
       s.append(")")
-    }
-  }
-
-  private data class FlatDir(private val repoUrl: String) : Repository() {
-    override fun render(scribe: Scribe): String = scribe.line { s ->
-      s.append("flatDir { ")
-      s.appendQuoted(repoUrl)
-      s.append(" }")
     }
   }
 
