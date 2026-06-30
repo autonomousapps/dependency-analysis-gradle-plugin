@@ -21,12 +21,19 @@ import com.autonomousapps.kit.render.Scribe
  *   maven(url = "https://repo.spring.io/release")
  * }
  * ```
+ *
+ * @see [Repository]
  */
 public class Repositories @JvmOverloads constructor(
-  public val repositories: MutableList<Repository> = mutableListOf(),
+  public val repositories: MutableList<out Element> = mutableListOf(),
 ) : Element.Block {
 
-  public constructor(vararg repositories: Repository) : this(repositories.toMutableList())
+  public interface Element {
+    // Duplicating Scribe's primary interface method
+    public fun render(scribe: Scribe): String
+  }
+
+  public constructor(vararg repositories: Element) : this(repositories.toMutableList())
 
   public val isEmpty: Boolean = repositories.isEmpty()
 

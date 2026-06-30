@@ -88,11 +88,25 @@ public class Scribe @JvmOverloads constructor(
     return buffer.toString()
   }
 
+  /**
+   * This method is *not* indent-aware. If you want an indent, do something like this:
+   * ```
+   * scribe.line { it.append(obj) }
+   * ```
+   * @see [line]
+   */
   public fun append(obj: Any?): Scribe {
     buffer.append(obj.toString())
     return this
   }
 
+  /**
+   * This method is *not* indent-aware. If you want an indent, do something like this:
+   * ```
+   * scribe.line { it.appendQuoted(obj) }
+   * ```
+   * @see [line]
+   */
   public fun appendQuoted(obj: Any?): Scribe {
     append(quote())
     append(obj.toString())
@@ -100,6 +114,13 @@ public class Scribe @JvmOverloads constructor(
     return this
   }
 
+  /**
+   * This method is *not* indent-aware. If you want an indent, do something like this:
+   * ```
+   * scribe.line { it.appendLine() }
+   * ```
+   * @see [line]
+   */
   public fun appendLine(): Scribe {
     buffer.appendLine()
     return this

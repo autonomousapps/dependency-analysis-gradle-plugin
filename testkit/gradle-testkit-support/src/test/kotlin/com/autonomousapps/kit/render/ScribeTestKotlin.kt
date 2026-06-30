@@ -33,10 +33,15 @@ internal class ScribeTestKotlin {
 
     @Test fun `can render repositories block`() {
       // Given
+      val exclusiveContentRepo = Repository.ExclusiveContent(
+        repo = Repository.ofMaven("https://repo.foo.bar/"),
+        filters = listOf("includeGroup(\"com.foo.bar\")")
+      )
       val repositories = Repositories(
         Repository.GOOGLE,
         Repository.MAVEN_CENTRAL,
         Repository.SNAPSHOTS,
+        exclusiveContentRepo,
       )
 
       // When
@@ -49,6 +54,14 @@ internal class ScribeTestKotlin {
           google()
           mavenCentral()
           maven(url = "https://central.sonatype.com/repository/maven-snapshots/")
+          exclusiveContent {
+            forRepository {
+              maven(url = "https://repo.foo.bar/")
+            }
+            filter {
+              includeGroup("com.foo.bar")
+            }
+          }
         }
         
       """.trimIndent()
