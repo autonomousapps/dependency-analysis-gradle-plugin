@@ -15,6 +15,7 @@ public object Flags {
   internal const val AUTO_APPLY = "dependency.analysis.autoapply"
 
   private const val MAX_CACHE_SIZE = "dependency.analysis.cache.max"
+  private const val BATCH_SIZE = "dependency.analysis.batch.size"
   private const val TEST_ANALYSIS = "dependency.analysis.test.analysis"
   private const val PRINT_BUILD_HEALTH = "dependency.analysis.print.build.health"
   private const val PROJECT_INCLUDES = "dependency.analysis.project.includes"
@@ -59,6 +60,18 @@ public object Flags {
           userValue.toLong()
         } catch (e: NumberFormatException) {
           throw GradleException("$userValue is not a valid cache size. Provide a long value", e)
+        }
+      }
+      .getOrElse(default)
+  }
+
+  internal fun Project.batchSize(default: Int): Int {
+    return providers.systemProperty(BATCH_SIZE)
+      .map { userValue ->
+        try {
+          userValue.toInt()
+        } catch (e: NumberFormatException) {
+          throw GradleException("$userValue is not a valid batch size. Provide an int value", e)
         }
       }
       .getOrElse(default)
