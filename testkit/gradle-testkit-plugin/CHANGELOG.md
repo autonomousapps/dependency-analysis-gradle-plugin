@@ -1,7 +1,8 @@
 Gradle TestKit Plugin Changelog
 
-# Unreleased
+# Version 0.19
 * [Feat]: update default testkit-support version to latest.
+* [Feat]: update default testkit-truth version to latest.
 
 # Version 0.18
 * [Feat] Update default support lib version to 0.23.
