@@ -1,5 +1,9 @@
 Gradle TestKit Support Changelog
 
+# Version 0.27
+* [feat]: add fluent API for `AndroidLayout`.
+* [feat]: support `exclusiveContent` repositories.
+
 # Version 0.26
 * [Feat]: new factory method on `VersionCatalogs` to simplify creation.
 * [Feat]: improve `repository` rendering for Kotlin DSL.
