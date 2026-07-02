@@ -254,8 +254,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
 
     private fun buildWarning(): Warning {
       val duplicateClassesReports = parameters.duplicateClassesReports.get().asSequence()
-        .map { it.fromJsonSet<DuplicateClass>() }
-        .flatten()
+        .flatMap { it.fromJsonSet<DuplicateClass>() }
         .toSortedSet()
 
       return Warning(duplicateClassesReports)
