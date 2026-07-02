@@ -438,41 +438,64 @@ internal class StandardTransform(
       { it.isAnyChange() },
     )
 
-    // debugImplementation -> null
-    remove.forEach { theRemove ->
-      // null -> fireDebugRuntimeOnly, null -> waterDebugRuntimeOnly
-      val adds = add.filterToSet { theAdd -> theAdd.coordinates == theRemove.coordinates }
-      if (adds.size > 1) {
-        // Android product flavors / build types
-        val toConfiguration = configurationNames.findSimplifiedToConfiguration(
-          fromConfiguration = theRemove.fromConfiguration!!,
-          toConfigurations = adds.mapToSet { it.toConfiguration!! },
-        )
+    // TODO(tsr): it is so far past time to split StandardTransform into JvmTransform, AndroidTransform, KmpTransform...
+    if (projectType == ProjectType.ANDROID) {
+      // debugImplementation -> null
+      remove.forEach { theRemove ->
+        // null -> fireDebugRuntimeOnly, null -> waterDebugRuntimeOnly
+        val adds = add.filterToSet { theAdd -> theAdd.coordinates == theRemove.coordinates }
+        if (adds.size > 1) {
+          // Android product flavors / build types
+          val toConfiguration = configurationNames.findSimplifiedToConfiguration(
+            fromConfiguration = theRemove.fromConfiguration!!,
+            toConfigurations = adds.mapToSet { it.toConfiguration!! },
+          )
 
-        if (toConfiguration != null) {
-          advice.removeAll(adds)
+          if (toConfiguration != null) {
+            advice.removeAll(adds)
+            advice -= theRemove
+            remove -= theRemove
+
+            advice += Advice.ofChange(
+              coordinates = theRemove.coordinates,
+              fromConfiguration = theRemove.fromConfiguration,
+              toConfiguration = toConfiguration,
+            )
+          }
+        } else if (adds.size == 1) {
+          val theAdd = adds.single()
+
+          // nb: this code block is duplicated exactly below.
+          // Replace add + remove => change.
+          advice -= theAdd
           advice -= theRemove
           remove -= theRemove
 
           advice += Advice.ofChange(
             coordinates = theRemove.coordinates,
-            fromConfiguration = theRemove.fromConfiguration,
-            toConfiguration = toConfiguration,
+            fromConfiguration = theRemove.fromConfiguration!!,
+            toConfiguration = theAdd.toConfiguration!!
           )
         }
-      } else if (adds.size == 1) {
-        // JVM case
-        val theAdd = adds.single()
+      }
+    } else {
+      // JVM, KMP
+      add.forEach { theAdd ->
+        remove
+          .find { theRemove -> theRemove.coordinates == theAdd.coordinates }
+          ?.let { theRemove ->
+            // nb: this code block is duplicated exactly above.
+            // Replace add + remove => change.
+            advice -= theAdd
+            advice -= theRemove
+            remove -= theRemove
 
-        advice -= theAdd
-        advice -= theRemove
-        remove -= theRemove
-
-        advice += Advice.ofChange(
-          coordinates = theRemove.coordinates,
-          fromConfiguration = theRemove.fromConfiguration!!,
-          toConfiguration = theAdd.toConfiguration!!
-        )
+            advice += Advice.ofChange(
+              coordinates = theRemove.coordinates,
+              fromConfiguration = theRemove.fromConfiguration!!,
+              toConfiguration = theAdd.toConfiguration!!
+            )
+          }
       }
     }
 
