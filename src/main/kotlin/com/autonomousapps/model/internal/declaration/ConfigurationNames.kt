@@ -206,7 +206,22 @@ internal class ConfigurationNames(
       .maxByOrNull { it.length }
   }
 
+  /**
+   * This method can only return a non-null value for [ProjectType.ANDROID] (and even then, it can be null). Which is to
+   * say, conceptually, this method only makes sense for Android projects, and is intended for cases involving build
+   * types and product flavors.
+   */
   fun findSimplifiedToConfiguration(fromConfiguration: String, toConfigurations: Set<String>): String? {
+    return when (projectType) {
+      ProjectType.ANDROID -> findSimplifiedToConfigurationForAndroid(fromConfiguration, toConfigurations)
+      else -> null
+    }
+  }
+
+  private fun findSimplifiedToConfigurationForAndroid(
+    fromConfiguration: String,
+    toConfigurations: Set<String>,
+  ): String? {
     val removeFlavor = findProductFlavorFrom(fromConfiguration)
     val removeBuildType = findBuildTypeFrom(fromConfiguration)
 
