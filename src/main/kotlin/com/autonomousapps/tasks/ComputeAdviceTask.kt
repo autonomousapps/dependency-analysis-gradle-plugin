@@ -7,7 +7,7 @@ import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.UsageContainer
 import com.autonomousapps.internal.advice.KmpCommonDependencies
 import com.autonomousapps.internal.android.ProductFlavor
-import com.autonomousapps.internal.transform.StandardTransform
+import com.autonomousapps.internal.transform.TransformFactory
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.internal.DependencyGraphView
@@ -346,14 +346,10 @@ internal class DependencyAdviceBuilder(
 
     return dependencyUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(
+        newTransform(
           coordinates = coordinates,
           declarations = declarations,
           dependencyGraph = dependencyGraph,
-          configurationNames = configurationNames,
-          buildPath = buildPath,
-          explicitSourceSets = explicitSourceSets,
-          projectType = projectType,
         )
           .reduce(usages)
           .map { advice -> advice to coordinates }
@@ -425,16 +421,27 @@ internal class DependencyAdviceBuilder(
 
     return annotationProcessorUsages.asSequence()
       .flatMap { (coordinates, usages) ->
-        StandardTransform(
+        newTransform(
           coordinates = coordinates,
           declarations = declarations,
           dependencyGraph = emptyMap(),
-          buildPath = buildPath,
-          explicitSourceSets = explicitSourceSets,
-          projectType = projectType,
-          configurationNames = configurationNames,
-          isKaptApplied = isKaptApplied,
         ).reduce(usages)
       }
+  }
+
+  private fun newTransform(
+    coordinates: Coordinates,
+    declarations: Set<Declaration>,
+    dependencyGraph: Map<String, DependencyGraphView>,
+  ): Usage.Transform {
+    return TransformFactory(
+      coordinates = coordinates,
+      declarations = declarations,
+      dependencyGraph = dependencyGraph,
+      buildPath = buildPath,
+      configurationNames = configurationNames,
+      explicitSourceSets = explicitSourceSets,
+      isKaptApplied = isKaptApplied,
+    ).of(projectType)
   }
 }
