@@ -2,82 +2,34 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.transform
 
-import com.autonomousapps.extension.DependenciesHandler
-import com.autonomousapps.graph.Graphs.children
-import com.autonomousapps.graph.Graphs.root
-import com.autonomousapps.internal.DependencyScope
-import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.*
-import com.autonomousapps.model.Coordinates.Companion.copy
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.DependencyGraphView
-import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.model.source.SourceKind
-import com.google.common.collect.SetMultimap
-import org.gradle.api.attributes.Category
 
-/**
- * Given the [coordinates] of a dependency, zero or more [declarations] for that dependency, and the [usages][Usage] of
- * that dependency: emit a set of transforms, or advice, that a user can follow to produce simple and correct dependency
- * declarations in a build script.
- */
-internal class StandardTransform(
-  private val coordinates: Coordinates,
-  private val declarations: Set<Declaration>,
-  private val dependencyGraph: Map<String, DependencyGraphView>,
-  private val buildPath: String,
-  private val explicitSourceSets: Set<String> = emptySet(),
-  private val projectType: ProjectType,
-  private val configurationNames: ConfigurationNames,
-  private val isKaptApplied: Boolean = false,
-) : Usage.Transform {
-
-  private val mapper = UsageToConfigurationMapper(
-    isKaptApplied = isKaptApplied,
-    projectType = projectType,
-  )
-
-  /**
-   * Returns the set of direct (non-transitive) dependencies from [dependencyGraph], associated with the source sets
-   * ([Variant.variant][SourceKind]) they're related to.
-   *
-   * These are _direct_ dependencies that are not _declared_ because they're coming from associated classpaths. For
-   * example, the `test` source set extends from the `main` source set (and also the compile and runtime classpaths).
-   */
-  private val directDependencies: SetMultimap<String, SourceKind> by unsafeLazy {
-    newSetMultimap<String, SourceKind>().apply {
-      dependencyGraph.values.map { graphView ->
-        val root = graphView.graph.root()
-        graphView.graph.children(root).forEach { directDependency ->
-          val identifier = directDependency.normalizedIdentifier(buildPath)
-          put(identifier, graphView.sourceKind)
-        }
-      }
-    }
-  }
-
-  /**
-   * This results in a map like:
-   * * "group:name:1.0" -> (compileClasspath, runtimeClasspath)
-   * * ":project" -> (compileClasspath)
-   *
-   * etc.
-   */
-  private val dependenciesToClasspaths: SetMultimap<String, String> by unsafeLazy {
-    newSetMultimap<String, String>().apply {
-      dependencyGraph.values.map { graphView ->
-        graphView.graph.nodes().forEach { node ->
-          val identifier = node.normalizedIdentifier(buildPath)
-          put(identifier, graphView.configurationName)
-        }
-      }
-    }
-  }
+internal class AndroidTransform(
+  coordinates: Coordinates,
+  declarations: Set<Declaration>,
+  explicitSourceSets: Set<String>,
+  configurationNames: ConfigurationNames,
+  buildPath: String,
+  dependencyGraph: Map<String, DependencyGraphView>,
+  isKaptApplied: Boolean = false,
+) : AbstractTransform(
+  coordinates = coordinates,
+  declarations = declarations,
+  explicitSourceSets = explicitSourceSets,
+  configurationNames = configurationNames,
+  dependencyGraph = dependencyGraph,
+  buildPath = buildPath,
+  isKaptApplied = isKaptApplied,
+) {
 
   override fun reduce(usages: Set<Usage>): Set<Advice> {
     val advice = mutableSetOf<Advice>()
@@ -209,7 +161,7 @@ internal class StandardTransform(
     sourceSetName: String,
   ): MutableSet<Usage> {
     fun MutableSet<Usage>.maybeReduceFurther(): MutableSet<Usage> {
-      return if (projectType == ProjectType.ANDROID && sourceSetName == SourceKind.TEST_NAME) { // TODO: `&& SourceKind.ANDROID_TEST_NAME`?
+      return if (sourceSetName == SourceKind.TEST_NAME) { // TODO: `&& SourceKind.ANDROID_TEST_NAME`?
         reduceUsages(this)
       } else {
         this
@@ -327,7 +279,7 @@ internal class StandardTransform(
     // matter of laziness. If the single declaration is both wrong _and_ on a variant, then we transform it to the
     // correct usage on that same variant. E.g., debugImplementation => debugRuntimeOnly. Without this block, the
     // algorithm would instead advise: debugImplementation => runtimeOnly.
-    if (projectType == ProjectType.ANDROID && usages.size == 1 && declarations.size == 1) {
+    if (usages.size == 1 && declarations.size == 1) {
       val lastUsage = usages.first()
       if (lastUsage.bucket != Bucket.NONE) {
         val lastDeclaration = declarations.first()
@@ -346,82 +298,10 @@ internal class StandardTransform(
     }
 
     // Any remaining usages should be added
-    usages.asSequence()
-      // Don't add unused usages!
-      .filterUsed()
-      // Don't add runtimeOnly or compileOnly (compileOnly, compileOnlyApi, providedCompile) declarations
-      // nb: this probably remains the correct choice, but it can lead to issues when we remove an "unused" dependency
-      // and fail to add a required runtimeOnly dependency that was part of the unused dep's transitive graph. Removing
-      // this line would lead to "super strict" declarations that are, perhaps, more bazel-like (every classpath
-      // consists only of positively-declared dependencies).
-      .filterNot { usage -> usage.bucket == Bucket.COMPILE_ONLY }
-      // Don't add something that is only present on the compileClasspath as that will change the runtimeClasspath,
-      // which we do not want to do.
-      .filterNot { usage ->
-        val identifier = if (coordinates is IncludedBuildCoordinates) {
-          coordinates.resolvedProject.identifier
-        } else {
-          coordinates.identifier
-        }
-
-        val currentClasspaths = dependenciesToClasspaths.get(identifier)
-        val isRuntimeUsage =
-          usage.bucket == Bucket.API || usage.bucket == Bucket.IMPL || usage.bucket == Bucket.RUNTIME_ONLY
-
-        // if it is a runtime usage and this dep isn't currently in the matching runtime classpath, don't add it there.
-        isRuntimeUsage && !usage.runtimeMatches(currentClasspaths)
-      }
-      .mapTo(advice) { usage ->
-        val preferredCoordinatesNotation =
-          if (coordinates is IncludedBuildCoordinates && coordinates.resolvedProject.buildPath == buildPath) {
-            coordinates.resolvedProject
-          } else {
-            coordinates
-          }
-        Advice.ofAdd(preferredCoordinatesNotation.withoutDefaultCapability(), mapper.toConfiguration(usage))
-      }
+    addRemainingUsages(usages, advice)
 
     // Any remaining declarations should be removed
-    declarations.asSequence()
-      // Don't remove runtimeOnly or compileOnly declarations
-      .filterNot { decl ->
-        decl.bucket(configurationNames) == Bucket.COMPILE_ONLY || decl.bucket(configurationNames) == Bucket.RUNTIME_ONLY
-      }
-      .mapTo(advice) { declaration ->
-        Advice.ofRemove(declarationCoordinates(declaration), declaration)
-      }
-  }
-
-  private fun Declaration.findSourceKind(hasCustomSourceSets: Boolean): SourceKind? {
-    return sourceSetKind(hasCustomSourceSets, configurationNames)
-  }
-
-  /**
-   * Returns true if [sourceSet] is in the set of [explicitSourceSets], or if [explicitSourceSets] is set for all source
-   * sets.
-   */
-  private fun explicitFor(sourceSet: String?): Boolean {
-    return sourceSet in explicitSourceSets
-      || DependenciesHandler.isExplicitForAll(explicitSourceSets)
-  }
-
-  /** Use coordinates/variant of the original declaration when reporting remove/change as it is more precise. */
-  private fun declarationCoordinates(decl: Declaration): Coordinates {
-    return when (coordinates) {
-      is IncludedBuildCoordinates if decl.identifier.startsWith(":") -> coordinates.resolvedProject
-
-      // This handles the case where we have an unused dependency because it's been excluded via
-      // configurations.<foo>.exclude(group = "group", module = "module")
-      is FlatCoordinates if decl.version != null -> {
-        ModuleCoordinates(coordinates.identifier, decl.version, decl.gradleVariantIdentification)
-      }
-
-      else -> coordinates
-    }.copy(decl.identifier, decl.gradleVariantIdentification)
-  }
-
-  private fun hasCustomSourceSets(usages: Set<Usage>): Boolean {
-    return usages.any { it.sourceKind.kind == SourceKind.CUSTOM_JVM_KIND }
+    removeRemainingDeclarations(declarations, advice)
   }
 
   /**
@@ -438,66 +318,45 @@ internal class StandardTransform(
       { it.isAnyChange() },
     )
 
-    // TODO(tsr): it is so far past time to split StandardTransform into JvmTransform, AndroidTransform, KmpTransform...
-    if (projectType == ProjectType.ANDROID) {
-      // debugImplementation -> null
-      remove.forEach { theRemove ->
-        // null -> fireDebugRuntimeOnly, null -> waterDebugRuntimeOnly
-        val adds = add.filterToSet { theAdd -> theAdd.coordinates == theRemove.coordinates }
-        if (adds.size > 1) {
-          // Android product flavors / build types
-          val toConfiguration = configurationNames.findSimplifiedToConfiguration(
-            fromConfiguration = theRemove.fromConfiguration!!,
-            toConfigurations = adds.mapToSet { it.toConfiguration!! },
-          )
+    // debugImplementation -> null
+    remove.forEach { theRemove ->
+      // null -> fireDebugRuntimeOnly, null -> waterDebugRuntimeOnly
+      val adds = add.filterToSet { theAdd -> theAdd.coordinates == theRemove.coordinates }
+      if (adds.size > 1) {
+        // Android product flavors / build types
+        val toConfiguration = configurationNames.findSimplifiedToConfiguration(
+          fromConfiguration = theRemove.fromConfiguration!!,
+          toConfigurations = adds.mapToSet { it.toConfiguration!! },
+        )
 
-          if (toConfiguration != null) {
-            advice.removeAll(adds)
-            advice -= theRemove
-            remove -= theRemove
-
-            advice += Advice.ofChange(
-              coordinates = theRemove.coordinates,
-              fromConfiguration = theRemove.fromConfiguration,
-              toConfiguration = toConfiguration,
-            )
-          }
-        } else if (adds.size == 1) {
-          val theAdd = adds.single()
-
-          // nb: this code block is duplicated exactly below.
-          // Replace add + remove => change.
-          advice -= theAdd
+        if (toConfiguration != null) {
+          advice.removeAll(adds)
           advice -= theRemove
           remove -= theRemove
 
           advice += Advice.ofChange(
             coordinates = theRemove.coordinates,
-            fromConfiguration = theRemove.fromConfiguration!!,
-            toConfiguration = theAdd.toConfiguration!!
+            fromConfiguration = theRemove.fromConfiguration,
+            toConfiguration = toConfiguration,
           )
         }
-      }
-    } else {
-      // JVM, KMP
-      add.forEach { theAdd ->
-        remove
-          .find { theRemove -> theRemove.coordinates == theAdd.coordinates }
-          ?.let { theRemove ->
-            // nb: this code block is duplicated exactly above.
-            // Replace add + remove => change.
-            advice -= theAdd
-            advice -= theRemove
-            remove -= theRemove
+      } else if (adds.size == 1) {
+        val theAdd = adds.single()
 
-            advice += Advice.ofChange(
-              coordinates = theRemove.coordinates,
-              fromConfiguration = theRemove.fromConfiguration!!,
-              toConfiguration = theAdd.toConfiguration!!
-            )
-          }
+        // nb: this code block is duplicated exactly below.
+        // Replace add + remove => change.
+        advice -= theAdd
+        advice -= theRemove
+        remove -= theRemove
+
+        advice += Advice.ofChange(
+          coordinates = theRemove.coordinates,
+          fromConfiguration = theRemove.fromConfiguration!!,
+          toConfiguration = theAdd.toConfiguration!!
+        )
       }
     }
+
 
     // Look for conflicting advice relating to Android product flavors or build types.
     // Previously if we had a declaration like `fireImplementation("foo")` (with product flavors "fire" and "water"),
@@ -507,45 +366,43 @@ internal class StandardTransform(
     // block below handles this by checking change/add advice to see if they're for the same source kind and product
     // flavor and, if so, removing them.
     // See `ProductFlavorsAndBuildTypesSpec`.
-    if (projectType == ProjectType.ANDROID) {
-      change.forEach { theChange ->
-        val configurationName = theChange.fromConfiguration!!
-        val theChangeSourceKind = configurationNames
-          .sourceKindFrom(configurationName, false)
-          // We only care about the `kind` (MAIN, TEST, etc.), not full equality of SourceKind.
-          ?.kind
-        // If it's null, can't make a reasonable equality check, so exit.
-          ?: return@forEach
+    change.forEach { theChange ->
+      val configurationName = theChange.fromConfiguration!!
+      val theChangeSourceKind = configurationNames
+        .sourceKindFrom(configurationName, false)
+        // We only care about the `kind` (MAIN, TEST, etc.), not full equality of SourceKind.
+        ?.kind
+      // If it's null, can't make a reasonable equality check, so exit.
+        ?: return@forEach
 
-        val theChangeFlavor = configurationNames.findProductFlavorFrom(configurationName)
-        val theChangeBuildType = configurationNames.findBuildTypeFrom(configurationName)
+      val theChangeFlavor = configurationNames.findProductFlavorFrom(configurationName)
+      val theChangeBuildType = configurationNames.findBuildTypeFrom(configurationName)
 
-        var removed = false
-        add.asSequence()
-          .filter { theAdd -> theAdd.coordinates == theChange.coordinates }
-          .filter { theAdd ->
-            val theAddSourceKind = configurationNames.sourceKindFrom(theAdd.toConfiguration!!, false)?.kind
-            theAddSourceKind == theChangeSourceKind
-          }
-          .filter { theAdd ->
-            val toConfiguration = theAdd.toConfiguration!!
-            val theAddFlavor = configurationNames.findProductFlavorFrom(toConfiguration)
-            val sameFlavor = theChangeFlavor == theAddFlavor
-
-            val theAddBuildType = configurationNames.findBuildTypeFrom(toConfiguration)
-            val sameBuildType = theChangeBuildType == theAddBuildType
-
-            sameFlavor || (theChangeFlavor == null && sameBuildType)
-          }
-          .forEach { theAdd ->
-            removed = true
-            advice -= theAdd
-          }
-
-        if (removed) {
-          advice -= theChange
-          change -= theChange
+      var removed = false
+      add.asSequence()
+        .filter { theAdd -> theAdd.coordinates == theChange.coordinates }
+        .filter { theAdd ->
+          val theAddSourceKind = configurationNames.sourceKindFrom(theAdd.toConfiguration!!, false)?.kind
+          theAddSourceKind == theChangeSourceKind
         }
+        .filter { theAdd ->
+          val toConfiguration = theAdd.toConfiguration!!
+          val theAddFlavor = configurationNames.findProductFlavorFrom(toConfiguration)
+          val sameFlavor = theChangeFlavor == theAddFlavor
+
+          val theAddBuildType = configurationNames.findBuildTypeFrom(toConfiguration)
+          val sameBuildType = theChangeBuildType == theAddBuildType
+
+          sameFlavor || (theChangeFlavor == null && sameBuildType)
+        }
+        .forEach { theAdd ->
+          removed = true
+          advice -= theAdd
+        }
+
+      if (removed) {
+        advice -= theChange
+        change -= theChange
       }
     }
 
@@ -562,93 +419,4 @@ internal class StandardTransform(
       .map { downgradeTestDependencies(it) }
       .toSet()
   }
-
-  /**
-   * We don't want to be forced to redeclare dependencies in related source sets. Consider (pseudocode):
-   * ```
-   * // build.gradle
-   * sourceSets.functionalTest.extendsFrom sourceSets.test
-   *
-   * dependencies {
-   *   testImplementation 'foo:bar:1.0'
-   *   // functionalTestImplementation will also "inherit" the 'foo:bar:1.0' dependency.
-   * }
-   * ```
-   *
-   * nb: returning false means "keep this advice."
-   */
-  private fun isDeclaredInRelatedSourceSet(allAdvice: Set<Advice>, advice: Advice): Boolean {
-    if (!advice.isAnyAdd()) return false
-
-    val sourceSetName = DependencyScope.sourceSetName(advice.toConfiguration!!)
-
-    // With explicit source sets, a source set may not be related to any other.
-    if (explicitFor(sourceSetName)) return false
-
-    val isTestRelated = sourceSetName?.let { DependencyScope.isTestRelated(it) } == true
-
-    // Don't strip advice that improves correctness (e.g., declaring something on an "api-like" configuration).
-    // Unless it's api-like on a test source set, which makes no sense.
-    if (advice.isToApiLike() && !isTestRelated) return false
-
-    // Instead of attempting a complex algorithm to get it "just right", if we see ANY downgrade advice, we bail out.
-    // This particular function is already an optimization to support a scenario we arguably shouldn't, leading to
-    // increasingly complex and brittle code. That is, it supports the special case that main deps are generally
-    // visible to test. Perhaps we should just stop doing that.
-    val anyDowngrade = allAdvice.any { it.isDowngrade() }
-    if (anyDowngrade) return false
-
-    val sourceSets = directDependencies[advice.coordinates.identifier].map { it.name }
-
-    // There's "no point" in adding a new declaration when that dependency is already available as a direct dependency,
-    // UNLESS we also happen to have some advice that might DOWNGRADE/REMOVE that declaration. For example, we might be
-    // about to advise the user to remove an `implementation` dependency, in which case the advice to also add a
-    // `testImplementation` dependency IS NOT redundant and SHOULD NOT be filtered out.
-    return sourceSetName in sourceSets
-  }
-
-  /**
-   * If we're adding an api-like declaration to a test-like configuration, instead suggest adding it to an
-   * implementation-like configuration. Tests don't have APIs.
-   */
-  private fun downgradeTestDependencies(advice: Advice): Advice {
-    if (!advice.isAnyAdd()) return advice
-    if (!advice.isToApiLike()) return advice
-
-    val sourceSetName = DependencyScope.sourceSetName(advice.toConfiguration!!) ?: return advice
-    if (!DependencyScope.isTestRelated(sourceSetName)) return advice
-
-    return advice.copy(toConfiguration = "${sourceSetName}Implementation")
-  }
 }
-
-private fun Set<Declaration>.forCoordinates(coordinates: Coordinates): Set<Declaration> {
-  return asSequence()
-    .filter { declaration ->
-      declaration.identifier == coordinates.identifier
-        // In the special case of IncludedBuildCoordinates, the declaration might be a 'project(...)' dependency
-        // if subprojects inside an included build depend on each other.
-        || (coordinates is IncludedBuildCoordinates) && declaration.identifier == coordinates.resolvedProject.identifier
-    }
-    .filter { it.isJarDependency() && it.gradleVariantIdentification.variantMatches(coordinates) }
-    .toSet()
-}
-
-private fun isSingleBucketForSingleVariant(usages: Set<Usage>): Boolean {
-  return if (usages.size == 1) {
-    true
-  } else {
-    usages.mapToSet { it.bucket }.size == 1 && usages.mapToSet { it.sourceKind.base() }.size == 1
-  }
-}
-
-private fun Sequence<Usage>.filterUsed() = filterNot { it.bucket == Bucket.NONE }
-
-/**
- * Does the dependency point to one (or multiple) Jars, or is it just Metadata (i.e. a platform)
- * that we always want to keep?
- */
-private fun Declaration.isJarDependency() =
-  gradleVariantIdentification.attributes[Category.CATEGORY_ATTRIBUTE.name].let {
-    it != Category.REGULAR_PLATFORM && it != Category.ENFORCED_PLATFORM
-  }

@@ -185,7 +185,7 @@ public data class ProjectCoordinates(
 ) : Coordinates(identifier, gradleVariantIdentification) {
 
   init {
-    check(identifier.startsWith(':')) { "Project coordinates must start with a ':'" }
+    check(identifier.startsWith(':')) { "Project coordinates must start with a ':'. Was '$identifier'." }
   }
 
   /**
