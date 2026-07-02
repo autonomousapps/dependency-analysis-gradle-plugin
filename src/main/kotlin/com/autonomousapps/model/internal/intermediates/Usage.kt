@@ -31,6 +31,8 @@ internal data class Usage(
     val BY_VARIANT: Comparator<Usage> = compareBy { it.sourceKind }
   }
 
+  fun isRuntimeUsage(): Boolean = bucket.isRuntimeBucket()
+
   /** @see [SourceKind.runtimeMatches] */
   fun runtimeMatches(classpaths: Collection<String>): Boolean {
     return sourceKind.runtimeMatches(classpaths)
