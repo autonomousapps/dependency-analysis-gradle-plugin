@@ -46,7 +46,7 @@ internal abstract class AbstractTransform(
    */
   protected val directDependencies: SetMultimap<String, SourceKind> by unsafeLazy {
     newSetMultimap<String, SourceKind>().apply {
-      dependencyGraph.values.map { graphView ->
+      dependencyGraph.values.forEach { graphView ->
         val root = graphView.graph.root()
         graphView.graph.children(root).forEach { directDependency ->
           val identifier = directDependency.normalizedIdentifier(buildPath)
@@ -65,7 +65,7 @@ internal abstract class AbstractTransform(
    */
   protected val dependenciesToClasspaths: SetMultimap<String, String> by unsafeLazy {
     newSetMultimap<String, String>().apply {
-      dependencyGraph.values.map { graphView ->
+      dependencyGraph.values.forEach { graphView ->
         graphView.graph.nodes().forEach { node ->
           val identifier = node.normalizedIdentifier(buildPath)
           put(identifier, graphView.configurationName)
