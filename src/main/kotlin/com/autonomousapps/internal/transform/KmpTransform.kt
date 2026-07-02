@@ -5,7 +5,6 @@ package com.autonomousapps.internal.transform
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
-import com.autonomousapps.model.IncludedBuildCoordinates
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.ConfigurationNames
@@ -15,8 +14,8 @@ import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.model.source.SourceKind
 
 internal class KmpTransform(
-  private val declarations: Set<Declaration>,
   coordinates: Coordinates,
+  declarations: Set<Declaration>,
   explicitSourceSets: Set<String> = emptySet(),
   configurationNames: ConfigurationNames,
   buildPath: String,
@@ -24,6 +23,7 @@ internal class KmpTransform(
   isKaptApplied: Boolean = false,
 ) : AbstractTransform(
   coordinates = coordinates,
+  declarations = declarations,
   configurationNames = configurationNames,
   dependencyGraph = dependencyGraph,
   buildPath = buildPath,
@@ -152,9 +152,6 @@ internal class KmpTransform(
    * Simplifies a set of [usages][Usage], taking into account the [visibility] of [sourceSetName] into the `main` source
    * set, and also whether the user has opted-into "explicit source sets." For example, if a `main` usage is visible
    * on the compile classpath of a downstream source set like `test`, then we filter out all non-runtime-only usages.
-   *
-   * Android unit (host) tests get special treatment, essentially collapsing something like "debugTest" into simply
-   * "test," reflecting the reality of how most Android projects are configured.
    */
   private fun MutableSet<Usage>.simplify(
     visibility: Bucket.Visibility,
@@ -265,50 +262,7 @@ internal class KmpTransform(
     }
 
     // Any remaining usages should be added
-    usages.asSequence()
-      // Don't add unused usages!
-      .filterUsed()
-      // Don't add runtimeOnly or compileOnly (compileOnly, compileOnlyApi, providedCompile) declarations
-      // nb: this probably remains the correct choice, but it can lead to issues when we remove an "unused" dependency
-      // and fail to add a required runtimeOnly dependency that was part of the unused dep's transitive graph. Removing
-      // this line would lead to "super strict" declarations that are, perhaps, more bazel-like (every classpath
-      // consists only of positively-declared dependencies).
-      .filterNot { usage -> usage.bucket == Bucket.COMPILE_ONLY }
-      // Don't add something that is only present on the compileClasspath as that will change the runtimeClasspath,
-      // which we do not want to do.
-      .filterNot { usage ->
-        val identifier = if (coordinates is IncludedBuildCoordinates) {
-          coordinates.resolvedProject.identifier
-        } else {
-          coordinates.identifier
-        }
-
-        val currentClasspaths = dependenciesToClasspaths.get(identifier)
-        val isRuntimeUsage =
-          usage.bucket == Bucket.API || usage.bucket == Bucket.IMPL || usage.bucket == Bucket.RUNTIME_ONLY
-
-        // if it is a runtime usage and this dep isn't currently in the matching runtime classpath, don't add it there.
-        isRuntimeUsage && !usage.runtimeMatches(currentClasspaths)
-      }
-      .mapTo(advice) { usage ->
-        val preferredCoordinatesNotation =
-          if (coordinates is IncludedBuildCoordinates && coordinates.resolvedProject.buildPath == buildPath) {
-            coordinates.resolvedProject
-          } else {
-            coordinates
-          }
-        Advice.ofAdd(preferredCoordinatesNotation.withoutDefaultCapability(), mapper.toConfiguration(usage))
-      }
-
-    // Any remaining declarations should be removed
-    declarations.asSequence()
-      // Don't remove runtimeOnly or compileOnly declarations
-      .filterNot { decl ->
-        decl.bucket(configurationNames) == Bucket.COMPILE_ONLY || decl.bucket(configurationNames) == Bucket.RUNTIME_ONLY
-      }
-      .mapTo(advice) { declaration ->
-        Advice.ofRemove(declarationCoordinates(declaration), declaration)
-      }
+    addRemainingUsages(usages, advice)
   }
 
   /**
@@ -319,10 +273,9 @@ internal class KmpTransform(
    * dependencies.
    */
   private fun simplify(advice: MutableSet<Advice>): Set<Advice> {
-    val (add, remove, change) = advice.mutPartitionOf(
+    val (add, remove) = advice.mutPartitionOf(
       { it.isAdd() || it.isCompileOnly() },
       { it.isRemove() || it.isRemoveCompileOnly() },
-      { it.isAnyChange() },
     )
 
     // JVM, KMP

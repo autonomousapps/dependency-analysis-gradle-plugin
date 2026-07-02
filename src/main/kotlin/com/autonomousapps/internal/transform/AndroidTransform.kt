@@ -15,8 +15,8 @@ import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.model.source.SourceKind
 
 internal class AndroidTransform(
-  private val declarations: Set<Declaration>,
   coordinates: Coordinates,
+  declarations: Set<Declaration>,
   explicitSourceSets: Set<String> = emptySet(),
   configurationNames: ConfigurationNames,
   buildPath: String,
@@ -24,6 +24,7 @@ internal class AndroidTransform(
   isKaptApplied: Boolean = false,
 ) : AbstractTransform(
   coordinates = coordinates,
+  declarations = declarations,
   configurationNames = configurationNames,
   dependencyGraph = dependencyGraph,
   buildPath = buildPath,
@@ -160,14 +161,6 @@ internal class AndroidTransform(
     visibility: Bucket.Visibility,
     sourceSetName: String,
   ): MutableSet<Usage> {
-    fun MutableSet<Usage>.maybeReduceFurther(): MutableSet<Usage> {
-      return if (sourceSetName == SourceKind.TEST_NAME) { // TODO: `&& SourceKind.ANDROID_TEST_NAME`?
-        reduceUsages(this)
-      } else {
-        this
-      }
-    }
-
     return if (visibility.forEither && !explicitFor(sourceSetName)) {
       // TODO(tsr): add test for this case.
       //  1. a dep that should be moved from impl->api
@@ -185,9 +178,17 @@ internal class AndroidTransform(
 
       seq
         .toMutableSet()
-        .maybeReduceFurther()
+        .maybeReduceFurther(sourceSetName)
     } else {
       reduceUsages(this)
+    }
+  }
+
+  private fun MutableSet<Usage>.maybeReduceFurther(sourceSetName: String): MutableSet<Usage> {
+    return if (sourceSetName == SourceKind.TEST_NAME) { // TODO: `&& SourceKind.ANDROID_TEST_NAME`?
+      reduceUsages(this)
+    } else {
+      this
     }
   }
 
@@ -298,50 +299,7 @@ internal class AndroidTransform(
     }
 
     // Any remaining usages should be added
-    usages.asSequence()
-      // Don't add unused usages!
-      .filterUsed()
-      // Don't add runtimeOnly or compileOnly (compileOnly, compileOnlyApi, providedCompile) declarations
-      // nb: this probably remains the correct choice, but it can lead to issues when we remove an "unused" dependency
-      // and fail to add a required runtimeOnly dependency that was part of the unused dep's transitive graph. Removing
-      // this line would lead to "super strict" declarations that are, perhaps, more bazel-like (every classpath
-      // consists only of positively-declared dependencies).
-      .filterNot { usage -> usage.bucket == Bucket.COMPILE_ONLY }
-      // Don't add something that is only present on the compileClasspath as that will change the runtimeClasspath,
-      // which we do not want to do.
-      .filterNot { usage ->
-        val identifier = if (coordinates is IncludedBuildCoordinates) {
-          coordinates.resolvedProject.identifier
-        } else {
-          coordinates.identifier
-        }
-
-        val currentClasspaths = dependenciesToClasspaths.get(identifier)
-        val isRuntimeUsage =
-          usage.bucket == Bucket.API || usage.bucket == Bucket.IMPL || usage.bucket == Bucket.RUNTIME_ONLY
-
-        // if it is a runtime usage and this dep isn't currently in the matching runtime classpath, don't add it there.
-        isRuntimeUsage && !usage.runtimeMatches(currentClasspaths)
-      }
-      .mapTo(advice) { usage ->
-        val preferredCoordinatesNotation =
-          if (coordinates is IncludedBuildCoordinates && coordinates.resolvedProject.buildPath == buildPath) {
-            coordinates.resolvedProject
-          } else {
-            coordinates
-          }
-        Advice.ofAdd(preferredCoordinatesNotation.withoutDefaultCapability(), mapper.toConfiguration(usage))
-      }
-
-    // Any remaining declarations should be removed
-    declarations.asSequence()
-      // Don't remove runtimeOnly or compileOnly declarations
-      .filterNot { decl ->
-        decl.bucket(configurationNames) == Bucket.COMPILE_ONLY || decl.bucket(configurationNames) == Bucket.RUNTIME_ONLY
-      }
-      .mapTo(advice) { declaration ->
-        Advice.ofRemove(declarationCoordinates(declaration), declaration)
-      }
+    addRemainingUsages(usages, advice)
   }
 
   /**

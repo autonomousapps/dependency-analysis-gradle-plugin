@@ -29,11 +29,15 @@ internal enum class Bucket(val value: String) {
   NONE("n/a"),
   ;
 
+  fun isRuntimeBucket(): Boolean = this in runtimeBuckets
+
   fun matches(declaration: Declaration, configurationNames: ConfigurationNames): Boolean {
     return this == declaration.bucket(configurationNames)
   }
 
   companion object {
+    private val runtimeBuckets = listOf(API, IMPL, RUNTIME_ONLY)
+
     @JvmStatic
     fun of(configurationName: String, configurationNames: ConfigurationNames): Bucket {
       if (configurationNames.isForAnnotationProcessor(configurationName)) return ANNOTATION_PROCESSOR
