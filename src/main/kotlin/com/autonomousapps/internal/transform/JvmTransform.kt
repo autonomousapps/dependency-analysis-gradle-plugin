@@ -2,11 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.transform
 
-import com.autonomousapps.extension.DependenciesHandler
-import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.*
-import com.autonomousapps.model.Coordinates.Companion.copy
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.IncludedBuildCoordinates
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.ConfigurationNames
@@ -16,16 +15,19 @@ import com.autonomousapps.model.internal.intermediates.Usage
 import com.autonomousapps.model.source.SourceKind
 
 internal class JvmTransform(
-  private val coordinates: Coordinates,
   private val declarations: Set<Declaration>,
-  private val explicitSourceSets: Set<String> = emptySet(),
-  private val configurationNames: ConfigurationNames,
+  coordinates: Coordinates,
+  explicitSourceSets: Set<String> = emptySet(),
+  configurationNames: ConfigurationNames,
   buildPath: String,
   dependencyGraph: Map<String, DependencyGraphView>,
   isKaptApplied: Boolean = false,
 ) : AbstractTransform(
+  coordinates = coordinates,
+  configurationNames = configurationNames,
   dependencyGraph = dependencyGraph,
   buildPath = buildPath,
+  explicitSourceSets = explicitSourceSets,
   isKaptApplied = isKaptApplied,
 ) {
 
@@ -309,38 +311,6 @@ internal class JvmTransform(
       }
   }
 
-  private fun Declaration.findSourceKind(hasCustomSourceSets: Boolean): SourceKind? {
-    return sourceSetKind(hasCustomSourceSets, configurationNames)
-  }
-
-  /**
-   * Returns true if [sourceSet] is in the set of [explicitSourceSets], or if [explicitSourceSets] is set for all source
-   * sets.
-   */
-  private fun explicitFor(sourceSet: String?): Boolean {
-    return sourceSet in explicitSourceSets
-      || DependenciesHandler.isExplicitForAll(explicitSourceSets)
-  }
-
-  /** Use coordinates/variant of the original declaration when reporting remove/change as it is more precise. */
-  private fun declarationCoordinates(decl: Declaration): Coordinates {
-    return when (coordinates) {
-      is IncludedBuildCoordinates if decl.identifier.startsWith(":") -> coordinates.resolvedProject
-
-      // This handles the case where we have an unused dependency because it's been excluded via
-      // configurations.<foo>.exclude(group = "group", module = "module")
-      is FlatCoordinates if decl.version != null -> {
-        ModuleCoordinates(coordinates.identifier, decl.version, decl.gradleVariantIdentification)
-      }
-
-      else -> coordinates
-    }.copy(decl.identifier, decl.gradleVariantIdentification)
-  }
-
-  private fun hasCustomSourceSets(usages: Set<Usage>): Boolean {
-    return usages.any { it.sourceKind.kind == SourceKind.CUSTOM_JVM_KIND }
-  }
-
   /**
    * Simply advice by transforming matching pairs of add-advice and remove-advice into a single change-advice. Also
    * strips out confusing and verbose advice to change/add dependencies for the same product flavor.
@@ -386,63 +356,5 @@ internal class JvmTransform(
       .filterNot { isDeclaredInRelatedSourceSet(advice, it) }
       .map { downgradeTestDependencies(it) }
       .toSet()
-  }
-
-  /**
-   * We don't want to be forced to redeclare dependencies in related source sets. Consider (pseudocode):
-   * ```
-   * // build.gradle
-   * sourceSets.functionalTest.extendsFrom sourceSets.test
-   *
-   * dependencies {
-   *   testImplementation 'foo:bar:1.0'
-   *   // functionalTestImplementation will also "inherit" the 'foo:bar:1.0' dependency.
-   * }
-   * ```
-   *
-   * nb: returning false means "keep this advice."
-   */
-  private fun isDeclaredInRelatedSourceSet(allAdvice: Set<Advice>, advice: Advice): Boolean {
-    if (!advice.isAnyAdd()) return false
-
-    val sourceSetName = DependencyScope.sourceSetName(advice.toConfiguration!!)
-
-    // With explicit source sets, a source set may not be related to any other.
-    if (explicitFor(sourceSetName)) return false
-
-    val isTestRelated = sourceSetName?.let { DependencyScope.isTestRelated(it) } == true
-
-    // Don't strip advice that improves correctness (e.g., declaring something on an "api-like" configuration).
-    // Unless it's api-like on a test source set, which makes no sense.
-    if (advice.isToApiLike() && !isTestRelated) return false
-
-    // Instead of attempting a complex algorithm to get it "just right", if we see ANY downgrade advice, we bail out.
-    // This particular function is already an optimization to support a scenario we arguably shouldn't, leading to
-    // increasingly complex and brittle code. That is, it supports the special case that main deps are generally
-    // visible to test. Perhaps we should just stop doing that.
-    val anyDowngrade = allAdvice.any { it.isDowngrade() }
-    if (anyDowngrade) return false
-
-    val sourceSets = directDependencies[advice.coordinates.identifier].map { it.name }
-
-    // There's "no point" in adding a new declaration when that dependency is already available as a direct dependency,
-    // UNLESS we also happen to have some advice that might DOWNGRADE/REMOVE that declaration. For example, we might be
-    // about to advise the user to remove an `implementation` dependency, in which case the advice to also add a
-    // `testImplementation` dependency IS NOT redundant and SHOULD NOT be filtered out.
-    return sourceSetName in sourceSets
-  }
-
-  /**
-   * If we're adding an api-like declaration to a test-like configuration, instead suggest adding it to an
-   * implementation-like configuration. Tests don't have APIs.
-   */
-  private fun downgradeTestDependencies(advice: Advice): Advice {
-    if (!advice.isAnyAdd()) return advice
-    if (!advice.isToApiLike()) return advice
-
-    val sourceSetName = DependencyScope.sourceSetName(advice.toConfiguration!!) ?: return advice
-    if (!DependencyScope.isTestRelated(sourceSetName)) return advice
-
-    return advice.copy(toConfiguration = "${sourceSetName}Implementation")
   }
 }
