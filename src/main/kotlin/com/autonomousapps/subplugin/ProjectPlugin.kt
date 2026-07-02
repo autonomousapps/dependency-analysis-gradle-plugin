@@ -144,6 +144,11 @@ internal class ProjectPlugin(private val project: Project) {
     project = project,
     artifactDescription = DagpArtifacts.Kind.RESOLVED_DEPS,
   )
+  private val sourcedProjectHealthPublisher = interProjectPublisher(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.SOURCED_PROJECT_HEALTH,
+  )
+
   private val typeUsagesPublisher = interProjectPublisher(
     project = project,
     artifactDescription = DagpArtifacts.Kind.TYPE_USAGE,
@@ -1089,6 +1094,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     filterAdviceTask.configure { t ->
+      t.buildFile.set(project.buildFile)
       t.buildPath.set(buildPath(dependencyAnalyzer.compileConfigurationName))
       t.dependencyGraphViews.add(graphViewTask.flatMap { it.output })
       t.dependencyGraphViews.add(graphViewTask.flatMap { it.outputRuntime })
@@ -1167,6 +1173,10 @@ internal class ProjectPlugin(private val project: Project) {
 
       // ...and produces this output.
       t.output.set(paths.filteredAdvicePath)
+      t.sourcedOutput.set(paths.filteredSourcedAdvicePath)
+      t.enableSarifReporting.set(dagpExtension.reportingHandler.sarifReport)
+      t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
+      t.rootFolder.set(project.layout.settingsDirectory.asFile)
     }
 
     val writeProjectMetadata = tasks.register("writeProjectMetadata", WriteProjectMetadataTask::class.java) { t ->
@@ -1178,6 +1188,7 @@ internal class ProjectPlugin(private val project: Project) {
     val generateProjectHealthReport =
       tasks.register("generateConsoleReport", GenerateProjectHealthReportTask::class.java) { t ->
         t.projectAdvice.set(filterAdviceTask.flatMap { it.output })
+        t.sourcedProjectAdvice.set(filterAdviceTask.flatMap { it.sourcedOutput })
         t.projectMetadata.set(writeProjectMetadata.flatMap { it.output })
         t.reportingConfig.set(dagpExtension.reportingHandler.config())
         t.dslKind.set(DslKind.from(buildFile))
@@ -1185,6 +1196,8 @@ internal class ProjectPlugin(private val project: Project) {
         t.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
         t.useParenthesesForGroovy.set(dagpExtension.dependenciesHandler.useParenthesesForGroovy)
         t.output.set(paths.consoleReportPath)
+        t.sarifOutput.set(paths.sarifReportPath)
+        t.enableSarifReporting.set(dagpExtension.reportingHandler.sarifReport)
       }
 
     tasks.register("projectHealth", ProjectHealthTask::class.java) { t ->
@@ -1235,6 +1248,7 @@ internal class ProjectPlugin(private val project: Project) {
     // Publish our artifacts
     combinedGraphPublisher.publish(mergeProjectGraphsTask.flatMap { it.output })
     projectHealthPublisher.publish(filterAdviceTask.flatMap { it.output })
+    sourcedProjectHealthPublisher.publish(filterAdviceTask.flatMap { it.sourcedOutput })
     projectMetadataPublisher.publish(writeProjectMetadata.flatMap { it.output })
     publicClassesPublisher.publish(aggregatePublicTypesTask.flatMap { it.output })
     resolvedDependenciesPublisher.publish(computeResolvedDependenciesTask.flatMap { it.output })

@@ -60,6 +60,10 @@ internal class RootPlugin(private val project: Project) {
     project = project,
     artifactDescription = DagpArtifacts.Kind.RESOLVED_DEPS,
   )
+  private val sourcedAdviceResolver = interProjectResolver(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.SOURCED_PROJECT_HEALTH,
+  )
   private val typeUsagesResolver = interProjectResolver(
     project = project,
     artifactDescription = DagpArtifacts.Kind.TYPE_USAGE,
@@ -120,6 +124,7 @@ internal class RootPlugin(private val project: Project) {
 
     val generateBuildHealthTask = tasks.register("generateBuildHealth", GenerateBuildHealthTask::class.java) { t ->
       t.projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      t.sourcedProjectHealthReports.setFrom(sourcedAdviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
       t.projectMetadataReports.setFrom(projectMetadataResolver.internal.map { it.artifactsFor("json").artifactFiles })
       t.reportingConfig.set(dagpExtension.reportingHandler.config())
       t.projectCount.set(allprojects.size)
@@ -131,6 +136,8 @@ internal class RootPlugin(private val project: Project) {
       t.output.set(paths.buildHealthPath)
       t.consoleOutput.set(paths.consoleReportPath)
       t.outputFail.set(paths.shouldFailPath)
+      t.sarifOutput.set(paths.sarifReportPath)
+      t.enableSarifReporting.set(dagpExtension.reportingHandler.sarifReport)
     }
 
     tasks.register("buildHealth", BuildHealthTask::class.java) { t ->

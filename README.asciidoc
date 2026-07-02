@@ -162,6 +162,20 @@ dependency.analysis.project.includes=^((?!:prefix)).*$
 The value provided is evaluated as a regex. The example above uses a negative lookahead to exclude any project whose
 path (`project.path`) begins with `:prefix`, and include everything else.
 
+If you wish to this report exported as the SARIF output, add this to the `dependencyAnalysis` DSL:
+
+.build.gradle.kts
+[source,kotlin]
+----
+dependencyAnalysis {
+  reporting {
+    sarifReport(true)
+  }
+}
+----
+
+Above will generate `build/dependency-analysis/build-health-report.sarif` file on report.
+
 == Repositories
 
 From 2.19.0 for releases, and 2.18.1-SNAPSHOT for snapshots, this plugin uses https://central.sonatype.com. To add this

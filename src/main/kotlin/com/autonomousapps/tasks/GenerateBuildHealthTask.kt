@@ -8,6 +8,7 @@ import com.autonomousapps.extension.ReportingHandler
 import com.autonomousapps.extension.getEffectivePostscript
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
+import com.autonomousapps.internal.advice.ProjectHealthSarifReportBuilder
 import com.autonomousapps.internal.utils.Colors
 import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.bufferWriteJson
@@ -17,7 +18,9 @@ import com.autonomousapps.model.AndroidScore
 import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.BuildHealth.AndroidScoreMetrics
 import com.autonomousapps.model.ProjectAdvice
+import com.autonomousapps.model.SourcedProjectAdvice
 import com.autonomousapps.model.internal.ProjectMetadata
+import io.github.detekt.sarif4k.SarifSerializer
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -35,6 +38,10 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   public abstract val projectHealthReports: ConfigurableFileCollection
+
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val sourcedProjectHealthReports: ConfigurableFileCollection
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
@@ -68,6 +75,12 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
 
   @get:OutputFile
   public abstract val outputFail: RegularFileProperty
+
+  @get:OutputFile
+  public abstract val sarifOutput: RegularFileProperty
+
+  @get:Input
+  public abstract val enableSarifReporting: Property<Boolean>
 
   @TaskAction public fun action() {
     val output = output.getAndDelete()
@@ -176,6 +189,20 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
       if (ps.isNotEmpty()) {
         consoleOutput.appendText("\n\n${ps.colorize(Colors.BOLD)}")
       }
+    }
+
+    if (enableSarifReporting.get()) {
+      val sarifOutput = sarifOutput.getAndDelete()
+      val sourcedAdvice = sourcedProjectHealthReports.files.map { it.fromJson<SourcedProjectAdvice>() }
+
+      val sarifReport = ProjectHealthSarifReportBuilder(
+        projectAdvices = sourcedAdvice,
+        dslKind = dslKind.get(),
+        dependencyMap = dependencyMap.get().toLambda(),
+        useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
+      ).sarif
+
+      sarifOutput.writeText(SarifSerializer.toJson(sarifReport))
     }
   }
 
