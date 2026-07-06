@@ -4,7 +4,7 @@
 agp = "8.10.0"
 agp-common = "32.0.0"
 antlr-base = "4.13.2"
-antlr-shadowed = "4.13.2.1"
+antlr-shadowed = "4.13.2.2"
 asm-relocated = "9.9.0"
 buildconfig = "5.7.1"
 caffeine = "3.2.3"
