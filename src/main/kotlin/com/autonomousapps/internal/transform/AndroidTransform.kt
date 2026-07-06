@@ -318,8 +318,28 @@ internal class AndroidTransform(
       { it.isAnyChange() },
     )
 
+    // TODO(tsr): this results in slightly weird advice, like the following. It's actually unclear which is better.
+    //  ```
+    //  Advice for :consumer
+    //  Existing dependencies which should be modified to be as indicated:
+    //    testImplementation project(':producer') (was implementation)
+    //    testImplementation project(':producer') (was testFixturesImplementation)
+    //  ```
+    //  Compare to the JVM/KMP advice resulting from the same structure:
+    //  ```
+    //  Advice for :consumer
+    //  Unused dependencies which should be removed:
+    //    testFixturesImplementation(project(":producer"))
+    //  Existing dependencies which should be modified to be as indicated:
+    //    testImplementation(project(":producer")) (was implementation)
+    //  ```
+    // See `android.ConcurrentModificationSpec` and `jvm.ConcurrentModificationSpec`.
+    //
     // debugImplementation -> null
-    remove.forEach { theRemove ->
+    val iter = remove.iterator()
+    while (iter.hasNext()) {
+      val theRemove = iter.next()
+
       // null -> fireDebugRuntimeOnly, null -> waterDebugRuntimeOnly
       val adds = add.filterToSet { theAdd -> theAdd.coordinates == theRemove.coordinates }
       if (adds.size > 1) {
@@ -332,7 +352,7 @@ internal class AndroidTransform(
         if (toConfiguration != null) {
           advice.removeAll(adds)
           advice -= theRemove
-          remove -= theRemove
+          iter.remove()
 
           advice += Advice.ofChange(
             coordinates = theRemove.coordinates,
@@ -347,7 +367,7 @@ internal class AndroidTransform(
         // Replace add + remove => change.
         advice -= theAdd
         advice -= theRemove
-        remove -= theRemove
+        iter.remove()
 
         advice += Advice.ofChange(
           coordinates = theRemove.coordinates,
