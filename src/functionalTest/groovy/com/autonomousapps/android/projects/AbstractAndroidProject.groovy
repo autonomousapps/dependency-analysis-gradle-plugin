@@ -118,7 +118,12 @@ abstract class AbstractAndroidProject extends AbstractProject {
     return null
   }
 
+  @Deprecated
   protected GradleProject.Builder newAndroidGradleProjectBuilder(String agpVersion) {
+    return newAndroidGradleProjectBuilder()
+  }
+
+  protected GradleProject.Builder newAndroidGradleProjectBuilder() {
     return newGradleProjectBuilder()
       .withRootProject { root ->
         root.gradleProperties += GradleProperties.minimalAndroidProperties()

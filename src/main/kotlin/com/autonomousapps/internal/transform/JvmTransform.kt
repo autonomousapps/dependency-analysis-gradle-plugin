@@ -279,6 +279,7 @@ internal class JvmTransform(
    * dependencies.
    */
   private fun simplify(advice: MutableSet<Advice>): Set<Advice> {
+    // TODO(tsr): This top part is identical to KmpTransform
     val (add, remove) = advice.mutPartitionOf(
       { it.isAdd() || it.isCompileOnly() },
       { it.isRemove() || it.isRemoveCompileOnly() },
