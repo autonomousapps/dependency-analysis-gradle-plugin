@@ -1,5 +1,15 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.16.1
+* [fix]: stop checking for missing runtime exceptions.
+* [fix]: don't advise moving dependency from `commonMainApi` to `jvmMainApi`.
+* [fix]: use `Iterator.remove()` for safe modification.
+* [perf]: compress `synthetic-project.json` to save disk space.
+* [chore]: update kotlin-editor-relocated to latest.
+* [chore]: update simple grammar ('antlr-shadowed') to latest.
+* [chore]: build with Gradle 9.6.0, and test against it
+* [refactor]: split `StandardTransform` into Android/JVM/KMP-specific classes.
+
 # Version 3.16.0
 * [feat]: only emit 'Fixing dependencies for...' if the build script is being rewritten.
 * [fix]: test against AGP 9.2.1 and update `AGP_MAX` to 9.2.1.
@@ -7,7 +17,7 @@ Dependency Analysis Plugin Changelog
 * [fix]: escape Kotlin reserved keywords when using project accessors.
 * [fix]: improve handling of Android product flavors.
 * [fix]: improve handling of Android build types.
-* [maint]: update kotlin-editor-relocated to latest.
+* [chore]: update kotlin-editor-relocated to latest.
 
 # Version 3.15.0
 * [feat]: support AGP 9.2.0.
