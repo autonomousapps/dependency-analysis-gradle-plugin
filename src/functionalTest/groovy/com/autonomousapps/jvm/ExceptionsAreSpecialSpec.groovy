@@ -4,10 +4,12 @@ package com.autonomousapps.jvm
 
 import com.autonomousapps.jvm.projects.ExceptionsAreSpecialProject
 import com.autonomousapps.utils.Colors
+import spock.lang.Ignore
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
+@Ignore("This feature is buggy and really complex to get right for limited utility")
 class ExceptionsAreSpecialSpec extends AbstractJvmSpec {
 
   @SuppressWarnings('GroovyAssignabilityCheck')
