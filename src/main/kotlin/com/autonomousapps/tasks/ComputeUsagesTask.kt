@@ -264,7 +264,8 @@ private class GraphVisitor(
         }
 
         is ExceptionCapability -> {
-          hasReferencedExceptionType = isForMissingRuntimeException(dependencyCoordinates, capability, context)
+          // TODO(tsr): this feature is buggy and really complex to get right for limited utility.
+          //hasReferencedExceptionType = isForMissingRuntimeException(dependencyCoordinates, capability, context)
         }
 
         is InferredCapability -> {
