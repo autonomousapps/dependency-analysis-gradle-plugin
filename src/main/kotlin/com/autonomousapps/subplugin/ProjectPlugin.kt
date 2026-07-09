@@ -1048,11 +1048,12 @@ internal class ProjectPlugin(private val project: Project) {
     // Computes how this project really uses its dependencies, without consideration for user reporting preferences.
     val computeUsagesTask = dependencyAnalyzer.registerComputeUsagesTask(
       checkSuperClasses = dagpExtension.usageHandler.analysisHandler.checkSuperClasses,
-      checkBinaryCompat = checkBinaryCompat(),
+      checkBinaryCompat = dagpExtension.usageHandler.analysisHandler.checkBinaryCompat.orElse(checkBinaryCompat()),
       isKaptApplied = isKaptApplied().orElse(isLegacyKaptApplied()),
       graphViewTask = graphViewTask,
       findDeclarationsTask = findDeclarationsTask,
       synthesizeProjectViewTask = synthesizeProjectViewTask,
+      explodeJarTask = explodeJarTask,
       synthesizeDependenciesTask = synthesizeDependenciesTask,
       duplicateClassesCompile = duplicateClassesCompile,
       duplicateClassesRuntime = duplicateClassesRuntime,

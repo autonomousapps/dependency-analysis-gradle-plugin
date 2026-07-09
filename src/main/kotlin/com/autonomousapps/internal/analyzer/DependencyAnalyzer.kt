@@ -86,6 +86,7 @@ internal interface DependencyAnalyzer {
     graphViewTask: TaskProvider<GraphViewTask>,
     findDeclarationsTask: TaskProvider<FindDeclarationsTask>,
     synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
+    explodeJarTask: TaskProvider<ExplodeJarTask>,
     synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
     duplicateClassesCompile: TaskProvider<DiscoverClasspathDuplicationTask>,
     duplicateClassesRuntime: TaskProvider<DiscoverClasspathDuplicationTask>,
@@ -255,13 +256,13 @@ internal abstract class AbstractDependencyAnalyzer(
     graphViewTask: TaskProvider<GraphViewTask>,
     findDeclarationsTask: TaskProvider<FindDeclarationsTask>,
     synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
+    explodeJarTask: TaskProvider<ExplodeJarTask>,
     synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,
     duplicateClassesCompile: TaskProvider<DiscoverClasspathDuplicationTask>,
     duplicateClassesRuntime: TaskProvider<DiscoverClasspathDuplicationTask>
   ): TaskProvider<ComputeUsagesTask> {
     return project.tasks.register("computeActualUsage$taskNameSuffix", ComputeUsagesTask::class.java) { t ->
       t.checkSuperClasses.set(checkSuperClasses)
-      // Currently only modeling this via Gradle property. TODO(tsr): hoist it to the DSL.
       t.checkBinaryCompat.set(checkBinaryCompat)
 
       t.buildPath.set(project.buildPath(compileConfigurationName))
@@ -270,6 +271,7 @@ internal abstract class AbstractDependencyAnalyzer(
       t.declarations.set(findDeclarationsTask.flatMap { it.output })
       t.dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
       t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
+      t.explodedJars.set(explodeJarTask.flatMap { it.output })
       t.kapt.set(isKaptApplied)
       t.duplicateClassesReports.add(duplicateClassesCompile.flatMap { it.output })
       t.duplicateClassesReports.add(duplicateClassesRuntime.flatMap { it.output })

@@ -220,7 +220,7 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
             // We don't care if a jar reflectively accesses itself. That's just weird (looking at you, guava)
             .filterNot { accessedJar -> accessedJar === accessingJar }
             .flatMap { accessedJar ->
-              accessedJar.binaryClasses
+              accessedJar.simplifiedBinaryClasses
                 .mapNotNull { bin ->
                   // These are accesses of a class (`bin.className`) in `explodedJar`.
                   val realAccesses = reflectiveAccesses.filterValues { accesses -> bin.className in accesses }

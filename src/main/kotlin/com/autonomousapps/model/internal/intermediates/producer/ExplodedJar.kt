@@ -5,6 +5,7 @@ package com.autonomousapps.model.internal.intermediates.producer
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.MapSetComparator
 import com.autonomousapps.internal.utils.ifNotEmpty
+import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.*
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
@@ -18,20 +19,13 @@ import com.squareup.moshi.JsonClass
 internal data class ExplodedJar(
   override val coordinates: Coordinates,
 
-  /**
-   * True if this dependency contains only annotations. False otherwise.
-   */
+  /** True if this dependency contains only annotations. False otherwise. */
   val isAnnotations: Boolean = false,
 
-  /**
-   * The set of classes that are service providers (they extend [java.security.Provider]). May be
-   * empty.
-   */
+  /** The set of classes that are service providers (they extend [java.security.Provider]). May be empty. */
   val securityProviders: Set<String> = emptySet(),
 
-  /**
-   * Android Lint registry, if there is one. May be null.
-   */
+  /** Android Lint registry, if there is one. May be null. */
   val androidLintRegistry: String? = null,
 
   /**
@@ -42,8 +36,16 @@ internal data class ExplodedJar(
 
   /**
    * The classes (with binary member signatures) provided by this library.
+   *
+   * @see [simplifiedBinaryClasses]
    */
   val binaryClasses: Set<BinaryClass>,
+
+  /**
+   * The classes provided by this library. By contrast to the old `binaryClasses`, does not contain the member
+   * signatures. This simplified form is intended to reduce memory pressure.
+   */
+  val simplifiedBinaryClasses: Set<SimplifiedBinaryClass>,
 
   /**
    * A map of each class declared by this library to the set of constants it defines. The latter may
@@ -57,9 +59,7 @@ internal data class ExplodedJar(
   /** Map of class names to the exceptions they handle. Does not include standard Java exceptions. May be empty. */
   val exceptions: Map<String, Set<String>>,
 
-  /**
-   * All the "Kt" files within this component.
-   */
+  /** All the "Kt" files within this component. */
   val ktFiles: Set<KtFile>,
 ) : DependencyView<ExplodedJar> {
 
@@ -73,6 +73,7 @@ internal data class ExplodedJar(
     androidLintRegistry = exploding.androidLintRegistry,
     isLintJar = exploding.isLintJar,
     binaryClasses = exploding.binaryClasses,
+    simplifiedBinaryClasses = exploding.binaryClasses.mapToOrderedSet { SimplifiedBinaryClass(it.className) },
     constants = exploding.constants,
     reflectiveAccesses = exploding.reflectiveAccesses,
     exceptions = exploding.exceptions,
@@ -86,6 +87,7 @@ internal data class ExplodedJar(
       .thenBy(ExplodedJar::isLintJar)
       .thenBy(LexicographicIterableComparator()) { it.securityProviders }
       .thenBy(LexicographicIterableComparator()) { it.binaryClasses }
+      .thenBy(LexicographicIterableComparator()) { it.simplifiedBinaryClasses }
       .thenBy(LexicographicIterableComparator()) { it.ktFiles }
       .thenBy(MapSetComparator()) { it.constants }
       .thenBy(MapSetComparator()) { it.reflectiveAccesses }
@@ -102,7 +104,7 @@ internal data class ExplodedJar(
   override fun toCapabilities(): List<Capability> {
     val capabilities = mutableListOf<Capability>()
     capabilities += InferredCapability(isAnnotations)
-    binaryClasses.ifNotEmpty { capabilities += BinaryClassCapability.newInstance(it) }
+    simplifiedBinaryClasses.ifNotEmpty { capabilities += ClassCapability.newInstance(it) }
     constants.ifNotEmpty { capabilities += ConstantCapability.newInstance(it, ktFiles) }
     exceptions.ifNotEmpty { capabilities += ExceptionCapability.newInstance(it) }
     securityProviders.ifNotEmpty { capabilities += SecurityProviderCapability.newInstance(it) }

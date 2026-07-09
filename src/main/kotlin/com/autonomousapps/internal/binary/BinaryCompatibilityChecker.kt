@@ -10,18 +10,13 @@ import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DuplicateClass
-import com.autonomousapps.model.internal.BinaryClassCapability
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import com.autonomousapps.visitor.GraphViewVisitor
 
-/**
- * TODO(tsr): there are [reports](https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1604) that
- *  this analysis is blowing up heap usage and leading to OOMs.
- */
 internal class BinaryCompatibilityChecker(
   private val coordinates: Coordinates,
-  private val binaryClassCapability: BinaryClassCapability,
+  private val binaryClasses: Set<BinaryClass>,
   private val context: GraphViewVisitor.Context,
 ) {
 
@@ -74,9 +69,9 @@ internal class BinaryCompatibilityChecker(
       .filterToOrderedSet { access -> access.owner in relevantDuplicateClassNames }
 
     if (relevantMemberAccesses.isEmpty()) return null
-
+    
     val (matchingBinaryClasses, nonMatchingBinaryClasses) = relevantMemberAccesses.mapToSet { access ->
-      binaryClassCapability.findMatchingClasses(access)
+      findMatchingClasses(access)
     }.reduce()
 
     if (nonMatchingBinaryClasses.isEmpty()) return null
@@ -148,7 +143,7 @@ internal class BinaryCompatibilityChecker(
     return builders.values.mapToOrderedSet { it.build() }
   }
 
-  private fun BinaryClassCapability.findMatchingClasses(memberAccess: MemberAccess): PartitionResult {
+  private fun findMatchingClasses(memberAccess: MemberAccess): PartitionResult {
     val relevant = findRelevantBinaryClasses(memberAccess)
 
     // lenient
@@ -173,7 +168,7 @@ internal class BinaryCompatibilityChecker(
    * All of the above ("this" class, its super class, and its interfaces) are relevant for search purposes. Note we
    * don't inspect the member names for this check.
    */
-  private fun BinaryClassCapability.findRelevantBinaryClasses(memberAccess: MemberAccess): Set<BinaryClass> {
+  private fun findRelevantBinaryClasses(memberAccess: MemberAccess): Set<BinaryClass> {
     // direct references
     val relevant = binaryClasses.filterTo(mutableSetOf()) { bin ->
       bin.className == memberAccess.owner.dotty()
