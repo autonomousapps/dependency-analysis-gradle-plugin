@@ -17,7 +17,7 @@ import com.autonomousapps.visitor.GraphViewVisitor
 
 /**
  * TODO(tsr): there are [reports](https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1604) that
- * this analysis is blowing up heap usage and leading to OOMs.
+ *  this analysis is blowing up heap usage and leading to OOMs.
  */
 internal class BinaryCompatibilityChecker(
   private val coordinates: Coordinates,
