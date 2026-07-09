@@ -18,6 +18,21 @@ final class BinaryIncompatibilityProject extends AbstractProject {
 
   private GradleProject build(boolean extra) {
     return newGradleProjectBuilder()
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.withGroovy(
+            '''\
+            dependencyAnalysis {
+              usage {
+                analysis {
+                  checkBinaryCompatibility(true)
+                }
+              }
+            }
+            '''.stripIndent()
+          )
+        }
+      }
     // :consumer uses the Producer class.
     // This class is provided by both
     // 1. :producer-2, which is a direct dependency, and

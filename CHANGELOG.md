@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.17.0
+* [feat]: add DSL option for binary-compatibility check. It now defaults to 'false'. This is a breaking behavioral 
+  change.
+* [performance]: reduce memory usage when *not* opting-in to the binary-compatibility check.
+
 # Version 3.16.1
 * [fix]: stop checking for missing runtime exceptions.
 * [fix]: don't advise moving dependency from `commonMainApi` to `jvmMainApi`.

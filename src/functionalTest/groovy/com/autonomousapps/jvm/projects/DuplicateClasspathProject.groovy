@@ -211,6 +211,12 @@ final class DuplicateClasspathProject extends AbstractProject {
       builder.append('    postscript("""MULTILINE\nERRORS-ONLY POSTSCRIPT""")\n')
       builder.append('  }\n')
 
+      builder.append('  usage {\n')
+      builder.append('    analysis {\n')
+      builder.append('      checkBinaryCompatibility(true)\n')
+      builder.append('    }\n')
+      builder.append('  }\n')
+
       builder.append('  issues {\n')
       builder.append('    all {\n')
       builder.append('      onAny {\n')

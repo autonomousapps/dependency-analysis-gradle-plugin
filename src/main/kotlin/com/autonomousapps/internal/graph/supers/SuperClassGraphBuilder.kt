@@ -3,8 +3,10 @@
 package com.autonomousapps.internal.graph.supers
 
 import com.autonomousapps.internal.graph.newGraphBuilder
-import com.autonomousapps.model.internal.BinaryClassCapability
+import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.internal.ClassCapability
 import com.autonomousapps.model.internal.Dependency
+import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import com.google.common.graph.Graph
 
 /** Builds a [`Graph<SuperNode>`][Graph]. */
@@ -43,22 +45,24 @@ internal class SuperClassGraphBuilder {
 
   companion object {
     /** Builds a graph from child classes up through super classes and interfaces, up to `java.lang.Object`. */
-    fun of(dependencies: Set<Dependency>): Graph<SuperNode> {
+    fun of(dependencies: Set<Dependency>, binaryClasses: Map<Coordinates, Set<BinaryClass>>): Graph<SuperNode> {
       val builder = SuperClassGraphBuilder()
 
       dependencies.forEach { dep ->
-        dep.findCapability<BinaryClassCapability>()?.let { capability ->
-          capability.binaryClasses.map { bin ->
-            val from = SuperNode(bin.className).apply {
+        dep.findCapability<ClassCapability>()?.let { capability ->
+          capability.classes.forEach { className ->
+            val from = SuperNode(className).apply {
               deps += dep.coordinates
             }
             builder.putNode(from)
 
             // edge from the child class to its super class, if it has one
-            bin.superClassName?.let { superClassName ->
-              val to = SuperNode(superClassName)
-              builder.putEdge(from, to)
-            }
+            val bin = binaryClasses[dep.coordinates]!!.first { it.className == className }
+            bin.superClassName
+              ?.let { superClassName ->
+                val to = SuperNode(superClassName)
+                builder.putEdge(from, to)
+              }
 
             // edge from the child class to each of its interfaces, if it has any
             if (bin.interfaces.isNotEmpty()) {

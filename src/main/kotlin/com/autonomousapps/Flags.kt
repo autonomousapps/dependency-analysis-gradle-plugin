@@ -89,7 +89,7 @@ public object Flags {
   internal fun Project.checkBinaryCompat(): Provider<Boolean> {
     return providers.gradleProperty(CHECK_BINARY_COMPAT)
       .map { it.toBoolean() }
-      .orElse(true)
+      .orElse(false)
   }
 
   private fun Project.getGradleOrSysProp(name: String, default: Boolean): Boolean {

@@ -5,10 +5,10 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.strings.ensureSuffix
 import com.autonomousapps.model.*
-import com.autonomousapps.model.internal.BinaryClassCapability
 import com.autonomousapps.model.internal.Dependency
 import com.autonomousapps.model.internal.InlineMemberCapability
 import com.autonomousapps.model.internal.ProjectVariant
+import com.autonomousapps.model.internal.ClassCapability
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
@@ -117,7 +117,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
       val map = mutableMapOf<String, Coordinates>()
       explodedJars.forEach { jar ->
         val coordinates = jar.coordinates.normalized(buildPath)
-        jar.binaryClasses.forEach { binaryClass ->
+        jar.simplifiedBinaryClasses.forEach { binaryClass ->
           map[binaryClass.className] = coordinates
         }
       }
@@ -228,7 +228,7 @@ private class TypeUsageAnalyzer(
   private fun getCacheEntry(dependency: Dependency): Set<Imports> {
     // We use the String coordinates as the map key because `dependency.hashCode()` is EXTREMELY expensive.
     return importsCache.getOrPut(dependency.coordinates.gav()) {
-      val binaryEntries = dependency.findCapability<BinaryClassCapability>()?.let(Imports::of).orEmpty()
+      val binaryEntries = dependency.findCapability<ClassCapability>()?.let(Imports::of).orEmpty()
       val inlineEntries = dependency.findCapability<InlineMemberCapability>()?.let(Imports::of).orEmpty()
 
       binaryEntries + inlineEntries
@@ -275,7 +275,7 @@ private class TypeUsageAnalyzer(
         )
       }
 
-      fun of(binary: BinaryClassCapability): Set<Imports> {
+      fun of(binary: ClassCapability): Set<Imports> {
         return binary.classes.mapToOrderedSet { className ->
           val candidateImports = if (className.contains('.')) {
             sortedSetOf(className, className.substringBeforeLast('.') + ".*")

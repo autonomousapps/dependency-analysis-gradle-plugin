@@ -6,9 +6,9 @@ import com.autonomousapps.internal.unsafeLazy
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.mapToOrderedSet
-import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import com.autonomousapps.model.internal.intermediates.producer.Constant
 import com.autonomousapps.model.internal.intermediates.producer.ReflectingDependency
+import com.autonomousapps.model.internal.intermediates.producer.SimplifiedBinaryClass
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
 
@@ -137,21 +137,21 @@ internal data class AnnotationProcessorCapability(
 
 @TypeLabel("binaryClass")
 @JsonClass(generateAdapter = false)
-internal data class BinaryClassCapability(
-  val binaryClasses: Set<BinaryClass>,
+internal data class ClassCapability(
+  val simplifiedBinaryClasses: Set<SimplifiedBinaryClass>,
 ) : Capability() {
 
   companion object {
-    fun newInstance(binaryClasses: Set<BinaryClass>): BinaryClassCapability {
-      return BinaryClassCapability(binaryClasses.toSortedSet().efficient())
+    fun newInstance(simplifiedBinaryClasses: Set<SimplifiedBinaryClass>): ClassCapability {
+      return ClassCapability(simplifiedBinaryClasses.toSortedSet().efficient())
     }
   }
 
-  val classes by unsafeLazy { binaryClasses.mapToOrderedSet { it.className } }
+  val classes by unsafeLazy { simplifiedBinaryClasses.mapToOrderedSet { it.className } }
 
   override fun merge(other: Capability): Capability {
     return newInstance(
-      binaryClasses = (binaryClasses + (other as BinaryClassCapability).binaryClasses).efficient(),
+      simplifiedBinaryClasses = (simplifiedBinaryClasses + (other as ClassCapability).simplifiedBinaryClasses).efficient(),
     )
   }
 }
