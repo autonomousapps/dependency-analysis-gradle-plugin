@@ -64,39 +64,40 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
   // 1. META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory
   // 2. META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler
   private fun findServiceLoaders(artifact: ResolvedArtifactResult): Set<ServiceLoaderDependency> {
-    val zip = ZipFile(artifact.file)
+    return ZipFile(artifact.file).use { zip ->
 
-    return zip.entries().asSequence()
-      .filter { it.name.startsWith(SERVICE_LOADER_PATH) }
-      .filterNot { it.name.startsWith(ANNOTATION_PROCESSOR_PATH) }
-      .filterNot { it.isDirectory }
-      .mapNotNull { serviceFile ->
-        val providerClasses = zip.getInputStream(serviceFile)
-          .bufferedReader().use(BufferedReader::readLines).asSequence()
-          // remove whitespace
-          .map(String::trim)
-          // remove blank lines
-          .filterNot(String::isBlank)
-          // ignore comments
-          .filter { !it.startsWith("#") }
-          .toSortedSet()
+      zip.entries().asSequence()
+        .filter { it.name.startsWith(SERVICE_LOADER_PATH) }
+        .filterNot { it.name.startsWith(ANNOTATION_PROCESSOR_PATH) }
+        .filterNot { it.isDirectory }
+        .mapNotNull { serviceFile ->
+          val providerClasses = zip.getInputStream(serviceFile)
+            .bufferedReader().use(BufferedReader::readLines).asSequence()
+            // remove whitespace
+            .map(String::trim)
+            // remove blank lines
+            .filterNot(String::isBlank)
+            // ignore comments
+            .filter { !it.startsWith("#") }
+            .toSortedSet()
 
-        // Unclear why this would ever be empty.
-        // See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/780
-        if (providerClasses.isNotEmpty()) {
-          ServiceLoaderDependency.newInstance(
-            providerFile = serviceFile.name.removePrefix(SERVICE_LOADER_PATH),
-            providerClasses = providerClasses,
-            artifact = artifact
-          )
-        } else {
-          val contents = zip.getInputStream(serviceFile).bufferedReader().use(BufferedReader::readText)
-          logger.debug(
-            "${artifact.file.name} has a services file at path ${serviceFile.name}, but there are no services! " +
-              "File contents:\n<<$contents>>"
-          )
-          null
-        }
-      }.toSortedSet()
+          // Unclear why this would ever be empty.
+          // See https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/780
+          if (providerClasses.isNotEmpty()) {
+            ServiceLoaderDependency.newInstance(
+              providerFile = serviceFile.name.removePrefix(SERVICE_LOADER_PATH),
+              providerClasses = providerClasses,
+              artifact = artifact
+            )
+          } else {
+            val contents = zip.getInputStream(serviceFile).bufferedReader().use(BufferedReader::readText)
+            logger.debug(
+              "${artifact.file.name} has a services file at path ${serviceFile.name}, but there are no services! " +
+                "File contents:\n<<$contents>>"
+            )
+            null
+          }
+        }.toSortedSet()
+    }
   }
 }

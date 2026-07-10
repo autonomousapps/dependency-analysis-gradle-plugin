@@ -136,14 +136,15 @@ public abstract class FindDeclaredProcsTask : DefaultTask() {
   }
 
   private fun findProcs(file: File): List<String>? {
-    val zip = ZipFile(file)
-    return zip.getEntry(ANNOTATION_PROCESSOR_PATH)?.let { entry ->
-      zip.getInputStream(entry).bufferedReader().use(BufferedReader::readLines)
-        // Filter out comments. For example, log4j-core has a license header in this file.
-        .filterNot { line -> line.trim().startsWith("#") }
-        .map(String::trim)
-        // Filter out blank lines
-        .filter(String::isNotBlank)
+    return ZipFile(file).use { zip ->
+      zip.getEntry(ANNOTATION_PROCESSOR_PATH)?.let { entry ->
+        zip.getInputStream(entry).bufferedReader().use(BufferedReader::readLines)
+          // Filter out comments. For example, log4j-core has a license header in this file.
+          .filterNot { line -> line.trim().startsWith("#") }
+          .map(String::trim)
+          // Filter out blank lines
+          .filter(String::isNotBlank)
+      }
     }
   }
 

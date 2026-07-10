@@ -105,14 +105,15 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
     }
 
     private fun inspectJar(artifact: ResolvedArtifactResult) {
-      val zip = ZipFile(artifact.file)
+      ZipFile(artifact.file).use { zip ->
 
-      val coordinates = artifact.toCoordinates()
+        val coordinates = artifact.toCoordinates()
 
-      // Create multimap of class name to [dependencies]
-      zip.asSequenceOfClassFiles()
-        .map(ZipEntry::getName)
-        .forEach { duplicatesMap.put(it, coordinates) }
+        // Create multimap of class name to [dependencies]
+        zip.asSequenceOfClassFiles()
+          .map(ZipEntry::getName)
+          .forEach { duplicatesMap.put(it, coordinates) }
+      }
     }
   }
 }
