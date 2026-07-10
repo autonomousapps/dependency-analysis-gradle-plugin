@@ -66,7 +66,7 @@ public abstract class FindAndroidLinters : DefaultTask() {
   }
 
   private fun findLintRegistry(jar: File): String {
-    return ZipFile(jar).use { zip ->
+    ZipFile(jar).use { zip ->
 
       val manifestEntry: String? = zip.getEntry(MANIFEST_PATH)?.run {
         zip.getInputStream(this).bufferedReader().use(BufferedReader::readLines)
@@ -74,14 +74,14 @@ public abstract class FindAndroidLinters : DefaultTask() {
           ?.substringAfter(":")
           ?.trim()
       }
-      if (manifestEntry != null) return@use manifestEntry
+      if (manifestEntry != null) return manifestEntry
 
       val serviceEntry: String? = zip.getEntry(LINT_ISSUE_REGISTRY_PATH)?.run {
         zip.getInputStream(this).bufferedReader().use(BufferedReader::readLines)
           .first()
           .trim()
       }
-      if (serviceEntry != null) return@use serviceEntry
+      if (serviceEntry != null) return serviceEntry
 
       // One of the above should be non-null
       throw GradleException("No linter issue registry for ${jar.path}")
