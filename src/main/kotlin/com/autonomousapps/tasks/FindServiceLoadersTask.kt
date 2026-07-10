@@ -64,9 +64,9 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
   // 1. META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory
   // 2. META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler
   private fun findServiceLoaders(artifact: ResolvedArtifactResult): Set<ServiceLoaderDependency> {
-    return ZipFile(artifact.file).use { zip ->
+    ZipFile(artifact.file).use { zip ->
 
-      return@use zip.entries().asSequence()
+      return zip.entries().asSequence()
         .filter { it.name.startsWith(SERVICE_LOADER_PATH) }
         .filterNot { it.name.startsWith(ANNOTATION_PROCESSOR_PATH) }
         .filterNot { it.isDirectory }
