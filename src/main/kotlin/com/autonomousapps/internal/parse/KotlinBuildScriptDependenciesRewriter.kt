@@ -25,9 +25,11 @@ import java.nio.file.Path
 /**
  * Rewrites a Kotlin build script based on provided advice, which includes:
  *
- * - When entering the `dependencies` block, processing each dependency declaration to either remove or update it according to the advice provided.
+ * - When entering the `dependencies` block, processing each dependency declaration to either remove or update it
+ *   according to the advice provided.
  * - Upon exiting the `dependencies` block, adding any new dependencies.
- * - At the end of the script, adding a `dependencies` block if new dependencies are present and the block is currently missing.
+ * - At the end of the script, adding a `dependencies` block if new dependencies are present and the block is currently
+ *   missing.
  *
  * Note: Buildscript dependencies are ignored.
  */
