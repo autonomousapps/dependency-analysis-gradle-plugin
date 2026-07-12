@@ -164,6 +164,10 @@ final class JvmTargetProject extends AbstractProject {
     ]
   }
 
+  /*
+   * buildHealth
+   */
+
   Set<ProjectAdvice> actualBuildHealth() {
     return actualProjectAdvice(gradleProject)
   }
@@ -178,4 +182,40 @@ final class JvmTargetProject extends AbstractProject {
   final Set<ProjectAdvice> expectedBuildHealth = [
     projectAdviceForDependencies(':consumer', consumerAdvice)
   ]
+
+  /*
+   * fixDependencies
+   */
+
+  final String actualBuildscriptContent() {
+    return gradleProject.projectDir('consumer').resolve('build.gradle.kts').text.trim()
+  }
+
+  final String expectedBuildScriptContent() {
+    return '''\
+      plugins {
+        id("org.jetbrains.kotlin.multiplatform")
+        id("com.autonomousapps.dependency-analysis")
+      }
+      
+      kotlin {
+        jvm()
+        sourceSets {
+          commonMain.dependencies {
+            api(project.dependencies.platform("com.squareup.okio:okio-bom:3.16.4"))
+            api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+            api("com.squareup.okio:okio:3.16.4")
+          }
+          commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+          }
+          jvmTest.dependencies {
+            implementation(kotlin("test-junit"))
+            implementation("org.assertj:assertj-core:3.27.7")
+            implementation("commons-io:commons-io:2.21.0")
+          }
+        }
+      }'''.stripIndent()
+  }
 }
