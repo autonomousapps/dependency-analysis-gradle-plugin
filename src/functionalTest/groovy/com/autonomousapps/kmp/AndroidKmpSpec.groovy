@@ -9,7 +9,7 @@ import static com.google.common.truth.Truth.assertThat
 
 final class AndroidKmpSpec extends AbstractKmpSpec {
 
-  def "can analyze a kmp project with android targets (#gradleVersion AGP #agpVersion)"() {
+  def "androidMain is special (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new AndroidMainProject(agpVersion)
     gradleProject = project.gradleProject
