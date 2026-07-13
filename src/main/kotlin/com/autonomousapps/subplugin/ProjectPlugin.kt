@@ -1208,6 +1208,7 @@ internal class ProjectPlugin(private val project: Project) {
       t.buildScript.set(buildFile)
       t.projectAdvice.set(filterAdviceTask.flatMap { it.output })
       t.projectMetadata.set(writeProjectMetadata.flatMap { it.output })
+      t.sourceSetNames.set(supportedSourceSetNames)
       t.dependencyMap.set(dagpExtension.dependenciesHandler.map)
       t.useTypesafeProjectAccessors.set(dagpExtension.useTypesafeProjectAccessors)
       t.useParenthesesForGroovy.set(dagpExtension.dependenciesHandler.useParenthesesForGroovy)
