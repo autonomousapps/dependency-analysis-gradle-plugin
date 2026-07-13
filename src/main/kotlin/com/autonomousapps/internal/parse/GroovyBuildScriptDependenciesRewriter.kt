@@ -16,10 +16,15 @@ import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.filterToSet
 import com.autonomousapps.internal.utils.ifNotEmpty
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.internal.ProjectType
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
+/**
+ * Note that this class, and Groovy DSL support in general, is in maintenance mode and unlikely to get new features. In
+ * particular, there are no plans to add support for `fixDependencies` (RewriteTask) for KMP projects.
+ */
 internal class GroovyBuildScriptDependenciesRewriter private constructor(
   private val tokens: CommonTokenStream,
   private val rewriter: TrackingRewriter,
@@ -28,6 +33,10 @@ internal class GroovyBuildScriptDependenciesRewriter private constructor(
   private val advice: Set<Advice>,
   /** Reverse map from custom representation to standard. */
   private val reversedDependencyMap: (String) -> String,
+
+  // TODO(tsr): these two properties are currently unused. They would support fixDependencies for KMP projects.
+  private val projectType: ProjectType,
+  private val sourceSetNames: Set<String>,
 ) : BuildScriptDependenciesRewriter, GradleScriptBaseListener() {
 
   private class RewriterErrorListener : AbstractErrorListener() {
@@ -194,6 +203,8 @@ internal class GroovyBuildScriptDependenciesRewriter private constructor(
 
   internal companion object {
     fun of(
+      projectType: ProjectType,
+      sourceSetNames: Set<String>,
       file: Path,
       advice: Set<Advice>,
       advicePrinter: AdvicePrinter,
@@ -215,6 +226,8 @@ internal class GroovyBuildScriptDependenciesRewriter private constructor(
         printer = advicePrinter,
         advice = advice,
         reversedDependencyMap = reversedDependencyMap,
+        projectType = projectType,
+        sourceSetNames = sourceSetNames,
       )
       val tree = parser.script()
       walker.walk(listener, tree)

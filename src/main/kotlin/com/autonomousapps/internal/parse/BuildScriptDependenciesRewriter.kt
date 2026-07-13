@@ -5,6 +5,7 @@ package com.autonomousapps.internal.parse
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.model.Advice
+import com.autonomousapps.model.internal.ProjectType
 import java.io.File
 
 internal interface BuildScriptDependenciesRewriter {
@@ -13,6 +14,8 @@ internal interface BuildScriptDependenciesRewriter {
 
   companion object {
     fun of(
+      projectType: ProjectType,
+      sourceSetNames: Set<String>,
       file: File,
       advice: Set<Advice>,
       advicePrinter: AdvicePrinter,
@@ -22,8 +25,8 @@ internal interface BuildScriptDependenciesRewriter {
       val filePath = file.toPath()
 
       return when (dslKind) {
-        DslKind.KOTLIN -> KotlinBuildScriptDependenciesRewriter.of(filePath, advice, advicePrinter, reversedDependencyMap)
-        DslKind.GROOVY -> GroovyBuildScriptDependenciesRewriter.of(filePath, advice, advicePrinter, reversedDependencyMap)
+        DslKind.KOTLIN -> KotlinBuildScriptDependenciesRewriter.of(projectType, sourceSetNames, filePath, advice, advicePrinter, reversedDependencyMap)
+        DslKind.GROOVY -> GroovyBuildScriptDependenciesRewriter.of(projectType, sourceSetNames, filePath, advice, advicePrinter, reversedDependencyMap)
       }
     }
   }

@@ -19,6 +19,7 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
   lateinit var dir: Path
 
   private val projectType = ProjectType.JVM
+  private val sourceSetNames = setOf("main", "test")
 
   private fun Path.writeText(text: String): Path = Files.writeString(this, text)
 
@@ -66,6 +67,8 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
 
     // When
     val parser = GroovyBuildScriptDependenciesRewriter.of(
+      projectType,
+      sourceSetNames,
       sourceFile,
       advice,
       AdvicePrinter(
@@ -150,6 +153,8 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
 
     // When
     val parser = GroovyBuildScriptDependenciesRewriter.of(
+      projectType,
+      sourceSetNames,
       sourceFile,
       advice,
       AdvicePrinter(
@@ -263,6 +268,8 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
 
     // When
     val parser = GroovyBuildScriptDependenciesRewriter.of(
+      projectType,
+      sourceSetNames,
       sourceFile,
       advice,
       AdvicePrinter(
@@ -333,6 +340,8 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
 
     // When
     val parser = GroovyBuildScriptDependenciesRewriter.of(
+      projectType,
+      sourceSetNames,
       sourceFile,
       emptySet(),
       AdvicePrinter(
@@ -386,6 +395,8 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
 
     // When
     val parser = GroovyBuildScriptDependenciesRewriter.of(
+      projectType,
+      sourceSetNames,
       sourceFile,
       advice,
       AdvicePrinter(
@@ -468,6 +479,8 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
 
     // When
     val parser = GroovyBuildScriptDependenciesRewriter.of(
+      projectType,
+      sourceSetNames,
       sourceFile,
       advice,
       AdvicePrinter(
@@ -536,6 +549,8 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
 
     // When
     val parser = GroovyBuildScriptDependenciesRewriter.of(
+      projectType,
+      sourceSetNames,
       sourceFile,
       advice,
       AdvicePrinter(
@@ -592,6 +607,8 @@ internal class GroovyBuildScriptDependenciesRewriterTest {
 
     // When
     val parser = GroovyBuildScriptDependenciesRewriter.of(
+      projectType,
+      sourceSetNames,
       sourceFile,
       advice,
       AdvicePrinter(

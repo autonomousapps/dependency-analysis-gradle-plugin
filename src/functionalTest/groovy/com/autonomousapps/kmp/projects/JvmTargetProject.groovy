@@ -19,6 +19,7 @@ final class JvmTargetProject extends AbstractProject {
 
   static final String CAFFEINE = 'com.github.ben-manes.caffeine:caffeine:3.2.3'
   static final String OKIO = 'com.squareup.okio:okio:3.16.4'
+  static final String OK_HTTP = 'com.squareup.okhttp3:okhttp:4.6.0'
 
   final GradleProject gradleProject
 
@@ -45,6 +46,7 @@ final class JvmTargetProject extends AbstractProject {
                 commonMain.dependencies(
                   api('com.squareup.okio:okio-bom:3.16.4').onKmpPlatform(),
                   api('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'),
+                  implementation(':producer'),
                   implementation(OKIO),
                 )
               }
@@ -70,6 +72,23 @@ final class JvmTargetProject extends AbstractProject {
           }
         }
       }
+      .withSubproject('producer') { s ->
+        s.sources = producerSources()
+        s.withBuildScript { bs ->
+          bs.plugins = kmpLibrary
+          bs.kotlinKmp { k ->
+            k.jvmTarget = KotlinJvmTarget.default()
+            k.sourceSets { sourceSets ->
+              sourceSets.commonMain { commonMain ->
+                commonMain.dependencies(
+                  api(OK_HTTP),
+                )
+              }
+            }
+          }
+        }
+      }
+
       .write()
   }
 
@@ -80,10 +99,16 @@ final class JvmTargetProject extends AbstractProject {
           '''
             package common.main
             
+            import common.main.producer.CommonMainProducer
             import okio.Buffer
             
             abstract class CommonMain {
-              abstract fun usesOkio(): Buffer  
+              abstract fun usesOkio(): Buffer
+              
+              fun usesProducer() {
+                // directly uses OkHttp
+                val client = CommonMainProducer().providesOkHttpClient()
+              }
             }
           '''
         )
@@ -164,6 +189,25 @@ final class JvmTargetProject extends AbstractProject {
     ]
   }
 
+  private static List<Source> producerSources() {
+    return [
+      Source
+        .kotlin(
+          '''
+            package common.main.producer
+            
+            import okhttp3.OkHttpClient
+            
+            class CommonMainProducer {
+              fun providesOkHttpClient(): OkHttpClient = OkHttpClient.Builder().build()
+            }
+          '''
+        )
+        .withSourceSet('commonMain')
+        .build(),
+    ]
+  }
+
   /*
    * buildHealth
    */
@@ -177,10 +221,13 @@ final class JvmTargetProject extends AbstractProject {
     Advice.ofRemove(moduleCoordinates(CAFFEINE), 'jvmMainApi'),
     // commonMainApi("com.squareup.okio:okio:3.16.4") (was commonMainImplementation)
     Advice.ofChange(moduleCoordinates(OKIO), 'commonMainImplementation', 'commonMainApi'),
+    // jvmMainImplementation("com.squareup.okhttp3:okhttp:4.6.0")
+    Advice.ofAdd(moduleCoordinates(OK_HTTP), 'jvmMainImplementation'),
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [
-    projectAdviceForDependencies(':consumer', consumerAdvice)
+    projectAdviceForDependencies(':consumer', consumerAdvice),
+    emptyProjectAdviceFor(':producer')
   ]
 
   /*
@@ -204,11 +251,15 @@ final class JvmTargetProject extends AbstractProject {
           commonMain.dependencies {
             api(project.dependencies.platform("com.squareup.okio:okio-bom:3.16.4"))
             api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+            implementation(project(":producer"))
             api("com.squareup.okio:okio:3.16.4")
           }
           commonTest.dependencies {
             implementation(kotlin("test"))
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+          }
+          jvmMain.dependencies {
+            implementation("com.squareup.okhttp3:okhttp:4.6.0")
           }
           jvmTest.dependencies {
             implementation(kotlin("test-junit"))

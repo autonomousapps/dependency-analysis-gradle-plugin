@@ -1,6 +1,6 @@
 // Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-package com.autonomousapps.internal.parse
+package com.autonomousapps.internal.parse.advice
 
 import com.autonomousapps.internal.cash.grammar.kotlindsl.model.DependencyDeclaration
 import com.autonomousapps.model.Advice
@@ -8,27 +8,13 @@ import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.ProjectCoordinates
 
-// TODO(tsr): write unit tests
-internal class AdviceFinder(
-  private val advice: Set<Advice>,
-  private val reversedDependencyMap: (String) -> String,
-) {
+internal abstract class AbstractAdviceFinder(
+  protected val advice: Set<Advice>,
+  protected val reversedDependencyMap: (String) -> String,
+) : AdviceFinder {
 
-  fun findAdvice(dependencyDeclaration: DependencyDeclaration): Advice? {
-    val originalIdentifier = dependencyDeclaration.identifier.path.removeSurrounding("\"")
-    val rawIdentifier = reversedDependencyMap(originalIdentifier)
-    val normalizedIdentifier = normalizeTypeSafeProjectAccessor(originalIdentifier)
-
-    return advice.find {
-      // First match on GAV/identifier (check both original and normalized)
-      (it.matchesIdentifier(rawIdentifier) || it.matchesIdentifier(normalizedIdentifier))
-        // Then match on configuration
-        && it.matchesConfiguration(dependencyDeclaration)
-        // Then match on type (project, module, etc) with type-safe accessor support
-        && it.matchesType(dependencyDeclaration, originalIdentifier)
-        // Then match on capabilities
-        && it.matchesCapabilities(dependencyDeclaration)
-    }
+  protected fun Advice.matchesIdentifier(identifier: String): Boolean {
+    return coordinates.gav() == identifier || coordinates.identifier == identifier
   }
 
   /**
@@ -36,7 +22,7 @@ internal class AdviceFinder(
    * E.g., "projects.myModule" -> ":my-module"
    * But "projects.common.viewmodels" -> ":common:viewmodels" (dots become colons)
    */
-  private fun normalizeTypeSafeProjectAccessor(identifier: String): String {
+  protected fun normalizeTypeSafeProjectAccessor(identifier: String): String {
     if (!identifier.startsWith("projects.")) {
       return identifier
     }
@@ -44,10 +30,10 @@ internal class AdviceFinder(
     // Convert "projects.myModule" -> ":my-module"
     // Handle camelCase to kebab-case conversion, but also handle dots as path separators
     val projectPath = identifier.removePrefix("projects.")
-    
+
     // Replace dots with colons first (for submodules like "common.viewmodels" -> "common:viewmodels")
     val withColons = projectPath.replace(".", ":")
-    
+
     // Then handle camelCase to kebab-case conversion for each segment
     val segments = withColons.split(":")
     val normalizedSegments = segments.map { segment ->
@@ -59,15 +45,7 @@ internal class AdviceFinder(
     return ":${normalizedSegments.joinToString(":")}"
   }
 
-  private fun Advice.matchesIdentifier(identifier: String): Boolean {
-    return coordinates.gav() == identifier || coordinates.identifier == identifier
-  }
-
-  private fun Advice.matchesConfiguration(dependencyDeclaration: DependencyDeclaration): Boolean {
-    return fromConfiguration == dependencyDeclaration.configuration
-  }
-
-  private fun Advice.matchesType(dependencyDeclaration: DependencyDeclaration, rawIdentifier: String): Boolean {
+  protected fun Advice.matchesType(dependencyDeclaration: DependencyDeclaration, rawIdentifier: String): Boolean {
     // Special handling for type-safe project accessors that might be misclassified by the parser
     // Type-safe project accessors like "projects.myModule" might be parsed as MODULE type
     // instead of PROJECT type by the ANTLR parser.
@@ -88,7 +66,7 @@ internal class AdviceFinder(
     }
   }
 
-  private fun Advice.matchesCapabilities(dependencyDeclaration: DependencyDeclaration): Boolean {
+  protected fun Advice.matchesCapabilities(dependencyDeclaration: DependencyDeclaration): Boolean {
     return when (dependencyDeclaration.capability) {
       DependencyDeclaration.Capability.DEFAULT -> coordinates.gradleVariantIdentification.capabilities.isEmpty()
 

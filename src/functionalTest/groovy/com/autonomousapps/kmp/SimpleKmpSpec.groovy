@@ -31,6 +31,11 @@ final class SimpleKmpSpec extends AbstractKmpSpec {
             api("${JvmTargetProject.CAFFEINE}")
           }
         
+        These transitive dependencies should be declared directly:
+          jvmMain.dependencies {
+            implementation("${JvmTargetProject.OK_HTTP}")
+          }
+      
         Existing dependencies which should be modified to be as indicated:
           commonMain.dependencies {
             api("${JvmTargetProject.OKIO}") (was commonMainImplementation)

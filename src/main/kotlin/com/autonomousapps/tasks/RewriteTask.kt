@@ -18,6 +18,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.options.Option
 
@@ -41,6 +42,9 @@ public abstract class RewriteTask : DefaultTask() {
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   public abstract val projectMetadata: RegularFileProperty
+
+  @get:Input
+  public abstract val sourceSetNames: SetProperty<String>
 
   @get:Input
   public abstract val dependencyMap: MapProperty<String, String>
@@ -70,6 +74,8 @@ public abstract class RewriteTask : DefaultTask() {
     val map = dependencyMap.get()
 
     val rewriter = BuildScriptDependenciesRewriter.of(
+      projectType = projectMetadata.projectType,
+      sourceSetNames = sourceSetNames.get(),
       file = buildScript,
       advice = projectAdvice.dependencyAdvice.filtered(isUpgrade),
       advicePrinter = AdvicePrinter(
@@ -79,7 +85,7 @@ public abstract class RewriteTask : DefaultTask() {
         useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
         useParenthesesForGroovy = useParenthesesForGroovy.get(),
       ),
-      reversedDependencyMap = createReversedDependencyMap(map, useTypesafeProjectAccessors.get())
+      reversedDependencyMap = createReversedDependencyMap(map, useTypesafeProjectAccessors.get()),
     )
 
     if (rewriter.hasChanges()) {

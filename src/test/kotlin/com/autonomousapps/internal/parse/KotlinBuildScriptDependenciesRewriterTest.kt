@@ -4,7 +4,6 @@ package com.autonomousapps.internal.parse
 
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.advice.DslKind
-import com.autonomousapps.internal.squareup.cash.grammar.KotlinParser
 import com.autonomousapps.internal.utils.intoSet
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
@@ -23,13 +22,19 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
   @TempDir
   lateinit var dir: Path
 
-  private val projectType = ProjectType.JVM
+  private fun Path.writeText(text: String): Path = Files.writeString(this, text)
+  private fun String.trimmedLines() = lines().map { it.trimEnd() }
 
-  @Test fun `can update dependencies`() {
-    // Given
-    val sourceFile = dir.resolve("build.gradle.kts")
-    sourceFile.writeText(
-      """
+  @Nested
+  inner class JVM {
+    private val projectType = ProjectType.JVM
+    private val sourceSetNames = setOf("main", "test")
+
+    @Test fun `can update dependencies`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
         import foo
         import bar
 
@@ -60,27 +65,29 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
 
         println("hello, world!")
       """.trimIndent()
-    )
-    val advice = setOf(
-      Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
-      Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
-      Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
-    )
-
-    // When
-    val parser = KotlinBuildScriptDependenciesRewriter.of(
-      sourceFile,
-      advice,
-      AdvicePrinter(
-        dslKind = DslKind.KOTLIN,
-        projectType = projectType,
-        useTypesafeProjectAccessors = false,
       )
-    )
+      val advice = setOf(
+        Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
+        Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
+        Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
+      )
 
-    // Then
-    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
-      """
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        projectType,
+        sourceSetNames,
+        sourceFile,
+        advice,
+        AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        )
+      )
+
+      // Then
+      assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+        """
         import foo
         import bar
 
@@ -109,14 +116,14 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
 
         println("hello, world!")
       """.trimIndent().trimmedLines()
-    )
-  }
+      )
+    }
 
-  @Test fun `can update dependencies with typesafe project accessors`() {
-    // Given
-    val sourceFile = dir.resolve("build.gradle.kts")
-    sourceFile.writeText(
-      """
+    @Test fun `can update dependencies with typesafe project accessors`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
         import foo
         import bar
 
@@ -147,28 +154,30 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
 
         println("hello, world!")
       """.trimIndent()
-    )
-    val advice = setOf(
-      Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
-      Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
-      Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
-      Advice.ofAdd(Coordinates.of(":interface"), "api"),
-    )
-
-    // When
-    val parser = KotlinBuildScriptDependenciesRewriter.of(
-      sourceFile,
-      advice,
-      AdvicePrinter(
-        dslKind = DslKind.KOTLIN,
-        projectType = projectType,
-        useTypesafeProjectAccessors = true,
       )
-    )
+      val advice = setOf(
+        Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
+        Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
+        Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
+        Advice.ofAdd(Coordinates.of(":interface"), "api"),
+      )
 
-    // Then
-    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
-      """
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        projectType,
+        sourceSetNames,
+        sourceFile,
+        advice,
+        AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = true,
+        )
+      )
+
+      // Then
+      assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+        """
         import foo
         import bar
 
@@ -198,14 +207,14 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
 
         println("hello, world!")
       """.trimIndent().trimmedLines()
-    )
-  }
+      )
+    }
 
-  @Test fun `can update dependencies with dependencyMap`() {
-    // Given
-    val sourceFile = dir.resolve("build.gradle.kts")
-    sourceFile.writeText(
-      """
+    @Test fun `can update dependencies with dependencyMap`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
         import foo
         import bar
 
@@ -237,46 +246,48 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
 
         println("hello, world!")
       """.trimIndent()
-    )
+      )
 
-    val advice = setOf(
-      Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
-      Advice.ofChange(Coordinates.of("ford:prefect:1.0"), "api", "implementation"),
-      Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
-      Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
-      Advice.ofAdd(Coordinates.of("magrathea:asleep:1000000"), "implementation"),
-    )
+      val advice = setOf(
+        Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
+        Advice.ofChange(Coordinates.of("ford:prefect:1.0"), "api", "implementation"),
+        Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
+        Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
+        Advice.ofAdd(Coordinates.of("magrathea:asleep:1000000"), "implementation"),
+      )
 
-    // When
-    val parser = KotlinBuildScriptDependenciesRewriter.of(
-      sourceFile,
-      advice,
-      AdvicePrinter(
-        dslKind = DslKind.KOTLIN,
-        dependencyMap = {
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        projectType,
+        sourceSetNames,
+        sourceFile,
+        advice,
+        AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          dependencyMap = {
+            when (it) {
+              ":sad-robot" -> "\":depressed-robot\""
+              "magrathea:asleep:1000000" -> "deps.magrathea"
+              "ford:prefect" -> "libs.fordPrefect"
+              else -> null
+            }
+          },
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        ),
+        reversedDependencyMap = {
           when (it) {
-            ":sad-robot" -> "\":depressed-robot\""
-            "magrathea:asleep:1000000" -> "deps.magrathea"
-            "ford:prefect" -> "libs.fordPrefect"
-            else -> null
+            "\":depressed-robot\"" -> ":sad-robot"
+            "deps.magrathea" -> "magrathea:asleep:1000000"
+            "libs.fordPrefect" -> "ford:prefect"
+            else -> it
           }
-        },
-        projectType = projectType,
-        useTypesafeProjectAccessors = false,
-      ),
-      reversedDependencyMap = {
-        when (it) {
-          "\":depressed-robot\"" -> ":sad-robot"
-          "deps.magrathea" -> "magrathea:asleep:1000000"
-          "libs.fordPrefect" -> "ford:prefect"
-          else -> it
         }
-      }
-    )
+      )
 
-    // Then
-    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
-      """
+      // Then
+      assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+        """
         import foo
         import bar
 
@@ -307,14 +318,14 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
 
         println("hello, world!")
       """.trimIndent().trimmedLines()
-    )
-  }
+      )
+    }
 
-  @Test fun `ignores buildscript dependencies`() {
-    // Given
-    val sourceFile = dir.resolve("build.gradle.kts")
-    sourceFile.writeText(
-      """
+    @Test fun `ignores buildscript dependencies`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
       import foo
       import bar
 
@@ -359,27 +370,29 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
 
       println("hello, world!")
     """.trimIndent()
-    )
-    val advice = setOf(
-      Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
-      Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
-      Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
-    )
+      )
+      val advice = setOf(
+        Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
+        Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
+        Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
+      )
 
-    // When
-    val parser = KotlinBuildScriptDependenciesRewriter.of(
-      sourceFile,
-      advice,
-      AdvicePrinter(
-        dslKind = DslKind.KOTLIN,
-        projectType = projectType,
-        useTypesafeProjectAccessors = false,
-      ),
-    )
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        projectType,
+        sourceSetNames,
+        sourceFile,
+        advice,
+        AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        ),
+      )
 
-    // Then
-    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
-      """
+      // Then
+      assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+        """
       import foo
       import bar
 
@@ -422,14 +435,14 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
 
       println("hello, world!")
       """.trimIndent().trimmedLines()
-    )
-  }
+      )
+    }
 
-  @Test fun `can add dependencies to build script that didn't have a dependencies block`() {
-    // Given
-    val sourceFile = dir.resolve("build.gradle.kts")
-    sourceFile.writeText(
-      """
+    @Test fun `can add dependencies to build script that didn't have a dependencies block`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
         plugins {
           id("foo")
         }
@@ -447,28 +460,30 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
           whatever
         }
       """.trimIndent()
-    )
+      )
 
-    val advice = setOf(
-      Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
-      Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
-      Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
-    )
+      val advice = setOf(
+        Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
+        Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
+        Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
+      )
 
-    // When
-    val parser = KotlinBuildScriptDependenciesRewriter.of(
-      sourceFile,
-      advice,
-      AdvicePrinter(
-        dslKind = DslKind.KOTLIN,
-        projectType = projectType,
-        useTypesafeProjectAccessors = false,
-      ),
-    )
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        projectType,
+        sourceSetNames,
+        sourceFile,
+        advice,
+        AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        ),
+      )
 
-    // Then
-    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
-      """
+      // Then
+      assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+        """
         plugins {
           id("foo")
         }
@@ -490,14 +505,14 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
           runtimeOnly(project(":sad-robot"))
         }
       """.trimIndent().trimmedLines()
-    )
-  }
+      )
+    }
 
-  @Test fun `only removes dependencies on expected configuration`() {
-    // Given
-    val sourceFile = dir.resolve("build.gradle.kts")
-    sourceFile.writeText(
-      """
+    @Test fun `only removes dependencies on expected configuration`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
         plugins {
           id("foo")
         }
@@ -525,28 +540,30 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
 
         println("hello, world!")
       """.trimIndent()
-    )
+      )
 
-    val advice = setOf(
-      Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
-      Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "implementation"),
-      Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
-    )
+      val advice = setOf(
+        Advice.ofChange(Coordinates.of(":marvin"), "api", "compileOnly"),
+        Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "implementation"),
+        Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
+      )
 
-    // When
-    val parser = KotlinBuildScriptDependenciesRewriter.of(
-      sourceFile,
-      advice,
-      AdvicePrinter(
-        dslKind = DslKind.KOTLIN,
-        projectType = projectType,
-        useTypesafeProjectAccessors = false,
-      ),
-    )
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        projectType,
+        sourceSetNames,
+        sourceFile,
+        advice,
+        AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        ),
+      )
 
-    // Then
-    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
-      """
+      // Then
+      assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+        """
         plugins {
           id("foo")
         }
@@ -575,15 +592,15 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
 
         println("hello, world!")
       """.trimIndent().trimmedLines()
-    )
-  }
+      )
+    }
 
-  @Test fun `can parse complex dependencies`() {
-    // Given
-    val sourceFile = dir.resolve("build.gradle.kts")
+    @Test fun `can parse complex dependencies`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
 
-    sourceFile.writeText(
-      """
+      sourceFile.writeText(
+        """
       dependencies {
         if (true) {
           testImplementation("heart:of-gold:1.+") // stay as is
@@ -593,208 +610,15 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
         devImplementation(group = "io.netty", name = "netty-transport-native-unix-common", classifier = "osx-aarch_64")
       }
       """.trimIndent()
-    )
-
-    val advice = setOf(Advice(Coordinates.of("heart:of-gold:1.+"), "testImplementation", "implementation"))
-    // When
-    val parser = KotlinBuildScriptDependenciesRewriter.of(
-      sourceFile,
-      advice,
-      AdvicePrinter(
-        dslKind = DslKind.KOTLIN,
-        projectType = projectType,
-        useTypesafeProjectAccessors = false,
-      ),
-    )
-
-    // Then
-    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
-      """
-      dependencies {
-        if (true) {
-          testImplementation("heart:of-gold:1.+") // stay as is
-        }
-
-        implementation("heart:of-gold:1.+")
-        devImplementation(group = "io.netty", name = "netty-transport-native-unix-common", classifier = "osx-aarch_64")
-      }
-      """.trimIndent().trimmedLines()
-    ).inOrder()
-  }
-
-  @Test fun `can parse type-safe project accessors`() {
-    // Given
-    val sourceFile = dir.resolve("build.gradle.kts")
-    sourceFile.writeText(
-      """
-        dependencies {
-          implementation(projects.myModule)
-          api(libs.someLibrary)
-        }
-      """.trimIndent()
-    )
-
-    // When
-    val parser = KotlinBuildScriptDependenciesRewriter.of(
-      sourceFile,
-      emptySet(),
-      AdvicePrinter(
-        dslKind = DslKind.KOTLIN,
-        projectType = projectType,
-        useTypesafeProjectAccessors = true,
       )
-    )
 
-    // Then
-    val result = parser.rewritten()
-    assertThat(result).contains("implementation(projects.myModule)")
-    assertThat(result).contains("api(libs.someLibrary)")
-  }
-
-  @Test fun `should handle type-safe project accessors with parentheses`() {
-    // Given
-    val sourceFile = dir.resolve("build.gradle.kts")
-    sourceFile.writeText(
-      """
-        dependencies {
-          implementation(projects.myModule)
-        }
-      """.trimIndent()
-    )
-    val advice = setOf(
-      Advice.ofChange(
-        coordinates = Coordinates.of(":my-module"),
-        fromConfiguration = "implementation",
-        toConfiguration = "api"
-      )
-    )
-
-    // When
-    val parser = KotlinBuildScriptDependenciesRewriter.of(
-      sourceFile,
-      advice,
-      AdvicePrinter(
-        dslKind = DslKind.KOTLIN,
-        projectType = projectType,
-        useTypesafeProjectAccessors = true,
-      )
-    )
-
-    // Then - should successfully parse and modify
-    assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
-      """
-        dependencies {
-          api(projects.myModule)
-        }
-      """.trimIndent().trimmedLines()
-    ).inOrder()
-  }
-
-  @Nested
-  inner class Ktfmt {
-    @Test fun `can add a single dependency`() {
-      // Given
-      val sourceFile = dir.resolve("build.gradle.kts")
-      sourceFile.writeText(
-        """
-        plugins {
-          id("foo")
-        }
-
-        dependencies { implementation(libs.foo.bar) }
-      """.trimIndent()
-      )
-      val advice = setOf(Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"))
-
+      val advice = setOf(Advice(Coordinates.of("heart:of-gold:1.+"), "testImplementation", "implementation"))
       // When
       val parser = KotlinBuildScriptDependenciesRewriter.of(
+        projectType,
+        sourceSetNames,
         sourceFile,
         advice,
-        AdvicePrinter(
-          dslKind = DslKind.KOTLIN,
-          projectType = projectType,
-          useTypesafeProjectAccessors = false,
-        )
-      )
-
-      // Then
-      // nb: there's an extra whitespace at the end of the `dependencies` line and this is necessary for the test to pass
-      assertThat(parser.rewritten()).isEqualTo(
-        """
-        plugins {
-          id("foo")
-        }
-
-        dependencies { implementation(libs.foo.bar) 
-          runtimeOnly(project(":sad-robot"))
-        }
-      """.trimIndent()
-      )
-    }
-
-    @Test fun `can add two dependencies`() {
-      // Given
-      val sourceFile = dir.resolve("build.gradle.kts")
-      sourceFile.writeText(
-        """
-        plugins {
-          id("foo")
-        }
-
-        dependencies { implementation(libs.foo.bar) }
-      """.trimIndent()
-      )
-      val advice = setOf(
-        Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
-        Advice.ofAdd(Coordinates.of(":marvin"), "runtimeOnly"),
-      )
-
-      // When
-      val parser = KotlinBuildScriptDependenciesRewriter.of(
-        sourceFile,
-        advice,
-        AdvicePrinter(
-          dslKind = DslKind.KOTLIN,
-          projectType = projectType,
-          useTypesafeProjectAccessors = false,
-        )
-      )
-
-      // Then
-      // nb: there's an extra whitespace at the end of the `dependencies` line and this is necessary for the test to pass
-      assertThat(parser.rewritten()).isEqualTo(
-        """
-        plugins {
-          id("foo")
-        }
-
-        dependencies { implementation(libs.foo.bar) 
-          runtimeOnly(project(":marvin"))
-          runtimeOnly(project(":sad-robot"))
-        }
-      """.trimIndent()
-      )
-    }
-  }
-
-  @Nested
-  inner class TestFixtures {
-    @Test fun `test fixtures of different dependency`() {
-      // Given
-      val sourceFile = dir.resolve("build.gradle.kts")
-      sourceFile.writeText(
-        """
-        dependencies {
-          implementation("heart:of-gold:1.+")
-          implementation(testFixtures(project(":foo")))
-        }
-      """.trimIndent()
-      )
-
-      // When
-      val parser = KotlinBuildScriptDependenciesRewriter.of(
-        sourceFile,
-        emptySet(),
         AdvicePrinter(
           dslKind = DslKind.KOTLIN,
           projectType = projectType,
@@ -805,107 +629,455 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
       // Then
       assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
         """
-        dependencies {
-          implementation("heart:of-gold:1.+")
-          implementation(testFixtures(project(":foo")))
+      dependencies {
+        if (true) {
+          testImplementation("heart:of-gold:1.+") // stay as is
         }
+
+        implementation("heart:of-gold:1.+")
+        devImplementation(group = "io.netty", name = "netty-transport-native-unix-common", classifier = "osx-aarch_64")
+      }
       """.trimIndent().trimmedLines()
       ).inOrder()
     }
 
-    @Test fun `advice to change main visibility, with testFixtures dep on same project`() {
+    @Test fun `can parse type-safe project accessors`() {
       // Given
       val sourceFile = dir.resolve("build.gradle.kts")
       sourceFile.writeText(
         """
         dependencies {
-          implementation(project(":producer"))
-          implementation(testFixtures(project(":producer")))
+          implementation(projects.myModule)
+          api(libs.someLibrary)
         }
       """.trimIndent()
       )
-      val advice = Advice.ofChange(
-        coordinates = ProjectCoordinates(":producer", GradleVariantIdentification.EMPTY),
-        fromConfiguration = "implementation",
-        toConfiguration = "api",
-      ).intoSet()
 
       // When
       val parser = KotlinBuildScriptDependenciesRewriter.of(
-        file = sourceFile,
-        advice = advice,
-        advicePrinter = AdvicePrinter(
+        projectType,
+        sourceSetNames,
+        sourceFile,
+        emptySet(),
+        AdvicePrinter(
           dslKind = DslKind.KOTLIN,
           projectType = projectType,
-          useTypesafeProjectAccessors = false,
-        ),
+          useTypesafeProjectAccessors = true,
+        )
       )
 
       // Then
-      assertThat(parser.rewritten()).isEqualTo(
-        """
-        dependencies {
-          api(project(":producer"))
-          implementation(testFixtures(project(":producer")))
-        }
-      """.trimIndent()
-      )
+      val result = parser.rewritten()
+      assertThat(result).contains("implementation(projects.myModule)")
+      assertThat(result).contains("api(libs.someLibrary)")
     }
 
-    @Test fun `advice to change main and testFixtures visibility, with deps on same project`() {
+    @Test fun `should handle type-safe project accessors with parentheses`() {
       // Given
       val sourceFile = dir.resolve("build.gradle.kts")
       sourceFile.writeText(
         """
         dependencies {
-          implementation(project(":producer"))
-          api(testFixtures(project(":producer")))
+          implementation(projects.myModule)
         }
       """.trimIndent()
       )
       val advice = setOf(
-        // Advice for main variant
         Advice.ofChange(
-          coordinates = ProjectCoordinates(":producer", GradleVariantIdentification.EMPTY),
+          coordinates = Coordinates.of(":my-module"),
           fromConfiguration = "implementation",
-          toConfiguration = "api",
-        ),
-        // Advice for test-fixtures variant
-        Advice.ofChange(
-          coordinates = ProjectCoordinates(
-            ":producer", GradleVariantIdentification(
-              capabilities = setOf(":producer${GradleVariantIdentification.TEST_FIXTURES}"),
-              attributes = emptyMap(),
-            )
-          ),
-          fromConfiguration = "api",
-          toConfiguration = "implementation",
+          toConfiguration = "api"
         )
       )
 
       // When
       val parser = KotlinBuildScriptDependenciesRewriter.of(
-        file = sourceFile,
-        advice = advice,
-        advicePrinter = AdvicePrinter(
+        projectType,
+        sourceSetNames,
+        sourceFile,
+        advice,
+        AdvicePrinter(
           dslKind = DslKind.KOTLIN,
           projectType = projectType,
-          useTypesafeProjectAccessors = false,
-        ),
+          useTypesafeProjectAccessors = true,
+        )
       )
 
-      // Then
-      assertThat(parser.rewritten()).isEqualTo(
+      // Then - should successfully parse and modify
+      assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
         """
+        dependencies {
+          api(projects.myModule)
+        }
+      """.trimIndent().trimmedLines()
+      ).inOrder()
+    }
+
+    @Nested
+    inner class Ktfmt {
+      @Test fun `can add a single dependency`() {
+        // Given
+        val sourceFile = dir.resolve("build.gradle.kts")
+        sourceFile.writeText(
+          """
+        plugins {
+          id("foo")
+        }
+
+        dependencies { implementation(libs.foo.bar) }
+      """.trimIndent()
+        )
+        val advice = setOf(Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"))
+
+        // When
+        val parser = KotlinBuildScriptDependenciesRewriter.of(
+          projectType,
+          sourceSetNames,
+          sourceFile,
+          advice,
+          AdvicePrinter(
+            dslKind = DslKind.KOTLIN,
+            projectType = projectType,
+            useTypesafeProjectAccessors = false,
+          )
+        )
+
+        // Then
+        // nb: there's an extra whitespace at the end of the `dependencies` line and this is necessary for the test to pass
+        assertThat(parser.rewritten()).isEqualTo(
+          """
+        plugins {
+          id("foo")
+        }
+
+        dependencies { implementation(libs.foo.bar) 
+          runtimeOnly(project(":sad-robot"))
+        }
+      """.trimIndent()
+        )
+      }
+
+      @Test fun `can add two dependencies`() {
+        // Given
+        val sourceFile = dir.resolve("build.gradle.kts")
+        sourceFile.writeText(
+          """
+        plugins {
+          id("foo")
+        }
+
+        dependencies { implementation(libs.foo.bar) }
+      """.trimIndent()
+        )
+        val advice = setOf(
+          Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
+          Advice.ofAdd(Coordinates.of(":marvin"), "runtimeOnly"),
+        )
+
+        // When
+        val parser = KotlinBuildScriptDependenciesRewriter.of(
+          projectType,
+          sourceSetNames,
+          sourceFile,
+          advice,
+          AdvicePrinter(
+            dslKind = DslKind.KOTLIN,
+            projectType = projectType,
+            useTypesafeProjectAccessors = false,
+          )
+        )
+
+        // Then
+        // nb: there's an extra whitespace at the end of the `dependencies` line and this is necessary for the test to pass
+        assertThat(parser.rewritten()).isEqualTo(
+          """
+        plugins {
+          id("foo")
+        }
+
+        dependencies { implementation(libs.foo.bar) 
+          runtimeOnly(project(":marvin"))
+          runtimeOnly(project(":sad-robot"))
+        }
+      """.trimIndent()
+        )
+      }
+    }
+
+    @Nested
+    inner class TestFixtures {
+      @Test fun `test fixtures of different dependency`() {
+        // Given
+        val sourceFile = dir.resolve("build.gradle.kts")
+        sourceFile.writeText(
+          """
+        dependencies {
+          implementation("heart:of-gold:1.+")
+          implementation(testFixtures(project(":foo")))
+        }
+      """.trimIndent()
+        )
+
+        // When
+        val parser = KotlinBuildScriptDependenciesRewriter.of(
+          projectType = projectType,
+          sourceSetNames = sourceSetNames,
+          sourceFile,
+          emptySet(),
+          AdvicePrinter(
+            dslKind = DslKind.KOTLIN,
+            projectType = projectType,
+            useTypesafeProjectAccessors = false,
+          ),
+        )
+
+        // Then
+        assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+          """
+        dependencies {
+          implementation("heart:of-gold:1.+")
+          implementation(testFixtures(project(":foo")))
+        }
+      """.trimIndent().trimmedLines()
+        ).inOrder()
+      }
+
+      @Test fun `advice to change main visibility, with testFixtures dep on same project`() {
+        // Given
+        val sourceFile = dir.resolve("build.gradle.kts")
+        sourceFile.writeText(
+          """
+        dependencies {
+          implementation(project(":producer"))
+          implementation(testFixtures(project(":producer")))
+        }
+      """.trimIndent()
+        )
+        val advice = Advice.ofChange(
+          coordinates = ProjectCoordinates(":producer", GradleVariantIdentification.EMPTY),
+          fromConfiguration = "implementation",
+          toConfiguration = "api",
+        ).intoSet()
+
+        // When
+        val parser = KotlinBuildScriptDependenciesRewriter.of(
+          projectType = projectType,
+          sourceSetNames = sourceSetNames,
+          file = sourceFile,
+          advice = advice,
+          advicePrinter = AdvicePrinter(
+            dslKind = DslKind.KOTLIN,
+            projectType = projectType,
+            useTypesafeProjectAccessors = false,
+          ),
+        )
+
+        // Then
+        assertThat(parser.rewritten()).isEqualTo(
+          """
         dependencies {
           api(project(":producer"))
           implementation(testFixtures(project(":producer")))
         }
       """.trimIndent()
-      )
+        )
+      }
+
+      @Test fun `advice to change main and testFixtures visibility, with deps on same project`() {
+        // Given
+        val sourceFile = dir.resolve("build.gradle.kts")
+        sourceFile.writeText(
+          """
+        dependencies {
+          implementation(project(":producer"))
+          api(testFixtures(project(":producer")))
+        }
+      """.trimIndent()
+        )
+        val advice = setOf(
+          // Advice for main variant
+          Advice.ofChange(
+            coordinates = ProjectCoordinates(":producer", GradleVariantIdentification.EMPTY),
+            fromConfiguration = "implementation",
+            toConfiguration = "api",
+          ),
+          // Advice for test-fixtures variant
+          Advice.ofChange(
+            coordinates = ProjectCoordinates(
+              ":producer", GradleVariantIdentification(
+                capabilities = setOf(":producer${GradleVariantIdentification.TEST_FIXTURES}"),
+                attributes = emptyMap(),
+              )
+            ),
+            fromConfiguration = "api",
+            toConfiguration = "implementation",
+          )
+        )
+
+        // When
+        val parser = KotlinBuildScriptDependenciesRewriter.of(
+          projectType = projectType,
+          sourceSetNames = sourceSetNames,
+          file = sourceFile,
+          advice = advice,
+          advicePrinter = AdvicePrinter(
+            dslKind = DslKind.KOTLIN,
+            projectType = projectType,
+            useTypesafeProjectAccessors = false,
+          ),
+        )
+
+        // Then
+        assertThat(parser.rewritten()).isEqualTo(
+          """
+        dependencies {
+          api(project(":producer"))
+          implementation(testFixtures(project(":producer")))
+        }
+      """.trimIndent()
+        )
+      }
     }
   }
 
-  private fun Path.writeText(text: String): Path = Files.writeString(this, text)
-  private fun String.trimmedLines() = lines().map { it.trimEnd() }
+  @Nested
+  inner class KMP {
+    private val projectType = ProjectType.KMP
+    private val sourceSetNames = setOf(
+      "commonMain", "commonTest",
+      "jvmMain", "jvmTest",
+      "androidMain", "androidTest",
+    )
+
+    @Test fun `can update dependencies`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
+        plugins {
+          id("foo")
+        }
+        
+        kotlin {
+          sourceSets {
+            commonMain.dependencies {
+              implementation("heart:of-gold:1.+")
+            }
+            commonTest.dependencies {
+              implementation(kotlin("test"))
+              implementation("pan-galactic:gargle-blaster:2.0-SNAPSHOT") {
+                because("life's too short not to")
+              }
+            }
+            jvmMain.dependencies {
+              api(project(":marvin"))
+            }
+          } 
+        }
+      """.trimIndent()
+      )
+      val advice = setOf(
+        Advice.ofRemove(Coordinates.of("heart:of-gold:1.+"), "commonMainImplementation"),
+        Advice.ofChange(
+          Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"),
+          "commonTestImplementation",
+          "commonTestCompileOnly"
+        ),
+        // add to pre-existing block
+        Advice.ofAdd(Coordinates.of(":sad-robot"), "jvmMainRuntimeOnly"),
+        // add to new block
+        Advice.ofAdd(Coordinates.of("meaning:of-life:42"), "jvmTestImplementation"),
+      )
+
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        projectType,
+        sourceSetNames,
+        sourceFile,
+        advice,
+        AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        )
+      )
+
+      // TODO(tsr): fixDependencies is removing the `because` clause.
+      // Then
+      assertThat(parser.rewritten()).isEqualTo(
+        """
+          plugins {
+            id("foo")
+          }
+          
+          kotlin {
+            sourceSets {
+              commonMain.dependencies {
+              }
+              commonTest.dependencies {
+                implementation(kotlin("test"))
+                compileOnly("pan-galactic:gargle-blaster:2.0-SNAPSHOT")
+              }
+              jvmMain.dependencies {
+                api(project(":marvin"))
+                runtimeOnly(project(":sad-robot"))
+              }
+              jvmTest.dependencies {
+                implementation("meaning:of-life:42")
+              }
+            } 
+          }
+        """.trimIndent()
+      )
+    }
+
+    // TODO(tsr): what about `sourceSets.dependencies` or just `dependencies`?
+    @Test fun `can create kotlin-sourceSets-dependencies block`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
+        |plugins {
+        |  id("foo")
+        |}
+        |
+      """.trimMargin()
+      )
+      val advice = setOf(Advice.ofAdd(Coordinates.of("meaning:of-life:42"), "jvmTestImplementation"))
+
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        projectType,
+        sourceSetNames,
+        sourceFile,
+        advice,
+        AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        )
+      )
+
+      // Then
+      assertThat(parser.rewritten()).isEqualTo(
+        """
+          |plugins {
+          |  id("foo")
+          |}
+          |
+          |kotlin {
+          |  sourceSets {
+          |    jvmTest.dependencies {
+          |      implementation("meaning:of-life:42")
+          |    }
+          |  }
+          |}
+          |
+        """.trimMargin()
+      )
+    }
+
+    // TODO(tsr): add test for ktfmt
+    //kotlin { sourceSets { jvmTest.dependencies { implementation("meaning:of-life:42") } } }
+  }
 }

@@ -62,8 +62,19 @@ internal class AdvicePrinter(
     return "  $configuration$printableIdentifier$was"
   }
 
-  fun toDeclaration(advice: Advice): String {
-    return "  ${advice.toConfiguration}${gav(advice.coordinates)}"
+  fun toDeclaration(advice: Advice, scope: String = ""): String {
+    val toConfiguration = requireNotNull(advice.toConfiguration) {
+      "Advice.toConfiguration was null for advice='$advice'."
+    }
+
+    // api => api
+    // commonMainApi => api
+    val effectiveToConfiguration = if (scope.isEmpty()) {
+      toConfiguration
+    } else {
+      toConfiguration.removePrefix(scope).replaceFirstChar(Char::lowercase)
+    }
+    return "  $effectiveToConfiguration${gav(advice.coordinates)}"
   }
 
   fun gav(coordinates: Coordinates): String {
