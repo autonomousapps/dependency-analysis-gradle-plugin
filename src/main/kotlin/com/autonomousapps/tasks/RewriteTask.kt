@@ -14,6 +14,7 @@ import com.autonomousapps.internal.utils.reversed
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 import com.autonomousapps.model.internal.ProjectMetadata
+import com.autonomousapps.model.internal.ProjectType
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
@@ -66,10 +67,16 @@ public abstract class RewriteTask : DefaultTask() {
   @TaskAction public fun action() {
     val buildScript = buildScript.get().asFile
 
-    val isUpgrade = upgrade.getOrElse(false)
     val dslKind = DslKind.from(buildScript)
-    val projectAdvice = projectAdvice.fromJson<ProjectAdvice>()
     val projectMetadata = projectMetadata.fromJson<ProjectMetadata>()
+
+    if (dslKind == DslKind.GROOVY && projectMetadata.projectType == ProjectType.KMP) {
+      logger.warn("Support for rewriting Groovy DSL (.gradle) scripts in KMP projects has not been implemented. Exiting.")
+      return
+    }
+
+    val isUpgrade = upgrade.getOrElse(false)
+    val projectAdvice = projectAdvice.fromJson<ProjectAdvice>()
 
     val map = dependencyMap.get()
 
