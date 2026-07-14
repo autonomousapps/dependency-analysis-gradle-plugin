@@ -12,6 +12,7 @@ import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.artifacts.DagpArtifacts
 import com.autonomousapps.internal.artifactsFor
+import com.autonomousapps.internal.jsonArtifacts
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.services.GlobalDslService
@@ -119,8 +120,8 @@ internal class RootPlugin(private val project: Project) {
     }
 
     val generateBuildHealthTask = tasks.register("generateBuildHealth", GenerateBuildHealthTask::class.java) { t ->
-      t.projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
-      t.projectMetadataReports.setFrom(projectMetadataResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      t.projectHealthReports.setFrom(adviceResolver.internal.map { it.jsonArtifacts().artifactFiles })
+      t.projectMetadataReports.setFrom(projectMetadataResolver.internal.map { it.jsonArtifacts().artifactFiles })
       t.reportingConfig.set(dagpExtension.reportingHandler.config())
       t.projectCount.set(allprojects.size)
       t.dslKind.set(DslKind.from(buildFile))
@@ -143,8 +144,8 @@ internal class RootPlugin(private val project: Project) {
 
     val generatePublicTypeUsages =
       tasks.register("generatePublicTypeUsages", GeneratePublicTypeUsageTask::class.java) { t ->
-        t.publicClassesReports.from(publicClassesResolver.internal.map { it.artifactsFor("json").artifactFiles })
-        t.typeUsageReports.from(typeUsagesResolver.internal.map { it.artifactsFor("json").artifactFiles })
+        t.publicClassesReports.from(publicClassesResolver.internal.map { it.jsonArtifacts().artifactFiles })
+        t.typeUsageReports.from(typeUsagesResolver.internal.map { it.jsonArtifacts().artifactFiles })
         t.output.set(paths.publicTypeUsagePath)
         t.outputConsole.set(paths.publicTypeUsageConsolePath)
       }
@@ -155,7 +156,7 @@ internal class RootPlugin(private val project: Project) {
 
     tasks.register("generateWorkPlan", GenerateWorkPlan::class.java) { t ->
       t.buildPath.set(buildPath(combinedGraphResolver.internal.name))
-      t.combinedProjectGraphs.setFrom(combinedGraphResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      t.combinedProjectGraphs.setFrom(combinedGraphResolver.internal.map { it.jsonArtifacts().artifactFiles })
       t.outputDirectory.set(paths.workPlanDir)
     }
 

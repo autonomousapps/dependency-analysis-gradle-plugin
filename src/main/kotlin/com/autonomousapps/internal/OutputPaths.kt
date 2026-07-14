@@ -4,19 +4,32 @@
 
 package com.autonomousapps.internal
 
+import com.autonomousapps.Flags
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 
-internal const val ROOT_DIR = "reports/dependency-analysis"
+private val COMPRESS = Flags.compress()
+private const val ROOT_DIR = "reports/dependency-analysis"
+
+internal const val GZ = "gz"
+internal const val JSON = "json"
+
+private fun path(path: String): String {
+  return if (COMPRESS && path.endsWith(".$JSON")) {
+    "$path.$GZ"
+  } else {
+    path
+  }
+}
 
 internal class OutputPaths(
   private val project: Project,
-  variantName: String
+  variantName: String,
 ) {
 
-  private fun file(path: String): Provider<RegularFile> = project.layout.buildDirectory.file(path)
+  private fun file(path: String): Provider<RegularFile> = project.layout.buildDirectory.file(path(path))
   private fun dir(path: String): Provider<Directory> = project.layout.buildDirectory.dir(path)
 
   private val variantDirectory = "$ROOT_DIR/$variantName"
@@ -29,7 +42,7 @@ internal class OutputPaths(
   val externalDependenciesPath = file("${intermediatesDir}/external-dependencies.txt")
   val duplicateCompileClasspathPath = file("${intermediatesDir}/duplicate-classes-compile.json")
   val duplicateCompileRuntimePath = file("${intermediatesDir}/duplicate-classes-runtime.json")
-  val explodedJarsPath = file("${intermediatesDir}/exploded-jars.json.gz")
+  val explodedJarsPath = file("${intermediatesDir}/exploded-jars.json")
   val inlineUsagePath = file("${intermediatesDir}/inline-usage.json")
   val typealiasUsagePath = file("${intermediatesDir}/typealias-usage.json")
   val inlineUsageErrorsPath = file("${intermediatesDir}/inline-usage-errors.txt")
@@ -48,7 +61,7 @@ internal class OutputPaths(
   val dependenciesDir = dir("${variantDirectory}/dependencies")
   val explodedSourcePath = file("${intermediatesDir}/exploded-source.json")
   val explodingBytecodePath = file("${intermediatesDir}/exploding-bytecode.json")
-  val syntheticProjectPath = file("${intermediatesDir}/synthetic-project.json.gz")
+  val syntheticProjectPath = file("${intermediatesDir}/synthetic-project.json")
   val dependencyTraceReportPath = file("${variantDirectory}/dependency-trace-report.json")
   val typeUsagePath = file("${variantDirectory}/type-usage.json")
   val androidScorePath = file("${variantDirectory}/android-score.json")
@@ -77,10 +90,11 @@ internal class OutputPaths(
  * Differs from [OutputPaths] in that this is for project-aggregator tasks that don't have variants.
  */
 @Suppress("SameParameterValue")
-internal class NoVariantOutputPaths(private val project: Project) {
+internal class NoVariantOutputPaths(
+  private val project: Project,
+) {
 
-  private fun file(path: String): Provider<RegularFile> = project.layout.buildDirectory.file(path)
-  private fun dir(path: String): Provider<Directory> = project.layout.buildDirectory.dir(path)
+  private fun file(path: String): Provider<RegularFile> = project.layout.buildDirectory.file(path(path))
 
   val locationsPath = file("$ROOT_DIR/declarations.json")
   val resolvedDepsPath = file("$ROOT_DIR/resolved-dependencies-report.txt")
@@ -105,9 +119,13 @@ internal class NoVariantOutputPaths(private val project: Project) {
 /**
  * This is for the holistic, root-level aggregate reports.
  */
-internal class RootOutputPaths(private val project: Project) {
+internal class RootOutputPaths(
+  private val project: Project,
+) {
 
-  private fun file(path: String): Provider<RegularFile> = project.layout.buildDirectory.file(path)
+  private fun file(path: String): Provider<RegularFile> = project.layout.buildDirectory.file(path(path))
+
+  @Suppress("SameParameterValue")
   private fun dir(path: String): Provider<Directory> = project.layout.buildDirectory.dir(path)
 
   val duplicateDependenciesPath = file("$ROOT_DIR/duplicate-dependencies-report.json")
@@ -133,15 +151,16 @@ internal class RedundantSubPluginOutputPaths(private val project: Project) {
   val pluginJvmAdvicePath = file("$ROOT_DIR/advice-plugin-jvm.json")
 }
 
-// TODO used by tests
-public fun getAdvicePathV2(): String = "$ROOT_DIR/final-advice.json"
-public fun getFinalAdvicePathV2(): String = "$ROOT_DIR/build-health-report.json"
-public fun getExplodedJarsPathV2(variantName: String): String =
-  "$ROOT_DIR/$variantName/intermediates/exploded-jars.json.gz"
+/*
+ * Used by tests.
+ */
 
-public fun getDuplicateDependenciesReport(): String = "$ROOT_DIR/duplicate-dependencies-report.json"
-public fun getAllLibsVersionsTomlPath(): String = "$ROOT_DIR/allLibs.versions.toml"
-public fun getResolvedDependenciesReport(): String = "$ROOT_DIR/resolved-dependencies-report.txt"
-public fun getResolvedVersionsTomlPath(): String = "$ROOT_DIR/resolvedAllLibs.versions.toml"
-public fun getTypeUsagePath(variantName: String = "main"): String = "$ROOT_DIR/$variantName/type-usage.json"
-public fun getPublicTypeUsagePath(): String = "$ROOT_DIR/public-type-usage-report.json"
+public fun getAdvicePathV2(): String = path("$ROOT_DIR/final-advice.json")
+public fun getFinalAdvicePathV2(): String = path("$ROOT_DIR/build-health-report.json")
+public fun getExplodedJarsPathV2(variantName: String): String = path("$ROOT_DIR/$variantName/intermediates/exploded-jars.json")
+public fun getDuplicateDependenciesReport(): String = path("$ROOT_DIR/duplicate-dependencies-report.json")
+public fun getAllLibsVersionsTomlPath(): String = path("$ROOT_DIR/allLibs.versions.toml")
+public fun getResolvedDependenciesReport(): String = path("$ROOT_DIR/resolved-dependencies-report.txt")
+public fun getResolvedVersionsTomlPath(): String = path("$ROOT_DIR/resolvedAllLibs.versions.toml")
+public fun getTypeUsagePath(variantName: String = "main"): String = path("$ROOT_DIR/$variantName/type-usage.json")
+public fun getPublicTypeUsagePath(): String = path("$ROOT_DIR/public-type-usage-report.json")

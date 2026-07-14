@@ -15,6 +15,8 @@ public object Flags {
   internal const val AUTO_APPLY = "dependency.analysis.autoapply"
 
   private const val CHECK_BINARY_COMPAT = "dependency.analysis.check-binary-compat"
+
+  // Keep in sync with `compressOutputs()` in build.gradle.kts
   private const val COMPRESS = "dependency.analysis.compress.outputs"
   private const val MAX_CACHE_SIZE = "dependency.analysis.cache.max"
   private const val PRINT_BUILD_HEALTH = "dependency.analysis.print.build.health"
