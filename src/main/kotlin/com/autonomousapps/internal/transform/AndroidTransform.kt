@@ -386,14 +386,16 @@ internal class AndroidTransform(
     // block below handles this by checking change/add advice to see if they're for the same source kind and product
     // flavor and, if so, removing them.
     // See `ProductFlavorsAndBuildTypesSpec`.
-    change.forEach { theChange ->
+    val changeIter = change.iterator()
+    while (changeIter.hasNext()) {
+      val theChange = changeIter.next()
       val configurationName = theChange.fromConfiguration!!
       val theChangeSourceKind = configurationNames
         .sourceKindFrom(configurationName, false)
         // We only care about the `kind` (MAIN, TEST, etc.), not full equality of SourceKind.
         ?.kind
       // If it's null, can't make a reasonable equality check, so exit.
-        ?: return@forEach
+        ?: continue
 
       val theChangeFlavor = configurationNames.findProductFlavorFrom(configurationName)
       val theChangeBuildType = configurationNames.findBuildTypeFrom(configurationName)
@@ -422,7 +424,7 @@ internal class AndroidTransform(
 
       if (removed) {
         advice -= theChange
-        change -= theChange
+        changeIter.remove()
       }
     }
 
