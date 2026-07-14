@@ -3,6 +3,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.graph.Graphs.roots
+import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.graph.GraphWriter
 import com.autonomousapps.internal.graph.newGraphBuilder
 import com.autonomousapps.internal.graph.plus
@@ -38,9 +39,10 @@ public abstract class GenerateWorkPlan : DefaultTask() {
   public abstract val outputDirectory: DirectoryProperty
 
   @TaskAction public fun action() {
-    val combinedGraphOut = outputDirectory.file("combined-graph.json").getAndDelete()
-    val combinedGraphDotOut = outputDirectory.file("combined-graph.gz").getAndDelete()
-    val workPlanJsonOut = outputDirectory.file("work-plan.json").getAndDelete()
+    val extension = OutputPaths.jsonExtension()
+    val combinedGraphOut = outputDirectory.file("combined-graph.$extension").getAndDelete()
+    val combinedGraphDotOut = outputDirectory.file("combined-graph.gv").getAndDelete()
+    val workPlanJsonOut = outputDirectory.file("work-plan.$extension").getAndDelete()
     val workPlanTextOut = outputDirectory.file("work-plan.txt").getAndDelete()
 
     // TODO(tsr): this is all very ugly

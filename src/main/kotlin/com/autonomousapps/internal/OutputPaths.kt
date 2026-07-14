@@ -29,6 +29,14 @@ internal class OutputPaths(
   variantName: String,
 ) {
 
+  companion object {
+    fun jsonExtension(): String = if (COMPRESS) {
+      "$JSON.$GZ"
+    } else {
+      JSON
+    }
+  }
+
   private fun file(path: String): Provider<RegularFile> = project.layout.buildDirectory.file(path(path))
   private fun dir(path: String): Provider<Directory> = project.layout.buildDirectory.dir(path)
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model
 
+import com.autonomousapps.internal.OutputPaths
 import com.google.common.hash.Hashing
 import com.squareup.moshi.JsonClass
 import dev.zacsweers.moshix.sealed.annotations.TypeLabel
@@ -59,12 +60,15 @@ public sealed class Coordinates(
   /** Group-artifact-version (GAV) string representation, as used in Gradle dependency declarations. */
   public abstract fun gav(): String
 
-  internal fun toFileName() = capabilitiesWithoutDefault().let { capabilities ->
-    when {
-      capabilities.isEmpty() -> "${gav().replace(":", "__")}.json"
-      // In case we have capabilities, we use a unique hash for the capability combination in the file name
-      // to not mix dependencies with different capabilities.
-      else -> "${gav().replace(":", "__")}__${fingerprint(capabilities)}.json"
+  internal fun toFileName(): String {
+    val extension = OutputPaths.jsonExtension()
+    return capabilitiesWithoutDefault().let { capabilities ->
+      when {
+        capabilities.isEmpty() -> "${gav().replace(":", "__")}.$extension"
+        // In case we have capabilities, we use a unique hash for the capability combination in the file name
+        // to not mix dependencies with different capabilities.
+        else -> "${gav().replace(":", "__")}__${fingerprint(capabilities)}.$extension"
+      }
     }
   }
 
