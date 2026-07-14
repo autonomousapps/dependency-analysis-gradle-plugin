@@ -71,28 +71,15 @@ public inline fun <reified T> T.toJson(withNulls: Boolean = false): String {
   return getJsonAdapter<T>(withNulls).toJson(this)
 }
 
-public inline fun <reified T> String.fromJsonList(withNulls: Boolean = false): List<T> {
-  return getJsonListAdapter<T>(withNulls).fromJson(this)!!
-}
-
-public inline fun <reified T> String.fromJsonSet(withNulls: Boolean = false): Set<T> {
-  return getJsonSetAdapter<T>(withNulls).fromJson(this)!!
-}
-
-public inline fun <reified K, reified V> String.fromJsonMap(): Map<K, V> {
-  val mapType = newParameterizedType(Map::class.java, K::class.java, V::class.java)
-  val adapter = MOSHI.adapter<Map<K, V>>(mapType)
-  return adapter.fromJson(this)!!
-}
-
+// nb: the BufferedSource receiver is already compressed or not. No need to parameterize this function.
 public inline fun <reified K, reified V> BufferedSource.fromJsonMapList(): Map<K, List<V>> {
   val listType = newParameterizedType(List::class.java, V::class.java)
   val mapType = newParameterizedType(Map::class.java, K::class.java, listType)
   val adapter = MOSHI.adapter<Map<K, List<V>>>(mapType)
-
   return adapter.fromJson(this)!!
 }
 
+// nb: the BufferedSource receiver is already compressed or not. No need to parameterize this function.
 public inline fun <reified K, reified V> BufferedSource.fromJsonMapSet(): Map<K, Set<V>> {
   return getJsonMapSetAdapter<K, V>().fromJson(this)!!
 }
@@ -106,10 +93,11 @@ public inline fun <reified K, reified V> BufferedSource.fromJsonMapSet(): Map<K,
  */
 public inline fun <reified K, reified V> File.bufferWriteJsonMap(
   set: Map<K, V>,
+  compress: Boolean = false,
   withNulls: Boolean = false,
   indent: String = noJsonIndent
 ) {
-  JsonWriter.of(sink().buffer()).use { writer ->
+  jsonWriter(compress).use { writer ->
     getJsonMapAdapter<K, V>(withNulls).indent(indent).toJson(writer, set)
   }
 }
@@ -123,9 +111,10 @@ public inline fun <reified K, reified V> File.bufferWriteJsonMap(
  */
 public inline fun <reified K, reified V> File.bufferWriteJsonMapSet(
   set: Map<K, Set<V>>,
+  compress: Boolean = false,
   indent: String = noJsonIndent
 ) {
-  JsonWriter.of(sink().buffer()).use { writer ->
+  jsonWriter(compress).use { writer ->
     getJsonMapSetAdapter<K, V>().indent(indent).toJson(writer, set)
   }
 }
@@ -137,8 +126,12 @@ public inline fun <reified K, reified V> File.bufferWriteJsonMapSet(
  * @param set The set to write to file
  * @param indent The indent to control how the result is formatted
  */
-public inline fun <reified T> File.bufferWriteJsonList(set: List<T>, indent: String = noJsonIndent) {
-  JsonWriter.of(sink().buffer()).use { writer ->
+public inline fun <reified T> File.bufferWriteJsonList(
+  set: List<T>,
+  compress: Boolean = false,
+  indent: String = noJsonIndent,
+) {
+  jsonWriter(compress).use { writer ->
     getJsonListAdapter<T>().indent(indent).toJson(writer, set)
   }
 }
@@ -156,13 +149,7 @@ public inline fun <reified T> File.bufferWriteJsonSet(
   compress: Boolean = false,
   indent: String = noJsonIndent,
 ) {
-  val buffer = if (compress) {
-    GzipSink(sink()).buffer()
-  } else {
-    sink().buffer()
-  }
-
-  JsonWriter.of(buffer).use { writer ->
+  jsonWriter(compress).use { writer ->
     getJsonSetAdapter<T>().indent(indent).toJson(writer, set)
   }
 }
@@ -180,26 +167,31 @@ public inline fun <reified T> File.bufferWriteJson(
   compress: Boolean = false,
   indent: String = noJsonIndent,
 ) {
-  val buffer = if (compress) {
-    GzipSink(sink()).buffer()
-  } else {
-    sink().buffer()
-  }
-
-  JsonWriter.of(buffer).use { writer ->
+  jsonWriter(compress).use { writer ->
     getJsonAdapter<T>().indent(indent).toJson(writer, obj)
   }
 }
 
 public inline fun <reified A, reified B> File.bufferWriteParameterizedJson(
   parameterizedData: A,
+  compress: Boolean = false,
   indent: String = noJsonIndent
 ) {
-  JsonWriter.of(sink().buffer()).use { writer ->
+  jsonWriter(compress).use { writer ->
     MOSHI.adapter<A>(newParameterizedType(A::class.java, B::class.java))
       .indent(indent)
       .toJson(writer, parameterizedData)
   }
+}
+
+public fun File.jsonWriter(compress: Boolean = false): JsonWriter {
+  val buffer = if (compress) {
+    GzipSink(sink()).buffer()
+  } else {
+    sink().buffer()
+  }
+
+  return JsonWriter.of(buffer)
 }
 
 @Suppress("unused")
