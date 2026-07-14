@@ -7,8 +7,13 @@ import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.internal.intermediates.producer.AndroidLinterDependency
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Path
+import kotlin.io.path.writeText
 
 internal class CoordinatesTest {
+
+  @TempDir lateinit var tempDir: Path
 
   private val gvi = GradleVariantIdentification(setOf("some:capability"), mapOf("someAttribute" to "blue"))
 
@@ -24,7 +29,10 @@ internal class CoordinatesTest {
       """[{"coordinates":{"type":"project","identifier":":app","gradleVariantIdentification":{"capabilities":["some:capability"],"attributes":{"someAttribute":"blue"}}},"lintRegistry":"fooRegistry"}]"""
     )
 
-    val deserialized = serialized.fromJsonSet<AndroidLinterDependency>()
+    val coordinatesJson = tempDir.resolve("coordinates.json")
+    coordinatesJson.writeText(serialized)
+
+    val deserialized = coordinatesJson.toFile().fromJsonSet<AndroidLinterDependency>()
     assertThat(deserialized).isEqualTo(linterDependency)
   }
 
@@ -40,7 +48,10 @@ internal class CoordinatesTest {
       """[{"coordinates":{"type":"module","identifier":"magic:app","resolvedVersion":"1.0","gradleVariantIdentification":{"capabilities":["some:capability"],"attributes":{"someAttribute":"blue"}}},"lintRegistry":"fooRegistry"}]"""
     )
 
-    val deserialized = serialized.fromJsonSet<AndroidLinterDependency>()
+    val coordinatesJson = tempDir.resolve("coordinates.json")
+    coordinatesJson.writeText(serialized)
+
+    val deserialized = coordinatesJson.toFile().fromJsonSet<AndroidLinterDependency>()
     assertThat(deserialized).isEqualTo(linterDependency)
   }
 
@@ -56,7 +67,10 @@ internal class CoordinatesTest {
       """[{"coordinates":{"type":"flat","identifier":"Gradle API"},"lintRegistry":"fooRegistry"}]"""
     )
 
-    val deserialized = serialized.fromJsonSet<AndroidLinterDependency>()
+    val coordinatesJson = tempDir.resolve("coordinates.json")
+    coordinatesJson.writeText(serialized)
+
+    val deserialized = coordinatesJson.toFile().fromJsonSet<AndroidLinterDependency>()
     assertThat(deserialized).isEqualTo(linterDependency)
   }
 
