@@ -3,6 +3,7 @@
 package com.autonomousapps.internal.parse.advice
 
 import com.autonomousapps.internal.cash.grammar.kotlindsl.model.DependencyDeclaration
+import com.autonomousapps.internal.utils.uncapitalizeSafely
 import com.autonomousapps.model.Advice
 
 internal class KmpAdviceFinder(
@@ -29,7 +30,7 @@ internal class KmpAdviceFinder(
   }
 
   private fun Advice.matchesConfiguration(dependencyDeclaration: DependencyDeclaration, scope: String): Boolean {
-    val effectiveFromConfiguration = fromConfiguration?.substringAfter(scope)?.replaceFirstChar(Char::lowercase)
+    val effectiveFromConfiguration = fromConfiguration?.substringAfter(scope)?.uncapitalizeSafely()
     return effectiveFromConfiguration == dependencyDeclaration.configuration
   }
 }

@@ -4,7 +4,9 @@ package com.autonomousapps.model.internal.declaration
 
 import com.autonomousapps.internal.android.ProductFlavor
 import com.autonomousapps.internal.unsafeLazy
+import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.internal.utils.flatMapToOrderedSet
+import com.autonomousapps.internal.utils.uncapitalizeSafely
 import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.source.AndroidSourceKind
@@ -87,7 +89,7 @@ internal class ConfigurationNames(
       bucket
     } else {
       // test + compileOnly => testCompileOnly
-      sourceSetName + bucket.replaceFirstChar(Char::uppercase)
+      sourceSetName + bucket.capitalizeSafely()
     }
   }
 
@@ -152,7 +154,7 @@ internal class ConfigurationNames(
         ""
       } else {
         // can be "test...", "testDebug...", "testRelease...", etc.
-        configurationName.removeSuffix(mainBucket.replaceFirstChar(Char::uppercase))
+        configurationName.removeSuffix(mainBucket.capitalizeSafely())
       }
 
       findSourceKind(
@@ -202,7 +204,7 @@ internal class ConfigurationNames(
   fun findBuildTypeFrom(configurationName: String): String? {
     return buildTypes
       // debugImplementation or flavorDebugImplementation
-      .filter { configurationName.startsWith(it) || configurationName.contains(it.replaceFirstChar(Char::uppercase)) }
+      .filter { configurationName.startsWith(it) || configurationName.contains(it.capitalizeSafely()) }
       .maxByOrNull { it.length }
   }
 
@@ -248,7 +250,7 @@ internal class ConfigurationNames(
 
     return if (prefix != null) {
       val bucket = Bucket.of(toConfigurations.first(), this).value
-      "$prefix${bucket.replaceFirstChar(Char::uppercase)}"
+      "$prefix${bucket.capitalizeSafely()}"
     } else {
       null
     }
@@ -299,7 +301,7 @@ internal class ConfigurationNames(
       require(projectType == ProjectType.ANDROID) { "Expected Android project" }
       val name = variantSlug
         .removePrefix(SourceKind.TEST_FIXTURES_NAME)
-        .replaceFirstChar(Char::lowercase)
+        .uncapitalizeSafely()
 
       AndroidSourceKind.testFixtures(name)
     } else if (variantSlug.startsWith(SourceKind.TEST_NAME)) {
@@ -307,7 +309,7 @@ internal class ConfigurationNames(
       require(projectType == ProjectType.ANDROID) { "Expected Android project" }
       val name = variantSlug
         .removePrefix(SourceKind.TEST_NAME)
-        .replaceFirstChar(Char::lowercase)
+        .uncapitalizeSafely()
 
       AndroidSourceKind.test(name)
     } else if (variantSlug.startsWith(SourceKind.ANDROID_TEST_NAME)) {
@@ -315,7 +317,7 @@ internal class ConfigurationNames(
       require(projectType == ProjectType.ANDROID) { "Expected Android project" }
       val name = variantSlug
         .removePrefix(SourceKind.ANDROID_TEST_NAME)
-        .replaceFirstChar(Char::lowercase)
+        .uncapitalizeSafely()
 
       AndroidSourceKind.androidTest(name)
     } else {

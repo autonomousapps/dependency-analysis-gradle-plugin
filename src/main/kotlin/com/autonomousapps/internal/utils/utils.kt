@@ -154,6 +154,10 @@ internal fun String.capitalizeSafely(): String {
   return replaceFirstChar(Char::uppercase)
 }
 
+internal fun String.uncapitalizeSafely(): String {
+  return replaceFirstChar(Char::lowercase)
+}
+
 // copied from StringsJVM.kt
 @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 internal fun String.lowercase(): String = (this as java.lang.String).toLowerCase(Locale.ROOT)
