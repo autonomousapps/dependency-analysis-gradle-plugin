@@ -10,14 +10,15 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 
-private val COMPRESS = Flags.compress()
 private const val ROOT_DIR = "reports/dependency-analysis"
 
 internal const val GZ = "gz"
 internal const val JSON = "json"
 
-private fun path(path: String): String {
-  return if (COMPRESS && path.endsWith(".$JSON")) {
+private fun compress(): Boolean = Flags.compress()
+
+private fun path(path: String, compress: Boolean = compress()): String {
+  return if (compress && path.endsWith(".$JSON")) {
     "$path.$GZ"
   } else {
     path
@@ -30,7 +31,7 @@ internal class OutputPaths(
 ) {
 
   companion object {
-    fun jsonExtension(): String = if (COMPRESS) {
+    fun jsonExtension(): String = if (compress()) {
       "$JSON.$GZ"
     } else {
       JSON

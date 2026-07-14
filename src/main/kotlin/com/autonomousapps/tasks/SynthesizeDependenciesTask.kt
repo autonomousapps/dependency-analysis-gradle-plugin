@@ -133,7 +133,7 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
 
       val dependencies = parameters.compileDependencies.fromJson<CoordinatesContainer>().coordinates
       val physicalArtifacts = parameters.physicalArtifacts.fromJsonSet<PhysicalArtifact>()
-      val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>(compressed = true)
+      val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>()
       val reflectiveAccesses = findReflectiveAccesses(explodedJars)
       val inlineMembers = parameters.inlineMembers.fromJsonSet<InlineMemberDependency>()
       val typealiases = parameters.typealiases.fromJsonSet<TypealiasDependency>()

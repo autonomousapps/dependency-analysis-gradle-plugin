@@ -3,6 +3,7 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.AdviceHelper
+import com.autonomousapps.Flags
 import com.autonomousapps.android.projects.AutoValueProjectUsedByKapt
 import com.autonomousapps.android.projects.DaggerKaptProject
 import com.autonomousapps.android.projects.KaptProject

@@ -202,8 +202,9 @@ fun quickTest(): Boolean = providers
   .isPresent
 
 // Keep in sync with Flags.COMPRESS
+val compressKey = "dependency.analysis.compress.outputs"
 fun compressOutputs(): Boolean = providers
-  .systemProperty("dependency.analysis.compress.outputs")
+  .systemProperty(compressKey)
   .map { it.toBoolean() }
   .getOrElse(true)
 
@@ -217,7 +218,7 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
   systemProperty("com.autonomousapps.quick", "${quickTest()}")
   systemProperty("com.autonomousapps.test.versions.kotlin", libs.versions.kotlin.get())
   systemProperty("com.autonomousapps.test.versions.kotlin.later", libs.versions.kotlinForAndroidtests.get())
-  systemProperty("dependency.analysis.compress.outputs", "${compressOutputs()}")
+  systemProperty(compressKey, "${compressOutputs()}")
 
   beforeTest(closureOf<TestDescriptor> {
     logger.lifecycle("Running test: $this")

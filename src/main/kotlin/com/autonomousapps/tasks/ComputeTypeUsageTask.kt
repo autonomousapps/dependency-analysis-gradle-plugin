@@ -92,7 +92,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
       val output = parameters.output.getAndDelete()
 
       // 1. Load data
-      val project = parameters.syntheticProject.fromJson<ProjectVariant>(compressed = true)
+      val project = parameters.syntheticProject.fromJson<ProjectVariant>()
       val dependencies = project.dependencies(parameters.dependencies.get())
       val classToCoords = buildClassIndex()
 
@@ -112,7 +112,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
     }
 
     private fun buildClassIndex(): Map<String, Coordinates> {
-      val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>(compressed = true)
+      val explodedJars = parameters.explodedJars.fromJsonSet<ExplodedJar>()
 
       val map = mutableMapOf<String, Coordinates>()
       explodedJars.forEach { jar ->
