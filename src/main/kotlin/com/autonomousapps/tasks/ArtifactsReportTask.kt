@@ -7,7 +7,6 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.filterNonGradle
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.internal.ExcludedIdentifier
 import com.autonomousapps.model.internal.PhysicalArtifact
 import org.gradle.api.DefaultTask
@@ -107,7 +106,8 @@ public abstract class ArtifactsReportTask : DefaultTask() {
     val excludedIdentifiers = getExcludedIdentifiers()
 
     output.bufferWriteJsonSet(allArtifacts + opaqueArtifacts)
-    excludedIdentifiersOutput.writeText(excludedIdentifiers.toJson())
+    excludedIdentifiersOutput.bufferWriteJsonSet(excludedIdentifiers)
+//    excludedIdentifiersOutput.writeText(excludedIdentifiers.toJson())
   }
 
   private fun toPhysicalArtifacts(artifacts: ArtifactCollection): Set<PhysicalArtifact> {

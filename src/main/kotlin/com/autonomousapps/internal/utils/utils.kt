@@ -48,110 +48,73 @@ internal fun Provider<RegularFile>.getAndDelete(): File {
 
 /** Buffer reads of the nullable RegularFileProperty from disk to the set. */
 internal inline fun <reified T> RegularFileProperty.fromNullableJsonSet(
-  compressed: Boolean = false,
+  compressed: Boolean = COMPRESS,
 ): Set<T> {
   return orNull?.fromJsonSet(compressed) ?: emptySet()
 }
 
 /** Buffers reads of the RegularFileProperty from disk to the set. */
 internal inline fun <reified T> RegularFileProperty.fromJsonSet(
-  compressed: Boolean = false,
+  compressed: Boolean = COMPRESS,
 ): Set<T> = get().fromJsonSet(compressed)
 
 /** Buffers reads of the RegularFile from disk to the set. */
 internal inline fun <reified T> RegularFile.fromJsonSet(
-  compressed: Boolean = false,
+  compressed: Boolean = COMPRESS,
 ): Set<T> = asFile.fromJsonSet(compressed)
 
 /** Buffers reads of the RegularFile from disk to the set. */
 internal inline fun <reified T> File.fromJsonSet(
-  compressed: Boolean = false,
+  compressed: Boolean = COMPRESS,
 ): Set<T> {
   return bufferRead(compressed).use { getJsonSetAdapter<T>().fromJson(it)!! }
 }
 
 /** Buffers reads of the RegularFileProperty from disk to the set. */
 internal inline fun <reified T> RegularFileProperty.fromJsonList(
-  compressed: Boolean = false,
+  compressed: Boolean = COMPRESS,
 ): List<T> = get().fromJsonList(compressed)
 
 /** Buffers reads of the RegularFile from disk to the set. */
 internal inline fun <reified T> RegularFile.fromJsonList(
-  compressed: Boolean = false,
+  compressed: Boolean = COMPRESS,
 ): List<T> {
   return asFile.bufferRead(compressed).use { reader ->
     getJsonListAdapter<T>().fromJson(reader)!!
   }
 }
 
-internal inline fun <reified K, reified V> RegularFileProperty.fromJsonMapList(
-  compressed: Boolean = false,
-): Map<K, List<V>> {
-  return get().fromJsonMapList(compressed)
-}
-
 internal inline fun <reified K, reified V> RegularFileProperty.fromJsonMapSet(
-  compressed: Boolean = false,
+  compressed: Boolean = COMPRESS,
 ): Map<K, Set<V>> {
   return get().fromJsonMapSet(compressed)
 }
 
-internal inline fun <reified K, reified V> RegularFile.fromJsonMapList(
-  compressed: Boolean = false,
-): Map<K, List<V>> {
-  return asFile.fromJsonMapList(compressed)
-}
-
 internal inline fun <reified K, reified V> RegularFile.fromJsonMapSet(
-  compressed: Boolean = false,
+  compressed: Boolean = COMPRESS,
 ): Map<K, Set<V>> {
   return asFile.fromJsonMapSet(compressed)
 }
 
-internal inline fun <reified K, reified V> File.fromJsonMapList(
-  compressed: Boolean = false,
-): Map<K, List<V>> {
-  return bufferRead(compressed).fromJsonMapList()
-}
-
 internal inline fun <reified K, reified V> File.fromJsonMapSet(
-  compressed: Boolean = false,
+  compressed: Boolean = COMPRESS,
 ): Map<K, Set<V>> {
   return bufferRead(compressed).fromJsonMapSet()
 }
 
-/** Buffers reads of the RegularFileProperty from disk to the set. */
-internal inline fun <reified K, reified V> RegularFileProperty.fromJsonMap(
-  compressed: Boolean = false,
-): Map<K, V> = get().fromJsonMap(compressed)
-
-/** Buffers reads of the RegularFile from disk to the set. */
-internal inline fun <reified K, reified V> RegularFile.fromJsonMap(
-  compressed: Boolean = false,
-): Map<K, V> = asFile.fromJsonMap(compressed)
-
-/** Buffers reads of the File from disk to the set. */
-internal inline fun <reified K, reified V> File.fromJsonMap(
-  compressed: Boolean = false,
-): Map<K, V> {
-  return bufferRead(compressed).use { reader ->
-    getJsonMapAdapter<K, V>().fromJson(reader)!!
-  }
-}
-
 /** Buffer reads of the RegularFileProperty from disk to the set. */
 internal inline fun <reified T> RegularFileProperty.fromJson(
-  compressed: Boolean = false,
+  compressed: Boolean = COMPRESS,
 ): T = get().fromJson(compressed)
 
 /** Buffer reads of the RegularFile from disk to the set. */
 internal inline fun <reified T> RegularFile.fromJson(
-  compressed: Boolean = false,
+  compressed: Boolean = COMPRESS,
 ): T = asFile.fromJson(compressed)
 
 /** Buffer reads of the File from disk to the set. */
 internal inline fun <reified T> File.fromJson(
-  compressed: Boolean = false,
+  compressed: Boolean = COMPRESS,
 ): T = bufferRead(compressed).use { reader -> getJsonAdapter<T>().fromJson(reader)!! }
 
 internal fun RegularFileProperty.readLines(): List<String> = get().readLines()
@@ -161,7 +124,7 @@ internal fun RegularFile.readLines(): List<String> = asFile.readLines()
 internal fun RegularFileProperty.readText(): String = get().asFile.readText()
 
 private fun File.bufferRead(
-  compressed: Boolean = false,
+  compressed: Boolean = COMPRESS,
 ): BufferedSource {
   return if (compressed) {
     GzipSource(source()).buffer()

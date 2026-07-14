@@ -82,7 +82,7 @@ public abstract class ExplodeJarTask @Inject constructor(
         inMemoryCache = parameters.inMemoryCache.get()
       ).explodedJars()
 
-      output.bufferWriteJsonSet(explodedJars, compress = true)
+      output.bufferWriteJsonSet(explodedJars)
     }
   }
 }

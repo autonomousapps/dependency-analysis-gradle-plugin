@@ -14,12 +14,13 @@ public object Flags {
   // Deprecated
   internal const val AUTO_APPLY = "dependency.analysis.autoapply"
 
+  private const val CHECK_BINARY_COMPAT = "dependency.analysis.check-binary-compat"
+  private const val COMPRESS = "dependency.analysis.compress.outputs"
   private const val MAX_CACHE_SIZE = "dependency.analysis.cache.max"
-  private const val TEST_ANALYSIS = "dependency.analysis.test.analysis"
   private const val PRINT_BUILD_HEALTH = "dependency.analysis.print.build.health"
   private const val PROJECT_INCLUDES = "dependency.analysis.project.includes"
 
-  private const val CHECK_BINARY_COMPAT = "dependency.analysis.check-binary-compat"
+  private const val TEST_ANALYSIS = "dependency.analysis.test.analysis"
 
   // Used in tests
   internal const val BYTECODE_LOGGING = "dependency.analysis.bytecode.logging"
@@ -91,6 +92,10 @@ public object Flags {
       .map { it.toBoolean() }
       .orElse(false)
   }
+
+  // We need to use System.getProperty() because these methods are all static and don't have access to anything that
+  // could provide a ProviderFactory. Design flaw, I suppose.
+  public fun compress(): Boolean = System.getProperty(COMPRESS, "true").toBoolean()
 
   private fun Project.getGradleOrSysProp(name: String, default: Boolean): Boolean {
     val byGradle = getGradlePropForConfiguration(name, default)

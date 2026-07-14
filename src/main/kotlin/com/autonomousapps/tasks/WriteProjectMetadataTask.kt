@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toJson
@@ -38,6 +39,7 @@ public abstract class WriteProjectMetadataTask : DefaultTask() {
       projectType = projectType.get(),
     )
 
-    output.writeText(metadata.toJson())
+    output.bufferWriteJson(metadata)
+//    output.writeText(metadata.toJson())
   }
 }

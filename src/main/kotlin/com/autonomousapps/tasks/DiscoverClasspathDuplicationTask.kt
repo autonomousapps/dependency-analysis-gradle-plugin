@@ -56,7 +56,8 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
     val project = syntheticProject.fromJson<ProjectVariant>(compressed = true)
     val duplicates = ClasspathAnalyzer(project, classpathName.get(), classpath).duplicates()
 
-    output.writeText(duplicates.toJson())
+    output.bufferWriteJsonSet(duplicates)
+//    output.writeText(duplicates.toJson())
   }
 
   internal class ClasspathAnalyzer(

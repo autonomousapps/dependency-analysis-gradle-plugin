@@ -9,9 +9,9 @@ import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.ProjectAdvice
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import com.squareup.moshi.Types
+import okio.BufferedSource
+import okio.GzipSource
 import okio.Okio
-
-import java.util.zip.GZIPInputStream
 
 abstract class AdviceStrategy {
 
@@ -19,42 +19,34 @@ abstract class AdviceStrategy {
 
   abstract def actualComprehensiveAdviceForProject(GradleProject gradleProject, String projectName)
 
-  protected static BuildHealth fromBuildHealth(String json) {
-    def adapter = MoshiUtils.MOSHI.adapter(BuildHealth)
-    return adapter.fromJson(json)
-  }
-
-  protected static Set<ProjectAdvice> fromAllProjectAdviceJson(String json) {
-    return fromBuildHealth(json).projectAdvice
-  }
-
   abstract Map<String, Set<String>> getDuplicateDependenciesReport(GradleProject gradleProject)
 
   abstract List<String> getResolvedDependenciesReport(GradleProject gradleProject, String projectPath)
 
-  protected static ProjectAdvice fromProjectAdvice(String json) {
-    def adapter = MoshiUtils.MOSHI.adapter(ProjectAdvice)
-    return adapter.fromJson(json)
-  }
-
   abstract Set<ExplodedJar> getExplodedJarsForProjectAndVariant(GradleProject gradleProject, String projectName, String variantName)
-
-  protected static Set<ExplodedJar> fromExplodedJars(String json) {
-    def set = Types.newParameterizedType(Set, ExplodedJar)
-    def adapter = MoshiUtils.MOSHI.<Set<ExplodedJar>> adapter(set)
-    return adapter.fromJson(json)
-  }
 
   static class V2 extends AdviceStrategy {
 
+    private static boolean COMPRESSED = Flags.INSTANCE.compress()
+
     @Override
     Map<String, Set<String>> getDuplicateDependenciesReport(GradleProject gradleProject) {
-      def json = gradleProject.singleArtifact(':', OutputPathsKt.getDuplicateDependenciesReport())
-        .asPath.text.trim()
-      def set = Types.newParameterizedType(Set, String)
-      def map = Types.newParameterizedType(Map, String, set)
-      def adapter = MoshiUtils.MOSHI.<Map<String, Set<String>>> adapter(map)
-      return adapter.fromJson(json)
+      def duplicateDependencies = gradleProject.singleArtifact(':', OutputPathsKt.getDuplicateDependenciesReport())
+
+      bufferRead(duplicateDependencies.asFile).withCloseable { reader ->
+        def set = Types.newParameterizedType(Set, String)
+        def map = Types.newParameterizedType(Map, String, set)
+        def adapter = MoshiUtils.MOSHI.<Map<String, Set<String>>> adapter(map)
+
+        adapter.fromJson(reader)
+      }
+
+//      def json = gradleProject.singleArtifact(':', OutputPathsKt.getDuplicateDependenciesReport())
+//        .asPath.text.trim()
+//      def set = Types.newParameterizedType(Set, String)
+//      def map = Types.newParameterizedType(Map, String, set)
+//      def adapter = MoshiUtils.MOSHI.<Map<String, Set<String>>> adapter(map)
+//      return adapter.fromJson(json)
     }
 
     @Override
@@ -64,29 +56,54 @@ abstract class AdviceStrategy {
     }
 
     @Override
-    def actualBuildHealth(GradleProject gradleProject) {
+    Set<ProjectAdvice> actualBuildHealth(GradleProject gradleProject) {
       def buildHealth = gradleProject.singleArtifact(':', OutputPathsKt.getFinalAdvicePathV2())
-      return fromAllProjectAdviceJson(buildHealth.asPath.text)
+
+      bufferRead(buildHealth.asFile).withCloseable { reader ->
+        MoshiUtils.MOSHI.adapter(BuildHealth).fromJson(reader).projectAdvice
+      }
+    }
+
+    private static BufferedSource bufferRead(File file) {
+      def fileSource = Okio.source(file)
+      if (COMPRESSED) {
+        Okio.buffer(new GzipSource(fileSource))
+      } else {
+        Okio.buffer(fileSource)
+      }
     }
 
     @Override
-    def actualComprehensiveAdviceForProject(GradleProject gradleProject, String projectName) {
-      def advice = gradleProject.singleArtifact(projectName, OutputPathsKt.getAggregateAdvicePathV2())
-      return fromProjectAdvice(advice.asPath.text)
+    ProjectAdvice actualComprehensiveAdviceForProject(GradleProject gradleProject, String projectName) {
+      def advice = gradleProject.singleArtifact(projectName, OutputPathsKt.getAdvicePathV2())
+
+      bufferRead(advice.asFile).withCloseable { reader ->
+        MoshiUtils.MOSHI.adapter(ProjectAdvice).fromJson(reader)
+      }
+
+//      return fromProjectAdvice(advice.asPath.text)
     }
 
     @Override
     Set<ExplodedJar> getExplodedJarsForProjectAndVariant(GradleProject gradleProject, String projectName, String variantName) {
       def explodedJarsGz = gradleProject.singleArtifact(projectName, OutputPathsKt.getExplodedJarsPathV2(variantName))
-      // TODO(pde): Extract to a better place
-      def json = new FileInputStream(explodedJarsGz.asFile).withStream { is ->
-        new GZIPInputStream(is).withStream { gzis ->
-          new InputStreamReader(gzis, "UTF-8").withReader { reader ->
-            return reader.text
-          }
-        }
+
+      bufferRead(explodedJarsGz.asFile).withCloseable { reader ->
+        def set = Types.newParameterizedType(Set, ExplodedJar)
+        def adapter = MoshiUtils.MOSHI.<Set<ExplodedJar>> adapter(set)
+        adapter.fromJson(reader)
       }
-      return fromExplodedJars(json)
+
+
+//      // TODO(pde): Extract to a better place
+//      def json = new FileInputStream(explodedJarsGz.asFile).withStream { is ->
+//        new GZIPInputStream(is).withStream { gzis ->
+//          new InputStreamReader(gzis, "UTF-8").withReader { reader ->
+//            return reader.text
+//          }
+//        }
+//      }
+//      return fromExplodedJars(json)
     }
   }
 }

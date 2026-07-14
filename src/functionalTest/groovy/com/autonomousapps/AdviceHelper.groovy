@@ -93,10 +93,6 @@ final class AdviceHelper {
     return [] as Set<Advice>
   }
 
-  static Set<PluginAdvice> emptyPluginAdvice() {
-    return [] as Set<PluginAdvice>
-  }
-
   static ProjectAdvice projectAdvice(
     String projectPath,
     Set<Advice> advice,

@@ -5,6 +5,7 @@
 
 package com.autonomousapps.internal.utils
 
+import com.autonomousapps.Flags
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.source.SourceKind
@@ -13,6 +14,7 @@ import com.squareup.moshi.*
 import com.squareup.moshi.Types.newParameterizedType
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dev.zacsweers.moshix.sealed.reflect.MoshiSealedJsonAdapterFactory
+import okio.BufferedSink
 import okio.BufferedSource
 import okio.GzipSink
 import okio.buffer
@@ -20,6 +22,8 @@ import okio.sink
 import java.io.File
 
 public const val noJsonIndent: String = ""
+
+public val COMPRESS: Boolean = Flags.compress()
 
 public val MOSHI: Moshi by lazy {
   Moshi.Builder()
@@ -67,7 +71,9 @@ public inline fun <reified T> String.fromJson(): T {
   return getJsonAdapter<T>().fromJson(this)!!
 }
 
-public inline fun <reified T> T.toJson(withNulls: Boolean = false): String {
+public inline fun <reified T> T.toJson(
+  withNulls: Boolean = false,
+): String {
   return getJsonAdapter<T>(withNulls).toJson(this)
 }
 
@@ -93,7 +99,7 @@ public inline fun <reified K, reified V> BufferedSource.fromJsonMapSet(): Map<K,
  */
 public inline fun <reified K, reified V> File.bufferWriteJsonMap(
   set: Map<K, V>,
-  compress: Boolean = false,
+  compress: Boolean = COMPRESS,
   withNulls: Boolean = false,
   indent: String = noJsonIndent
 ) {
@@ -111,7 +117,7 @@ public inline fun <reified K, reified V> File.bufferWriteJsonMap(
  */
 public inline fun <reified K, reified V> File.bufferWriteJsonMapSet(
   set: Map<K, Set<V>>,
-  compress: Boolean = false,
+  compress: Boolean = COMPRESS,
   indent: String = noJsonIndent
 ) {
   jsonWriter(compress).use { writer ->
@@ -128,7 +134,7 @@ public inline fun <reified K, reified V> File.bufferWriteJsonMapSet(
  */
 public inline fun <reified T> File.bufferWriteJsonList(
   set: List<T>,
-  compress: Boolean = false,
+  compress: Boolean = COMPRESS,
   indent: String = noJsonIndent,
 ) {
   jsonWriter(compress).use { writer ->
@@ -146,7 +152,7 @@ public inline fun <reified T> File.bufferWriteJsonList(
  */
 public inline fun <reified T> File.bufferWriteJsonSet(
   set: Set<T>,
-  compress: Boolean = false,
+  compress: Boolean = COMPRESS,
   indent: String = noJsonIndent,
 ) {
   jsonWriter(compress).use { writer ->
@@ -164,7 +170,7 @@ public inline fun <reified T> File.bufferWriteJsonSet(
  */
 public inline fun <reified T> File.bufferWriteJson(
   obj: T,
-  compress: Boolean = false,
+  compress: Boolean = COMPRESS,
   indent: String = noJsonIndent,
 ) {
   jsonWriter(compress).use { writer ->
@@ -174,7 +180,7 @@ public inline fun <reified T> File.bufferWriteJson(
 
 public inline fun <reified A, reified B> File.bufferWriteParameterizedJson(
   parameterizedData: A,
-  compress: Boolean = false,
+  compress: Boolean = COMPRESS,
   indent: String = noJsonIndent
 ) {
   jsonWriter(compress).use { writer ->
@@ -184,7 +190,7 @@ public inline fun <reified A, reified B> File.bufferWriteParameterizedJson(
   }
 }
 
-public fun File.jsonWriter(compress: Boolean = false): JsonWriter {
+public fun File.jsonWriter(compress: Boolean = COMPRESS): JsonWriter {
   val buffer = if (compress) {
     GzipSink(sink()).buffer()
   } else {
