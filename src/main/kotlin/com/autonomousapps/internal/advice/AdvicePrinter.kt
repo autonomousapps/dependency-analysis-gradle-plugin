@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.advice
 
+import com.autonomousapps.internal.utils.uncapitalizeSafely
 import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
@@ -72,7 +73,7 @@ internal class AdvicePrinter(
     val effectiveToConfiguration = if (scope.isEmpty()) {
       toConfiguration
     } else {
-      toConfiguration.removePrefix(scope).replaceFirstChar(Char::lowercase)
+      toConfiguration.removePrefix(scope).uncapitalizeSafely()
     }
     return "  $effectiveToConfiguration${gav(advice.coordinates)}"
   }

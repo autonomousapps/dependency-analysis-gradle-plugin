@@ -4,6 +4,8 @@ package com.autonomousapps.model.internal.declaration
 
 import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.internal.unsafeLazy
+import com.autonomousapps.internal.utils.capitalizeSafely
+import com.autonomousapps.internal.utils.uncapitalizeSafely
 
 internal class AnnotationProcessorNameMatcher(
   val kind: AnnotationProcessor,
@@ -19,16 +21,16 @@ internal class AnnotationProcessorNameMatcher(
   private val sourceSetNamesToConfigurationNames: Map<String, String> by unsafeLazy {
     supportedSourceSetNames.associateWith { sourceSetName ->
       if (kind == AnnotationProcessor.KAPT) {
-        kind.value + computeKaptName(sourceSetName).replaceFirstChar(Char::uppercase)
+        kind.value + computeKaptName(sourceSetName).capitalizeSafely()
       } else {
-        sourceSetName + kind.value.replaceFirstChar(Char::uppercase)
+        sourceSetName + kind.value.capitalizeSafely()
       }
     }
   }
 
   /** For KMP and Kapt, we change `jvmTest` to `test`. */
   private fun computeKaptName(base: String): String = when (projectType) {
-    ProjectType.KMP -> base.substringAfter("jvm").replaceFirstChar(Char::lowercase)
+    ProjectType.KMP -> base.substringAfter("jvm").uncapitalizeSafely()
     else -> base
   }
 

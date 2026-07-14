@@ -7,6 +7,7 @@ import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.utils.Colors
 import com.autonomousapps.internal.utils.Colors.colorize
 import com.autonomousapps.internal.utils.appendReproducibleNewLine
+import com.autonomousapps.internal.utils.uncapitalizeSafely
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.model.*
 import com.autonomousapps.model.internal.ProjectMetadata
@@ -282,7 +283,7 @@ internal class ProjectHealthConsoleReportBuilder(
             // => "Implementation"
             .substringAfter(sourceSetName)
             // => "implementation"
-            .replaceFirstChar(Char::lowercase)
+            .uncapitalizeSafely()
 
           val line = line(kmpConfigurationName, data.second, data.third)
           builder

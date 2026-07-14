@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.transform
 
+import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.intermediates.Usage
@@ -47,7 +48,7 @@ internal class UsageToConfigurationMapper(
     } else {
       // "debug" + "implementation" -> "debugImplementation"
       // "test" + "implementation" -> "testImplementation"
-      "${theSourceKind.configurationNamePrefix()}${usage.bucket.value.replaceFirstChar(Char::uppercase)}"
+      "${theSourceKind.configurationNamePrefix()}${usage.bucket.value.capitalizeSafely()}"
     }
   }
 
@@ -66,17 +67,17 @@ internal class UsageToConfigurationMapper(
 
   // TODO(tsr): this needs similar handling to above.
   private fun SourceKind.configurationNameSuffix(): String = when (kind) {
-    SourceKind.MAIN_KIND -> name.replaceFirstChar(Char::uppercase)
+    SourceKind.MAIN_KIND -> name.capitalizeSafely()
     SourceKind.TEST_KIND -> "Test"
     SourceKind.ANDROID_TEST_FIXTURES_KIND -> "TestFixtures"
     SourceKind.ANDROID_TEST_KIND -> "AndroidTest"
-    SourceKind.CUSTOM_JVM_KIND -> name.replaceFirstChar(Char::uppercase)
+    SourceKind.CUSTOM_JVM_KIND -> name.capitalizeSafely()
     else -> error("Unexpected kind: $kind")
   }
 
   private fun SourceKind.variantName(sourceKindName: String): String {
     return if (projectType == ProjectType.ANDROID && name != sourceKindName) {
-      "$name${sourceKindName.replaceFirstChar(Char::uppercase)}"
+      "$name${sourceKindName.capitalizeSafely()}"
     } else {
       sourceKindName
     }
