@@ -32,7 +32,7 @@ internal class CoordinatesTest {
     val coordinatesJson = tempDir.resolve("coordinates.json")
     coordinatesJson.writeText(serialized)
 
-    val deserialized = coordinatesJson.toFile().fromJsonSet<AndroidLinterDependency>()
+    val deserialized = coordinatesJson.toFile().fromJsonSet<AndroidLinterDependency>(compressed = false)
     assertThat(deserialized).isEqualTo(linterDependency)
   }
 
@@ -51,7 +51,7 @@ internal class CoordinatesTest {
     val coordinatesJson = tempDir.resolve("coordinates.json")
     coordinatesJson.writeText(serialized)
 
-    val deserialized = coordinatesJson.toFile().fromJsonSet<AndroidLinterDependency>()
+    val deserialized = coordinatesJson.toFile().fromJsonSet<AndroidLinterDependency>(compressed = false)
     assertThat(deserialized).isEqualTo(linterDependency)
   }
 
@@ -70,7 +70,7 @@ internal class CoordinatesTest {
     val coordinatesJson = tempDir.resolve("coordinates.json")
     coordinatesJson.writeText(serialized)
 
-    val deserialized = coordinatesJson.toFile().fromJsonSet<AndroidLinterDependency>()
+    val deserialized = coordinatesJson.toFile().fromJsonSet<AndroidLinterDependency>(compressed = false)
     assertThat(deserialized).isEqualTo(linterDependency)
   }
 
