@@ -27,8 +27,6 @@ abstract class AdviceStrategy {
 
   static class V2 extends AdviceStrategy {
 
-    private static boolean COMPRESSED = Flags.INSTANCE.compress()
-
     @Override
     Map<String, Set<String>> getDuplicateDependenciesReport(GradleProject gradleProject) {
       def duplicateDependencies = gradleProject.singleArtifact(':', OutputPathsKt.getDuplicateDependenciesReport())
@@ -40,13 +38,6 @@ abstract class AdviceStrategy {
 
         adapter.fromJson(reader)
       }
-
-//      def json = gradleProject.singleArtifact(':', OutputPathsKt.getDuplicateDependenciesReport())
-//        .asPath.text.trim()
-//      def set = Types.newParameterizedType(Set, String)
-//      def map = Types.newParameterizedType(Map, String, set)
-//      def adapter = MoshiUtils.MOSHI.<Map<String, Set<String>>> adapter(map)
-//      return adapter.fromJson(json)
     }
 
     @Override
@@ -66,7 +57,7 @@ abstract class AdviceStrategy {
 
     private static BufferedSource bufferRead(File file) {
       def fileSource = Okio.source(file)
-      if (COMPRESSED) {
+      if (Flags.INSTANCE.compress()) {
         Okio.buffer(new GzipSource(fileSource))
       } else {
         Okio.buffer(fileSource)
@@ -80,8 +71,6 @@ abstract class AdviceStrategy {
       bufferRead(advice.asFile).withCloseable { reader ->
         MoshiUtils.MOSHI.adapter(ProjectAdvice).fromJson(reader)
       }
-
-//      return fromProjectAdvice(advice.asPath.text)
     }
 
     @Override
@@ -93,17 +82,6 @@ abstract class AdviceStrategy {
         def adapter = MoshiUtils.MOSHI.<Set<ExplodedJar>> adapter(set)
         adapter.fromJson(reader)
       }
-
-
-//      // TODO(pde): Extract to a better place
-//      def json = new FileInputStream(explodedJarsGz.asFile).withStream { is ->
-//        new GZIPInputStream(is).withStream { gzis ->
-//          new InputStreamReader(gzis, "UTF-8").withReader { reader ->
-//            return reader.text
-//          }
-//        }
-//      }
-//      return fromExplodedJars(json)
     }
   }
 }
