@@ -121,6 +121,7 @@ gradleTestKitSupport {
 }
 
 dependencies {
+  api(libs.kotlin.stdlib.jdk8)
   api(libs.moshi.core)
   api(libs.moshix.sealed.runtime)
 
@@ -128,7 +129,6 @@ dependencies {
   implementation(project(":graph-support"))
   implementation(project(":variant-artifacts"))
   implementation(libs.guava)
-  implementation(libs.kotlin.stdlib.jdk8)
   implementation(libs.kotlin.editor.relocated)
   implementation(libs.moshi.kotlin)
   implementation(libs.moshix.sealed.reflect)
