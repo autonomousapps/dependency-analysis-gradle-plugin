@@ -107,12 +107,10 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
       // normalize
       val path = includedBuildProject.removePrefix(":")
 
-      // The first part is the name of the included build, and the rest is the fully-qualified name to the project
+      // The first part is the name of the included build, and the rest is the fully-qualified name of the project
       val index = path.indexOf(':')
       if (index == -1) {
-        error(
-          "Expected path to included build project (form: <included build name>:<project path>). Got '$includedBuildProject'."
-        )
+        error("Expected path to included build project (form: <included build name>:<project path>). Was '$includedBuildProject'.")
       }
 
       val includedBuild = project.gradle.includedBuild(path.substring(0, index))
@@ -124,8 +122,8 @@ public abstract class GradleTestKitSupportExtension(private val project: Project
       includedBuild.task("$projectPath:$taskName")
     }.forEach { taskRef ->
       // Add dependency from this project's installation task onto the included build project's installation task
-      installForFunctionalTest.configure {
-        it.dependsOn(taskRef)
+      installForFunctionalTest.configure { t ->
+        t.dependsOn(taskRef)
       }
     }
 
