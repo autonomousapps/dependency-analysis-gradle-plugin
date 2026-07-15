@@ -1,9 +1,13 @@
 Dependency Analysis Plugin Changelog
 
 # Version 3.17.0
+* [feat]: support KMP with 'fixDependencies' (`RewriteTask`) in Kotlin DSL only.
 * [feat]: add DSL option for binary-compatibility check. It now defaults to 'false'. This is a breaking behavioral 
   change.
+* [fix]: close leaked `ZipFile` objects.
+* [fix]: use Iterator.remove() to remove changes in Android project analysis.
 * [performance]: reduce memory usage when *not* opting-in to the binary-compatibility check.
+* [refactor]: limit use of `T.toJson()`. Prefer `bufferedWriteJson()`.
 
 # Version 3.16.1
 * [fix]: stop checking for missing runtime exceptions.
