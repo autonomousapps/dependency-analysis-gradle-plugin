@@ -8,6 +8,7 @@ import com.autonomousapps.internal.graph.GraphWriter
 import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapNotNullToSet
+import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.CoordinatesContainer
@@ -18,6 +19,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.FileCollectionDependency
 import org.gradle.api.artifacts.result.ResolvedComponentResult
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -64,6 +66,19 @@ public abstract class GraphViewTask : DefaultTask() {
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
   public abstract val declarations: RegularFileProperty
+
+  /**
+   * Unused, except to influence the up-to-date-ness of this task. [compileFiles] contains external artifacts only and
+   * [declarations] covers only this project's own declarations, so without this input a transitive project dependency
+   * added by an upstream project would not change any tracked input, and a stale graph would be replayed from the
+   * build cache (or the task would be UP-TO-DATE).
+   */
+  @get:Input
+  public abstract val compileClasspathComponentIds: SetProperty<String>
+
+  /** See [compileClasspathComponentIds]. */
+  @get:Input
+  public abstract val runtimeClasspathComponentIds: SetProperty<String>
 
   /** Needed to make sure task gives the same result if the build configuration in a composite changed between runs. */
   @get:Input
@@ -118,8 +133,29 @@ public abstract class GraphViewTask : DefaultTask() {
         .mapNotNullToSet { it.toCoordinates() }
     })
 
+    compileClasspathComponentIds.set(compileClasspathResult.map { it.allComponentIds() })
+    runtimeClasspathComponentIds.set(runtimeClasspathResult.map { it.allComponentIds() })
+
     compileFiles.setFrom(project.provider { compileClasspath.externalArtifactsFor(jarAttr).artifactFiles })
     runtimeFiles.setFrom(project.provider { runtimeClasspath.externalArtifactsFor(jarAttr).artifactFiles })
+  }
+
+  private companion object {
+    private fun ResolvedComponentResult.allComponentIds(): Set<String> {
+      val visited = mutableSetOf<ResolvedComponentResult>()
+      val queue = ArrayDeque<ResolvedComponentResult>()
+      queue.add(this)
+
+      while (queue.isNotEmpty()) {
+        val node = queue.removeFirst()
+        if (!visited.add(node)) continue
+        node.dependencies.asSequence()
+          .filterIsInstance<ResolvedDependencyResult>()
+          .forEach { queue.add(it.selected) }
+      }
+
+      return visited.mapToOrderedSet { it.id.displayName }
+    }
   }
 
   @TaskAction public fun action() {
