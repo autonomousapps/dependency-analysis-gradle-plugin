@@ -239,6 +239,7 @@ package com.autonomousapps.extension {
 
   public abstract class UsageAnalysisHandler {
     ctor @javax.inject.Inject public UsageAnalysisHandler(org.gradle.api.model.ObjectFactory objects);
+    method public final void checkBinaryCompatibility(boolean shouldCheck);
     method public final void checkSuperClasses(boolean shouldCheck);
   }
 
