@@ -107,7 +107,7 @@ public abstract class ArtifactsReportTask : DefaultTask() {
     val excludedIdentifiers = getExcludedIdentifiers()
 
     output.bufferWriteJsonSet(allArtifacts + opaqueArtifacts)
-    excludedIdentifiersOutput.writeText(excludedIdentifiers.toJson())
+    excludedIdentifiersOutput.bufferWriteJsonSet(excludedIdentifiers)
   }
 
   private fun toPhysicalArtifacts(artifacts: ArtifactCollection): Set<PhysicalArtifact> {
