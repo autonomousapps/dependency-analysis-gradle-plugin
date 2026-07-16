@@ -53,7 +53,6 @@ final class IncludedBuildWithAnnotationProcessorProject extends AbstractProject 
       }
       .withIncludedBuild('processor-build') { second ->
         second.withRootProject { r ->
-          r.gradleProperties += GradleProperties.enableConfigurationCache() + GRADLE_PROPERTIES
           r.withBuildScript { bs ->
             bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinJvmNoApply]
           }
