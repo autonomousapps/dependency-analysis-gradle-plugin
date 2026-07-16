@@ -6,7 +6,6 @@ import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.gradle.Dependency
-import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Java
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 import com.autonomousapps.model.Advice
@@ -105,7 +104,6 @@ final class CompileOnlyTransitiveProject extends AbstractProject {
         .withIncludedBuild('other') { included ->
           included
             .withRootProject { r ->
-              r.gradleProperties += GradleProperties.enableConfigurationCache() + GRADLE_PROPERTIES
               r.withBuildScript { bs ->
                 bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinJvmNoApply]
               }

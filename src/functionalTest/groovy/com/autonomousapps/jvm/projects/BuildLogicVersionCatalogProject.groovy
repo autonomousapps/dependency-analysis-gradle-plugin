@@ -43,7 +43,6 @@ final class BuildLogicVersionCatalogProject extends AbstractProject {
       }
       .withIncludedBuild(BUILD_LOGIC) { buildLogic ->
         buildLogic.withRootProject { r ->
-          r.gradleProperties += GRADLE_PROPERTIES
           r.withSettingsScript { s ->
             s.additions = """\
             dependencyResolutionManagement {
