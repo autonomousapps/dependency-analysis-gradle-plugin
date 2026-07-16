@@ -17,13 +17,13 @@ final class GraphViewCacheSpec extends AbstractJvmSpec {
     def task = ':proj:graphViewMain'
 
     when: 'First build'
-    def result = build(gradleVersion, gradleProject.rootDir, task, '--build-cache', '-Dv=0.3.0-alpha27')
+    def result = build(gradleVersion, gradleProject.rootDir, task, '-Dv=0.3.0-alpha27')
 
     then: 'Task executed'
     assertAbout(buildTasks()).that(result.task(task)).succeeded()
 
     when: 'Second build'
-    result = build(gradleVersion, gradleProject.rootDir, 'clean', task, '--build-cache', '-Dv=0.3.0-alpha28')
+    result = build(gradleVersion, gradleProject.rootDir, 'clean', task, '-Dv=0.3.0-alpha28')
 
     then: 'Task executed (not FROM_CACHE)'
     assertAbout(buildTasks()).that(result.task(task)).succeeded()

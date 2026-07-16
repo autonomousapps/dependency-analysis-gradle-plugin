@@ -4,7 +4,6 @@ package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AndroidAssetsProject
 import com.autonomousapps.internal.android.AgpVersion
-import org.gradle.util.GradleVersion
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.kit.truth.BuildTaskSubject.buildTasks
@@ -20,11 +19,7 @@ final class ConfigurationCacheSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when: 'We build the first time'
-    def result = build(
-      gradleVersion as GradleVersion,
-      gradleProject.rootDir,
-      'buildHealth', '--configuration-cache'
-    )
+    def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'buildHealth produces expected results'
     assertAbout(buildHealth())
@@ -35,11 +30,7 @@ final class ConfigurationCacheSpec extends AbstractAndroidSpec {
     assertAbout(buildTasks()).that(result.task(':generateBuildHealth')).succeeded()
 
     when: 'We build again'
-    result = build(
-      gradleVersion as GradleVersion,
-      gradleProject.rootDir,
-      'buildHealth', '--configuration-cache'
-    )
+    result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then: 'buildHealth produces expected results'
     assertAbout(buildHealth())

@@ -19,7 +19,7 @@ final class GraphViewProjectEdgeCacheSpec extends AbstractJvmSpec {
     def task = ':consumer:graphViewMain'
 
     when: 'First build, without the direct -> transitive edge'
-    def result = build(gradleVersion, gradleProject.rootDir, ':buildHealth', '--build-cache')
+    def result = build(gradleVersion, gradleProject.rootDir, ':buildHealth')
     def graphCompilePath = OutputPathsKt.getGraphCompilePath('main')
     def graphOutput = gradleProject.singleArtifact('consumer', graphCompilePath).asFile
 
@@ -28,7 +28,7 @@ final class GraphViewProjectEdgeCacheSpec extends AbstractJvmSpec {
     assertThat(graphOutput.text).doesNotContain(':transitive')
 
     when: 'Second build, after the direct project adds an api dependency on transitive'
-    result = build(gradleVersion, gradleProject.rootDir, 'clean', ':buildHealth', '--build-cache', '-Dedge=true')
+    result = build(gradleVersion, gradleProject.rootDir, 'clean', ':buildHealth', '-Dedge=true')
 
     then: 'Task executed (not FROM_CACHE) and transitive is in the graph'
     assertAbout(buildTasks()).that(result.task(task)).succeeded()
@@ -44,13 +44,13 @@ final class GraphViewProjectEdgeCacheSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when: 'First build, without the direct -> transitive edge'
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth', '--build-cache')
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then: 'There is no advice'
     assertThat(actualProjectAdvice('consumer').dependencyAdvice).isEmpty()
 
     when: 'Second build, after the direct project adds an api dependency on transitive'
-    build(gradleVersion, gradleProject.rootDir, 'clean', ':buildHealth', '--build-cache', '-Dedge=true')
+    build(gradleVersion, gradleProject.rootDir, 'clean', ':buildHealth', '-Dedge=true')
 
     then: 'Advises declaring the used transitive dependency directly'
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)

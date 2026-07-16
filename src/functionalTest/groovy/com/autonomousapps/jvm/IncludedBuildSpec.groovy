@@ -17,7 +17,7 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
    * Only since Gradle 8.2 we can use the more precise BuildIdentifier.buildPath (instead of BuildIdentifier.name).
    * That's why the expectations in this test differ depending on Gradle version.
    */
-  private final static isAtLeastGradle82(GradleVersion version)  {
+  private final static isAtLeastGradle82(GradleVersion version) {
     version >= GradleVersion.version("8.2")
   }
 
@@ -151,19 +151,19 @@ final class IncludedBuildSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, '--build-cache', ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     when: 'Running again - UP-TO-DATE'
-    build(gradleVersion, gradleProject.rootDir, '--build-cache', ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then: 'Result is the same'
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     when: 'Running again - FROM-CACHE'
-    build(gradleVersion, gradleProject.rootDir, '--build-cache', 'clean', ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, 'clean', ':buildHealth')
 
     then: 'Result is the same'
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
