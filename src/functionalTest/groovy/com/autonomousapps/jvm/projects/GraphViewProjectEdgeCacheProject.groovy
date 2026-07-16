@@ -5,8 +5,12 @@ package com.autonomousapps.jvm.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.gradle.SettingsScript
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
+
+import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.gradle.Dependency.implementation
 
 final class GraphViewProjectEdgeCacheProject extends AbstractProject {
 
@@ -30,35 +34,20 @@ final class GraphViewProjectEdgeCacheProject extends AbstractProject {
         }
       }
       .withSubproject('consumer') { s ->
-        s.sources = [CONSUMER_SOURCE]
-        s.withFile(
-          'src/edge/kotlin/com/example/UsesTransitive.kt',
-          """\
-          package com.example
-
-          import com.example.transitive.Transitive
-
-          class UsesTransitive {
-            private val transitive = Transitive()
-          }
-          """.stripIndent()
-        )
+        s.sources = CONSUMER_SOURCE
         s.withBuildScript { bs ->
           bs.plugins = kotlin
+          bs.dependencies(implementation(':direct'))
           bs.withGroovy("""\
           if (providers.systemProperty('edge').present) {
             sourceSets.main.kotlin.srcDir('src/edge/kotlin')
-          }
-
-          dependencies {
-            implementation project(':direct')
-          }""")
+          }""".stripIndent())
         }
       }
       .withSubproject('direct') { s ->
-        s.sources = [DIRECT_SOURCE]
+        s.sources = DIRECT_SOURCE
         s.withBuildScript { bs ->
-          bs.plugins = kotlinOnly
+          bs.plugins = kotlin
           // The system property models an upstream change adding a project edge: the
           // consumer's own build script and declarations are untouched by it.
           bs.withGroovy("""\
@@ -70,39 +59,72 @@ final class GraphViewProjectEdgeCacheProject extends AbstractProject {
         }
       }
       .withSubproject('transitive') { s ->
-        s.sources = [TRANSITIVE_SOURCE]
+        s.sources = TRANSITIVE_SOURCE
         s.withBuildScript { bs ->
-          bs.plugins = kotlinOnly
+          bs.plugins = kotlin
         }
       }
       .write()
   }
 
-  private static final Source CONSUMER_SOURCE = new Source(
-    SourceType.KOTLIN, 'Main', 'com/example',
-    """\
+  private static final List<Source> CONSUMER_SOURCE = [
+    Source.kotlin(
+      '''\
       package com.example
 
       import com.example.direct.Direct
       
       class Main {
         private val direct = Direct()
-      }""".stripIndent()
-  )
+      }'''.stripIndent()
+    ).build(),
+    Source.kotlin(
+      '''\
+      package com.example
 
-  private static final Source DIRECT_SOURCE = new Source(
-    SourceType.KOTLIN, 'Direct', 'com/example/direct',
-    """\
+      import com.example.transitive.Transitive
+      
+      class UsesTransitive {
+        private val transitive = Transitive()
+      }'''.stripIndent()
+    )
+      .withSourceSet('edge')
+      .build(),
+  ]
+
+  private static final List<Source> DIRECT_SOURCE = [
+    Source.kotlin(
+      '''\
       package com.example.direct
       
-      class Direct""".stripIndent()
-  )
+      class Direct'''.stripIndent()
+    ).build(),
+  ]
 
-  private static final Source TRANSITIVE_SOURCE = new Source(
-    SourceType.KOTLIN, 'Transitive', 'com/example/transitive',
-    """\
+  private static final List<Source> TRANSITIVE_SOURCE = [
+    Source.kotlin(
+      '''\
       package com.example.transitive
       
-      class Transitive""".stripIndent()
-  )
+      class Transitive'''.stripIndent()
+    ).build(),
+  ]
+
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
+  }
+
+  private final Set<Advice> consumerAdvice = [
+    Advice.ofAdd(projectCoordinates(':transitive'), 'implementation')
+  ]
+
+  private static Set<Advice> directAdvice = [
+    Advice.ofRemove(projectCoordinates(':transitive'), 'api')
+  ]
+
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    projectAdviceForDependencies(':consumer', consumerAdvice),
+    projectAdviceForDependencies(':direct', directAdvice),
+    emptyProjectAdviceFor(':transitive'),
+  ]
 }
