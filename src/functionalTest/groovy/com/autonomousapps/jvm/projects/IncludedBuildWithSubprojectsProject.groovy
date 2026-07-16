@@ -50,7 +50,7 @@ final class IncludedBuildWithSubprojectsProject extends AbstractProject {
       }
       .withIncludedBuild('second-build') { second ->
         second.withRootProject { r ->
-          r.gradleProperties += GradleProperties.enableConfigurationCache() + ADDITIONAL_PROPERTIES
+          r.gradleProperties += GradleProperties.enableConfigurationCache() + GRADLE_PROPERTIES
           r.withBuildScript { bs ->
             bs.plugins = [Plugins.dependencyAnalysis, Plugins.kotlinJvmNoApply]
           }
