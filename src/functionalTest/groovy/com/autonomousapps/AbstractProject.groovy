@@ -14,8 +14,12 @@ import com.autonomousapps.utils.DebugAware
 @SuppressWarnings('GrMethodMayBeStatic')
 abstract class AbstractProject extends AbstractGradleProject {
 
-  private static final String PRINT_ADVICE = "dependency.analysis.print.build.health=true"
-  protected static final GradleProperties ADDITIONAL_PROPERTIES = GradleProperties.of(PRINT_ADVICE)
+  protected static final GradleProperties GRADLE_PROPERTIES = GradleProperties.of(
+    GradleProperties.JVM_ARGS,
+    GradleProperties.PARALLEL,
+    GradleProperties.BUILD_CACHE,
+    "dependency.analysis.print.build.health=true",
+  )
 
   /** Applies the 'org.jetbrains.kotlin.jvm' plugin. */
   protected static final List<Plugin> kotlinOnly = [Plugins.kotlinJvmNoVersion]
@@ -85,15 +89,15 @@ abstract class AbstractProject extends AbstractGradleProject {
   protected GradleProject.Builder newGradleProjectBuilder(
     GradleProject.DslKind dslKind = GradleProject.DslKind.GROOVY
   ) {
-    def additionalProperties = ADDITIONAL_PROPERTIES
+    def gradleProperties = GRADLE_PROPERTIES
     // There is a Gradle bug that makes tests break when the test uses CC/IP and we're also debugging
     if (!DebugAware.debug) {
-      additionalProperties += GradleProperties.enableConfigurationCache()
+      gradleProperties += GradleProperties.enableConfigurationCache()
     }
 
     return super.newGradleProjectBuilder(dslKind)
       .withRootProject { r ->
-        r.gradleProperties += additionalProperties
+        r.gradleProperties = gradleProperties
         r.withBuildScript { bs ->
           bs.plugins(plugins.dependencyAnalysis, plugins.kotlinJvmNoApply)
         }
@@ -112,7 +116,7 @@ abstract class AbstractProject extends AbstractGradleProject {
     GradleProject.DslKind dslKind,
     boolean withKotlin
   ) {
-    def additionalProperties = ADDITIONAL_PROPERTIES
+    def additionalProperties = GRADLE_PROPERTIES
     // There is a Gradle bug that makes tests break when the test uses CC/IP and we're also debugging
     if (!DebugAware.debug) {
       additionalProperties += GradleProperties.enableConfigurationCache()
