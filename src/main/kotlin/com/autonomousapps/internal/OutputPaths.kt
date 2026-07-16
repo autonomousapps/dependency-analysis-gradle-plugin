@@ -146,3 +146,4 @@ public fun getResolvedDependenciesReport(): String = "$ROOT_DIR/resolved-depende
 public fun getResolvedVersionsTomlPath(): String = "$ROOT_DIR/resolvedAllLibs.versions.toml"
 public fun getTypeUsagePath(variantName: String = "main"): String = "$ROOT_DIR/$variantName/type-usage.json"
 public fun getPublicTypeUsagePath(): String = "$ROOT_DIR/public-type-usage-report.json"
+public fun getGraphCompilePath(variantName: String): String = "reports/dependency-analysis/$variantName/graph/graph-compile.json"

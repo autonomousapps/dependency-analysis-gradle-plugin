@@ -8,7 +8,6 @@ import com.autonomousapps.internal.graph.GraphWriter
 import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapNotNullToSet
-import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.CoordinatesContainer
@@ -165,22 +164,22 @@ public abstract class GraphViewTask : DefaultTask() {
     outputRuntime.bufferWriteJson(runtimeGraphView)
     outputRuntimeDot.writeText(graphWriter.toDot(runtimeGraph))
   }
-}
 
-private fun ResolvedComponentResult.allComponentIds(): Set<String> {
-  val visited = mutableSetOf<ResolvedComponentResult>()
-  val queue = ArrayDeque<ResolvedComponentResult>()
-  queue.add(this)
+  private fun ResolvedComponentResult.allComponentIds(): Set<String> {
+    val visited = mutableSetOf<String>()
+    val queue = ArrayDeque<ResolvedComponentResult>()
+    queue.add(this)
 
-  while (queue.isNotEmpty()) {
-    val node = queue.removeFirst()
-    if (!visited.add(node)) {
-      continue
+    while (queue.isNotEmpty()) {
+      val node = queue.removeFirst()
+      if (!visited.add(node.id.displayName)) {
+        continue
+      }
+      node.dependencies.asSequence()
+        .filterIsInstance<ResolvedDependencyResult>()
+        .forEach { queue.add(it.selected) }
     }
-    node.dependencies.asSequence()
-      .filterIsInstance<ResolvedDependencyResult>()
-      .forEach { queue.add(it.selected) }
-  }
 
-  return visited.mapToOrderedSet { it.id.displayName }
+    return visited
+  }
 }
