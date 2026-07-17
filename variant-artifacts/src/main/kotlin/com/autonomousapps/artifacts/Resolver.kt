@@ -54,9 +54,10 @@ public class Resolver<T : Named>(
       artifactDescription: ArtifactDescription<*>,
     ): Resolver<out Named> {
       val artifactName = artifactDescription.name.camelCase()
-      return if (project.extensions.extraProperties.has(artifactName)) {
+      val key = "$artifactName-resolver"
+      return if (project.extensions.extraProperties.has(key)) {
         @Suppress("UNCHECKED_CAST")
-        project.extensions.extraProperties[artifactName] as Resolver<Named>
+        project.extensions.extraProperties[key] as Resolver<Named>
       } else {
         // Register new attribute with attribute schema
         val strategy = project.dependencies.attributesSchema.attribute(artifactDescription.attribute)
@@ -69,7 +70,7 @@ public class Resolver<T : Named>(
           attributeMatchingStrategy = strategy,
         ).also {
           // memoize the value
-          project.extensions.extraProperties[artifactName] = it
+          project.extensions.extraProperties[key] = it
         }
       }
     }
