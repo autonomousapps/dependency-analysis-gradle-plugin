@@ -18,8 +18,9 @@ final class ConfigurationCacheSpec extends AbstractAndroidSpec {
     def project = new AndroidAssetsProject(agpVersion as String)
     gradleProject = project.gradleProject
 
+    // We use '--no-build-cache' because we're validating SUCCESS, and successive builds validate UP-TO-DATE
     when: 'We build the first time'
-    def result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    def result = build(gradleVersion, gradleProject.rootDir, ':buildHealth', '--no-build-cache')
 
     then: 'buildHealth produces expected results'
     assertAbout(buildHealth())
@@ -30,7 +31,7 @@ final class ConfigurationCacheSpec extends AbstractAndroidSpec {
     assertAbout(buildTasks()).that(result.task(':generateBuildHealth')).succeeded()
 
     when: 'We build again'
-    result = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    result = build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then: 'buildHealth produces expected results'
     assertAbout(buildHealth())
@@ -46,7 +47,7 @@ final class ConfigurationCacheSpec extends AbstractAndroidSpec {
       assertThat(result).output().contains('Configuration cache entry reused.')
     }
 
-    where: 'Min support for this is Gradle 7.5'
+    where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
   }
 }
