@@ -7,6 +7,7 @@ import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.attributes.AttributeMatchingStrategy
 import org.gradle.api.attributes.Category
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
@@ -14,7 +15,7 @@ import org.gradle.api.provider.Provider
 /**
  * Used for resolving custom artifacts in an aggregating project (often the "root" project), from producing projects
  * (often all or a subset of the subprojects ina build). Only for inter-project publishing and resolving (e.g., _not_
- * for publishing to Artifactory). See also [Publisher].
+ * for publishing to an external artifact repository). See also [Publisher].
  *
  * Represents a set of tightly coupled [Configuration]s:
  * * A "dependency scope" configuration ([declarable]).
@@ -36,21 +37,41 @@ public class Resolver<T : Named>(
   declarableName: String,
   category: String,
   attr: Attr<T>,
+  public val attributeMatchingStrategy: AttributeMatchingStrategy<out Named>,
 ) {
 
   public companion object {
-    /** Convenience function for creating a [Resolver] for inter-project resolving of an [ArtifactDescription]. */
+    /**
+     * Convenience function for creating a [Resolver] for inter-project resolving of an [ArtifactDescription]. Return
+     * value will be memoized, such that calling this function multiple times with the same [artifactDescription] will
+     * always result in the same [Resolver] instance being returned.
+     *
+     * Also registers [ArtifactDescription.attribute] with the project's
+     * [org.gradle.api.artifacts.dsl.DependencyHandler.attributesSchema].
+     */
     public fun interProjectResolver(
       project: Project,
       artifactDescription: ArtifactDescription<*>,
     ): Resolver<out Named> {
       val artifactName = artifactDescription.name.camelCase()
-      return Resolver(
-        project = project,
-        declarableName = artifactName,
-        category = artifactDescription.categoryName,
-        attr = Attr(artifactDescription.attribute, artifactName)
-      )
+      return if (project.extensions.extraProperties.has(artifactName)) {
+        @Suppress("UNCHECKED_CAST")
+        project.extensions.extraProperties[artifactName] as Resolver<Named>
+      } else {
+        // Register new attribute with attribute schema
+        val strategy = project.dependencies.attributesSchema.attribute(artifactDescription.attribute)
+
+        Resolver(
+          project = project,
+          declarableName = artifactName,
+          category = artifactDescription.categoryName,
+          attr = Attr(artifactDescription.attribute, artifactName),
+          attributeMatchingStrategy = strategy,
+        ).also {
+          // memoize the value
+          project.extensions.extraProperties[artifactName] = it
+        }
+      }
     }
   }
 
@@ -59,7 +80,8 @@ public class Resolver<T : Named>(
   private val internalName = "${declarableName}Classpath"
 
   /** Dependencies are declared on this configuration */
-  public val declarable: NamedDomainObjectProvider<out Configuration> = project.dependencyScopeConfiguration(declarableName)
+  public val declarable: NamedDomainObjectProvider<out Configuration> =
+    project.dependencyScopeConfiguration(declarableName)
 
   /**
    * The plugin will resolve dependencies against this internal configuration, which extends from
