@@ -8,31 +8,13 @@ import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.util.GradleVersion
-
-private val current: GradleVersion = GradleVersion.current()
-private val gradle85: GradleVersion = GradleVersion.version("8.5")
-private val gradle90: GradleVersion = GradleVersion.version("9.0")
-private val isAtLeastGradle85: Boolean = current >= gradle85
-private val isAtLeastGradle90: Boolean = current >= gradle90
 
 /**
  * Creates a "dependency scope"-type configuration, which we can think of as a _bucket_ for declaring dependencies. See
  * also [resolvableConfiguration] and [consumableConfiguration].
  */
 public fun Project.dependencyScopeConfiguration(configurationName: String): NamedDomainObjectProvider<out Configuration> {
-  return if (isAtLeastGradle85) {
-    configurations.dependencyScope(configurationName)
-  } else {
-    configurations.register(configurationName) { c ->
-      c.isCanBeResolved = false
-      c.isCanBeConsumed = true
-      if (!isAtLeastGradle90) {
-        @Suppress("DEPRECATION")
-        c.isVisible = false
-      }
-    }
-  }
+  return configurations.dependencyScope(configurationName)
 }
 
 /**
@@ -44,23 +26,9 @@ public fun Project.resolvableConfiguration(
   dependencyScopeConfiguration: NamedDomainObjectProvider<out Configuration>,
   configureAction: Action<in Configuration>,
 ): NamedDomainObjectProvider<out Configuration> {
-  return if (isAtLeastGradle85) {
-    configurations.resolvable(configurationName) { c ->
-      c.extendsFrom(dependencyScopeConfiguration.get())
-      configureAction.execute(c)
-    }
-  } else {
-    configurations.register(configurationName) { c ->
-      c.isCanBeResolved = true
-      c.isCanBeConsumed = false
-      if (!isAtLeastGradle90) {
-        @Suppress("DEPRECATION")
-        c.isVisible = false
-      }
-
-      c.extendsFrom(dependencyScopeConfiguration.get())
-      configureAction.execute(c)
-    }
+  return configurations.resolvable(configurationName) { c ->
+    c.extendsFrom(dependencyScopeConfiguration.get())
+    configureAction.execute(c)
   }
 }
 
@@ -73,20 +41,7 @@ public fun Project.consumableConfiguration(
   configurationName: String,
   configureAction: Action<in Configuration>,
 ): NamedDomainObjectProvider<out Configuration> {
-  return if (isAtLeastGradle85) {
-    configurations.consumable(configurationName) { c ->
-      configureAction.execute(c)
-    }
-  } else {
-    configurations.register(configurationName) { c ->
-      c.isCanBeConsumed = true
-      c.isCanBeResolved = false
-      if (!isAtLeastGradle90) {
-        @Suppress("DEPRECATION")
-        c.isVisible = false
-      }
-
-      configureAction.execute(c)
-    }
+  return configurations.consumable(configurationName) { c ->
+    configureAction.execute(c)
   }
 }
