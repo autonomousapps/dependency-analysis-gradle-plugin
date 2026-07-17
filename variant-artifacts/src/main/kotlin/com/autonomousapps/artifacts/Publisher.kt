@@ -7,6 +7,7 @@ import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.attributes.AttributeMatchingStrategy
 import org.gradle.api.attributes.Category
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -15,7 +16,7 @@ import org.gradle.api.tasks.bundling.AbstractArchiveTask
 
 /**
  * Used for publishing custom artifacts from a subproject to an aggregating project (often the "root" project). Only
- * for inter-project publishing (e.g., _not_ for publishing to Artifactory). See also [Resolver].
+ * for inter-project publishing (e.g., _not_ for publishing to an external artifact repository). See also [Resolver].
  *
  * Represents a set of tightly coupled [Configuration]s:
  * * A "dependency scope" configuration ([Resolver.declarable]).
@@ -36,10 +37,18 @@ public class Publisher<T : Named>(
   attr: Attr<T>,
   category: String,
   public val declarableName: String,
+  public val attributeMatchingStrategy: AttributeMatchingStrategy<out Named>,
 ) {
 
   public companion object {
-    /** Convenience function for creating a [Publisher] for inter-project publishing of an [ArtifactDescription]. */
+    /**
+     * Convenience function for creating a [Publisher] for inter-project publishing of an [ArtifactDescription]. Return
+     * value will be memoized, such that calling this function multiple times with the same [artifactDescription] will
+     * always result in the same [Publisher] instance being returned.
+     *
+     * Also registers [ArtifactDescription.attribute] with the project's
+     * [org.gradle.api.artifacts.dsl.DependencyHandler.attributesSchema].
+     */
     public fun interProjectPublisher(
       project: Project,
       artifactDescription: ArtifactDescription<*>,
@@ -49,11 +58,15 @@ public class Publisher<T : Named>(
         @Suppress("UNCHECKED_CAST")
         project.extensions.extraProperties[artifactName] as Publisher<Named>
       } else {
+        // Register new attribute with attribute schema
+        val strategy = project.dependencies.attributesSchema.attribute(artifactDescription.attribute)
+
         Publisher(
           project = project,
           declarableName = artifactName,
           category = artifactDescription.categoryName,
           attr = Attr(artifactDescription.attribute, artifactName),
+          attributeMatchingStrategy = strategy,
         ).also {
           // memoize the value
           project.extensions.extraProperties[artifactName] = it
