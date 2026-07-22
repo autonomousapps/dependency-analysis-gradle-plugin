@@ -102,6 +102,25 @@ internal inline fun <reified K, reified V> File.fromJsonMapSet(
   return bufferRead(compressed).fromJsonMapSet()
 }
 
+/** Buffers reads of the RegularFileProperty from disk to the set. */
+internal inline fun <reified K, reified V> RegularFileProperty.fromJsonMap(
+  compressed: Boolean = false,
+): Map<K, V> = get().fromJsonMap(compressed)
+
+/** Buffers reads of the RegularFile from disk to the set. */
+internal inline fun <reified K, reified V> RegularFile.fromJsonMap(
+  compressed: Boolean = false,
+): Map<K, V> = asFile.fromJsonMap(compressed)
+
+/** Buffers reads of the File from disk to the set. */
+internal inline fun <reified K, reified V> File.fromJsonMap(
+  compressed: Boolean = false,
+): Map<K, V> {
+  return bufferRead(compressed).use { reader ->
+    getJsonMapAdapter<K, V>().fromJson(reader)!!
+  }
+}
+
 /** Buffer reads of the RegularFileProperty from disk to the set. */
 internal inline fun <reified T> RegularFileProperty.fromJson(
   compressed: Boolean = false,

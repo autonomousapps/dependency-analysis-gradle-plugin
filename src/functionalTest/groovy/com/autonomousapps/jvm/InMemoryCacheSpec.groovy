@@ -15,7 +15,8 @@ class InMemoryCacheSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion, gradleProject.rootDir, ':buildHealth', ':second-build:buildHealth')
+    // '--no-build-cache': to make sure doLast always runs, printing the service identity.
+    def result = build(gradleVersion, gradleProject.rootDir, '--no-build-cache', ':buildHealth', ':second-build:buildHealth')
 
     then:
     def serviceObjects = parseServiceObjects(result)
@@ -35,7 +36,8 @@ class InMemoryCacheSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    def result = build(gradleVersion, gradleProject.rootDir, ':buildHealth', ':second-build:buildHealth')
+    // '--no-build-cache': to make sure doLast always runs, printing the service identity.
+    def result = build(gradleVersion, gradleProject.rootDir, '--no-build-cache', ':buildHealth', ':second-build:buildHealth')
 
     then:
     def serviceObjects = parseServiceObjects(result)

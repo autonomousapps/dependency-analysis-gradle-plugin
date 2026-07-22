@@ -4,7 +4,7 @@ plugins {
   id("build-logic.lib.java")
 }
 
-version = "${libs.versions.kotlineditor.core.get()}.0"
+version = "${libs.versions.kotlin.editor.core.get()}.0"
 
 dagp {
   version(version)
