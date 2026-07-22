@@ -365,6 +365,41 @@ these internal packages is at your own risk.
 For typical users who only apply the plugin and run the primary tasks (`buildHealth`, `projectHealth`, `reason`, etc.),
 major releases should be treated as non-events. For these users, the "API" is just those primary tasks.
 
+== Troubleshooting
+
+=== `org.jetbrains.kotlin:kotlin-metadata-jvm` and the Gradle runtime
+
+For Kotlin projects (whether Android, JVM, or KMP), this project uses the
+`org.jetbrains.kotlin:kotlin-metadata-jvm` artifact to read Kotlin metadata. In order to support versions of Gradle
+other than the very latest, we isolate that artifact from the main buildscript classpath because Gradle strictly
+requires a version compatible with its runtime. See the table
+https://docs.gradle.org/9.7.0-rc-1/userguide/compatibility.html[here] for more information. The upshot is that, if you
+see an error like
+
+> "Provided Metadata instance has version ..., while maximum supported version is ... To support newer
+versions, update the kotlin-metadata-jvm library."
+
+Then you should add the necessary dependency in your build scripts. Consider use of a convention plugin to manage this
+globally.
+
+.<module>/build.gradle.kts
+[source,kotlin]
+[%collapsible%open]
+----
+dependencies {
+  "dependencyAnalysisKotlinMetadata"("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.0")
+}
+----
+
+.<module>/build.gradle
+[source,groovy]
+[%collapsible]
+----
+dependencies {
+  dependencyAnalysisKotlinMetadata('org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.0')
+}
+----
+
 == Publications
 
 The following is a list of articles / blog posts that have been published discussing this plugin:
