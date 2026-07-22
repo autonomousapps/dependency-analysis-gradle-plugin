@@ -10,10 +10,7 @@ plugins {
   alias(libs.plugins.buildconfig)
 }
 
-// This version string comes from gradle.properties
-@Suppress("PropertyName")
-val VERSION: String by project
-version = VERSION
+version = providers.gradleProperty("VERSION").get()
 
 val isSnapshot: Boolean = version.toString().endsWith("SNAPSHOT")
 val isRelease: Boolean = !isSnapshot
@@ -216,8 +213,10 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
   systemProperty("com.autonomousapps.test.versions.kotlin", libs.versions.kotlinGradlePlugin.get())
   systemProperty("com.autonomousapps.test.versions.kotlin.later", libs.versions.kotlinForAndroidtests.get())
 
-  beforeTest(closureOf<TestDescriptor> {
-    logger.lifecycle("Running test: $this")
+  addTestListener(object : TestListener {
+    override fun beforeTest(testDescriptor: TestDescriptor) {
+      logger.lifecycle("Running test: $testDescriptor")
+    }
   })
 
   // ./gradlew :functionalTest -DfuncTest.package=<all|jvm|android>

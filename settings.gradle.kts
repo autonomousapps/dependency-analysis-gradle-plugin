@@ -80,7 +80,7 @@ dependencyResolutionManagement {
   }
 }
 
-val VERSION: String by extra.properties
+val version = providers.gradleProperty("VERSION").get()
 
 develocity {
   buildScan {
@@ -92,7 +92,7 @@ develocity {
     termsOfUseAgree = "yes"
 
     tag(if (isCI) "CI" else "Local")
-    tag(VERSION)
+    tag(version)
   }
 }
 
