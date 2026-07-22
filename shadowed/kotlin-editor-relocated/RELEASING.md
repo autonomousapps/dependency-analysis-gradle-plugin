@@ -7,6 +7,5 @@ Release procedure for kotlin-editor-relocated
 1. `git commit -am "chore(kotlin-editor): prepare for kotlin-editor-relocated release x."`.
 1. Publish: `./gradlew :kotlin-editor-relocated:publishToMavenCentral`.
 1. `git tag -a kotlin-editor-relocated-x -m "kotlin-editor-relocated version x."`.
-1. Update version number in `kotlin-editor-relocated/build.gradle.kts` to next snapshot version (x.y.z-SNAPSHOT).
 1. `git commit -am "chore(kotlin-editor): prepare next development version."`
 1. `git push && git push --tags`.
