@@ -6,8 +6,18 @@ pluginManagement {
     if (providers.systemProperty("local").isPresent) {
       mavenLocal()
     }
+
     gradlePluginPortal()
     mavenCentral()
+
+    // snapshots are permitted, but only for dependencies I own
+    maven {
+      url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+      content {
+        includeGroup("com.autonomousapps")
+        includeGroup("com.autonomousapps.dependency-analysis")
+      }
+    }
   }
 }
 
@@ -22,10 +32,19 @@ dependencyResolutionManagement {
     if (providers.systemProperty("local").isPresent) {
       mavenLocal()
     }
+
     google()
     mavenCentral()
     gradlePluginPortal() // gradle-publish-plugin
-    //maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") }
+
+    // snapshots are permitted, but only for dependencies I own
+    maven {
+      url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+      content {
+        includeGroup("com.autonomousapps")
+        includeGroup("com.autonomousapps.dependency-analysis")
+      }
+    }
   }
 }
 
