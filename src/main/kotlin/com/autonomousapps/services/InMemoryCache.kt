@@ -63,20 +63,36 @@ public abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
         it.parameters.cacheSize.set(cacheSize)
       }
 
+    // TODO(tsr): consider replacing this with @ServiceReference (from Gradle 8.0). We'd lose the cross-build shared
+    //  service, though. But that's getting harder to maintain.
     fun register(property: Property<InMemoryCache>, project: Project) {
       val cacheSize = project.cacheSize(DEFAULT_CACHE_VALUE)
 
-      // In a composite build, the root build is used to share the cache across builds if the root build used
-      // the same classloader for loading the plugin as the current build.
-      // See: https://github.com/gradle/gradle/issues/17559
-      val rootService = project.gradle.rootBuild().registerService(cacheSize)
-      try {
-        property.set(rootService)
-      } catch (_: IllegalArgumentException) {
-        // Root service is not of valid type as it was loaded with a different classloader.
-        // Fall back to an isolated service.
+      if (project.isIdea()) {
         property.set(project.gradle.registerService(cacheSize))
+      } else {
+        // In a composite build, the root build is used to share the cache across builds if the root build used
+        // the same classloader for loading the plugin as the current build.
+        // See: https://github.com/gradle/gradle/issues/17559
+        val rootService = project.gradle.rootBuild().registerService(cacheSize)
+        try {
+          property.set(rootService)
+        } catch (_: IllegalArgumentException) {
+          // Root service is not of valid type as it was loaded with a different classloader.
+          // Fall back to an isolated service.
+          property.set(project.gradle.registerService(cacheSize))
+        }
       }
+    }
+
+    private fun Project.isIdea(): Boolean {
+      return providers
+        // IDEA sync
+        .systemProperty("idea.sync.active")
+        // IDEA action, like running a test from the IDE
+        .orElse(project.providers.systemProperty("idea.active"))
+        .map { it.toBoolean() }
+        .getOrElse(false)
     }
   }
 }

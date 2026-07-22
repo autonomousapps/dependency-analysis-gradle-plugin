@@ -10,6 +10,7 @@ pluginManagement {
     if (providers.systemProperty("local").isPresent) {
       mavenLocal()
     }
+
     gradlePluginPortal()
     mavenCentral()
 
@@ -53,6 +54,10 @@ dependencyResolutionManagement {
     if (providers.systemProperty("local").isPresent) {
       mavenLocal()
     }
+
+    google()
+    mavenCentral()
+
     // snapshots are permitted, but only for dependencies I own
     maven {
       url = uri("https://central.sonatype.com/repository/maven-snapshots/")
@@ -61,8 +66,6 @@ dependencyResolutionManagement {
         includeGroup("com.autonomousapps.dependency-analysis")
       }
     }
-    google()
-    mavenCentral()
   }
 
   versionCatalogs {
