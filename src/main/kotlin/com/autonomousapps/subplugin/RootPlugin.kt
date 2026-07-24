@@ -122,8 +122,23 @@ internal class RootPlugin(private val project: Project) {
       t.output.set(paths.allLibsVersionsTomlPath)
     }
 
+    // Filter transitive exposure false positives before generating build health report.
+    // This cross-references type usage data to suppress "remove" advice for deps that
+    // downstream consumers access transitively.
+    val filterTransitiveExposureTask =
+      tasks.register("filterTransitiveExposure", FilterTransitiveExposureTask::class.java) { t ->
+        t.projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
+        t.typeUsageReports.setFrom(typeUsagesResolver.internal.map { it.artifactsFor("json").artifactFiles })
+        t.publicClassesReports.setFrom(publicClassesResolver.internal.map { it.artifactsFor("json").artifactFiles })
+        t.outputDir.set(layout.buildDirectory.dir("dagp-filtered-advice"))
+      }
+
     val generateBuildHealthTask = tasks.register("generateBuildHealth", GenerateBuildHealthTask::class.java) { t ->
-      t.projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      // Use filtered advice (transitive exposure false positives removed).
+      // The filter task writes filtered ProjectAdvice JSONs into its output directory.
+      t.projectHealthReports.setFrom(
+        files(layout.buildDirectory.dir("dagp-filtered-advice")).builtBy(filterTransitiveExposureTask)
+      )
       t.projectMetadataReports.setFrom(projectMetadataResolver.internal.map { it.artifactsFor("json").artifactFiles })
       t.reportingConfig.set(dagpExtension.reportingHandler.config())
       t.projectCount.set(allprojects.size)
