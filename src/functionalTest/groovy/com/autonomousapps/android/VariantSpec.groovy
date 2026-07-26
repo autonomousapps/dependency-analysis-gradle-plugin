@@ -18,7 +18,7 @@ final class VariantSpec extends AbstractAndroidSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, 'clean', 'buildHealth', '--no-build-cache')
+    build(gradleVersion, gradleProject.rootDir, 'clean', 'buildHealth')
 
     then:
     assertAbout(buildHealth())
