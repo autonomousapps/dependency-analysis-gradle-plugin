@@ -41,6 +41,10 @@ public abstract class ArtifactsReportTask : DefaultTask() {
   @get:Internal
   public abstract val opaqueArtifacts: Property<ArtifactCollection>
 
+  /** Tracks resolved artifact identities because their coordinates are serialized in [output]. */
+  @get:Input
+  public abstract val artifactIds: SetProperty<String>
+
   /**
    * This is the "official" input for wiring task dependencies correctly, but is otherwise
    * unused. This needs to use [InputFiles] and [PathSensitivity.ABSOLUTE] because the path to the

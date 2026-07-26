@@ -228,6 +228,8 @@ internal abstract class AbstractDependencyAnalyzer(
       t.setOpaqueConfiguration(project.configurations.named(compileConfigurationName)) { c ->
         c.opaqueComponentArtifacts()
       }
+      t.artifactIds.addAll(t.artifacts.map { artifacts -> artifacts.map { it.id.displayName } })
+      t.artifactIds.addAll(t.opaqueArtifacts.map { artifacts -> artifacts.map { it.id.displayName } })
       t.buildPath.set(project.buildPath(compileConfigurationName))
 
       t.output.set(outputPaths.compileArtifactsPath)
@@ -243,6 +245,8 @@ internal abstract class AbstractDependencyAnalyzer(
       t.setOpaqueConfiguration(project.configurations.named(runtimeConfigurationName)) { c ->
         c.opaqueComponentArtifacts()
       }
+      t.artifactIds.addAll(t.artifacts.map { artifacts -> artifacts.map { it.id.displayName } })
+      t.artifactIds.addAll(t.opaqueArtifacts.map { artifacts -> artifacts.map { it.id.displayName } })
       t.buildPath.set(project.buildPath(runtimeConfigurationName))
 
       t.output.set(outputPaths.runtimeArtifactsPath)
