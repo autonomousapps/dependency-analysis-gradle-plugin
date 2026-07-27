@@ -1,5 +1,10 @@
 Variant-Artifacts Changelog
 
+# Version 0.7.0
+* [feat]: memoize `Resolver`. Add attribute to attribute schema. Expose `AttributeMatchingStrategy`.
+* [feat]: remove Gradle version checks.
+* [fix]: disambiguate `Publisher` and `Resolver` keys.
+
 # Version 0.6.0
 * (Reverted) Compiled against Kotlin 2.3.20. Compiling against Kotlin 2.2.21 again, with language level 2.2.
 
