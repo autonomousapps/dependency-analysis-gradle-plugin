@@ -5,8 +5,6 @@ package com.autonomousapps.jvm.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.SourceType
-import com.autonomousapps.kit.gradle.Feature
 import com.autonomousapps.kit.gradle.Java
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -54,6 +52,7 @@ final class FeatureVariantTestProject extends AbstractProject {
 
   private GradleProject build() {
     def builder = newGradleProjectBuilder()
+
     if (ignoreCustomSourceSet) {
       builder.withRootProject { root ->
         root.withBuildScript { bs ->
@@ -68,71 +67,70 @@ final class FeatureVariantTestProject extends AbstractProject {
         }
       }
     }
-    builder.withSubproject('producer') { s ->
-      s.sources = sources
-      s.withBuildScript { bs ->
-        bs.plugins = javaLibrary
-        bs.java = Java.ofFeatures(Feature.ofName('extraFeature'))
-        bs.dependencies = [
-          commonsCollections('api'),
-          commonsCollections('extraFeatureApi')
-        ]
-        bs.withGroovy('group = "examplegroup"\n' + additionalCapabilities)
-      }
-    }
-    builder.withSubproject('consumer') { s ->
-      s.sources = consumerSources
-      s.withBuildScript { bs ->
-        bs.plugins = javaLibrary
-        bs.dependencies = [
-          producerCodeInFeature
-            ? project('api', ':producer', 'examplegroup:producer-extra-feature')
-            : project('api', ':producer')
-        ]
-      }
-    }
 
-    return builder.write()
+    return builder
+      .withSubproject('producer') { s ->
+        s.sources = sources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.java = Java.ofFeatures('extraFeature')
+          bs.dependencies = [
+            commonsCollections('api'),
+            commonsCollections('extraFeatureApi')
+          ]
+          bs.withGroovy('group = "examplegroup"\n' + additionalCapabilities)
+        }
+      }
+      .withSubproject('consumer') { s ->
+        s.sources = consumerSources
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+          bs.dependencies = [
+            producerCodeInFeature
+              ? project('api', ':producer', 'examplegroup:producer-extra-feature')
+              : project('api', ':producer')
+          ]
+        }
+      }
+      .write()
   }
 
-  private sources = [
-    new Source(
-      SourceType.JAVA, "Example", "com/example",
-      """\
-        package com.example;
+  private List<Source> sources = [
+    Source.java(
+      '''\
+      package com.example;
         
-        import org.apache.commons.collections4.bag.HashBag;
+      import org.apache.commons.collections4.bag.HashBag;
+              
+      public class Example {
+        public HashBag<String> bag;
+      }'''.stripIndent()
+    ).build(),
+    Source.java(
+      '''\
+      package com.example.extra;
         
-        public class Example {
-          public HashBag<String> bag;
-        }""".stripIndent()
-    ),
-    new Source(
-      SourceType.JAVA, "ExtraFeature", "com/example/extra",
-      """\
-        package com.example.extra;
-        
-        import org.apache.commons.collections4.bag.HashBag;
-        
-        public class ExtraFeature {
-          private HashBag<String> internalBag;
-        }""".stripIndent(),
-      producerCodeInFeature ? "extraFeature" : "main"
+      import org.apache.commons.collections4.bag.HashBag;
+              
+      public class ExtraFeature {
+        private HashBag<String> internalBag;
+      }'''.stripIndent()
     )
+      .withSourceSet(producerCodeInFeature ? 'extraFeature' : 'main')
+      .build(),
   ]
 
-  private consumerSources = [
-    new Source(
-      SourceType.JAVA, "Consumer", "com/example/consumer",
-      """\
-        package com.example.consumer;
+  private List<Source> consumerSources = [
+    Source.java(
+      '''\
+      package com.example.consumer;
         
-        import com.example.extra.ExtraFeature;
-        
-        public class Consumer {
-          private ExtraFeature extra;
-        }""".stripIndent()
-    )
+      import com.example.extra.ExtraFeature;
+              
+      public class Consumer {
+        private ExtraFeature extra;
+      }'''.stripIndent()
+    ).build(),
   ]
 
   Set<ProjectAdvice> actualBuildHealth() {
@@ -146,10 +144,12 @@ final class FeatureVariantTestProject extends AbstractProject {
   ]
 
   private final Set<Advice> expectedConsumerAdvice = [
-    Advice.ofChange(producerCodeInFeature
-      ? projectCoordinates(':producer', 'examplegroup:producer-extra-feature')
-      : projectCoordinates(':producer'),
-      'api', 'implementation')
+    Advice.ofChange(
+      producerCodeInFeature
+        ? projectCoordinates(':producer', 'examplegroup:producer-extra-feature')
+        : projectCoordinates(':producer'),
+      'api', 'implementation'
+    )
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth() {

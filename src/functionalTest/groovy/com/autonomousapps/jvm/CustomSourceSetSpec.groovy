@@ -50,6 +50,7 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when: // TODO(tsr): this test fails if the build cache is enabled
+//    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
     build(gradleVersion, gradleProject.rootDir, ':buildHealth', '--no-build-cache')
 
     then:
@@ -144,6 +145,7 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when: // TODO(tsr): this test fails if the build cache is enabled
+//    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
     build(gradleVersion, gradleProject.rootDir, ':buildHealth', '--no-build-cache')
 
     then:
