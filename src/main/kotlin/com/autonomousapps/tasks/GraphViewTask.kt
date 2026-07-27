@@ -35,7 +35,7 @@ public abstract class GraphViewTask : DefaultTask() {
   @get:Internal
   public abstract val compileClasspathName: Property<String>
 
-  @get:Internal
+  @get:Input
   public abstract val compileClasspathResult: Property<ResolvedComponentResult>
 
   @get:Internal
@@ -44,7 +44,7 @@ public abstract class GraphViewTask : DefaultTask() {
   @get:Internal
   public abstract val runtimeClasspathName: Property<String>
 
-  @get:Internal
+  @get:Input
   public abstract val runtimeClasspathResult: Property<ResolvedComponentResult>
 
   @get:Internal
