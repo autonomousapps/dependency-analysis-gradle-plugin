@@ -49,9 +49,8 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     def project = new FeatureVariantTestProject(producerCodeInFeature, additionalCapabilities)
     gradleProject = project.gradleProject
 
-    when: // TODO(tsr): this test fails if the build cache is enabled
-//    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth', '--no-build-cache')
+    when:
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
@@ -144,9 +143,8 @@ final class CustomSourceSetSpec extends AbstractJvmSpec {
     def project = new FeatureVariantTestProject(true, false, true)
     gradleProject = project.gradleProject
 
-    when: // TODO(tsr): this test fails if the build cache is enabled
-//    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth', '--no-build-cache')
+    when:
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
