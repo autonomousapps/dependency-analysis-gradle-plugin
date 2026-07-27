@@ -7,7 +7,6 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.filterNonGradle
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.toJson
 import com.autonomousapps.model.internal.ExcludedIdentifier
 import com.autonomousapps.model.internal.PhysicalArtifact
 import org.gradle.api.DefaultTask
@@ -21,6 +20,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Produces a report of all the artifacts required to build the given project; i.e., the artifacts on the compile
@@ -28,7 +28,7 @@ import org.gradle.api.tasks.*
  * the full list of analyzed [Configuration][org.gradle.api.artifacts.Configuration]s. These artifacts are physical
  * files on disk, such as jars.
  */
-@CacheableTask
+@DisableCachingByDefault(because = "When this task participates in the build cache, then `ClassifiersSpec.transitive classifier dependencies do not lead to wrong advice` fails")
 public abstract class ArtifactsReportTask : DefaultTask() {
 
   init {
