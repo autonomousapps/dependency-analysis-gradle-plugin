@@ -1,5 +1,19 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.18.0
+* [feat]: isolate usage of "kotlin-metadata-jvm" to workers and downgrade Kotlin version used by the plugin.
+* [feat]: allow to exclude ABI by source path.
+* [fix]: `GraphViewTask`'s inputs are inputs, not internal details.
+* [fix]: make `GraphViewTask` sensitive to new transitive project edges.
+* [fix]: disable caching for `ArtifactsReportTask`.
+* [fix]: Don't fail IDEA sync when registering `InMemoryCache` with a task.
+* [chore]: update kotlin-editor-relocated to 0.25.0.
+* [chore]: update gradle-script-grammar to 0.7.
+* [chore]: use Gradle 9.6.1.
+* [docs]: add 'troubleshooting' section to README with discussion of the "kotlin-metadata-jvm" issue.
+* [maintenance]: resolve Gradle deprecations.
+* [test]: the usual gradle flags should be set for all tests (in particular, `org.gradle.caching=true`).
+
 # Version 3.17.0
 * [feat]: support KMP with 'fixDependencies' (`RewriteTask`) in Kotlin DSL only.
 * [feat]: add DSL option for binary-compatibility check. It now defaults to 'false'. This is a breaking behavioral 
