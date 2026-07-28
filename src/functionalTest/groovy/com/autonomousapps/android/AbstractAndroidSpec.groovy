@@ -16,15 +16,16 @@ abstract class AbstractAndroidSpec extends AbstractFunctionalSpec {
   protected ProjectDirProvider androidProject = null
 
   protected static final AGP_8_10 = AgpVersion.version('8.10.1')
-  protected static final AGP_8_11 = AgpVersion.version('8.11.1')
-  protected static final AGP_8_12 = AgpVersion.version('8.12.2')
+  protected static final AGP_8_11 = AgpVersion.version('8.11.2')
+  protected static final AGP_8_12 = AgpVersion.version('8.12.3')
   protected static final AGP_8_13 = AgpVersion.version('8.13.2')
   protected static final AGP_9_0 = AgpVersion.version('9.0.1')
   protected static final AGP_9_1 = AgpVersion.version('9.1.0')
   protected static final AGP_9_2 = AgpVersion.version('9.2.1')
+  protected static final AGP_9_3 = AgpVersion.version('9.3.1')
 
   protected static final AGP_MIN = AGP_8_10
-  protected static final AGP_LATEST_STABLE = AGP_9_2
+  protected static final AGP_LATEST_STABLE = AGP_9_3
 
   /**
    * {@code AGP_MIN} represents the minimum stable _tested_ version. {@code AGP_LATEST} represents the maximum stable
