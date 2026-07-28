@@ -5,7 +5,9 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.JarExploder
+import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.bufferWriteJsonMap
+import com.autonomousapps.internal.utils.bufferWriteJsonMapSet
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.fromJsonMap
@@ -13,6 +15,8 @@ import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.internal.PhysicalArtifact
 import com.autonomousapps.model.internal.intermediates.producer.AndroidLinterDependency
+import com.autonomousapps.model.internal.intermediates.producer.BinaryClasses
+import com.autonomousapps.model.internal.intermediates.producer.ExpensiveJar
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
@@ -61,13 +65,17 @@ public abstract class ExplodeJarTask @Inject constructor(
   @get:OutputFile
   public abstract val output: RegularFileProperty
 
+  /** [`Map<Coordinates, Set<BinaryClass>>`][com.autonomousapps.model.internal.intermediates.producer.BinaryClass]. */
+  @get:OutputFile
+  public abstract val outputBinaryClasses: RegularFileProperty
+
   @TaskAction public fun action() {
     // Pass the shared cache content to the work action, which requires serializable data only
     val cache = inMemoryCache.get()
     val seed = physicalArtifacts.fromJsonList<PhysicalArtifact>()
       .mapNotNull { artifact ->
-        val key = artifact.file.absolutePath
-        cache.explodedJar(key)?.let { key to it }
+        val key = artifact.coordinates.toString()
+        cache.expensiveJar(key)?.let { key to it }
       }
       .toMap()
 
@@ -81,14 +89,15 @@ public abstract class ExplodeJarTask @Inject constructor(
       it.physicalArtifacts.set(physicalArtifacts)
       it.androidLinters.set(androidLinters)
       it.output.set(output)
+      it.outputBinaryClasses.set(outputBinaryClasses)
       it.cacheSeed.set(seedFile)
       it.newCacheEntries.set(newEntriesFile)
     }
 
     // Block so we can merge the worker's results back into the shared cache.
     workerExecutor.await()
-    newEntriesFile.fromJsonMap<String, ExplodedJar>().forEach { (key, explodedJar) ->
-      cache.explodedJars(key, explodedJar)
+    newEntriesFile.fromJsonMap<String, ExpensiveJar>().forEach { (key, expensiveJar) ->
+      cache.expensiveJars(key, expensiveJar)
     }
   }
 
@@ -99,8 +108,9 @@ public abstract class ExplodeJarTask @Inject constructor(
     public val androidLinters: RegularFileProperty
 
     public val output: RegularFileProperty
+    public val outputBinaryClasses: RegularFileProperty
 
-    /** [`Map<String, ExplodedJar>`][ExplodedJar] of already-cached results, keyed by artifact path. */
+    /** [`Map<String, ExplodedJar>`][ExplodedJar] of already-cached results, keyed by artifact coordinates. */
     public val cacheSeed: RegularFileProperty
 
     /** [`Map<String, ExplodedJar>`][ExplodedJar] of cache misses computed by this worker, for the task to merge back. */
@@ -111,6 +121,7 @@ public abstract class ExplodeJarTask @Inject constructor(
 
     override fun execute() {
       val output = parameters.output.getAndDelete()
+      val outputBinaryClasses = parameters.outputBinaryClasses.getAndDelete()
       val newCacheEntries = parameters.newCacheEntries.getAndDelete()
 
       val exploder = JarExploder(
@@ -119,8 +130,10 @@ public abstract class ExplodeJarTask @Inject constructor(
         seedCache = parameters.cacheSeed.fromJsonMap(),
       )
       val explodedJars = exploder.explodedJars()
+      val binaryClasses = BinaryClasses.of(exploder.binaryClasses())
 
       output.bufferWriteJsonSet(explodedJars, compress = true)
+      outputBinaryClasses.bufferWriteJson(binaryClasses, compress = true)
       newCacheEntries.bufferWriteJsonMap(exploder.newEntries)
     }
   }

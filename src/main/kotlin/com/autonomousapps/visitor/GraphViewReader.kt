@@ -12,7 +12,7 @@ import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.internal.ProjectVariant
 import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
-import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
+import com.autonomousapps.model.internal.intermediates.producer.BinaryClasses
 import com.google.common.graph.Graph
 
 internal class GraphViewReader(
@@ -22,7 +22,7 @@ internal class GraphViewReader(
   private val graphRuntime: DependencyGraphView,
   private val declarations: Set<Declaration>,
   private val duplicateClasses: Set<DuplicateClass>,
-  private val explodedJarsProvider: () -> Set<ExplodedJar>,
+  private val binaryClassesProvider: () -> Set<BinaryClasses>,
 ) {
 
   fun accept(visitor: GraphViewVisitor) {
@@ -33,7 +33,7 @@ internal class GraphViewReader(
       graphRuntime = graphRuntime,
       declarations = declarations,
       duplicateClasses = duplicateClasses,
-      explodedJarsProvider = explodedJarsProvider,
+      binaryClassesProvider = binaryClassesProvider,
     )
     project.excludedIdentifiers.forEach { excludedIdentifier ->
       visitor.visit(excludedIdentifier)
@@ -52,11 +52,13 @@ internal class DefaultContext(
   override val graphRuntime: DependencyGraphView,
   override val declarations: Set<Declaration>,
   override val duplicateClasses: Set<DuplicateClass>,
-  val explodedJarsProvider: () -> Set<ExplodedJar>,
+  val binaryClassesProvider: () -> Set<BinaryClasses>,
 ) : GraphViewVisitor.Context {
 
   override val binaryClasses: Map<Coordinates, Set<BinaryClass>> by unsafeLazy {
-    explodedJarsProvider().associate { jar -> jar.coordinates to jar.binaryClasses }
+    binaryClassesProvider().associate { (coordinates, binaryClasses) ->
+      coordinates to binaryClasses
+    }
   }
 
   // nb: this is a lazy property because it's very expensive to compute, and gated behind a user opt-in.

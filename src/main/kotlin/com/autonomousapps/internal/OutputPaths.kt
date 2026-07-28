@@ -30,6 +30,7 @@ internal class OutputPaths(
   val duplicateCompileClasspathPath = file("${intermediatesDir}/duplicate-classes-compile.json")
   val duplicateCompileRuntimePath = file("${intermediatesDir}/duplicate-classes-runtime.json")
   val explodedJarsPath = file("${intermediatesDir}/exploded-jars.json.gz")
+  val binaryClassesPath = file("${intermediatesDir}/binary-classes.json.gz")
   val inlineUsagePath = file("${intermediatesDir}/inline-usage.json")
   val typealiasUsagePath = file("${intermediatesDir}/typealias-usage.json")
   val inlineUsageErrorsPath = file("${intermediatesDir}/inline-usage-errors.txt")

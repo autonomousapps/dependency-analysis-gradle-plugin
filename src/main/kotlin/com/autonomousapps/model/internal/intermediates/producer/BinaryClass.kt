@@ -4,23 +4,28 @@ package com.autonomousapps.model.internal.intermediates.producer
 
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.efficient
+import com.autonomousapps.model.Coordinates
 import com.squareup.moshi.JsonClass
 import java.util.*
 
-/**
- * This class exists as a memory optimization. Most of the time, [BinaryClass.effectivelyPublicFields] and
- * [BinaryClass.effectivelyPublicMethods] aren't needed. The only come into play when users have opted-in to the binary
- * compatibility check. In large projects, these properties can dramatically increase heap usage.
- *
- * @see [com.autonomousapps.internal.binary.BinaryCompatibilityChecker]
- * @see [com.autonomousapps.model.internal.intermediates.Reason.BinaryIncompatible]
- */
+/** For serializing with Moshi. */
 @JsonClass(generateAdapter = false)
-internal data class SimplifiedBinaryClass(
-  val className: String,
-) : Comparable<SimplifiedBinaryClass> {
-  override fun compareTo(other: SimplifiedBinaryClass): Int {
-    return compareBy(SimplifiedBinaryClass::className)
+internal data class BinaryClasses(
+  val coordinates: Coordinates,
+  val binaryClasses: Set<BinaryClass>,
+) : Comparable<BinaryClasses> {
+
+  companion object {
+    fun of(map: Map<Coordinates, Set<BinaryClass>>): Set<BinaryClasses> {
+      return map.mapTo(sortedSetOf()) { (coordinates, binaryClasses) ->
+        BinaryClasses(coordinates, binaryClasses)
+      }
+    }
+  }
+
+  override fun compareTo(other: BinaryClasses): Int {
+    return compareBy<BinaryClasses>(BinaryClasses::coordinates)
+      .thenBy(LexicographicIterableComparator()) { it.binaryClasses }
       .compare(this, other)
   }
 }

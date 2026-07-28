@@ -77,7 +77,7 @@ public abstract class FindKotlinMagicTask @Inject constructor(
     val cache = inMemoryCacheProvider.get()
     val seed = artifacts.fromJsonList<PhysicalArtifact>()
       .mapNotNull { artifact ->
-        val key = artifact.file.absolutePath
+        val key = artifact.coordinates.toString()
         cache.kotlinCapabilities(key)?.let { key to it }
       }
       .toMap()
@@ -110,7 +110,9 @@ public abstract class FindKotlinMagicTask @Inject constructor(
     public val typealiasReport: RegularFileProperty
     public val errorsReport: RegularFileProperty
 
-    /** [`Map<String, KotlinCapabilities>`][KotlinCapabilities] of already-cached results, keyed by artifact path. */
+    /**
+     * [`Map<String, KotlinCapabilities>`][KotlinCapabilities] of already-cached results, keyed by artifact coordinates.
+     */
     public val cacheSeed: RegularFileProperty
 
     /** [`Map<String, KotlinCapabilities>`][KotlinCapabilities] of cache misses, for the task to merge back. */
@@ -162,7 +164,10 @@ internal class KotlinMagicFinder(
   val inlineMembers: Set<InlineMemberDependency>
   val typealiases: Set<TypealiasDependency>
 
-  /** [KotlinCapabilities] computed during this run (cache misses), keyed by artifact path, to merge into the cache. */
+  /**
+   * [KotlinCapabilities] computed during this run (cache misses), keyed by artifact coordinates, to merge into the
+   * cache.
+   */
   val newEntries: MutableMap<String, KotlinCapabilities> = LinkedHashMap()
 
   init {
@@ -173,7 +178,7 @@ internal class KotlinMagicFinder(
       .filter {
         it.isJar() || it.containsClassFiles()
       }.map { artifact ->
-        val key = artifact.file.absolutePath
+        val key = artifact.coordinates.toString()
         val capabilities = seedCache[key] ?: findKotlinMagic(artifact, artifact.mode).also { newEntries[key] = it }
         artifact to capabilities
       }.forEach { (artifact, capabilities) ->
