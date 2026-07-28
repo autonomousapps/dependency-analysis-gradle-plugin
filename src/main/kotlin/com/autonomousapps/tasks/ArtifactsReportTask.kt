@@ -14,13 +14,13 @@ import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
-import org.gradle.work.DisableCachingByDefault
 
 /**
  * Produces a report of all the artifacts required to build the given project; i.e., the artifacts on the compile
@@ -28,12 +28,20 @@ import org.gradle.work.DisableCachingByDefault
  * the full list of analyzed [Configuration][org.gradle.api.artifacts.Configuration]s. These artifacts are physical
  * files on disk, such as jars.
  */
-@DisableCachingByDefault(because = "When this task participates in the build cache, then `ClassifiersSpec.transitive classifier dependencies do not lead to wrong advice` fails")
+@CacheableTask
 public abstract class ArtifactsReportTask : DefaultTask() {
 
   init {
     description = "Produces a report that lists all direct and transitive dependencies, along with their artifacts"
   }
+
+  /**
+   * Required for caching correctness. Without this, then
+   * `ClassifiersSpec.transitive classifier dependencies do not lead to wrong advice` would fail when the build cache
+   * was enabled.
+   */
+  @get:Input
+  public abstract val resolvedComponentResult: Property<ResolvedComponentResult>
 
   @get:Internal
   public abstract val artifacts: Property<ArtifactCollection>
@@ -63,26 +71,6 @@ public abstract class ArtifactsReportTask : DefaultTask() {
     return opaqueArtifacts.map { it.artifactFiles }
   }
 
-  /** This artifact collection is the result of resolving the compile or runtime classpath for jar artifacts. */
-  public fun setConfiguration(
-    configuration: NamedDomainObjectProvider<Configuration>,
-    action: (Configuration) -> ArtifactCollection,
-  ) {
-    excludedIdentifiers.set(configuration.map { c -> c.excludeRules.map { "${it.group}:${it.module}".intern() } })
-    artifacts.set(configuration.map { c -> action(c) })
-  }
-
-  /**
-   * This artifact collection is the result of resolving the compile or runtime classpath for
-   * [OpaqueComponentArtifactIdentifiers][org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier].
-   */
-  public fun setOpaqueConfiguration(
-    configuration: NamedDomainObjectProvider<Configuration>,
-    action: (Configuration) -> ArtifactCollection,
-  ) {
-    opaqueArtifacts.set(configuration.map { c -> action(c) })
-  }
-
   /** Needed to make sure task gives the same result if the build configuration in a composite changed between runs. */
   @get:Input
   public abstract val buildPath: Property<String>
@@ -96,6 +84,30 @@ public abstract class ArtifactsReportTask : DefaultTask() {
 
   @get:OutputFile
   public abstract val excludedIdentifiersOutput: RegularFileProperty
+
+
+  /** This artifact collection is the result of resolving the compile or runtime classpath for jar artifacts. */
+  public fun setConfiguration(
+    configuration: NamedDomainObjectProvider<Configuration>,
+    action: (Configuration) -> ArtifactCollection,
+  ) {
+    resolvedComponentResult.set(configuration.flatMap { it.incoming.resolutionResult.rootComponent })
+    excludedIdentifiers.set(configuration.map { c -> c.excludeRules.map { "${it.group}:${it.module}".intern() } })
+    artifacts.set(configuration.map { c -> action(c) })
+  }
+
+  /**
+   * This artifact collection is the result of resolving the compile or runtime classpath for
+   * [OpaqueComponentArtifactIdentifiers][org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier].
+   */
+  public fun setOpaqueConfiguration(
+    configuration: NamedDomainObjectProvider<Configuration>,
+    action: (Configuration) -> ArtifactCollection,
+  ) {
+    // nb: there is no need to track the ResolveComponentResult for opaque artifacts since these are part of the Gradle
+    // runtime and any change to that will necessarily break caching.
+    opaqueArtifacts.set(configuration.map { c -> action(c) })
+  }
 
   @TaskAction
   public fun action() {
