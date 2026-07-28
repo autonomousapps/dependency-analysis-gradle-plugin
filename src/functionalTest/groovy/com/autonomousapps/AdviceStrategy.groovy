@@ -9,7 +9,6 @@ import com.autonomousapps.model.BuildHealth
 import com.autonomousapps.model.ProjectAdvice
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import com.squareup.moshi.Types
-import okio.Okio
 
 import java.util.zip.GZIPInputStream
 
@@ -29,6 +28,8 @@ abstract class AdviceStrategy {
   }
 
   abstract Map<String, Set<String>> getDuplicateDependenciesReport(GradleProject gradleProject)
+
+  abstract String getDuplicateDependenciesConsoleReport(GradleProject gradleProject)
 
   abstract List<String> getResolvedDependenciesReport(GradleProject gradleProject, String projectPath)
 
@@ -55,6 +56,11 @@ abstract class AdviceStrategy {
       def map = Types.newParameterizedType(Map, String, set)
       def adapter = MoshiUtils.MOSHI.<Map<String, Set<String>>> adapter(map)
       return adapter.fromJson(json)
+    }
+
+    @Override
+    String getDuplicateDependenciesConsoleReport(GradleProject gradleProject) {
+      return gradleProject.singleArtifact(':', OutputPathsKt.getDuplicateDependenciesConsoleReport()).asPath.text.trim()
     }
 
     @Override

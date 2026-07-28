@@ -45,11 +45,14 @@ final class DuplicateDependencyVersionsSpec extends AbstractAndroidSpec {
     def report = project.actualDuplicateDependencies()
     assertThat(report['junit:junit']).containsExactlyElementsIn('4.11', '4.12', '4.13').inOrder()
 
-    and: 'output'
+    and: 'stored console output'
+    assertThat(project.actualDuplicateDependenciesConsoleReport()).isEqualTo(project.expectedConsoleOutput)
+
+    and: 'emitted console output'
     assertAbout(buildResults())
       .that(result)
       .output()
-      .contains(project.expectedOutput)
+      .contains(project.expectedConsoleOutput)
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()

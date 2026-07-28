@@ -3,15 +3,10 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.internal.utils.VersionNumber
-import com.autonomousapps.internal.utils.fromJsonMapSet
+import com.autonomousapps.internal.utils.readText
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.UntrackedTask
+import org.gradle.api.tasks.*
 
 @UntrackedTask(because = "Always prints output")
 public abstract class PrintDuplicateDependenciesTask : DefaultTask() {
@@ -26,32 +21,7 @@ public abstract class PrintDuplicateDependenciesTask : DefaultTask() {
   public abstract val duplicateDependenciesReport: RegularFileProperty
 
   @TaskAction public fun action() {
-    val report = duplicateDependenciesReport.fromJsonMapSet<String, String>()
-    val total = report.size
-    val sum = report.values.sumOf { it.size }
-    val duplicates = report.filterTo(sortedMapOf()) { it.value.size > 1 }
-    val duplicateCount = duplicates.size
-
-    val output = buildString {
-      append("Your build uses $sum dependencies, representing $total distinct 'libraries.' ")
-      append("$duplicateCount libraries have multiple versions across the build.")
-      if (duplicateCount == 0) {
-        appendLine()
-      } else {
-        appendLine(" These are:")
-        duplicates.forEach { (id, versions) ->
-          appendLine("* $id:${versions.sortedVersions().joinToString(separator = ",", prefix = "{", postfix = "}")}")
-        }
-      }
-    }
-
-    logger.quiet(output)
+    val consoleReport = duplicateDependenciesReport.readText()
+    logger.quiet(consoleReport)
   }
 }
-
-// visible for testing
-internal fun Iterable<String>.sortedVersions(): Iterable<String> = asSequence()
-  .map { it to VersionNumber.parse(it) }
-  .sortedBy { it.second }
-  .map { it.first }
-  .toList()

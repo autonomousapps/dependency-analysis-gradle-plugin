@@ -107,10 +107,11 @@ internal class RootPlugin(private val project: Project) {
       tasks.register("computeDuplicateDependencies", ComputeDuplicateDependenciesTask::class.java) { t ->
         t.resolvedDependenciesReports.setFrom(resolvedDepsResolver.artifactFilesProvider())
         t.output.set(paths.duplicateDependenciesPath)
+        t.outputConsole.set(paths.duplicateDependenciesConsolePath)
       }
 
     tasks.register("printDuplicateDependencies", PrintDuplicateDependenciesTask::class.java) { t ->
-      t.duplicateDependenciesReport.set(computeDuplicatesTask.flatMap { it.output })
+      t.duplicateDependenciesReport.set(computeDuplicatesTask.flatMap { it.outputConsole })
     }
 
     tasks.register("computeAllDependencies", ComputeAllDependenciesTask::class.java) { t ->

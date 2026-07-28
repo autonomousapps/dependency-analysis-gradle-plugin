@@ -7,8 +7,7 @@ import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.gradle.Dependency
 
-import static com.autonomousapps.AdviceHelper.duplicateDependenciesReport
-import static com.autonomousapps.AdviceHelper.resolvedDependenciesReport
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.Dependency.project
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.appcompat
 
@@ -66,6 +65,10 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
 
   Map<String, Set<String>> actualDuplicateDependencies() {
     return duplicateDependenciesReport(gradleProject)
+  }
+
+  String actualDuplicateDependenciesConsoleReport() {
+    return duplicateDependenciesConsoleReport(gradleProject)
   }
 
   List<String> actualResolvedDependenciesFor(String projectPath) {
@@ -135,7 +138,7 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
     org-jetbrains-annotations-13-0 = { module = "org.jetbrains:annotations", version = "13.0" }
     '''.stripIndent()
 
-  String expectedOutput = '''\
+  String expectedConsoleOutput = '''\
     Your build uses 51 dependencies, representing 47 distinct 'libraries.' 3 libraries have multiple versions across the build. These are:
     * androidx.arch.core:core-runtime:{2.1.0,2.2.0}
     * androidx.core:core-ktx:{1.2.0,1.13.0}
