@@ -141,6 +141,10 @@ final class AdviceHelper {
     return STRATEGY.getDuplicateDependenciesReport(gradleProject)
   }
 
+  static String duplicateDependenciesConsoleReport(GradleProject gradleProject) {
+    return STRATEGY.getDuplicateDependenciesConsoleReport(gradleProject)
+  }
+
   static List<String> resolvedDependenciesReport(GradleProject gradleProject, String projectPath) {
     return STRATEGY.getResolvedDependenciesReport(gradleProject, projectPath)
   }
