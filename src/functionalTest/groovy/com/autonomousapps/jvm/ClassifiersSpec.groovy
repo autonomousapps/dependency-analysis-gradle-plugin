@@ -31,10 +31,8 @@ final class ClassifiersSpec extends AbstractJvmSpec {
     def project = new TransitiveClassifierTestProject(variant)
     gradleProject = project.gradleProject
 
-    // TODO(tsr): this test fails if `ArtifactsReportTask` has caching enabled.
     when:
     build(gradleVersion, gradleProject.rootDir, ':buildHealth')
-//    build(gradleVersion, gradleProject.rootDir, ':buildHealth, '--no-build-cache')
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())
