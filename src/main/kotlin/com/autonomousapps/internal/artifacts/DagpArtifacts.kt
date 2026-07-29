@@ -20,6 +20,7 @@ internal interface DagpArtifacts : Named {
     PROJECT_HEALTH,
     PROJECT_METADATA,
     RESOLVED_DEPS,
+    RUNTIME_DEPS,
     TYPE_USAGE,
     ;
 

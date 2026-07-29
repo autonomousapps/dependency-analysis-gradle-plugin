@@ -149,6 +149,10 @@ internal class ProjectPlugin(private val project: Project) {
     project = project,
     artifactDescription = DagpArtifacts.Kind.TYPE_USAGE,
   )
+  private val runtimeDepsPublisher = interProjectPublisher(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.RUNTIME_DEPS,
+  )
 
 
   private val dslService = GlobalDslService.of(project)
@@ -1237,6 +1241,28 @@ internal class ProjectPlugin(private val project: Project) {
     // Store the main output in the extension for consumption by end-users
     storeAdviceOutput(filterAdviceTask.flatMap { it.output })
 
+    // Register FindRuntimeDepsTask to detect Spring/Liquibase runtime dependencies
+    val findRuntimeDepsTask = tasks.register("findRuntimeDeps", FindRuntimeDepsTask::class.java) { t ->
+      t.projectPath.set(theProjectPath)
+      t.sourceFiles.setFrom(provider {
+        val sourceSets = extensions.findByType(SourceSetContainer::class.java)
+        val srcDirs = sourceSets?.filter { it.name == "main" }
+          ?.flatMap { sourceSet -> sourceSet.java.srcDirs }
+          ?.filter { dir -> dir.path.contains("/src/") && !dir.path.contains("/build/") }
+          ?: emptyList()
+        project.files(srcDirs).asFileTree.matching { it.include("**/*.java", "**/*.kt") }
+      })
+      t.resourceFiles.setFrom(provider {
+        val sourceSets = extensions.findByType(SourceSetContainer::class.java)
+        val resDirs = sourceSets?.filter { it.name == "main" }
+          ?.flatMap { sourceSet -> sourceSet.resources.srcDirs }
+          ?.filter { dir -> dir.path.contains("/src/") && !dir.path.contains("/build/") }
+          ?: emptyList()
+        project.files(resDirs).asFileTree.matching { it.include("**/*.xml", "**/*.yaml", "**/*.yml") }
+      })
+      t.output.set(paths.runtimeDepsPath)
+    }
+
     // Publish our artifacts
     combinedGraphPublisher.publish(mergeProjectGraphsTask.flatMap { it.output })
     projectHealthPublisher.publish(filterAdviceTask.flatMap { it.output })
@@ -1244,6 +1270,7 @@ internal class ProjectPlugin(private val project: Project) {
     publicClassesPublisher.publish(aggregatePublicTypesTask.flatMap { it.output })
     resolvedDependenciesPublisher.publish(computeResolvedDependenciesTask.flatMap { it.output })
     typeUsagesPublisher.publish(aggregateTypeUsageTask.flatMap { it.output })
+    runtimeDepsPublisher.publish(findRuntimeDepsTask.flatMap { it.output })
   }
 
   private fun Project.isKaptApplied() = providers.provider { plugins.hasPlugin("org.jetbrains.kotlin.kapt") }

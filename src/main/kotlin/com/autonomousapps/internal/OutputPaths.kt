@@ -89,6 +89,7 @@ internal class NoVariantOutputPaths(private val project: Project) {
   val mergedProjectGraphPath = file("$ROOT_DIR/merged-project-graph.json")
   val aggregateTypeUsagePath = file("$ROOT_DIR/type-usage.json")
   val publicTypesPath = file("$ROOT_DIR/public-types.json")
+  val runtimeDepsPath = file("$ROOT_DIR/runtime-deps.json")
 
   /*
    * Advice-related tasks.

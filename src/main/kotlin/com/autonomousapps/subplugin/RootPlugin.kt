@@ -66,6 +66,10 @@ internal class RootPlugin(private val project: Project) {
     project = project,
     artifactDescription = DagpArtifacts.Kind.TYPE_USAGE,
   )
+  private val runtimeDepsResolver = interProjectResolver(
+    project = project,
+    artifactDescription = DagpArtifacts.Kind.RUNTIME_DEPS,
+  )
 
   fun apply() = project.run {
     logger.log("Adding root project tasks")
@@ -130,6 +134,7 @@ internal class RootPlugin(private val project: Project) {
         t.projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
         t.typeUsageReports.setFrom(typeUsagesResolver.internal.map { it.artifactsFor("json").artifactFiles })
         t.publicClassesReports.setFrom(publicClassesResolver.internal.map { it.artifactsFor("json").artifactFiles })
+        t.runtimeDepsReports.setFrom(runtimeDepsResolver.internal.map { it.artifactsFor("json").artifactFiles })
         t.outputDir.set(layout.buildDirectory.dir("dagp-filtered-advice"))
       }
 

@@ -9,6 +9,8 @@ import com.autonomousapps.model.ProjectAdvice
 import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.internal.AggregateTypeUsageReport
 import com.autonomousapps.model.internal.PublicTypes
+import com.autonomousapps.model.internal.intermediates.RuntimeDepsReport
+import com.autonomousapps.internal.advice.RuntimeUsageFilter
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -55,6 +57,12 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
   @get:InputFiles
   public abstract val publicClassesReports: ConfigurableFileCollection
 
+  /** Per-project runtime deps reports from FindRuntimeDepsTask. */
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val runtimeDepsReports: ConfigurableFileCollection
+
   /** Output directory for filtered project health reports. */
   @get:OutputDirectory
   public abstract val outputDir: DirectoryProperty
@@ -65,6 +73,7 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
       it.projectHealthReports.setFrom(projectHealthReports)
       it.typeUsageReports.setFrom(typeUsageReports)
       it.publicClassesReports.setFrom(publicClassesReports)
+      it.runtimeDepsReports.setFrom(runtimeDepsReports)
       it.outputDir.set(outputDir)
     }
   }
@@ -73,6 +82,7 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
     public val projectHealthReports: ConfigurableFileCollection
     public val typeUsageReports: ConfigurableFileCollection
     public val publicClassesReports: ConfigurableFileCollection
+    public val runtimeDepsReports: ConfigurableFileCollection
     public val outputDir: DirectoryProperty
   }
 
@@ -142,54 +152,112 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
           }
         }
 
+      // 5b. Load runtime deps reports for RuntimeUsageFilter
+      val runtimeReports = parameters.runtimeDepsReports.files
+        .filter { it.exists() && it.length() > 0 }
+        .mapNotNull { file ->
+          try {
+            file.fromJson<RuntimeDepsReport>()
+          } catch (_: Exception) {
+            null
+          }
+        }
+        .associateBy { it.projectPath }
+
+      // Build depToClasses map for RuntimeUsageFilter (reverse mapping from type usage)
+      val depToClasses = mutableMapOf<String, MutableSet<String>>()
+      typeUsageByProject.values.forEach { report ->
+        report.projectDependencies.forEach { (depId, classes) ->
+          depToClasses.getOrPut(depId) { mutableSetOf() }.addAll(classes)
+        }
+        report.libraryDependencies.forEach { (depId, classes) ->
+          depToClasses.getOrPut(depId) { mutableSetOf() }.addAll(classes)
+        }
+      }
+
+      val runtimeFilter = RuntimeUsageFilter(
+        runtimeDepsReports = runtimeReports,
+        depToClasses = depToClasses,
+      )
+
       var totalSuppressed = 0
+      var runtimeSuppressed = 0
 
       allAdvice.forEachIndexed { idx, projectAdvice ->
         val projectPath = projectAdvice.projectPath
         val consumers = dependedBy[projectPath].orEmpty()
 
-        if (consumers.isEmpty() || projectAdvice.dependencyAdvice.isEmpty()) {
-          // No consumers or no advice → write as-is
+        if (projectAdvice.dependencyAdvice.isEmpty()) {
           outDir.resolve("${idx}.json").bufferWriteJson(projectAdvice)
           return@forEachIndexed
         }
 
         // For removal advice targeting project dependencies, check transitive exposure
-        val filteredAdvice = projectAdvice.dependencyAdvice.filter { advice ->
-          if (!advice.isAnyRemove()) return@filter true // Keep non-removal advice
+        val afterTransitiveFilter = if (consumers.isEmpty()) {
+          projectAdvice.dependencyAdvice
+        } else {
+          projectAdvice.dependencyAdvice.filter { advice ->
+            if (!advice.isAnyRemove()) return@filter true // Keep non-removal advice
 
-          val depCoords = advice.coordinates
-          // Only check project dependencies (the main source of false positives)
-          val depProjectPath = when (depCoords) {
-            is ProjectCoordinates -> depCoords.identifier
-            is IncludedBuildCoordinates -> depCoords.resolvedProject.identifier
-            else -> return@filter true // Not a project dep, keep advice
-          }
+            val depCoords = advice.coordinates
+            // Only check project dependencies (the main source of false positives)
+            val depProjectPath = when (depCoords) {
+              is ProjectCoordinates -> depCoords.identifier
+              is IncludedBuildCoordinates -> depCoords.resolvedProject.identifier
+              else -> return@filter true // Not a project dep, keep advice
+            }
 
-          // Get the public classes that the dep project provides
-          val depPublicClasses = publicClassesByProject[depProjectPath]?.types.orEmpty()
-          if (depPublicClasses.isEmpty()) return@filter true // Can't check, keep advice
+            // Get the public classes that the dep project provides
+            val depPublicClasses = publicClassesByProject[depProjectPath]?.types.orEmpty()
+            if (depPublicClasses.isEmpty()) return@filter true // Can't check, keep advice
 
-          // Check if any consumer of this project uses classes from the dep
-          val isTransitivelyExposed = consumers.any { consumerPath ->
-            val consumerUsage = typeUsageByProject[consumerPath] ?: return@any false
-            // Check what classes the consumer uses from ALL its project deps
-            val allClassesConsumerUses = consumerUsage.projectDependencies.values
-              .flatMapTo(mutableSetOf()) { it }
-            // If consumer uses any class that the dep provides → transitive exposure
-            depPublicClasses.any { it in allClassesConsumerUses }
-          }
+            // Check if any consumer of this project uses classes from the dep
+            val isTransitivelyExposed = consumers.any { consumerPath ->
+              val consumerUsage = typeUsageByProject[consumerPath] ?: return@any false
+              // Check what classes the consumer uses from ALL its project deps
+              val allClassesConsumerUses = consumerUsage.projectDependencies.values
+                .flatMapTo(mutableSetOf()) { it }
+              // If consumer uses any class that the dep provides → transitive exposure
+              depPublicClasses.any { it in allClassesConsumerUses }
+            }
 
-          if (isTransitivelyExposed) {
-            totalSuppressed++
-            false // Filter out this advice (suppress)
+            if (isTransitivelyExposed) {
+              totalSuppressed++
+              false // Filter out this advice (suppress)
+            } else {
+              true // Keep this advice
+            }
+          }.toSet()
+        }
+
+        // Apply runtime usage filter (Spring DI, Liquibase, etc.)
+        val afterRuntimeFilter = runtimeReports[projectPath]?.let { report ->
+          if (report.runtimeReferencedClasses.isEmpty() && report.componentScanPackages.isEmpty()) {
+            afterTransitiveFilter
           } else {
-            true // Keep this advice
+            afterTransitiveFilter.filter { advice ->
+              if (!advice.isAnyRemove()) return@filter true
+              val depIdentifier = advice.coordinates.identifier
+              val classesProvidedByDep = depToClasses[depIdentifier]
+              val shouldSuppress = if (classesProvidedByDep != null) {
+                report.runtimeReferencedClasses.any { it in classesProvidedByDep } ||
+                  report.componentScanPackages.any { pkg ->
+                    classesProvidedByDep.any { it.startsWith("$pkg.") }
+                  }
+              } else false
+
+              if (shouldSuppress) {
+                runtimeSuppressed++
+                false
+              } else {
+                true
+              }
+            }.toSet()
           }
-        }.toSet()
+        } ?: afterTransitiveFilter
 
         val filteredProjectAdvice = projectAdvice.copy(
-          dependencyAdvice = filteredAdvice
+          dependencyAdvice = afterRuntimeFilter
         )
 
         outDir.resolve("${idx}.json").bufferWriteJson(filteredProjectAdvice)
@@ -197,6 +265,9 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
 
       // Log summary
       println("(dependency analysis) Transitive exposure filter: suppressed $totalSuppressed removal suggestions")
+      if (runtimeSuppressed > 0) {
+        println("(dependency analysis) Runtime usage filter: suppressed $runtimeSuppressed removal suggestions")
+      }
     }
   }
 }
