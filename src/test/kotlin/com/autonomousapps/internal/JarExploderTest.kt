@@ -99,6 +99,49 @@ internal class JarExploderTest {
     assertThat(second.coordinates).isEqualTo(secondCoordinates)
   }
 
+  /** As in a dependency with classifiers. */
+  @Test fun `a cache hit does not leak data across artifacts that share coordinates but not a file`(@TempDir dir: File) {
+    val jar1 = File(dir, "lib.jar").apply {
+      ZipOutputStream(outputStream()).use { zip ->
+        zip.writeEntry("com/example/Foo.class", validClass("com/example/Foo"))
+      }
+    }
+    val jar2 = File(dir, "lib-linux.jar").apply {
+      ZipOutputStream(outputStream()).use { zip ->
+        zip.writeEntry("com/example/Bar.class", validClass("com/example/Bar"))
+      }
+    }
+
+    // The same coordinates, referencing two different files on disk.
+    val coordinates = ModuleCoordinates("group:name", "2.10.7", GradleVariantIdentification.EMPTY)
+
+    // The first consumer explodes the file and seeds the build-scoped cache, as ExplodeJarTask merges it back.
+    val firstExploder = JarExploder(
+      artifacts = listOf(PhysicalArtifact(coordinates = coordinates, file = jar1)),
+      androidLinters = emptySet(),
+      seedCache = emptyMap(),
+    )
+
+    // Check contents
+    val firstExplodedJar = firstExploder.explodedJars().single()
+    assertThat(firstExplodedJar.simplifiedBinaryClasses.map { it.className }).containsExactly("com.example.Foo")
+
+    val seededCache: Map<String, ExpensiveJar> = firstExploder.newEntries
+    // Sanity: the second consumer below must get a cache *hit*, else this test would pass vacuously.
+    assertThat(seededCache).isNotEmpty()
+
+    // The second consumer explodes the "same" artifact (identical coordinates), not seeded from that shared cache.
+    val secondExplodedJar = JarExploder(
+      artifacts = listOf(PhysicalArtifact(coordinates = coordinates, file = jar2)),
+      androidLinters = emptySet(),
+      seedCache = seededCache,
+    ).explodedJars().single()
+
+    // Check contents
+    assertThat(secondExplodedJar.simplifiedBinaryClasses.map { it.className }).containsExactly("com.example.Bar")
+    assertThat(secondExplodedJar.coordinates).isEqualTo(coordinates)
+  }
+
   private fun ZipOutputStream.writeEntry(name: String, bytes: ByteArray) {
     putNextEntry(ZipEntry(name))
     write(bytes)
