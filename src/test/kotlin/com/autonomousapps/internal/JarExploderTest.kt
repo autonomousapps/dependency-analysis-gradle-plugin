@@ -7,6 +7,7 @@ import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.internal.PhysicalArtifact
+import com.autonomousapps.model.internal.intermediates.producer.ExpensiveJar
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
@@ -51,7 +52,7 @@ internal class JarExploderTest {
     val exploded = exploder.explodedJars()
 
     assertThat(exploded).hasSize(1)
-    val classNames = exploded.first().binaryClasses.map { it.className }
+    val classNames = exploded.first().simplifiedBinaryClasses.map { it.className }
     assertThat(classNames).contains("com.example.Foo")
     assertThat(classNames).doesNotContain("com.example.Future")
   }
@@ -83,8 +84,7 @@ internal class JarExploderTest {
       androidLinters = emptySet(),
       seedCache = emptyMap(),
     )
-    first.explodedJars()
-    val seededCache: Map<String, ExplodedJar> = first.newEntries
+    val seededCache: Map<String, ExpensiveJar> = first.newEntries
     // Sanity: the second consumer below must get a cache *hit*, else this test would pass vacuously.
     assertThat(seededCache).isNotEmpty()
 

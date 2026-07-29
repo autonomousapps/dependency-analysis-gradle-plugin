@@ -35,13 +35,6 @@ internal data class ExplodedJar(
   val isLintJar: Boolean = false,
 
   /**
-   * The classes (with binary member signatures) provided by this library.
-   *
-   * @see [simplifiedBinaryClasses]
-   */
-  val binaryClasses: Set<BinaryClass>,
-
-  /**
    * The classes provided by this library. By contrast to the old `binaryClasses`, does not contain the member
    * signatures. This simplified form is intended to reduce memory pressure.
    */
@@ -72,7 +65,6 @@ internal data class ExplodedJar(
     securityProviders = exploding.securityProviders,
     androidLintRegistry = exploding.androidLintRegistry,
     isLintJar = exploding.isLintJar,
-    binaryClasses = exploding.binaryClasses,
     simplifiedBinaryClasses = exploding.binaryClasses.mapToOrderedSet { SimplifiedBinaryClass(it.className) },
     constants = exploding.constants,
     reflectiveAccesses = exploding.reflectiveAccesses,
@@ -86,7 +78,6 @@ internal data class ExplodedJar(
       .thenComparing(compareBy<ExplodedJar, String?>(nullsFirst()) { it.androidLintRegistry })
       .thenBy(ExplodedJar::isLintJar)
       .thenBy(LexicographicIterableComparator()) { it.securityProviders }
-      .thenBy(LexicographicIterableComparator()) { it.binaryClasses }
       .thenBy(LexicographicIterableComparator()) { it.simplifiedBinaryClasses }
       .thenBy(LexicographicIterableComparator()) { it.ktFiles }
       .thenBy(MapSetComparator()) { it.constants }

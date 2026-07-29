@@ -70,7 +70,7 @@ public abstract class ComputeUsagesTask @Inject constructor(
 
   @get:PathSensitive(PathSensitivity.NONE)
   @get:InputFile
-  public abstract val explodedJars: RegularFileProperty
+  public abstract val binaryClasses: RegularFileProperty
 
   @get:Input
   public abstract val kapt: Property<Boolean>
@@ -93,7 +93,7 @@ public abstract class ComputeUsagesTask @Inject constructor(
       it.declarations.set(declarations)
       it.dependencies.set(dependencies)
       it.syntheticProject.set(syntheticProject)
-      it.explodedJars.set(explodedJars)
+      it.binaryClasses.set(binaryClasses)
       it.kapt.set(kapt)
       it.duplicateClassesReports.set(duplicateClassesReports)
       it.output.set(output)
@@ -110,7 +110,7 @@ public abstract class ComputeUsagesTask @Inject constructor(
     public val declarations: RegularFileProperty
     public val dependencies: DirectoryProperty
     public val syntheticProject: RegularFileProperty
-    public val explodedJars: RegularFileProperty
+    public val binaryClasses: RegularFileProperty
     public val kapt: Property<Boolean>
     public val duplicateClassesReports: ListProperty<RegularFile>
     public val output: RegularFileProperty
@@ -139,7 +139,7 @@ public abstract class ComputeUsagesTask @Inject constructor(
         graphRuntime = graphRuntime,
         declarations = declarations,
         duplicateClasses = duplicateClasses,
-        explodedJarsProvider = { parameters.explodedJars.fromJsonSet(compressed = true) }
+        binaryClassesProvider = { parameters.binaryClasses.fromJsonSet(compressed = true) }
       )
       val visitor = GraphVisitor(
         project = project,

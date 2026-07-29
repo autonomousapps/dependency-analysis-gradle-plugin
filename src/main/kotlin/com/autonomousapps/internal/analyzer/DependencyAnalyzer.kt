@@ -272,7 +272,7 @@ internal abstract class AbstractDependencyAnalyzer(
       t.declarations.set(findDeclarationsTask.flatMap { it.output })
       t.dependencies.set(synthesizeDependenciesTask.flatMap { it.outputDir })
       t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
-      t.explodedJars.set(explodeJarTask.flatMap { it.output })
+      t.binaryClasses.set(explodeJarTask.flatMap { it.outputBinaryClasses })
       t.kapt.set(isKaptApplied)
       t.duplicateClassesReports.add(duplicateClassesCompile.flatMap { it.output })
       t.duplicateClassesReports.add(duplicateClassesRuntime.flatMap { it.output })
@@ -413,6 +413,7 @@ internal abstract class AbstractDependencyAnalyzer(
       t.kotlinMetadataClasspath.setFrom(KotlinMetadataClasspath.of(project))
 
       t.output.set(outputPaths.explodedJarsPath)
+      t.outputBinaryClasses.set(outputPaths.binaryClassesPath)
     }
   }
 
