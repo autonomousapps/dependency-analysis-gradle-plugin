@@ -22,16 +22,10 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
-import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkParameters
-import org.gradle.workers.WorkerExecutor
 import java.io.File
-import javax.inject.Inject
 
 @CacheableTask
-public abstract class ComputeDominatorTreeTask @Inject constructor(
-  private val workerExecutor: WorkerExecutor,
-) : DefaultTask() {
+public abstract class ComputeDominatorTreeTask : DefaultTask() {
 
   init {
     group = TASK_GROUP_DEP
@@ -62,84 +56,15 @@ public abstract class ComputeDominatorTreeTask @Inject constructor(
   public abstract val outputJson: RegularFileProperty
 
   @TaskAction public fun action() {
-    workerExecutor.noIsolation().submit(Action::class.java) { spec ->
-      spec.buildPath.set(buildPath)
-      spec.projectPath.set(projectPath)
-      spec.physicalArtifacts.set(physicalArtifacts)
-      spec.graphView.set(graphView)
-      spec.outputTxt.set(outputTxt)
-      spec.outputDot.set(outputDot)
-      spec.outputJson.set(outputJson)
-    }
-  }
-
-  public interface Parameters : WorkParameters {
-    public val buildPath: Property<String>
-    public val projectPath: Property<String>
-    public val physicalArtifacts: RegularFileProperty
-    public val graphView: RegularFileProperty
-    public val outputTxt: RegularFileProperty
-    public val outputDot: RegularFileProperty
-    public val outputJson: RegularFileProperty
-  }
-
-  public abstract class Action : WorkAction<Parameters> {
-    override fun execute() {
-      compute(
-        buildPath = parameters.buildPath,
-        projectPath = parameters.projectPath,
-        outputTxt = parameters.outputTxt,
-        outputDot = parameters.outputDot,
-        outputJson = parameters.outputJson,
-        physicalArtifacts = parameters.physicalArtifacts,
-        graphView = parameters.graphView,
-      )
-    }
-
-    private fun compute(
-      buildPath: Property<String>,
-      projectPath: Property<String>,
-      outputTxt: RegularFileProperty,
-      outputDot: RegularFileProperty,
-      outputJson: RegularFileProperty,
-      physicalArtifacts: RegularFileProperty,
-      graphView: RegularFileProperty,
-    ) {
-      val outputTxt = outputTxt.getAndDelete()
-      val outputDot = outputDot.getAndDelete()
-      val outputJson = outputJson.getAndDelete()
-
-      val artifactMap = physicalArtifacts.fromJsonSet<PhysicalArtifact>().associate { (coord, file) ->
-        coord to file
-      }
-
-      val graphView = graphView.fromJson<DependencyGraphView>()
-      val project = ProjectCoordinates(projectPath.get(), GradleVariantIdentification(setOf("ROOT"), emptyMap()), ":")
-      val tree = DominanceTree(graphView.graph, project)
-
-      val nodeWriter = BySize(
-        files = artifactMap,
-        tree = tree,
-        root = project
-      )
-      val dominanceTreeWriter: DominanceTreeWriter<Coordinates> = DominanceTreeWriter(
-        root = project,
-        tree = tree,
-        nodeWriter = nodeWriter,
-      )
-      val dataWriter = DominanceTreeDataWriter(
-        root = project,
-        tree = tree,
-        nodeWriter = nodeWriter,
-      )
-      val graphWriter = GraphWriter(buildPath.get())
-
-      outputTxt.writeText(dominanceTreeWriter.string)
-      outputDot.writeText(graphWriter.toDot(tree.dominanceGraph))
-      outputJson.bufferWriteParameterizedJson<DependencySizeTree<String>, String>(
-        dataWriter.sizeTree.map { it.identifier } // we only really care about the identitfiers
-      )
-    }
+    compute(
+      buildPath = buildPath,
+      projectPath = projectPath,
+      outputTxt = outputTxt,
+      outputDot = outputDot,
+      outputJson = outputJson,
+      physicalArtifacts = physicalArtifacts,
+      graphView = graphView,
+    )
   }
 
   private class BySize(
@@ -206,6 +131,54 @@ public abstract class ComputeDominatorTreeTask @Inject constructor(
       }
       builder.append(preferredCoordinatesNotation.gav())
       return builder.toString()
+    }
+  }
+
+  private companion object {
+    @Suppress("NAME_SHADOWING")
+    fun compute(
+      buildPath: Property<String>,
+      projectPath: Property<String>,
+      outputTxt: RegularFileProperty,
+      outputDot: RegularFileProperty,
+      outputJson: RegularFileProperty,
+      physicalArtifacts: RegularFileProperty,
+      graphView: RegularFileProperty,
+    ) {
+      val outputTxt = outputTxt.getAndDelete()
+      val outputDot = outputDot.getAndDelete()
+      val outputJson = outputJson.getAndDelete()
+
+      val artifactMap = physicalArtifacts.fromJsonSet<PhysicalArtifact>().associate { (coord, file) ->
+        coord to file
+      }
+
+      val graphView = graphView.fromJson<DependencyGraphView>()
+      val project = ProjectCoordinates(projectPath.get(), GradleVariantIdentification(setOf("ROOT"), emptyMap()), ":")
+      val tree = DominanceTree(graphView.graph, project)
+
+      val nodeWriter = BySize(
+        files = artifactMap,
+        tree = tree,
+        root = project
+      )
+      val dominanceTreeWriter: DominanceTreeWriter<Coordinates> = DominanceTreeWriter(
+        root = project,
+        tree = tree,
+        nodeWriter = nodeWriter,
+      )
+      val dataWriter = DominanceTreeDataWriter(
+        root = project,
+        tree = tree,
+        nodeWriter = nodeWriter,
+      )
+      val graphWriter = GraphWriter(buildPath.get())
+
+      outputTxt.writeText(dominanceTreeWriter.string)
+      outputDot.writeText(graphWriter.toDot(tree.dominanceGraph))
+      outputJson.bufferWriteParameterizedJson<DependencySizeTree<String>, String>(
+        dataWriter.sizeTree.map { it.identifier } // we only really care about the identitfiers
+      )
     }
   }
 }
