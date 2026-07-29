@@ -74,7 +74,7 @@ public abstract class ExplodeJarTask @Inject constructor(
     val cache = inMemoryCache.get()
     val seed = physicalArtifacts.fromJsonList<PhysicalArtifact>()
       .mapNotNull { artifact ->
-        val key = artifact.coordinates.toString()
+        val key = artifact.file.absolutePath
         cache.expensiveJar(key)?.let { key to it }
       }
       .toMap()
@@ -110,7 +110,7 @@ public abstract class ExplodeJarTask @Inject constructor(
     public val output: RegularFileProperty
     public val outputBinaryClasses: RegularFileProperty
 
-    /** [`Map<String, ExplodedJar>`][ExplodedJar] of already-cached results, keyed by artifact coordinates. */
+    /** [`Map<String, ExplodedJar>`][ExplodedJar] of already-cached results, keyed by artifact path. */
     public val cacheSeed: RegularFileProperty
 
     /** [`Map<String, ExplodedJar>`][ExplodedJar] of cache misses computed by this worker, for the task to merge back. */

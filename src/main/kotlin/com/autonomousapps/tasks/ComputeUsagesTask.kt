@@ -514,8 +514,7 @@ private class GraphVisitor(
     coordinates: Coordinates,
     context: GraphViewVisitor.Context,
   ) {
-    val binaryClasses =
-      context.binaryClasses[coordinates] ?: error("No binary classes for '${coordinates.identifier}'.")
+    val binaryClasses = context.binaryClasses[coordinates] ?: error("No binary classes for '${coordinates.identifier}'.")
     val result = BinaryCompatibilityChecker(coordinates, binaryClasses, context).result ?: return
 
     if (!result.isBinaryCompatible) {

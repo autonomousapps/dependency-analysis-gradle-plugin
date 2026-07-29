@@ -27,10 +27,7 @@ internal class JarExploder(
 
   private val logger = getLogger<ExplodeJarTask>()
 
-  /**
-   * [ExplodedJar]s computed during this run (cache misses), keyed by artifact coordinates, to merge back into the
-   * cache.
-   */
+  /** [ExplodedJar]s computed during this run (cache misses), keyed by artifact path, to merge back into the cache. */
   val newEntries: MutableMap<String, ExpensiveJar> = LinkedHashMap()
 
   private val expensiveJars = artifacts.asSequence()
@@ -50,7 +47,7 @@ internal class JarExploder(
 
   private fun Sequence<PhysicalArtifact>.toExpensiveJars(): Set<ExpensiveJar> =
     map { artifact ->
-      val key = artifact.coordinates.toString()
+      val key = artifact.file.absolutePath
       // A cache hit reuses the file-content-derived analysis, but the cached ExplodedJar also carries the coordinates
       // of whichever artifact first populated this path in the build-scoped cache. Rebind to THIS artifact's identity;
       // otherwise a file shared by two dependencies (e.g. a classifier/capability variant resolved by multiple
