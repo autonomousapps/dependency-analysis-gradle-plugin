@@ -84,7 +84,6 @@ internal class JarExploderTest {
       androidLinters = emptySet(),
       seedCache = emptyMap(),
     )
-    first.explodedJars()
     val seededCache: Map<String, ExpensiveJar> = first.newEntries
     // Sanity: the second consumer below must get a cache *hit*, else this test would pass vacuously.
     assertThat(seededCache).isNotEmpty()

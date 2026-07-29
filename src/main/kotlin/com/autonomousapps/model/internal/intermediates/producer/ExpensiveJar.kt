@@ -13,6 +13,12 @@ internal data class ExpensiveJar(
   val explodedJar: ExplodedJar,
   val binaryClasses: Set<BinaryClass>,
 ) : Comparable<ExpensiveJar> {
+
+  fun withCoordinates(other: Coordinates): ExpensiveJar = copy(
+    coordinates = other,
+    explodedJar = explodedJar.copy(coordinates = other)
+  )
+
   override fun compareTo(other: ExpensiveJar): Int {
     return compareBy<ExpensiveJar>(ExpensiveJar::coordinates)
       .thenBy(ExpensiveJar::explodedJar)

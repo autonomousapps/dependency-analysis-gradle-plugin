@@ -48,11 +48,16 @@ internal class JarExploder(
   private fun Sequence<PhysicalArtifact>.toExpensiveJars(): Set<ExpensiveJar> =
     map { artifact ->
       val key = artifact.file.absolutePath
-      // A cache hit reuses the file-content-derived analysis, but the cached ExplodedJar also carries the coordinates
+      // A cache hit reuses the file-content-derived analysis, but the cached ExpensiveJar also carries the coordinates
       // of whichever artifact first populated this path in the build-scoped cache. Rebind to THIS artifact's identity;
-      // otherwise a file shared by two dependencies (e.g. a classifier/capability variant resolved by multiple
-      // projects) leaks the other's coordinates and produces wrong advice.
-      seedCache[key]?.copy(coordinates = artifact.coordinates) ?: run {
+      // otherwise a file shared by two dependencies (e.g. a classifier variant resolved by multiple projects) leaks the
+      // other's coordinates and produces wrong advice. Note that Gradle does not provide the classifier in any public
+      // API, so `Coordinates` does not (cannot?) model it.
+      // tl;dr: two Coordinates, one physical artifact.
+      val cached = seedCache[key]
+      if (cached != null) {
+        cached.withCoordinates(artifact.coordinates)
+      } else {
         val explodingJar = if (artifact.isJar()) {
           explode(artifact, Mode.ZIP)
         } else {
