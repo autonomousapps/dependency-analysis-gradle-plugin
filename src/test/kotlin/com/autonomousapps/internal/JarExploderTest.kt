@@ -8,7 +8,6 @@ import com.autonomousapps.model.GradleVariantIdentification
 import com.autonomousapps.model.ModuleCoordinates
 import com.autonomousapps.model.internal.PhysicalArtifact
 import com.autonomousapps.model.internal.intermediates.producer.ExpensiveJar
-import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -45,14 +44,13 @@ internal class JarExploderTest {
     val exploder = JarExploder(
       artifacts = listOf(artifact),
       androidLinters = emptySet(),
-      seedCache = emptyMap(),
     )
 
     // Must not throw — the future-versioned class is skipped rather than handed to ASM.
-    val exploded = exploder.explodedJars()
+    val exploded = exploder.expensiveJars()
 
     assertThat(exploded).hasSize(1)
-    val classNames = exploded.first().simplifiedBinaryClasses.map { it.className }
+    val classNames = exploded.values.first().binaryClasses.map { it.className }
     assertThat(classNames).contains("com.example.Foo")
     assertThat(classNames).doesNotContain("com.example.Future")
   }
@@ -60,12 +58,12 @@ internal class JarExploderTest {
   /**
    * Regression test for https://github.com/autonomousapps/dependency-analysis-gradle-plugin/pull/1719.
    *
-   * The exploded-jar cache is keyed by file path, and (once kotlin-metadata was isolated to workers) its value became
-   * [ExplodedJar], which carries the dependency's [ExplodedJar.coordinates]. A single physical file can be resolved
-   * under different coordinates by different consumers. For example, a classifier/capability variant can be pulled by more than one
-   * project. A cache hit must reuse the cached file-content analysis but report the *current* artifact's coordinates,
-   * not whichever consumer populated the (build-scoped) cache first. Otherwise dependencies are mis-attributed and DAGP
-   * emits wrong advice (the `ClassifiersSpec` "transitive classifier" failures).
+   * The exploded-jar cache is keyed by file path, and its value carries the dependency's coordinates. A single physical
+   * file can be resolved under different coordinates by different consumers. For example, a classifier/capability
+   * variant can be pulled by more than one project. A cache hit must reuse the cached file-content analysis but report
+   * the *current* artifact's coordinates, not whichever consumer populated the (build-scoped) cache first. Otherwise
+   * dependencies are mis-attributed and DAGP emits wrong advice (the `ClassifiersSpec` "transitive classifier"
+   * failures).
    */
   @Test fun `a cache hit does not leak coordinates across artifacts that share a file`(@TempDir dir: File) {
     val jar = File(dir, "shared.jar").apply {
@@ -78,25 +76,25 @@ internal class JarExploderTest {
     val firstCoordinates = ModuleCoordinates("joda-time:joda-time", "2.10.7", GradleVariantIdentification.EMPTY)
     val secondCoordinates = ModuleCoordinates("net.danlew:android.joda", "2.10.7.2", GradleVariantIdentification.EMPTY)
 
-    // The first consumer explodes the file and seeds the build-scoped cache, as ExplodeJarTask merges it back.
-    val first = JarExploder(
+    // The first consumer explodes the file; ExplodeJarTask merges these entries into the build-scoped cache.
+    val cached: Map<String, ExpensiveJar> = JarExploder(
       artifacts = listOf(PhysicalArtifact(coordinates = firstCoordinates, file = jar)),
       androidLinters = emptySet(),
-      seedCache = emptyMap(),
-    )
-    val seededCache: Map<String, ExpensiveJar> = first.newEntries
-    // Sanity: the second consumer below must get a cache *hit*, else this test would pass vacuously.
-    assertThat(seededCache).isNotEmpty()
+    ).expensiveJars()
+    // Sanity: the second consumer below must get a cache *hit*. If this map were empty, the assertion below would hold
+    // no matter what the merge did.
+    assertThat(cached).isNotEmpty()
 
-    // The second consumer explodes the same file under different coordinates, seeded from that shared cache.
-    val second = JarExploder(
+    // The second consumer reaches the same file under different coordinates, and is served entirely from that cache.
+    val second = mergeExpensiveJars(
       artifacts = listOf(PhysicalArtifact(coordinates = secondCoordinates, file = jar)),
-      androidLinters = emptySet(),
-      seedCache = seededCache,
-    ).explodedJars().single()
+      cacheHits = cached,
+      newEntries = emptyMap(),
+    ).single()
 
     // It must report its own coordinates, not the first consumer's.
     assertThat(second.coordinates).isEqualTo(secondCoordinates)
+    assertThat(second.explodedJar.coordinates).isEqualTo(secondCoordinates)
   }
 
   /** As in a dependency with classifiers. */
@@ -115,31 +113,70 @@ internal class JarExploderTest {
     // The same coordinates, referencing two different files on disk.
     val coordinates = ModuleCoordinates("group:name", "2.10.7", GradleVariantIdentification.EMPTY)
 
-    // The first consumer explodes the file and seeds the build-scoped cache, as ExplodeJarTask merges it back.
-    val firstExploder = JarExploder(
+    // The first consumer explodes its file and seeds the build-scoped cache, as ExplodeJarTask merges it back.
+    val cached: Map<String, ExpensiveJar> = JarExploder(
       artifacts = listOf(PhysicalArtifact(coordinates = coordinates, file = jar1)),
       androidLinters = emptySet(),
-      seedCache = emptyMap(),
+    ).expensiveJars()
+
+    // Check contents
+    assertThat(cached.values.single().binaryClasses.map { it.className }).containsExactly("com.example.Foo")
+    // Sanity: the cache is non-empty, so a merge that keyed on coordinates rather than path would find this entry.
+    assertThat(cached).isNotEmpty()
+
+    // The second consumer resolves the "same" artifact (identical coordinates) to a different file, so it misses that
+    // cache and its jar is exploded by the worker.
+    val secondArtifact = PhysicalArtifact(coordinates = coordinates, file = jar2)
+    val newEntries = JarExploder(
+      artifacts = listOf(secondArtifact),
+      androidLinters = emptySet(),
+    ).expensiveJars()
+
+    val second = mergeExpensiveJars(
+      artifacts = listOf(secondArtifact),
+      cacheHits = cached,
+      newEntries = newEntries,
+    ).single()
+
+    // Check contents
+    assertThat(second.binaryClasses.map { it.className }).containsExactly("com.example.Bar")
+    assertThat(second.coordinates).isEqualTo(coordinates)
+  }
+
+  /**
+   * `ExplodeJarTask` serves cache hits from the daemon and sends only the misses to its isolated worker, so the reports
+   * it writes are a merge of the two. Every artifact must appear exactly once, whichever side it came from.
+   */
+  @Test fun `merges cache hits with jars exploded by the worker`(@TempDir dir: File) {
+    fun jar(name: String, className: String) = File(dir, name).apply {
+      ZipOutputStream(outputStream()).use { it.writeEntry("$className.class", validClass(className)) }
+    }
+
+    val cachedArtifact = PhysicalArtifact(
+      coordinates = ModuleCoordinates("org.example:cached", "1", GradleVariantIdentification.EMPTY),
+      file = jar("cached.jar", "com/example/Cached"),
+    )
+    val freshArtifact = PhysicalArtifact(
+      coordinates = ModuleCoordinates("org.example:fresh", "1", GradleVariantIdentification.EMPTY),
+      file = jar("fresh.jar", "com/example/Fresh"),
     )
 
-    // Check contents
-    val firstExplodedJar = firstExploder.explodedJars().single()
-    assertThat(firstExplodedJar.simplifiedBinaryClasses.map { it.className }).containsExactly("com.example.Foo")
+    // The first artifact is already cached, so only the second one reaches the worker's exploder.
+    val cacheHits = JarExploder(artifacts = listOf(cachedArtifact), androidLinters = emptySet()).expensiveJars()
+    val newEntries = JarExploder(artifacts = listOf(freshArtifact), androidLinters = emptySet()).expensiveJars()
 
-    val seededCache: Map<String, ExpensiveJar> = firstExploder.newEntries
-    // Sanity: the second consumer below must get a cache *hit*, else this test would pass vacuously.
-    assertThat(seededCache).isNotEmpty()
+    val merged = mergeExpensiveJars(
+      artifacts = listOf(cachedArtifact, freshArtifact),
+      cacheHits = cacheHits,
+      newEntries = newEntries,
+    )
 
-    // The second consumer explodes the "same" artifact (identical coordinates), not seeded from that shared cache.
-    val secondExplodedJar = JarExploder(
-      artifacts = listOf(PhysicalArtifact(coordinates = coordinates, file = jar2)),
-      androidLinters = emptySet(),
-      seedCache = seededCache,
-    ).explodedJars().single()
-
-    // Check contents
-    assertThat(secondExplodedJar.simplifiedBinaryClasses.map { it.className }).containsExactly("com.example.Bar")
-    assertThat(secondExplodedJar.coordinates).isEqualTo(coordinates)
+    assertThat(merged.map { it.coordinates })
+      .containsExactly(cachedArtifact.coordinates, freshArtifact.coordinates)
+    assertThat(merged.flatMap { expensive -> expensive.binaryClasses.map { it.className } })
+      .containsExactly("com.example.Cached", "com.example.Fresh")
+    assertThat(merged.flatMap { it.explodedJar.simplifiedBinaryClasses.map { c -> c.className } })
+      .containsExactly("com.example.Cached", "com.example.Fresh")
   }
 
   private fun ZipOutputStream.writeEntry(name: String, bytes: ByteArray) {

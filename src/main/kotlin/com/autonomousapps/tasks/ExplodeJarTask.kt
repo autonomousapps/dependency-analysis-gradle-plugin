@@ -5,19 +5,22 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.JarExploder
+import com.autonomousapps.internal.mergeExpensiveJars
 import com.autonomousapps.internal.utils.bufferWriteJson
+import com.autonomousapps.internal.utils.bufferWriteJsonList
 import com.autonomousapps.internal.utils.bufferWriteJsonMap
-import com.autonomousapps.internal.utils.bufferWriteJsonMapSet
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
+import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.fromJsonList
 import com.autonomousapps.internal.utils.fromJsonMap
 import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.mapToOrderedSet
+import com.autonomousapps.internal.utils.partitionByCacheHit
 import com.autonomousapps.model.internal.PhysicalArtifact
 import com.autonomousapps.model.internal.intermediates.producer.AndroidLinterDependency
 import com.autonomousapps.model.internal.intermediates.producer.BinaryClasses
 import com.autonomousapps.model.internal.intermediates.producer.ExpensiveJar
-import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -70,71 +73,72 @@ public abstract class ExplodeJarTask @Inject constructor(
   public abstract val outputBinaryClasses: RegularFileProperty
 
   @TaskAction public fun action() {
-    // Pass the shared cache content to the work action, which requires serializable data only
     val cache = inMemoryCache.get()
-    val seed = physicalArtifacts.fromJsonList<PhysicalArtifact>()
-      .mapNotNull { artifact ->
-        val key = artifact.file.absolutePath
-        cache.expensiveJar(key)?.let { key to it }
-      }
-      .toMap()
+    val artifacts = physicalArtifacts.fromJsonList<PhysicalArtifact>()
+      // We know how to analyze jars, and directories containing class files.
+      .filter { it.isJar() || it.containsClassFiles() }
 
-    val seedFile = File(temporaryDir, "exploded-jars-cache-seed.json").apply { bufferWriteJsonMap(seed) }
+    // The worker runs in an isolated classloader and so cannot share objects with this JVM; anything we hand it must be
+    // serialized out and deserialized back into a full copy. Send it only the artifacts we can't already answer for.
+    // Cache hits are held here, by reference, and never copied. (Seeding the worker with them instead cost a per-task
+    // deep copy of the whole compile classpath: tens of MB of JSON, serialized and parsed again for every task.)
+    val (cacheHits, misses) = artifacts.partitionByCacheHit(
+      key = { it.file.absolutePath },
+      hit = { cache.expensiveJar(it) },
+    )
+
+    val missesFile = File(temporaryDir, "exploded-jars-misses.json").apply { bufferWriteJsonList(misses) }
     val newEntriesFile = File(temporaryDir, "exploded-jars-cache-new.json")
 
     workerExecutor.classLoaderIsolation {
       // kotlin-metadata-jvm is not on the main plugin classpath (issue 1671); add it for the isolated worker only.
       it.classpath.from(kotlinMetadataClasspath)
     }.submit(ExplodeJarWorkAction::class.java) {
-      it.physicalArtifacts.set(physicalArtifacts)
+      it.physicalArtifacts.set(missesFile)
       it.androidLinters.set(androidLinters)
-      it.output.set(output)
-      it.outputBinaryClasses.set(outputBinaryClasses)
-      it.cacheSeed.set(seedFile)
       it.newCacheEntries.set(newEntriesFile)
     }
 
-    // Block so we can merge the worker's results back into the shared cache.
+    // Block so we can merge the worker's results back into the shared cache and write the reports.
     workerExecutor.await()
-    newEntriesFile.fromJsonMap<String, ExpensiveJar>().forEach { (key, expensiveJar) ->
-      cache.expensiveJars(key, expensiveJar)
-    }
+
+    val newEntries = newEntriesFile.fromJsonMap<String, ExpensiveJar>(compressed = true)
+    newEntries.forEach { (key, expensiveJar) -> cache.expensiveJars(key, expensiveJar) }
+
+    val expensiveJars = mergeExpensiveJars(artifacts, cacheHits, newEntries)
+    val binaryClasses = BinaryClasses.of(
+      expensiveJars.associate { it.coordinates to it.binaryClasses }.toSortedMap().efficient()
+    )
+
+    output.getAndDelete().bufferWriteJsonSet(expensiveJars.mapToOrderedSet { it.explodedJar }, compress = true)
+    outputBinaryClasses.getAndDelete().bufferWriteJson(binaryClasses, compress = true)
   }
 
   public interface ExplodeJarParameters : WorkParameters {
+    /**
+     * [`List<PhysicalArtifact>`][PhysicalArtifact] to explode: the subset of the task's artifacts that missed the
+     * build-scoped cache.
+     */
     public val physicalArtifacts: RegularFileProperty
 
     /** This may be empty. */
     public val androidLinters: RegularFileProperty
 
-    public val output: RegularFileProperty
-    public val outputBinaryClasses: RegularFileProperty
-
-    /** [`Map<String, ExplodedJar>`][ExplodedJar] of already-cached results, keyed by artifact path. */
-    public val cacheSeed: RegularFileProperty
-
-    /** [`Map<String, ExplodedJar>`][ExplodedJar] of cache misses computed by this worker, for the task to merge back. */
+    /** [`Map<String, ExpensiveJar>`][ExpensiveJar] computed by this worker, for the task to merge back. */
     public val newCacheEntries: RegularFileProperty
   }
 
   public abstract class ExplodeJarWorkAction : WorkAction<ExplodeJarParameters> {
 
     override fun execute() {
-      val output = parameters.output.getAndDelete()
-      val outputBinaryClasses = parameters.outputBinaryClasses.getAndDelete()
       val newCacheEntries = parameters.newCacheEntries.getAndDelete()
 
-      val exploder = JarExploder(
+      val expensiveJars = JarExploder(
         artifacts = parameters.physicalArtifacts.fromJsonList(),
         androidLinters = parameters.androidLinters.fromNullableJsonSet<AndroidLinterDependency>(),
-        seedCache = parameters.cacheSeed.fromJsonMap(),
-      )
-      val explodedJars = exploder.explodedJars()
-      val binaryClasses = BinaryClasses.of(exploder.binaryClasses())
+      ).expensiveJars()
 
-      output.bufferWriteJsonSet(explodedJars, compress = true)
-      outputBinaryClasses.bufferWriteJson(binaryClasses, compress = true)
-      newCacheEntries.bufferWriteJsonMap(exploder.newEntries)
+      newCacheEntries.bufferWriteJsonMap(expensiveJars, compress = true)
     }
   }
 }

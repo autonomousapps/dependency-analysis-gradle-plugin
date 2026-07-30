@@ -160,6 +160,26 @@ internal inline fun <T, R> Iterable<T>.mapToOrderedSet(transform: (T) -> R): Set
   return mapTo(TreeSet(), transform)
 }
 
+/**
+ * Splits [this] by whether a cache can already answer for each element: the hits, keyed by [key], and the elements that
+ * missed. Hits are returned as-is, so callers hold them by reference rather than copying them.
+ */
+internal inline fun <T, V : Any> Iterable<T>.partitionByCacheHit(
+  key: (T) -> String,
+  hit: (String) -> V?,
+): Pair<Map<String, V>, List<T>> {
+  val hits = LinkedHashMap<String, V>(collectionSizeOrDefault(10))
+  val misses = ArrayList<T>()
+
+  forEach { element ->
+    val k = key(element)
+    val cached = hit(k)
+    if (cached != null) hits[k] = cached else misses += element
+  }
+
+  return hits to misses
+}
+
 internal inline fun <T, R> Iterable<T>.flatMapToSet(transform: (T) -> Iterable<R>): Set<R> {
   return flatMapToMutableSet(transform)
 }

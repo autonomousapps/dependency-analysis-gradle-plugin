@@ -73,47 +73,51 @@ public abstract class FindKotlinMagicTask @Inject constructor(
 
   @TaskAction
   public fun action() {
-    // Pass the shared cache content to the work action, which requires serializable data only
     val cache = inMemoryCacheProvider.get()
-    val seed = artifacts.fromJsonList<PhysicalArtifact>()
-      .mapNotNull { artifact ->
-        val key = artifact.file.absolutePath
-        cache.kotlinCapabilities(key)?.let { key to it }
-      }
-      .toMap()
+    val allArtifacts = artifacts.fromJsonList<PhysicalArtifact>()
+      .filter { it.isJar() || it.containsClassFiles() }
 
-    val seedFile = File(temporaryDir, "kotlin-magic-cache-seed.json").apply { bufferWriteJsonMap(seed) }
+    // As in ExplodeJarTask: the isolated worker cannot share objects with this JVM, so send it only the artifacts the
+    // cache can't answer for. Cache hits stay here, by reference, rather than being deep-copied into every worker.
+    val (cacheHits, misses) = allArtifacts.partitionByCacheHit(
+      key = { it.file.absolutePath },
+      hit = { cache.kotlinCapabilities(it) },
+    )
+
+    val missesFile = File(temporaryDir, "kotlin-magic-misses.json").apply { bufferWriteJsonList(misses) }
     val newEntriesFile = File(temporaryDir, "kotlin-magic-cache-new.json")
 
+    // NB: submitted even when there are no misses. The worker also writes `errorsReport`, an output file that must
+    // always exist; skipping the worker on an empty `misses` would leave it missing.
     workerExecutor.classLoaderIsolation {
       // kotlin-metadata-jvm is not on the main plugin classpath (issue 1671); add it for the isolated worker only.
       it.classpath.from(kotlinMetadataClasspath)
     }.submit(Action::class.java) {
-      it.artifacts.set(artifacts)
-      it.inlineUsageReport.set(outputInlineMembers)
-      it.typealiasReport.set(outputTypealiases)
+      it.artifacts.set(missesFile)
       it.errorsReport.set(outputErrors)
-      it.cacheSeed.set(seedFile)
       it.newCacheEntries.set(newEntriesFile)
     }
 
-    // Block so we can merge the worker's results back into the shared cache.
+    // Block so we can merge the worker's results back into the shared cache and write the reports.
     workerExecutor.await()
-    newEntriesFile.fromJsonMap<String, KotlinCapabilities>().forEach { (key, capabilities) ->
-      cache.inlineMembers(key, capabilities)
-    }
+
+    val newEntries = newEntriesFile.fromJsonMap<String, KotlinCapabilities>(compressed = true)
+    newEntries.forEach { (key, capabilities) -> cache.inlineMembers(key, capabilities) }
+
+    val (inlineMembers, typealiases) = mergeKotlinMagic(allArtifacts, cacheHits, newEntries)
+    outputInlineMembers.getAndDelete().bufferWriteJsonSet(inlineMembers)
+    outputTypealiases.getAndDelete().bufferWriteJsonSet(typealiases)
   }
 
   public interface Parameters : WorkParameters {
+    /**
+     * [`List<PhysicalArtifact>`][PhysicalArtifact] to analyze: the subset of the task's artifacts that missed the
+     * build-scoped cache.
+     */
     public val artifacts: RegularFileProperty
-    public val inlineUsageReport: RegularFileProperty
-    public val typealiasReport: RegularFileProperty
     public val errorsReport: RegularFileProperty
 
-    /** [`Map<String, KotlinCapabilities>`][KotlinCapabilities] of already-cached results, keyed by artifact path. */
-    public val cacheSeed: RegularFileProperty
-
-    /** [`Map<String, KotlinCapabilities>`][KotlinCapabilities] of cache misses, for the task to merge back. */
+    /** [`Map<String, KotlinCapabilities>`][KotlinCapabilities] computed by this worker, for the task to merge back. */
     public val newCacheEntries: RegularFileProperty
   }
 
@@ -122,23 +126,15 @@ public abstract class FindKotlinMagicTask @Inject constructor(
     private val logger = getLogger<FindKotlinMagicTask>()
 
     override fun execute() {
-      val inlineUsageReportFile = parameters.inlineUsageReport.getAndDelete()
-      val typealiasReportFile = parameters.typealiasReport.getAndDelete()
       val errorsReport = parameters.errorsReport.getAndDelete()
       val newCacheEntries = parameters.newCacheEntries.getAndDelete()
 
       val finder = KotlinMagicFinder(
-        seedCache = parameters.cacheSeed.fromJsonMap(),
         artifacts = parameters.artifacts.fromJsonList<PhysicalArtifact>(),
         errorsReport = errorsReport,
       )
-      val inlineMembers = finder.inlineMembers
-      val typealiases = finder.typealiases
 
-      inlineUsageReportFile.bufferWriteJsonSet(inlineMembers)
-      typealiasReportFile.bufferWriteJsonSet(typealiases)
-
-      newCacheEntries.bufferWriteJsonMap(finder.newEntries)
+      newCacheEntries.bufferWriteJsonMap(finder.capabilities, compress = true)
 
       if (finder.didWriteErrors) {
         logger.warn("There were errors during inline member analysis. See ${errorsReport.toPath().toUri()}")
@@ -150,8 +146,38 @@ public abstract class FindKotlinMagicTask @Inject constructor(
   }
 }
 
+/**
+ * Combines the [cacheHits] with the [newEntries] just computed by the worker, into the reports for [artifacts].
+ *
+ * Runs in the daemon, so a cache hit is reused by reference and is never copied.
+ */
+internal fun mergeKotlinMagic(
+  artifacts: List<PhysicalArtifact>,
+  cacheHits: Map<String, KotlinCapabilities>,
+  newEntries: Map<String, KotlinCapabilities>,
+): Pair<Set<InlineMemberDependency>, Set<TypealiasDependency>> {
+  val inlineMembers = mutableSetOf<InlineMemberDependency>()
+  val typealiases = mutableSetOf<TypealiasDependency>()
+
+  artifacts.forEach { artifact ->
+    val key = artifact.file.absolutePath
+    val capabilities = cacheHits[key] ?: newEntries.getValue(key)
+    if (capabilities.inlineMembers.isNotEmpty()) {
+      inlineMembers += InlineMemberDependency.newInstance(artifact.coordinates, capabilities.inlineMembers)
+    }
+    if (capabilities.typealiases.isNotEmpty()) {
+      typealiases += TypealiasDependency.newInstance(artifact.coordinates, capabilities.typealiases)
+    }
+  }
+
+  return inlineMembers to typealiases
+}
+
+/**
+ * Analyzes the artifacts it is given, which are only ever the ones [FindKotlinMagicTask] could not serve from its
+ * build-scoped cache. Cache hits never reach this class, and so never cross the worker boundary.
+ */
 internal class KotlinMagicFinder(
-  private val seedCache: Map<String, KotlinCapabilities>,
   artifacts: List<PhysicalArtifact>,
   private val errorsReport: File,
 ) {
@@ -159,34 +185,9 @@ internal class KotlinMagicFinder(
   private val logger = getLogger<FindKotlinMagicTask>()
   var didWriteErrors = false
 
-  val inlineMembers: Set<InlineMemberDependency>
-  val typealiases: Set<TypealiasDependency>
-
-  /** [KotlinCapabilities] computed during this run (cache misses), keyed by artifact path, to merge into the cache. */
-  val newEntries: MutableMap<String, KotlinCapabilities> = LinkedHashMap()
-
-  init {
-    val inlineMembersMut = mutableSetOf<InlineMemberDependency>()
-    val typealiasesMut = mutableSetOf<TypealiasDependency>()
-
-    artifacts.asSequence()
-      .filter {
-        it.isJar() || it.containsClassFiles()
-      }.map { artifact ->
-        val key = artifact.file.absolutePath
-        val capabilities = seedCache[key] ?: findKotlinMagic(artifact, artifact.mode).also { newEntries[key] = it }
-        artifact to capabilities
-      }.forEach { (artifact, capabilities) ->
-        if (capabilities.inlineMembers.isNotEmpty()) {
-          inlineMembersMut += InlineMemberDependency.newInstance(artifact.coordinates, capabilities.inlineMembers)
-        }
-        if (capabilities.typealiases.isNotEmpty()) {
-          typealiasesMut += TypealiasDependency.newInstance(artifact.coordinates, capabilities.typealiases)
-        }
-      }
-
-    inlineMembers = inlineMembersMut
-    typealiases = typealiasesMut
+  /** [KotlinCapabilities] keyed by artifact path, for [FindKotlinMagicTask] to merge into its cache. */
+  val capabilities: Map<String, KotlinCapabilities> = artifacts.associate { artifact ->
+    artifact.file.absolutePath to findKotlinMagic(artifact, artifact.mode)
   }
 
   /**

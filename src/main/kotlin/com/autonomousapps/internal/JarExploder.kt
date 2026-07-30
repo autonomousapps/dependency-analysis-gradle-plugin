@@ -4,78 +4,42 @@ package com.autonomousapps.internal
 
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.asSequenceOfClassFiles
-import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.mapToOrderedSet
-import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.KtFile
 import com.autonomousapps.model.internal.PhysicalArtifact
 import com.autonomousapps.model.internal.PhysicalArtifact.Mode
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
 import com.autonomousapps.model.internal.intermediates.producer.AndroidLinterDependency
-import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import com.autonomousapps.model.internal.intermediates.producer.ExpensiveJar
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import com.autonomousapps.tasks.ExplodeJarTask
 import java.util.zip.ZipFile
 
+/**
+ * Explodes the artifacts it is given, which are only ever the ones [ExplodeJarTask] could not serve from its
+ * build-scoped cache. Cache hits never reach this class, and so never cross the worker boundary.
+ */
 internal class JarExploder(
-  artifacts: List<PhysicalArtifact>,
+  private val artifacts: List<PhysicalArtifact>,
   private val androidLinters: Set<AndroidLinterDependency>,
-  private val seedCache: Map<String, ExpensiveJar>,
 ) {
 
   private val logger = getLogger<ExplodeJarTask>()
 
-  /** [ExplodedJar]s computed during this run (cache misses), keyed by artifact path, to merge back into the cache. */
-  val newEntries: MutableMap<String, ExpensiveJar> = LinkedHashMap()
+  /** [ExpensiveJar]s keyed by artifact path, for [ExplodeJarTask] to merge into its cache. */
+  fun expensiveJars(): Map<String, ExpensiveJar> = artifacts.associate { artifact ->
+    val explodingJar = explode(artifact, artifact.mode)
 
-  private val expensiveJars = artifacts.asSequence()
-    .filter {
-      // We know how to analyze jars, and directories containing class files
-      it.isJar() || it.containsClassFiles()
-    }
-    .toExpensiveJars()
-
-  fun binaryClasses(): Map<Coordinates, Set<BinaryClass>> {
-    return expensiveJars.associate { it.coordinates to it.binaryClasses }.toSortedMap().efficient()
+    artifact.file.absolutePath to ExpensiveJar(
+      coordinates = artifact.coordinates,
+      explodedJar = ExplodedJar(
+        artifact = artifact,
+        exploding = explodingJar,
+      ),
+      binaryClasses = explodingJar.binaryClasses,
+    )
   }
-
-  fun explodedJars(): Set<ExplodedJar> {
-    return expensiveJars.mapToOrderedSet { it.explodedJar }
-  }
-
-  private fun Sequence<PhysicalArtifact>.toExpensiveJars(): Set<ExpensiveJar> =
-    map { artifact ->
-      val key = artifact.file.absolutePath
-      // A cache hit reuses the file-content-derived analysis, but the cached ExpensiveJar also carries the coordinates
-      // of whichever artifact first populated this path in the build-scoped cache. Rebind to THIS artifact's identity;
-      // otherwise a file shared by two dependencies (e.g. a classifier variant resolved by multiple projects) leaks the
-      // other's coordinates and produces wrong advice. Note that Gradle does not provide the classifier in any public
-      // API, so `Coordinates` does not (cannot?) model it.
-      // tl;dr: two Coordinates, one physical artifact.
-      val cached = seedCache[key]
-      if (cached != null) {
-        cached.withCoordinates(artifact.coordinates)
-      } else {
-        val explodingJar = if (artifact.isJar()) {
-          explode(artifact, Mode.ZIP)
-        } else {
-          explode(artifact, Mode.CLASSES)
-        }
-
-        val explodedJar = ExplodedJar(
-          artifact = artifact,
-          exploding = explodingJar
-        )
-
-        ExpensiveJar(
-          coordinates = artifact.coordinates,
-          explodedJar = explodedJar,
-          binaryClasses = explodingJar.binaryClasses,
-        ).also { newEntries[key] = it }
-      }
-    }.toSortedSet()
 
   /**
    * Analyzes bytecode in order to extract class names and some basic structural information from
@@ -130,4 +94,24 @@ internal class JarExploder(
   private fun findAndroidLinter(physicalArtifact: PhysicalArtifact): String? {
     return androidLinters.find { it.coordinates == physicalArtifact.coordinates }?.lintRegistry
   }
+}
+
+/**
+ * Combines the [cacheHits] with the [newEntries] just computed by the worker, into the reports for [artifacts].
+ *
+ * Runs in the daemon, so a cache hit is reused by reference and is never copied.
+ */
+internal fun mergeExpensiveJars(
+  artifacts: List<PhysicalArtifact>,
+  cacheHits: Map<String, ExpensiveJar>,
+  newEntries: Map<String, ExpensiveJar>,
+): Set<ExpensiveJar> = artifacts.mapToOrderedSet { artifact ->
+  val key = artifact.file.absolutePath
+  // A cache hit reuses the file-content-derived analysis, but the cached ExpensiveJar also carries the coordinates of
+  // whichever artifact first populated this path in the build-scoped cache. Rebind to THIS artifact's identity;
+  // otherwise a file shared by two dependencies (e.g. a classifier variant resolved by multiple projects) leaks the
+  // other's coordinates and produces wrong advice. Note that Gradle does not provide the classifier in any public API,
+  // so `Coordinates` does not (cannot?) model it.
+  // tl;dr: two Coordinates, one physical artifact.
+  (cacheHits[key] ?: newEntries.getValue(key)).withCoordinates(artifact.coordinates)
 }
