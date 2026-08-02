@@ -9,7 +9,7 @@ asm-relocated = "9.9.0"
 buildconfig = "5.7.1"
 caffeine = "3.2.3"
 commons-io = "2.21.0"
-dagp = "3.17.0"
+dagp = "3.18.0"
 error-prone = "2.44.0"
 gradle-publish-plugin = "2.1.1"
 gradle-version-min = "8.11.1"
@@ -30,7 +30,8 @@ kotlinGradlePlugin = "2.2.21"
 kotlinLanguageVersion = "2.1"
 kotlinRuntime = "2.1.21"
 kotlinForAndroidtests = "2.2.21"
-kotlinMetadata = "2.2.21"
+# The kotlin-metadata-jvm version, used in isolated workers, can be the latest released unless there are breaking changes in it.
+kotlinMetadataRuntime = "2.4.10"
 kotlinDokka = "2.2.0"
 kotlin-editor-core = "0.25"
 kotlin-editor-relocated = "0.25.0"
@@ -76,7 +77,8 @@ kotlin-multiplatform-gradle = { module = "org.jetbrains.kotlin.multiplatform:org
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlinRuntime" }
 kotlin-stdlib-core = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinRuntime" }
 kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlinRuntime" }
-kotlin-metadata-jvm = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlinMetadata" }
+# The version used when building the plugin has to stay compatible with the KGP version used
+kotlin-metadata-jvm = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlinGradlePlugin" }
 mavenPublishPlugin = { module = "com.vanniktech:gradle-maven-publish-plugin", version.ref = "mavenPublish" }
 metalava = { module = "com.android.tools.metalava:metalava", version.ref = "metalava" }
 moshi-core = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
