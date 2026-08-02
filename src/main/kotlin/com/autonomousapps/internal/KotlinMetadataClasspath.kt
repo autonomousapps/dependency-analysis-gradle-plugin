@@ -32,22 +32,11 @@ internal object KotlinMetadataClasspath {
    * time, before any task that calls [of] is registered.
    */
   fun register(project: Project) {
-    // https://docs.gradle.org/9.7.0-rc-1/userguide/compatibility.html
-    val kotlinMetadataVersion = if (GradleVersions.isAtLeastGradle970) {
-      "2.4.0"
-    } else if (GradleVersions.isAtLeastGradle940) {
-      "2.3.0"
-    } else if (GradleVersions.isAtLeastGradle811) {
-      BuildConfig.KOTLIN_METADATA_VERSION
-    } else {
-      error("Unsupported Gradle version: '${GradleVersions.current}'. Expected at least '${GradleVersions.minGradleVersion}'.")
-    }
-
     val scope = project.dependencyScopeConfiguration(DEPENDENCY_SCOPE)
     scope.configure { configuration ->
       configuration.defaultDependencies { deps ->
         val dep = project.dependencies.create(
-          "org.jetbrains.kotlin:kotlin-metadata-jvm:$kotlinMetadataVersion"
+          "org.jetbrains.kotlin:kotlin-metadata-jvm:${BuildConfig.KOTLIN_METADATA_VERSION}"
         ) as ExternalModuleDependency
         // The stdlib is inherited from DAGP's own (capped) classpath; don't drag a newer one onto the worker classpath.
         dep.exclude(mapOf("group" to "org.jetbrains.kotlin", "module" to "kotlin-stdlib"))

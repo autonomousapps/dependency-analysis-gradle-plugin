@@ -72,7 +72,7 @@ buildConfig {
   buildConfigField("String", "GRADLE_MIN_VERSION", libs.versions.gradle.version.min.map { "\"$it\"" })
   buildConfigField("String", "GRADLE_MAX_VERSION", libs.versions.gradle.version.max.map { "\"$it\"" })
   // The kotlin-metadata-jvm version supplied to classloader-isolated workers (see issue 1671). Not bundled in the jar.
-  buildConfigField("String", "KOTLIN_METADATA_VERSION", libs.versions.kotlinMetadata.map { "\"$it\"" })
+  buildConfigField("String", "KOTLIN_METADATA_VERSION", libs.versions.kotlinMetadataRuntime.map { "\"$it\"" })
 }
 
 val main = sourceSets["main"]
