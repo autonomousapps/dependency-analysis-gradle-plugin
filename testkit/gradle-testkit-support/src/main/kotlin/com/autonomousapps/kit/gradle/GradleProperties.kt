@@ -72,6 +72,14 @@ public class GradleProperties(private val lines: MutableList<String>) {
     public val PARALLEL: String = "org.gradle.parallel=true"
 
     /**
+     * Instruct Gradle to _not_ skip the Kotlin metadata version check. The default is to skip it.
+     *
+     * @see <a href="https://github.com/gradle/gradle/issues/30309#issuecomment-2343241180">Configure Kotlin Compiler Arguments for Kotlin DSL</a>
+     */
+    @JvmField
+    public val DO_NOT_SKIP_METADATA_VERSION_CHECK: String = "org.gradle.kotlin.dsl.skipMetadataVersionCheck=false"
+
+    /**
      * Disable the behavior of the Kotlin Gradle Plugin that adds the stdlib as an `api` dependency by default.
      *
      * @see <a href="https://kotlinlang.org/docs/gradle-configure-project.html#dependency-on-the-standard-library">Dependency on the standard library</a>
