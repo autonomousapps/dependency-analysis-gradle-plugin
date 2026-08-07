@@ -142,11 +142,39 @@ internal class JarExploderTest {
     assertThat(secondExplodedJar.coordinates).isEqualTo(coordinates)
   }
 
+  @Test fun `binary classes are preserved across artifacts with the same coordinates`(@TempDir dir: File) {
+    val kotlinClasses = dir.classDirectory("kotlin", "com/example/Fake")
+    val generatedJavaClasses = dir.classDirectory("java", "com/example/Fake_Factory")
+    val coordinates = ModuleCoordinates("group:name", "1.0", GradleVariantIdentification.EMPTY)
+
+    val binaryClasses = JarExploder(
+      artifacts = listOf(
+        PhysicalArtifact(coordinates = coordinates, file = kotlinClasses),
+        PhysicalArtifact(coordinates = coordinates, file = generatedJavaClasses),
+      ),
+      androidLinters = emptySet(),
+      seedCache = emptyMap(),
+    ).binaryClasses().getValue(coordinates)
+
+    assertThat(binaryClasses.map { it.className }).containsExactly(
+      "com.example.Fake",
+      "com.example.Fake_Factory",
+    )
+  }
+
   private fun ZipOutputStream.writeEntry(name: String, bytes: ByteArray) {
     putNextEntry(ZipEntry(name))
     write(bytes)
     closeEntry()
   }
+
+  private fun File.classDirectory(directoryName: String, className: String): File =
+    resolve(directoryName).also { directory ->
+      directory.resolve("$className.class").apply {
+        parentFile.mkdirs()
+        writeBytes(validClass(className))
+      }
+    }
 
   /** Generates a minimal, valid `.class` file (parseable by ASM) for the given internal name, e.g. `com/example/Foo`. */
   private fun validClass(internalName: String): ByteArray {
