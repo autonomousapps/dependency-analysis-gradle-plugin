@@ -38,7 +38,11 @@ internal class JarExploder(
     .toExpensiveJars()
 
   fun binaryClasses(): Map<Coordinates, Set<BinaryClass>> {
-    return expensiveJars.associate { it.coordinates to it.binaryClasses }.toSortedMap().efficient()
+    val binaryClasses = sortedMapOf<Coordinates, MutableSet<BinaryClass>>()
+    expensiveJars.forEach { jar ->
+      binaryClasses.getOrPut(jar.coordinates) { sortedSetOf() }.addAll(jar.binaryClasses)
+    }
+    return binaryClasses.mapValues { (_, classes) -> classes.efficient() }.efficient()
   }
 
   fun explodedJars(): Set<ExplodedJar> {
