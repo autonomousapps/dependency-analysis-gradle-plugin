@@ -21,6 +21,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
+import java.io.File
 
 /**
  * Produces a report of all the artifacts required to build the given project; i.e., the artifacts on the compile
@@ -125,20 +126,17 @@ public abstract class ArtifactsReportTask : DefaultTask() {
   private fun toPhysicalArtifacts(artifacts: ArtifactCollection): Set<PhysicalArtifact> {
     return artifacts.asSequence()
       .filterNonGradle()
-      .mapNotNull {
-        try {
-          // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/948#issuecomment-1711177139
-          val file = if (it.file.path.endsWith("kotlin/main") || it.file.path.endsWith("java/main")) {
-            it.file.parentFile!!.parentFile!!
-          } else {
-            it.file
+      .flatMap { artifact ->
+        // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/948#issuecomment-1711177139
+        artifact.file.sourceSetClassDirectories().asSequence().mapNotNull { file ->
+          try {
+            PhysicalArtifact.of(
+              artifact = artifact,
+              file = file
+            )
+          } catch (_: GradleException) {
+            null
           }
-          PhysicalArtifact.of(
-            artifact = it,
-            file = file
-          )
-        } catch (_: GradleException) {
-          null
         }
       }
       .toSortedSet()
@@ -148,5 +146,19 @@ public abstract class ArtifactsReportTask : DefaultTask() {
     return excludedIdentifiers.get().asSequence()
       .map { ExcludedIdentifier(it.intern()) }
       .toSortedSet()
+  }
+}
+
+private val JVM_CLASS_OUTPUT_LANGUAGES = setOf("java", "kotlin")
+
+internal fun File.sourceSetClassDirectories(): Set<File> {
+  val languageDirectory = parentFile ?: return setOf(this)
+  val classesDirectory = languageDirectory.parentFile ?: return setOf(this)
+  if (classesDirectory.name != "classes" || languageDirectory.name !in JVM_CLASS_OUTPUT_LANGUAGES) {
+    return setOf(this)
+  }
+
+  return JVM_CLASS_OUTPUT_LANGUAGES.mapTo(sortedSetOf()) { language ->
+    classesDirectory.resolve("$language/$name")
   }
 }
