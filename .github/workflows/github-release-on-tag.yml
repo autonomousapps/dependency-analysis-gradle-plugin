@@ -1,0 +1,34 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - v*
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # 6.0.2
+
+      - name: Extract release notes
+        run: |
+          awk -v header="# Version ${GITHUB_REF_NAME#v}" '
+            /^# Version / { found = ($0 == header); next }
+            found
+          ' CHANGELOG.md > release-notes.md
+
+      - name: Display release notes
+        run: cat release-notes.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME#v}" \
+            --notes-file release-notes.md
