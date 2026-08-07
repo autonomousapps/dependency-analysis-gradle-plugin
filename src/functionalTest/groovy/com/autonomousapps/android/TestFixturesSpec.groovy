@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.android
 
+import com.autonomousapps.android.projects.SplitJvmTestFixturesProject
 import com.autonomousapps.android.projects.TestFixturesAddTransitiveProject
+import com.autonomousapps.android.projects.TestFixturesDuplicatedWithMainProject
 import com.autonomousapps.android.projects.TestFixturesUnusedDependencyProject
 import com.autonomousapps.android.projects.TestFixturesWithAbiProject
-import com.autonomousapps.android.projects.TestFixturesDuplicatedWithMainProject
 import com.autonomousapps.internal.android.AgpVersion
 import org.gradle.util.GradleVersion
 
@@ -16,6 +17,21 @@ import static com.google.common.truth.Truth.assertAbout
 final class TestFixturesSpec extends AbstractAndroidSpec {
   
   private static final AgpVersion MINIMAL_AGP_SUPPORTING_TEST_FIXTURES = AgpVersion.version("8.5.0")
+
+  def "supports relocated mixed JVM test fixture outputs (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new SplitJvmTestFixturesProject(agpVersion as String)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion as GradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    noExceptionThrown()
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix(MINIMAL_AGP_SUPPORTING_TEST_FIXTURES)
+  }
 
   def "should not falsely report duplicated dependencies with main source set(#gradleVersion AGP #agpVersion)"() {
     given:
