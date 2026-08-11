@@ -47,7 +47,7 @@ internal class JarExploder(
 
   private fun Sequence<PhysicalArtifact>.toExpensiveJars(): Set<ExpensiveJar> =
     map { artifact ->
-      val key = artifact.file.absolutePath
+      val key = artifact.cacheKey()
       // A cache hit reuses the file-content-derived analysis, but the cached ExpensiveJar also carries the coordinates
       // of whichever artifact first populated this path in the build-scoped cache. Rebind to THIS artifact's identity;
       // otherwise a file shared by two dependencies (e.g. a classifier variant resolved by multiple projects) leaks the
@@ -78,19 +78,17 @@ internal class JarExploder(
     }.toSortedSet()
 
   /**
-   * Analyzes bytecode in order to extract class names and some basic structural information from
-   * the jar ([PhysicalArtifact.file]).
+   * Analyzes bytecode in order to extract class names and some basic structural information from the jar or
+   * directory(ies) of class files.
    *
-   * With Gradle 8.0+, local java-library project dependencies are provided as a collection of class files rather than
-   * jars. It seems that the behavior when requesting the "android-classes" artifact view has changed (previously we'd
-   * get jars, but now we get class files).
+   * @see [PhysicalArtifact.files]
    */
   private fun explode(artifact: PhysicalArtifact, mode: Mode): ExplodingJar {
     val ktFiles: Set<KtFile>
 
     val visitors = when (mode) {
       Mode.ZIP -> {
-        ZipFile(artifact.file).use { zip ->
+        ZipFile(artifact.jarFile()).use { zip ->
           ktFiles = KtFile.fromZip(zip)
 
           zip.asSequenceOfClassFiles()
@@ -104,9 +102,9 @@ internal class JarExploder(
       }
 
       Mode.CLASSES -> {
-        ktFiles = KtFile.fromDirectory(artifact.file)
+        ktFiles = KtFile.fromDirectories(artifact.files)
 
-        artifact.file.asSequenceOfClassFiles()
+        artifact.classFiles()
           .map { classFile ->
             ClassNameAndAnnotationsVisitor(logger).apply {
               val reader = classFile.inputStream().use { ClassReader(it.readBytes()) }

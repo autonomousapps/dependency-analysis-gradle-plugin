@@ -7,9 +7,7 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import java.io.File
-import java.util.Collections
-import java.util.SortedSet
-import java.util.TreeSet
+import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
@@ -92,6 +90,12 @@ internal fun Iterable<ZipEntry>.asSequenceOfClassFiles(): Sequence<ZipEntry> {
   return asSequence().filter {
     it.name.isAnalyzableClassFileName()
   }
+}
+
+internal fun sequenceOfClassFiles(dirs: Iterable<File>): Sequence<File> {
+  return dirs
+    .map { dir -> dir.asSequenceOfClassFiles() }
+    .reduce { acc, inc -> acc + inc }
 }
 
 internal fun File.asSequenceOfClassFiles(): Sequence<File> {

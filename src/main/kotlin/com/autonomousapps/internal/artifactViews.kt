@@ -7,12 +7,13 @@ import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.Category
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 
 /**
- * This is different than [org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE], which has type
+ * This is different from [org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE], which has type
  * `Category` (cf `String`).
  */
 internal val CATEGORY = Attribute.of("org.gradle.category", String::class.java)

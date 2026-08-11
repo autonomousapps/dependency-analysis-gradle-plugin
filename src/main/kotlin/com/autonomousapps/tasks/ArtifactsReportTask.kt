@@ -4,6 +4,7 @@
 
 package com.autonomousapps.tasks
 
+import com.autonomousapps.internal.ArtifactsExpander
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.filterNonGradle
 import com.autonomousapps.internal.utils.getAndDelete
@@ -37,8 +38,8 @@ public abstract class ArtifactsReportTask : DefaultTask() {
 
   /**
    * Required for caching correctness. Without this, then
-   * `ClassifiersSpec.transitive classifier dependencies do not lead to wrong advice` would fail when the build cache
-   * was enabled.
+   * `ClassifiersSpec.transitive classifier dependencies do not lead to wrong advice` fails when the build cache is
+   * enabled.
    */
   @get:Input
   public abstract val resolvedComponentResult: Property<ResolvedComponentResult>
@@ -127,15 +128,10 @@ public abstract class ArtifactsReportTask : DefaultTask() {
       .filterNonGradle()
       .mapNotNull {
         try {
-          // https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/948#issuecomment-1711177139
-          val file = if (it.file.path.endsWith("kotlin/main") || it.file.path.endsWith("java/main")) {
-            it.file.parentFile!!.parentFile!!
-          } else {
-            it.file
-          }
+          val files = ArtifactsExpander.maybeExpand(it.file)
           PhysicalArtifact.of(
             artifact = it,
-            file = file
+            files = files,
           )
         } catch (_: GradleException) {
           null

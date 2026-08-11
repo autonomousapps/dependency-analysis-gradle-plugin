@@ -68,7 +68,7 @@ public abstract class ComputeDominatorTreeTask : DefaultTask() {
   }
 
   private class BySize(
-    private val files: Map<Coordinates, File>,
+    private val files: Map<Coordinates, Set<File>>,
     private val tree: DominanceTree<Coordinates>,
     root: Coordinates,
   ) : DominanceTreeWriter.NodeWriter<Coordinates> {
@@ -78,7 +78,20 @@ public abstract class ComputeDominatorTreeTask : DefaultTask() {
 
     override fun getTreeSize(node: Coordinates): Long = sizes.computeIfAbsent(node) { treeSizeOf(it) }
 
-    override fun getSize(node: Coordinates): Long? = files[node]?.length()
+    override fun getSize(node: Coordinates): Long? {
+      val files = files[node] ?: return null
+      require(files.isNotEmpty()) { "Expected one or more files. Was '$files' for '$node'." }
+
+      return sizeOf(files)
+    }
+
+    private fun sizeOf(files: Set<File>): Long {
+      return if (files.size == 1) {
+        files.single().length()
+      } else {
+        sequenceOfClassFiles(files).sumOf { f -> f.length() }
+      }
+    }
 
     private fun reachableNodes(node: Coordinates) = reachableNodes.computeIfAbsent(node) {
       tree.dominanceGraph.reachableNodes(node, excludeSelf = false)
@@ -86,12 +99,12 @@ public abstract class ComputeDominatorTreeTask : DefaultTask() {
 
     private fun treeSizeOf(node: Coordinates): Long = reachableNodes(node)
       .mapNotNull { files[it] }
-      .sumOf { it.length() }
+      .sumOf { sizeOf(it) }
 
     // Get the scale (bytes, KB, MB, ...) for printing.
     private val scale = reachableNodes(root)
       .mapNotNull { files[it] }
-      .sumOf { it.length() }
+      .sumOf { sizeOf(it) }
       .let { FileUtils.getScale(it) }
 
     private val comparator = Comparator<Coordinates> { left, right ->
@@ -109,20 +122,19 @@ public abstract class ComputeDominatorTreeTask : DefaultTask() {
       if ((subs - node).isNotEmpty()) {
         val totalSize = subs
           .mapNotNull { files[it] }
-          .sumOf { it.length() }
+          .sumOf { sizeOf(it) }
 
         printedTotalSize = true
         builder.append(FileUtils.byteCountToDisplaySize(totalSize, scale)).append(' ')
       }
 
-      files[node]
-        ?.length()
-        ?.let {
-          if (printedTotalSize) builder.append('(')
-          builder.append(FileUtils.byteCountToDisplaySize(it, scale))
-          if (printedTotalSize) builder.append(')')
-          builder.append(' ')
-        }
+      files[node]?.let { files ->
+        val size = sizeOf(files)
+        if (printedTotalSize) builder.append('(')
+        builder.append(FileUtils.byteCountToDisplaySize(size, scale))
+        if (printedTotalSize) builder.append(')')
+        builder.append(' ')
+      }
 
       val preferredCoordinatesNotation = if (node is IncludedBuildCoordinates) {
         node.resolvedProject
@@ -149,8 +161,8 @@ public abstract class ComputeDominatorTreeTask : DefaultTask() {
       val outputDot = outputDot.getAndDelete()
       val outputJson = outputJson.getAndDelete()
 
-      val artifactMap = physicalArtifacts.fromJsonSet<PhysicalArtifact>().associate { (coord, file) ->
-        coord to file
+      val artifactMap = physicalArtifacts.fromJsonSet<PhysicalArtifact>().associate { (coord, files) ->
+        coord to files
       }
 
       val graphView = graphView.fromJson<DependencyGraphView>()

@@ -39,8 +39,6 @@ internal abstract class AndroidAnalyzer(
   final override val kaptConfigurationName = kaptConfName()
   final override val annotationProcessorConfigurationName = "${variantName}AnnotationProcessorClasspath"
   final override val testInstrumentationRunner: Provider<String> = variant.testInstrumentationRunner
-
-  // TODO(3.0): verify this is the correct attribute.
   final override val attributeValueJar = ArtifactAttributes.ANDROID_CLASSES_JAR
 
   final override val isDataBindingEnabled: Provider<Boolean> = agp.isDataBindingEnabled()

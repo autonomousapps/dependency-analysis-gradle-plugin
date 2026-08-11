@@ -74,7 +74,7 @@ public abstract class ExplodeJarTask @Inject constructor(
     val cache = inMemoryCache.get()
     val seed = physicalArtifacts.fromJsonList<PhysicalArtifact>()
       .mapNotNull { artifact ->
-        val key = artifact.file.absolutePath
+        val key = artifact.cacheKey()
         cache.expensiveJar(key)?.let { key to it }
       }
       .toMap()
