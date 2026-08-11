@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal
 
+import com.autonomousapps.internal.utils.flatMapToOrderedSet
 import com.squareup.moshi.JsonClass
 import java.io.File
 import java.io.InputStream
@@ -29,7 +30,9 @@ internal data class KtFile(
   internal companion object {
     private const val KOTLIN_MODULE = ".kotlin_module"
 
-    fun fromDirectory(dir: File): Set<KtFile> {
+    fun fromDirectories(dirs: Set<File>): Set<KtFile> = dirs.flatMapToOrderedSet { fromDirectory(it) }
+
+    private fun fromDirectory(dir: File): Set<KtFile> {
       check(dir.isDirectory) { "Expected directory. Was '${dir.absolutePath}'" }
 
       return dir

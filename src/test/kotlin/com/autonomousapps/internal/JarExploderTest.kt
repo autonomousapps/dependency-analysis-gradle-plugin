@@ -39,7 +39,7 @@ internal class JarExploderTest {
 
     val artifact = PhysicalArtifact(
       coordinates = ModuleCoordinates("org.example:example", "1", GradleVariantIdentification.EMPTY),
-      file = jar,
+      files = setOf(jar),
     )
 
     val exploder = JarExploder(
@@ -80,7 +80,7 @@ internal class JarExploderTest {
 
     // The first consumer explodes the file and seeds the build-scoped cache, as ExplodeJarTask merges it back.
     val first = JarExploder(
-      artifacts = listOf(PhysicalArtifact(coordinates = firstCoordinates, file = jar)),
+      artifacts = listOf(PhysicalArtifact(coordinates = firstCoordinates, files = setOf(jar))),
       androidLinters = emptySet(),
       seedCache = emptyMap(),
     )
@@ -90,7 +90,7 @@ internal class JarExploderTest {
 
     // The second consumer explodes the same file under different coordinates, seeded from that shared cache.
     val second = JarExploder(
-      artifacts = listOf(PhysicalArtifact(coordinates = secondCoordinates, file = jar)),
+      artifacts = listOf(PhysicalArtifact(coordinates = secondCoordinates, files = setOf(jar))),
       androidLinters = emptySet(),
       seedCache = seededCache,
     ).explodedJars().single()
@@ -117,7 +117,7 @@ internal class JarExploderTest {
 
     // The first consumer explodes the file and seeds the build-scoped cache, as ExplodeJarTask merges it back.
     val firstExploder = JarExploder(
-      artifacts = listOf(PhysicalArtifact(coordinates = coordinates, file = jar1)),
+      artifacts = listOf(PhysicalArtifact(coordinates = coordinates, files = setOf(jar1))),
       androidLinters = emptySet(),
       seedCache = emptyMap(),
     )
@@ -132,7 +132,7 @@ internal class JarExploderTest {
 
     // The second consumer explodes the "same" artifact (identical coordinates), not seeded from that shared cache.
     val secondExplodedJar = JarExploder(
-      artifacts = listOf(PhysicalArtifact(coordinates = coordinates, file = jar2)),
+      artifacts = listOf(PhysicalArtifact(coordinates = coordinates, files = setOf(jar2))),
       androidLinters = emptySet(),
       seedCache = seededCache,
     ).explodedJars().single()

@@ -3,6 +3,9 @@
 package com.autonomousapps.model.internal
 
 import com.autonomousapps.PROJECT_LOGGER
+import com.autonomousapps.internal.utils.LexicographicIterableComparator
+import com.autonomousapps.internal.utils.reallyAll
+import com.autonomousapps.internal.utils.sequenceOfClassFiles
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
 import com.squareup.moshi.JsonClass
@@ -16,7 +19,7 @@ internal data class PhysicalArtifact(
    * Physical artifact on disk; a jar file or directory pointing to class files. This file has an absolute path.
    * nb: attempts to make this file relative have thus far been doomed to fail. Please stop trying.
    */
-  val file: File,
+  val files: Set<File>,
 ) : Comparable<PhysicalArtifact> {
 
   enum class Mode {
@@ -26,47 +29,70 @@ internal data class PhysicalArtifact(
 
   init {
     check(isJar() || containsClassFiles()) {
-      "'file' must either be a jar or a directory that contains class files. Was '$file'"
+      "'files' must either be a jar or a 1+ directories that contains class files. Was '$files'"
     }
   }
 
   val mode: Mode = if (isJar()) Mode.ZIP else Mode.CLASSES
 
-  fun isJar(): Boolean = isJar(file)
-  fun containsClassFiles(): Boolean = containsClassFiles(file)
+  fun isJar(): Boolean = isJar(files)
+  fun containsClassFiles(): Boolean = containsClassFiles(files)
+
+  fun jarFile(): File {
+    require(isJar()) { "Expected jar file. Was '$files'." }
+    return files.single()
+  }
+
+  fun classFiles(): Sequence<File> {
+    require(containsClassFiles()) { "Expected directory(ies) containing class files. Was '$files'." }
+    return sequenceOfClassFiles(files)
+  }
+
+  fun cacheKey(): String {
+    return files.joinToString(separator = ",") { it.absolutePath }
+  }
 
   override fun compareTo(other: PhysicalArtifact): Int {
-    return coordinates.compareTo(other.coordinates).let {
-      if (it == 0) file.compareTo(other.file) else it
-    }
+    return compareBy<PhysicalArtifact>(PhysicalArtifact::coordinates)
+      .thenBy(LexicographicIterableComparator()) { it.files }
+      .compare(this, other)
   }
 
   companion object {
     internal fun of(
       artifact: ResolvedArtifactResult,
-      file: File,
+      files: Set<File>,
     ): PhysicalArtifact? {
-      if (!isValidArtifact(file)) {
+      if (!isValidArtifact(files)) {
         PROJECT_LOGGER.debug(
-          "$artifact is not valid as a PhysicalArtifact. $file is neither a jar nor a class-files-containing directory"
+          "{} is not valid as a PhysicalArtifact. {} is neither a jar nor a class-files-containing directory",
+          artifact,
+          files
         )
         return null
       }
 
       return PhysicalArtifact(
         coordinates = artifact.toCoordinates(),
-        file = file
+        files = files,
       )
     }
 
     /**
      * The [ArtifactCollection][org.gradle.api.artifacts.ArtifactCollection] in
-     * [ArtifactsReportTask][com.autonomousapps.tasks.ArtifactsReportTask.compileArtifacts] sometimes contains empty
+     * [ArtifactsReportTask][com.autonomousapps.tasks.ArtifactsReportTask.artifacts] sometimes contains empty
      * directories from Gradle transforms, and these are not valid as [PhysicalArtifact]s.
      */
-    private fun isValidArtifact(file: File): Boolean = isJar(file) || containsClassFiles(file)
+    private fun isValidArtifact(files: Set<File>): Boolean = isJar(files) || containsClassFiles(files)
 
-    private fun isJar(file: File): Boolean = file.name.endsWith(".jar")
-    private fun containsClassFiles(file: File): Boolean = file.walkBottomUp().any { f -> f.name.endsWith(".class") }
+    private fun isJar(files: Set<File>): Boolean {
+      return files.size == 1 && files.single().name.endsWith(".jar")
+    }
+
+    private fun containsClassFiles(files: Set<File>): Boolean {
+      return files.reallyAll {
+        it.walkBottomUp().any { f -> f.name.endsWith(".class") }
+      }
+    }
   }
 }

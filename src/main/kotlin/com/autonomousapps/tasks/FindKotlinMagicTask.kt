@@ -77,7 +77,7 @@ public abstract class FindKotlinMagicTask @Inject constructor(
     val cache = inMemoryCacheProvider.get()
     val seed = artifacts.fromJsonList<PhysicalArtifact>()
       .mapNotNull { artifact ->
-        val key = artifact.file.absolutePath
+        val key = artifact.cacheKey()
         cache.kotlinCapabilities(key)?.let { key to it }
       }
       .toMap()
@@ -173,7 +173,7 @@ internal class KotlinMagicFinder(
       .filter {
         it.isJar() || it.containsClassFiles()
       }.map { artifact ->
-        val key = artifact.file.absolutePath
+        val key = artifact.cacheKey()
         val capabilities = seedCache[key] ?: findKotlinMagic(artifact, artifact.mode).also { newEntries[key] = it }
         artifact to capabilities
       }.forEach { (artifact, capabilities) ->
@@ -224,7 +224,7 @@ internal class KotlinMagicFinder(
 
     when (mode) {
       Mode.ZIP -> {
-        ZipFile(artifact.file).use { zipFile ->
+        ZipFile(artifact.jarFile()).use { zipFile ->
           val entries = zipFile.entries().toList()
           // Only look at jars that have actual Kotlin classes in them
           if (entries.none { it.name.endsWith(".kotlin_module") }) {
@@ -263,11 +263,11 @@ internal class KotlinMagicFinder(
       }
 
       Mode.CLASSES -> {
-        if (KtFile.fromDirectory(artifact.file).isEmpty()) {
+        if (KtFile.fromDirectories(artifact.files).isEmpty()) {
           return KotlinCapabilities.EMPTY
         }
 
-        artifact.file.asSequenceOfClassFiles()
+        artifact.classFiles()
           .mapNotNull { classFile ->
             val kotlinMagic = readClass(
               classFile.inputStream().use { ClassReader(it.readBytes()) },
