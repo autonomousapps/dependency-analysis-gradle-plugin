@@ -283,6 +283,9 @@ public class GradleProject(
       name: String,
       block: AndroidSubproject.Builder.() -> Unit,
     ): Builder {
+      // Allow users to pass in `":foo:bar"` as well as `"foo:bar"`.
+      val name = name.removePrefix(":")
+
       // If a builder with this name already exists, returning it for building-upon
       val builder = androidSubprojectMap[name] ?: AndroidSubproject.Builder()
       builder.apply {
