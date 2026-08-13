@@ -5,6 +5,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.ManifestParser
+import com.autonomousapps.internal.identifiers
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapNotNullToOrderedSet
@@ -15,6 +16,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 
@@ -29,11 +31,16 @@ public abstract class ManifestComponentsExtractionTask : DefaultTask() {
 
   public fun setArtifacts(manifestArtifacts: ArtifactCollection) {
     this.manifestArtifacts = manifestArtifacts
+    manifestIdentifiers.set(manifestArtifacts.identifiers())
   }
 
   @PathSensitive(PathSensitivity.NAME_ONLY)
   @InputFiles
   public fun getManifestFiles(): FileCollection = manifestArtifacts.artifactFiles
+
+  /** The output contains artifact coordinates, which aren't reflected in [getManifestFiles]. See [identifiers]. */
+  @get:Input
+  public abstract val manifestIdentifiers: ListProperty<String>
 
   @get:Input
   public abstract val namespace: Property<String>

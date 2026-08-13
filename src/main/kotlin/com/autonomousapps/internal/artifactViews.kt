@@ -10,6 +10,7 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.Category
+import org.gradle.api.provider.Provider
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 
 /**
@@ -21,6 +22,16 @@ internal val CATEGORY = Attribute.of("org.gradle.category", String::class.java)
 private val attributeKey = Attribute.of("artifactType", String::class.java)
 
 internal fun Configuration.artifactsFor(attrValue: String): ArtifactCollection = artifactViewFor(attrValue).artifacts
+
+/**
+ * Returns the component identifiers of the artifacts in this collection (sorted for consistency).
+ * A task that writes these identifiers into its output must declare them as an [Input][org.gradle.api.tasks.Input].
+ * Otherwise, the task would keep stale identifiers in its output, since a version bump with byte-identical files
+ * wouldn't invalidate the file inputs.
+ */
+internal fun ArtifactCollection.identifiers(): Provider<List<String>> {
+  return resolvedArtifacts.map { artifacts -> artifacts.map { it.id.componentIdentifier.displayName }.sorted() }
+}
 
 /** Captures things like the Gradle version catalog and Gradle API jar. */
 internal fun Configuration.opaqueComponentArtifacts(): ArtifactCollection = incoming.artifactView { view ->

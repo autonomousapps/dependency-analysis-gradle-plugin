@@ -4,6 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.LINT_ISSUE_REGISTRY_PATH
 import com.autonomousapps.internal.MANIFEST_PATH
+import com.autonomousapps.internal.identifiers
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toCoordinates
@@ -13,8 +14,10 @@ import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.BufferedReader
@@ -36,10 +39,15 @@ public abstract class FindAndroidLinters : DefaultTask() {
 
   public fun setLintJars(lintJars: ArtifactCollection) {
     this.lintJars = lintJars
+    lintJarIdentifiers.set(lintJars.identifiers())
   }
 
   @Classpath
   public fun getLintArtifactFiles(): FileCollection = lintJars.artifactFiles
+
+  /** The output contains artifact coordinates, which aren't reflected in [getLintArtifactFiles]. See [identifiers]. */
+  @get:Input
+  public abstract val lintJarIdentifiers: ListProperty<String>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty

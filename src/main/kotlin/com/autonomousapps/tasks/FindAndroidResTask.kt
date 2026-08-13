@@ -4,6 +4,7 @@
 
 package com.autonomousapps.tasks
 
+import com.autonomousapps.internal.identifiers
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.internal.AndroidResCapability
 import com.autonomousapps.model.Coordinates
@@ -13,6 +14,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
@@ -32,6 +34,7 @@ public abstract class FindAndroidResTask : DefaultTask() {
 
   public fun setAndroidSymbols(resources: ArtifactCollection) {
     this.androidSymbols = resources
+    androidSymbolIdentifiers.set(resources.identifiers())
   }
 
   /** Artifact type "android-symbol-with-package-name". All Android libraries seem to have this. */
@@ -39,10 +42,15 @@ public abstract class FindAndroidResTask : DefaultTask() {
   @InputFiles
   public fun getAndroidSymbols(): FileCollection = androidSymbols.artifactFiles
 
+  /** The output contains artifact coordinates, which aren't reflected in [getAndroidSymbols]. See [identifiers]. */
+  @get:Input
+  public abstract val androidSymbolIdentifiers: ListProperty<String>
+
   private lateinit var androidPublicRes: ArtifactCollection
 
   public fun setAndroidPublicRes(androidPublicRes: ArtifactCollection) {
     this.androidPublicRes = androidPublicRes
+    androidPublicResIdentifiers.set(androidPublicRes.identifiers())
   }
 
   /**
@@ -52,6 +60,10 @@ public abstract class FindAndroidResTask : DefaultTask() {
   @PathSensitive(PathSensitivity.NAME_ONLY)
   @InputFiles
   public fun getAndroidPublicRes(): FileCollection = androidPublicRes.artifactFiles
+
+  /** The output contains artifact coordinates, which aren't reflected in [getAndroidPublicRes]. See [identifiers]. */
+  @get:Input
+  public abstract val androidPublicResIdentifiers: ListProperty<String>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
