@@ -3,6 +3,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
+import com.autonomousapps.internal.identifiers
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DuplicateClass
@@ -13,6 +14,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import java.util.TreeSet
@@ -35,10 +37,15 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
 
   public fun setClasspath(artifacts: ArtifactCollection) {
     this.classpath = artifacts
+    classpathIdentifiers.set(artifacts.identifiers())
   }
 
   @Classpath
   public fun getClasspath(): FileCollection = classpath.artifactFiles
+
+  /** The output contains artifact coordinates, which aren't reflected in [getClasspath]. See [identifiers]. */
+  @get:Input
+  public abstract val classpathIdentifiers: ListProperty<String>
 
   @get:Input
   public abstract val classpathName: Property<String>

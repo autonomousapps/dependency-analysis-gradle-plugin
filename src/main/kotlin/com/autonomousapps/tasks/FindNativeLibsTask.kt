@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.autonomousapps.internal.identifiers
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapNotNullToOrderedSet
@@ -12,6 +13,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 
 @CacheableTask
@@ -25,6 +27,7 @@ public abstract class FindNativeLibsTask : DefaultTask() {
 
   public fun setAndroidJni(androidJni: ArtifactCollection) {
     this.androidJni = androidJni
+    androidJniIdentifiers.set(androidJni.identifiers())
   }
 
   @Optional // Only available on Android
@@ -35,10 +38,15 @@ public abstract class FindNativeLibsTask : DefaultTask() {
     return androidJni.artifactFiles
   }
 
+  /** The output contains artifact coordinates, which aren't reflected in [getAndroidJniFiles]. See [identifiers]. */
+  @get:Input
+  public abstract val androidJniIdentifiers: ListProperty<String>
+
   private lateinit var dylibs: ArtifactCollection
 
   public fun setMacNativeLibs(dylibs: ArtifactCollection) {
     this.dylibs = dylibs
+    macNativeLibIdentifiers.set(dylibs.identifiers())
   }
 
   @Optional // Only available on JVM
@@ -48,6 +56,10 @@ public abstract class FindNativeLibsTask : DefaultTask() {
     if (!::dylibs.isInitialized) return null
     return dylibs.artifactFiles
   }
+
+  /** The output contains artifact coordinates, which aren't reflected in [getMacNativeLibs]. See [identifiers]. */
+  @get:Input
+  public abstract val macNativeLibIdentifiers: ListProperty<String>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty

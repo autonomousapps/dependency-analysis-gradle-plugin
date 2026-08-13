@@ -4,6 +4,7 @@ package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.ANNOTATION_PROCESSOR_PATH
 import com.autonomousapps.internal.SERVICE_LOADER_PATH
+import com.autonomousapps.internal.identifiers
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.internal.utils.filterNonGradle
 import com.autonomousapps.internal.utils.flatMapToSet
@@ -14,8 +15,10 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.BufferedReader
@@ -38,10 +41,15 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
 
   public fun setCompileClasspath(artifacts: ArtifactCollection) {
     this.compileClasspath = artifacts
+    compileClasspathIdentifiers.set(artifacts.identifiers())
   }
 
   @Classpath
   public fun getCompileClasspath(): FileCollection = compileClasspath.artifactFiles
+
+  /** The output contains artifact coordinates, which aren't reflected in [getCompileClasspath]. See [identifiers]. */
+  @get:Input
+  public abstract val compileClasspathIdentifiers: ListProperty<String>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty

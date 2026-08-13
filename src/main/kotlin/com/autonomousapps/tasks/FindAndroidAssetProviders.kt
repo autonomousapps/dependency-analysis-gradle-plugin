@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.autonomousapps.internal.identifiers
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toCoordinates
@@ -11,6 +12,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 
 @CacheableTask
@@ -24,11 +26,16 @@ public abstract class FindAndroidAssetProviders : DefaultTask() {
 
   public fun setAssets(assets: ArtifactCollection) {
     this.assetDirs = assets
+    assetIdentifiers.set(assets.identifiers())
   }
 
   @PathSensitive(PathSensitivity.RELATIVE)
   @InputFiles
   public fun getAssetArtifactFiles(): FileCollection = assetDirs.artifactFiles
+
+  /** The output contains artifact coordinates, which aren't reflected in [getAssetArtifactFiles]. See [identifiers]. */
+  @get:Input
+  public abstract val assetIdentifiers: ListProperty<String>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty

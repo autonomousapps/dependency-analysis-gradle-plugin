@@ -3,6 +3,7 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.ANNOTATION_PROCESSOR_PATH
+import com.autonomousapps.internal.identifiers
 import com.autonomousapps.internal.utils.bufferWriteJsonList
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.internal.intermediates.producer.AnnotationProcessorDependency
@@ -12,6 +13,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import java.io.BufferedReader
@@ -60,19 +62,32 @@ public abstract class FindDeclaredProcsTask : DefaultTask() {
 
   public fun setKaptArtifacts(artifacts: ArtifactCollection) {
     kaptArtifacts = artifacts
+    kaptArtifactIdentifiers.set(artifacts.identifiers())
   }
 
   public fun setAnnotationProcessorArtifacts(artifacts: ArtifactCollection) {
     annotationProcessorArtifacts = artifacts
+    annotationProcessorArtifactIdentifiers.set(artifacts.identifiers())
   }
 
   @Optional
   @Classpath
   public fun getKaptArtifactFiles(): FileCollection? = kaptArtifacts?.artifactFiles
 
+  /** The output contains artifact coordinates, which aren't reflected in [getKaptArtifactFiles]. See [identifiers]. */
+  @get:Input
+  public abstract val kaptArtifactIdentifiers: ListProperty<String>
+
   @Optional
   @Classpath
   public fun getAnnotationProcessorArtifactFiles(): FileCollection? = annotationProcessorArtifacts?.artifactFiles
+
+  /**
+   * The output contains artifact coordinates, which aren't reflected in [getAnnotationProcessorArtifactFiles]. See
+   * [identifiers].
+   */
+  @get:Input
+  public abstract val annotationProcessorArtifactIdentifiers: ListProperty<String>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
