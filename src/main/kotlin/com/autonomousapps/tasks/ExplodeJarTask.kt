@@ -124,8 +124,9 @@ public abstract class ExplodeJarTask @Inject constructor(
       val outputBinaryClasses = parameters.outputBinaryClasses.getAndDelete()
       val newCacheEntries = parameters.newCacheEntries.getAndDelete()
 
+      val artifacts = parameters.physicalArtifacts.fromJsonList<PhysicalArtifact>()
       val exploder = JarExploder(
-        artifacts = parameters.physicalArtifacts.fromJsonList(),
+        artifacts = artifacts,
         androidLinters = parameters.androidLinters.fromNullableJsonSet<AndroidLinterDependency>(),
         seedCache = parameters.cacheSeed.fromJsonMap(),
       )

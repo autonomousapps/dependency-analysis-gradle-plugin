@@ -57,7 +57,9 @@ internal class SuperClassGraphBuilder {
             builder.putNode(from)
 
             // edge from the child class to its super class, if it has one
-            val bin = binaryClasses[dep.coordinates]!!.first { it.className == className }
+            val classes = binaryClasses[dep.coordinates]!!
+            val bin = classes.firstOrNull { it.className == className }
+              ?: error("Cannot find class '$className' in dependency '${dep.coordinates}'.")
             bin.superClassName
               ?.let { superClassName ->
                 val to = SuperNode(superClassName)

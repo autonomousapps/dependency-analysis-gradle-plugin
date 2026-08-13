@@ -38,7 +38,20 @@ internal class JarExploder(
     .toExpensiveJars()
 
   fun binaryClasses(): Map<Coordinates, Set<BinaryClass>> {
-    return expensiveJars.associate { it.coordinates to it.binaryClasses }.toSortedMap().efficient()
+    val map = sortedMapOf<Coordinates, MutableSet<BinaryClass>>()
+
+    // Account for the fact that multiple artifacts can currently have the same Coordinates. This happens when a
+    // dependency has multiple artifacts, including some with classifiers. For example, `org.threeten:threetenbp:1.6.0`
+    // has a standard jar, and a jar with a `-no-tzdb` classifier. This functions merges both jars into a single set of
+    // `BinaryClass`es.
+    // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1814
+    expensiveJars.forEach { jar ->
+      map.merge(jar.coordinates, jar.binaryClasses.toMutableSet()) { acc, inc ->
+        acc.apply { addAll(inc) }
+      }
+    }
+
+    return map.efficient()
   }
 
   fun explodedJars(): Set<ExplodedJar> {
