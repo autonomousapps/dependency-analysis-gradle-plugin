@@ -77,7 +77,8 @@ internal class UsageToConfigurationMapper(
 
   private fun SourceKind.variantName(sourceKindName: String): String {
     return if (projectType == ProjectType.ANDROID && name != sourceKindName) {
-      "$name${sourceKindName.capitalizeSafely()}"
+      // "test" + "debug" => "testDebug
+      "$sourceKindName${name.capitalizeSafely()}"
     } else {
       sourceKindName
     }

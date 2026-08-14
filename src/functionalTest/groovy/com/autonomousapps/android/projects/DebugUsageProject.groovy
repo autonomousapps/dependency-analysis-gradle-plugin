@@ -31,7 +31,7 @@ final class DebugUsageProject extends AbstractAndroidProject {
 
   @SuppressWarnings('DuplicatedCode')
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { r ->
         if (isAtLeastAgp9) {
           // See https://developer.android.com/build/releases/agp-9-0-0-release-notes#android-gradle-plugin-behavior-changes
@@ -106,8 +106,8 @@ final class DebugUsageProject extends AbstractAndroidProject {
   )
 
   private final Set<Advice> consumerAdvice = [
-    Advice.ofChange(moduleCoordinates('junit:junit:4.13'), 'testImplementation', 'debugTestImplementation'),
-    Advice.ofChange(producerTestFixtures, 'testImplementation', 'debugTestImplementation'),
+    Advice.ofChange(moduleCoordinates('junit:junit:4.13'), 'testImplementation', 'testDebugImplementation'),
+    Advice.ofChange(producerTestFixtures, 'testImplementation', 'testDebugImplementation'),
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [
