@@ -9,8 +9,7 @@ assignees: ''
 
 ### Contributor Checklist
 - [ ] I have read the [Contributing guide](https://github.com/autonomousapps/dependency-analysis-gradle-plugin/blob/main/CONTRIBUTING.asciidoc).
-- [ ] I have read the
-  [Code of Conduct](https://github.com/autonomousapps/dependency-analysis-gradle-plugin/blob/main/CODE_OF_CONDUCT.md).
+- [ ] I have read the [Code of Conduct](https://github.com/autonomousapps/dependency-analysis-gradle-plugin/blob/main/CODE_OF_CONDUCT.md).
 - [ ] No part of this bug report was created with an LLM/AI.
 
 ### (Optional) Build scan link
