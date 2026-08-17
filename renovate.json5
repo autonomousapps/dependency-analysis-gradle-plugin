@@ -1,0 +1,44 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "branchPrefix": "renovate.",
+  "prConcurrentLimit": 1,
+  "prHourlyLimit": 1,
+  "enabledManagers": ["gradle"],
+  "extends": ["config:recommended"],
+  "gitIgnoredAuthors": [
+  ],
+  "ignorePaths": [
+  ],
+  // Require dashboard approval for major version bumps
+  "major": {
+    "dependencyDashboardApproval": true
+  },
+  "packageRules": [
+    {
+      "description": "Develocity Gradle Plugin",
+      "matchDatasources": ["maven"],
+      "matchDepNames": "com.gradle.develocity",
+      "matchPackageNames": ["com.gradle.develocity:com.gradle.develocity.gradle.plugin"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": false,
+      "autoApprove": false,
+      "dependencyDashboardApproval": false
+    },
+    {
+      "description": "Foojay Gradle plugin",
+      "matchDatasources": ["maven"],
+      "matchDepNames": ["org.gradle.toolchains.foojay-resolver-convention"],
+      "matchPackageNames": ["org.gradle.toolchains.foojay-resolver-convention:org.gradle.toolchains.foojay-resolver-convention.gradle.plugin"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": false,
+      "autoApprove": false,
+      "dependencyDashboardApproval": false
+    },
+    // Prevent some much older dependencies from being flagged as out-of-date
+    {
+      "description": "Ignore updates to okio",
+      "matchPackageNames": ["com.squareup.okio:okio", "com.squareup.okio:okio-bom"],
+      "enabled": false
+    },
+  ]
+}
