@@ -12,7 +12,7 @@ final class BuildLogicSpec extends AbstractJvmSpec {
   // This ensures that plugin dependencies preferable reference the marker artifact.
   def "gradle plugin markers are used when the plugin is used (#gradleVersion isDirect=#isDirect)"() {
     given:
-    def project = new BuildLogicProject(isDirect)
+    def project = new BuildLogicProject(kgpVersionFrom(gradleVersion), isDirect)
     gradleProject = project.gradleProject
 
     when:

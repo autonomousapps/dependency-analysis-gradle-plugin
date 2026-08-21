@@ -22,7 +22,7 @@ final class BuildLogicVersionCatalogSpec extends AbstractJvmSpec {
   //     Advice(coordinates=FlatCoordinates(identifier=), fromConfiguration=implementation, toConfiguration=null)
   def "can handle an opaque dependency on the gradle version catalog (#gradleVersion)"() {
     given:
-    def project = new BuildLogicVersionCatalogProject(true)
+    def project = new BuildLogicVersionCatalogProject(kgpVersionFrom(gradleVersion), true)
     gradleProject = project.gradleProject
 
     when:
@@ -40,7 +40,7 @@ final class BuildLogicVersionCatalogSpec extends AbstractJvmSpec {
 
   def "advice contains meaningful representation of flat coordinates (#gradleVersion)"() {
     given:
-    def project = new BuildLogicVersionCatalogProject(false)
+    def project = new BuildLogicVersionCatalogProject(kgpVersionFrom(gradleVersion), false)
     gradleProject = project.gradleProject
 
     when:
