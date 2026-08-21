@@ -60,12 +60,37 @@ public class GradleProperties(private val lines: MutableList<String>) {
     public val CONFIGURATION_CACHE_PARALLEL: String = "org.gradle.configuration-cache.parallel=true"
 
     /**
-     * Enable isolated projects, pre-Gradle 9.
+     * Enable isolated projects, Gradle 9.7+.
      *
-     * @see <a href="https://docs.gradle.org/nightly/userguide/isolated_projects.html">Isolated Projects</a>
+     * @see <a href="https://docs.gradle.org/current/userguide/isolated_projects.html">Isolated Projects</a>
      */
     @JvmField
+    public val ISOLATED_PROJECTS: String = "org.gradle.isolated-projects=true"
+
+    /**
+     * @see <a href="https://docs.gradle.org/nightly/userguide/isolated_projects.html#sec:diagnostics_mode">Diagnostics mode</a>
+     */
+    @JvmField
+    public val ISOLATED_PROJECTS_DIAGNOSTICS: String = "org.gradle.isolated-projects.diagnostics=true"
+
+    /**
+     * @see <a href="https://docs.gradle.org/nightly/userguide/isolated_projects.html#sec:dangerously_ignore_problems">Temporarily ignoring violations</a>
+     */
+    @JvmField
+    public val ISOLATED_PROJECTS_IGNORE_WARNINGS: String =
+      "org.gradle.isolated-projects.dangerously-ignore-problems=true"
+
+    /**
+     * Enable isolated projects, Gradle <= 9.6.
+     *
+     * @see [ISOLATED_PROJECTS]
+     */
+    @Deprecated(message = "Use ISOLATED_PROJECTS_STABLE instead", replaceWith = ReplaceWith("ISOLATED_PROJECTS_STABLE"))
+    @JvmField
     public val ISOLATED_PROJECTS_UNSTABLE: String = "org.gradle.unsafe.isolated-projects=true"
+
+    @JvmField
+    public val ISOLATED_PROJECTS_INTERNAL_CACHING: String = "org.gradle.internal.isolated-projects.caching=tooling"
 
     /** Enable parallel builds. */
     @JvmField
@@ -108,7 +133,7 @@ public class GradleProperties(private val lines: MutableList<String>) {
     public fun enableConfigurationCache(): GradleProperties = of(CONFIGURATION_CACHE_STABLE)
 
     @JvmStatic
-    public fun enableIsolatedProjects(): GradleProperties = of(ISOLATED_PROJECTS_UNSTABLE)
+    public fun enableIsolatedProjects(): GradleProperties = of(ISOLATED_PROJECTS)
 
     /**
      * Disable the behavior of the Kotlin Gradle Plugin that adds the stdlib as an `api` dependency by default.
