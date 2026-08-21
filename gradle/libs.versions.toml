@@ -22,7 +22,7 @@ javaTarget = "11"
 jdkVersion = "17"
 jspecify = "1.0.0"
 junit = "5.14.1"
-kotlinGradlePlugin = "2.2.21"
+kotlinGradlePlugin = "2.4.0"
 # Constraint: while Gradle 8.x is supported, every Kotlin artifact on DAGP's plugin classpath must have
 # binary-metadata version <= 2.1.x or Kotlin DSL script compilation breaks. Caps kotlinLanguageVersion (DAGP's classes)
 # and kotlinRuntime (bundled kotlin-stdlib*/kotlin-reflect). kotlinGradlePlugin (compiler/KGP) and kotlinMetadata
