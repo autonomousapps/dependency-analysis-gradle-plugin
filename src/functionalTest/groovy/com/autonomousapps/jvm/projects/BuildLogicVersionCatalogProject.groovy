@@ -20,7 +20,8 @@ final class BuildLogicVersionCatalogProject extends AbstractProject {
   private final boolean used
   final GradleProject gradleProject
 
-  BuildLogicVersionCatalogProject(boolean used) {
+  BuildLogicVersionCatalogProject(String kgpVersion, boolean used) {
+    super(kgpVersion)
     this.used = used
     this.gradleProject = build()
   }
@@ -54,7 +55,7 @@ final class BuildLogicVersionCatalogProject extends AbstractProject {
             }""".stripIndent()
           }
           r.withBuildScript { bs ->
-            bs.plugins(Plugins.dependencyAnalysis, Plugins.kotlinJvm, Plugin.javaGradle)
+            bs.plugins(Plugins.dependencyAnalysis, plugins.kotlinJvm, Plugin.javaGradle)
             bs.dependencies(
               // Kotlin DSL: files(libs::class.java.superclass.protectionDomain.codeSource.location)
               implementation('files(libs.class.superclass.protectionDomain.codeSource.location)').raw()

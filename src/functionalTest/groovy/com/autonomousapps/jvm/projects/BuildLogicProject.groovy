@@ -23,7 +23,8 @@ final class BuildLogicProject extends AbstractProject {
   private final boolean isDirect
   final GradleProject gradleProject
 
-  BuildLogicProject(boolean isDirect) {
+  BuildLogicProject(String kgpVersion, boolean isDirect) {
+    super(kgpVersion)
     this.isDirect = isDirect
     this.gradleProject = build()
   }

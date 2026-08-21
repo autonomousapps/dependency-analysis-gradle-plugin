@@ -16,8 +16,9 @@ abstract class AbstractProject extends AbstractGradleProject {
 
   protected static final GradleProperties GRADLE_PROPERTIES = GradleProperties.of(
     GradleProperties.JVM_ARGS,
-    GradleProperties.PARALLEL,
     GradleProperties.BUILD_CACHE,
+    GradleProperties.PARALLEL,
+    GradleProperties.DO_NOT_SKIP_METADATA_VERSION_CHECK,
     "dependency.analysis.print.build.health=true",
   )
 
@@ -93,6 +94,7 @@ abstract class AbstractProject extends AbstractGradleProject {
     // There is a Gradle bug that makes tests break when the test uses CC/IP and we're also debugging
     if (!DebugAware.debug) {
       gradleProperties += GradleProperties.enableConfigurationCache()
+      gradleProperties += GradleProperties.enableIsolatedProjects()
     }
 
     return super.newGradleProjectBuilder(dslKind)
