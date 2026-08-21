@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle
 
+import org.gradle.util.GradleVersion
+
 public class GradleProperties(private val lines: MutableList<String>) {
 
   public operator fun plus(other: CharSequence): GradleProperties {
@@ -47,6 +49,10 @@ public class GradleProperties(private val lines: MutableList<String>) {
     @JvmField
     public val BUILD_CACHE: String = "org.gradle.caching=true"
 
+    /** Enable configuration on demand. */
+    @JvmField
+    public val CONFIGURE_ON_DEMAND: String = "org.gradle.configureondemand=true"
+
     /** Enable the configuration cache, pre-Gradle 8. */
     @JvmField
     public val CONFIGURATION_CACHE_UNSTABLE: String = "org.gradle.unsafe.configuration-cache=true"
@@ -59,17 +65,25 @@ public class GradleProperties(private val lines: MutableList<String>) {
     @JvmField
     public val CONFIGURATION_CACHE_PARALLEL: String = "org.gradle.configuration-cache.parallel=true"
 
+    /** Enable isolated projects, pre-Gradle 9.7. */
+    @JvmField
+    public val ISOLATED_PROJECTS_UNSTABLE: String = "org.gradle.unsafe.isolated-projects=true"
+
     /**
-     * Enable isolated projects, pre-Gradle 9.
+     * Enable isolated projects, Gradle 9.7+.
      *
      * @see <a href="https://docs.gradle.org/nightly/userguide/isolated_projects.html">Isolated Projects</a>
      */
     @JvmField
-    public val ISOLATED_PROJECTS_UNSTABLE: String = "org.gradle.unsafe.isolated-projects=true"
+    public val ISOLATED_PROJECTS_STABLE: String = "org.gradle.isolated-projects=true"
 
     /** Enable parallel builds. */
     @JvmField
     public val PARALLEL: String = "org.gradle.parallel=true"
+
+    /** Enable parallel tooling API model building, from Gradle 9.4. */
+    @JvmField
+    public val TOOLING_PARALLEL: String = "org.gradle.tooling.parallel=true"
 
     /**
      * Instruct Gradle to _not_ skip the Kotlin metadata version check. The default is to skip it.
@@ -105,10 +119,43 @@ public class GradleProperties(private val lines: MutableList<String>) {
     public fun minimalAndroidProperties(): GradleProperties = of(JVM_ARGS, USE_ANDROID_X, NON_TRANSITIVE_R)
 
     @JvmStatic
+    public fun enableBuildCache(): GradleProperties = of(BUILD_CACHE)
+
+    @JvmStatic
+    public fun enableConfigureOnDemand(): GradleProperties = of(CONFIGURE_ON_DEMAND)
+
+    @JvmStatic
     public fun enableConfigurationCache(): GradleProperties = of(CONFIGURATION_CACHE_STABLE)
 
     @JvmStatic
-    public fun enableIsolatedProjects(): GradleProperties = of(ISOLATED_PROJECTS_UNSTABLE)
+    public fun enableParallelConfigurationCache(): GradleProperties {
+      return if (GradleVersion.current().baseVersion >= GradleVersion.version("8.11")) {
+        of(CONFIGURATION_CACHE_PARALLEL)
+      } else {
+        of()
+      }
+    }
+
+    @JvmStatic
+    public fun enableIsolatedProjects(): GradleProperties {
+      return if (GradleVersion.current().baseVersion >= GradleVersion.version("9.7")) {
+        of(ISOLATED_PROJECTS_STABLE)
+      } else {
+        of(ISOLATED_PROJECTS_UNSTABLE)
+      }
+    }
+
+    @JvmStatic
+    public fun enableParallelProjectExecution(): GradleProperties = of(PARALLEL)
+
+    @JvmStatic
+    public fun enableParallelTooling(): GradleProperties {
+      return if (GradleVersion.current().baseVersion >= GradleVersion.version("9.4")) {
+        of(TOOLING_PARALLEL)
+      } else {
+        of()
+      }
+    }
 
     /**
      * Disable the behavior of the Kotlin Gradle Plugin that adds the stdlib as an `api` dependency by default.
