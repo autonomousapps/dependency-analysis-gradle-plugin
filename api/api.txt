@@ -153,6 +153,7 @@ package com.autonomousapps.extension {
     ctor @javax.inject.Inject public ExclusionsHandler(org.gradle.api.model.ObjectFactory objects);
     method public final void excludeAnnotations(@org.intellij.lang.annotations.Language("RegExp") java.lang.String... annotationRegexes);
     method public final void excludeClasses(@org.intellij.lang.annotations.Language("RegExp") java.lang.String... classRegexes);
+    method public final void excludePaths(@org.intellij.lang.annotations.Language("RegExp") java.lang.String... pathRegexes);
     method public final void excludeSourceSets(java.lang.String... sourceSets);
     method public final void ignoreGeneratedCode();
     method public final void ignoreInternalPackages();
