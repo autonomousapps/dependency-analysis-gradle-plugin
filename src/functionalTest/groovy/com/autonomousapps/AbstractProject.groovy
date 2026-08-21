@@ -94,7 +94,8 @@ abstract class AbstractProject extends AbstractGradleProject {
     // There is a Gradle bug that makes tests break when the test uses CC/IP and we're also debugging
     if (!DebugAware.debug) {
       gradleProperties += GradleProperties.enableConfigurationCache()
-      gradleProperties += GradleProperties.enableIsolatedProjects()
+      // TODO(tsr): enable this separately. Some functionalTest fixtures violate IP constraints
+      //gradleProperties += GradleProperties.enableIsolatedProjects()
     }
 
     return super.newGradleProjectBuilder(dslKind)
