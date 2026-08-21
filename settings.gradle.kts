@@ -107,3 +107,6 @@ fun includeShadowed(path: String) {
   include(":$path")
   project(":$path").projectDir = file("shadowed/$path")
 }
+
+// https://docs.gradle.org/nightly/userguide/isolated_projects.html#sec:no_implicit_parents_lookup
+enableFeaturePreview("NO_IMPLICIT_LOOKUP_IN_PARENT_PROJECTS")
