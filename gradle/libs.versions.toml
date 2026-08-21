@@ -37,7 +37,7 @@ kotlin-editor-core = "0.25"
 kotlin-editor-relocated = "0.25.0"
 # 0.36.0 requires JDK 17
 mavenPublish = "0.35.0"
-metalava = "1.0.0-alpha14"
+metalava = "1.0.0-alpha15"
 moshi = "1.15.2"
 moshix = "0.30.0"
 #moshix = "0.31.0"
