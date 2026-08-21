@@ -21,7 +21,7 @@ internal object GradleVersions {
   private val gradle900: GradleVersion = GradleVersion.version("9.0.0")
   private val gradle910: GradleVersion = GradleVersion.version("9.1.0")
   private val gradle940: GradleVersion = GradleVersion.version("9.4.0")
-  private val gradle970: GradleVersion = GradleVersion.version("9.7.0-rc-1")
+  private val gradle970: GradleVersion = GradleVersion.version("9.7.1")
 
   val isAtLeastMinimum: Boolean = current >= minGradleVersion
 
