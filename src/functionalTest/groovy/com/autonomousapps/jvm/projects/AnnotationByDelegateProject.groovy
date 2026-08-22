@@ -5,10 +5,13 @@ package com.autonomousapps.jvm.projects
 import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
+import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.actualProjectAdvice
 import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.AdviceHelper.moduleCoordinates
+import static com.autonomousapps.AdviceHelper.projectAdviceForDependencies
 import static com.autonomousapps.kit.gradle.Dependency.api
 
 final class AnnotationByDelegateProject extends AbstractProject {
@@ -53,8 +56,14 @@ final class AnnotationByDelegateProject extends AbstractProject {
     return actualProjectAdvice(gradleProject)
   }
 
+  private final Set<Advice> consumerAdvice() {
+    [
+      Advice.ofAdd(moduleCoordinates('com.google.errorprone:error_prone_annotations:2.28.0'), 'implementation')
+    ]
+  }
+
   final Set<ProjectAdvice> expectedBuildHealth = [
-    emptyProjectAdviceFor(':consumer'),
+    projectAdviceForDependencies(':consumer', consumerAdvice()),
   ]
 }
 
