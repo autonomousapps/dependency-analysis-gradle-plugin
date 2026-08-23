@@ -10,6 +10,7 @@ class DependencyProvider(
 ) {
 
   private val pluginUnderTestVersion = AbstractGradleProject.PLUGIN_UNDER_TEST_VERSION
+  private val versionsDagger = "2.60.1"
 
   fun dagp(configurationName: String): Dependency {
     return Dependency(
@@ -83,11 +84,11 @@ class DependencyProvider(
   }
 
   fun hiltAndroid(configuration: String): Dependency {
-    return Dependency(configuration, "com.google.dagger:hilt-android:2.59.2")
+    return Dependency(configuration, "com.google.dagger:hilt-android:$versionsDagger")
   }
 
   fun hiltAndroidCompiler(configuration: String): Dependency {
-    return Dependency(configuration, "com.google.dagger:hilt-android-compiler:2.59.2")
+    return Dependency(configuration, "com.google.dagger:hilt-android-compiler:$versionsDagger")
   }
 
   fun kotestAssertions(configuration: String): Dependency {
