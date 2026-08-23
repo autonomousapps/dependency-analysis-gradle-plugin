@@ -99,8 +99,11 @@ final class AnnotationsImplementationSpec extends AbstractJvmSpec {
     gradleVersion << gradleVersions()
   }
 
-  // This test ensures that we don't suggest adding an implementation dependency on errorprone annotations due to
-  // implicit usage of @CanIgnoreReturnValue, which is an api dependency provided by Guava for use of the Service class.
+  // See https://github.com/autonomousapps/dependency-analysis-gradle-plugin/pull/1839#issuecomment-5376928594 for why
+  // this spec now asserts that errorprone is added to implementation, vs what used to be the case.
+  // TODO(tsr): the following is no longer true (but maybe it should be):
+  //  This test ensures that we don't suggest adding an implementation dependency on errorprone annotations due to
+  //  implicit usage of @CanIgnoreReturnValue, which is an api dependency provided by Guava for use of the Service class
   def "class-retained annotations used by delegates do not need to be declared (#gradleVersion)"() {
     given:
     def project = new AnnotationByDelegateProject()
@@ -119,7 +122,7 @@ final class AnnotationsImplementationSpec extends AbstractJvmSpec {
       '''\
         ------------------------------------------------------------
         You asked about the dependency 'com.google.errorprone:error_prone_annotations:2.28.0'.
-        There is no advice regarding this dependency.
+        You have been advised to add this dependency to 'implementation'.
         ------------------------------------------------------------
     
         Shortest path from :consumer to com.google.errorprone:error_prone_annotations:2.28.0 for compileClasspath:
@@ -144,7 +147,7 @@ final class AnnotationsImplementationSpec extends AbstractJvmSpec {
         
         Source: main
         ------------
-        * Uses (as or in an annotation) 1 class: com.google.errorprone.annotations.CanIgnoreReturnValue (implies compileOnly).
+        * Uses 1 class: com.google.errorprone.annotations.CanIgnoreReturnValue (implies implementation).
         
         Source: test
         ------------

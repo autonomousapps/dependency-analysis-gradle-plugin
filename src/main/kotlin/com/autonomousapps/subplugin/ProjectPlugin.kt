@@ -824,7 +824,7 @@ internal class ProjectPlugin(private val project: Project) {
       return false
     }
 
-    // TODO(tsr): configurations.named() is problematic since its lazy but I need to know NOW if this configuration exists
+    // TODO(tsr): configurations.named() is problematic since it's lazy but I need to know NOW if this configuration exists
     val hasApiConfiguration = configurations.namedOrNull(compilation.apiConfigurationName) != null
     // 'xTest' sourceSets do not have an ABI (this is a heuristic)
     val isNotTest = !sourceSetName.endsWith("Test")
