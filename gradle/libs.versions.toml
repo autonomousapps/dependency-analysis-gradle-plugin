@@ -20,7 +20,7 @@ groovy = "4.0.33"
 guava = "33.5.0-jre"
 javaTarget = "11"
 jdkVersion = "17"
-jspecify = "1.0.0"
+jspecify = "1.0.1"
 junit = "5.14.1"
 kotlinGradlePlugin = "2.4.0"
 # Constraint: while Gradle 8.x is supported, every Kotlin artifact on DAGP's plugin classpath must have
