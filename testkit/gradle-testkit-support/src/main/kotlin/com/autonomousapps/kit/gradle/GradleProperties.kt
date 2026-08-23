@@ -65,17 +65,38 @@ public class GradleProperties(private val lines: MutableList<String>) {
     @JvmField
     public val CONFIGURATION_CACHE_PARALLEL: String = "org.gradle.configuration-cache.parallel=true"
 
-    /** Enable isolated projects, pre-Gradle 9.7. */
-    @JvmField
-    public val ISOLATED_PROJECTS_UNSTABLE: String = "org.gradle.unsafe.isolated-projects=true"
-
     /**
      * Enable isolated projects, Gradle 9.7+.
      *
-     * @see <a href="https://docs.gradle.org/nightly/userguide/isolated_projects.html">Isolated Projects</a>
+     * @see <a href="https://docs.gradle.org/current/userguide/isolated_projects.html">Isolated Projects</a>
      */
     @JvmField
-    public val ISOLATED_PROJECTS_STABLE: String = "org.gradle.isolated-projects=true"
+    public val ISOLATED_PROJECTS: String = "org.gradle.isolated-projects=true"
+
+    /**
+     * Enable isolated projects, Gradle <= 9.6.
+     *
+     * @see [ISOLATED_PROJECTS]
+     */
+    @Deprecated(message = "Use ISOLATED_PROJECTS instead", replaceWith = ReplaceWith("ISOLATED_PROJECTS"))
+    @JvmField
+    public val ISOLATED_PROJECTS_UNSTABLE: String = "org.gradle.unsafe.isolated-projects=true"
+
+    @JvmField
+    public val ISOLATED_PROJECTS_INTERNAL_CACHING: String = "org.gradle.internal.isolated-projects.caching=tooling"
+
+    /**
+     * @see <a href="https://docs.gradle.org/nightly/userguide/isolated_projects.html#sec:diagnostics_mode">Diagnostics mode</a>
+     */
+    @JvmField
+    public val ISOLATED_PROJECTS_DIAGNOSTICS: String = "org.gradle.isolated-projects.diagnostics=true"
+
+    /**
+     * @see <a href="https://docs.gradle.org/nightly/userguide/isolated_projects.html#sec:dangerously_ignore_problems">Temporarily ignoring violations</a>
+     */
+    @JvmField
+    public val ISOLATED_PROJECTS_IGNORE_WARNINGS: String =
+      "org.gradle.isolated-projects.dangerously-ignore-problems=true"
 
     /** Enable parallel builds. */
     @JvmField
@@ -139,8 +160,9 @@ public class GradleProperties(private val lines: MutableList<String>) {
     @JvmStatic
     public fun enableIsolatedProjects(): GradleProperties {
       return if (GradleVersion.current().baseVersion >= GradleVersion.version("9.7")) {
-        of(ISOLATED_PROJECTS_STABLE)
+        of(ISOLATED_PROJECTS)
       } else {
+        @Suppress("DEPRECATION")
         of(ISOLATED_PROJECTS_UNSTABLE)
       }
     }
