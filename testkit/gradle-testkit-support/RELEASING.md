@@ -11,6 +11,3 @@ Release procedure for gradle-testkit-support
 1. `git commit -am "chore(testkit-support): prepare next development version of testkit-support."`
 1. `git push && git push --tags`
 1. (Optional) Update `gradle-testkit-plugin` default version of this library and publish it.
-1. (Optional) Follow instructions in console output to release from Maven Central's staging repo.
-   This step is now automated via the `:promote` task, and should only be necessary if that task
-   fails.
