@@ -13,6 +13,7 @@
   "major": {
     "dependencyDashboardApproval": true
   },
+  // https://docs.renovatebot.com/string-pattern-matching/
   "packageRules": [
     {
       "description": "Develocity Gradle Plugin",
@@ -37,8 +38,14 @@
     // Prevent some much older dependencies from being flagged as out-of-date
     {
       "description": "Ignore updates to okio",
-      "matchPackageNames": ["com.squareup.okio:okio", "com.squareup.okio:okio-bom"],
+      "matchPackageNames": ["com.squareup.okio:okio*"],
       "enabled": false
     },
+    // Prevent dangerous dependencies from being flagged as out-of-date
+    {
+      "description": "Ignore updates to KGP",
+      "matchPackageNames": ["org.jetbrains.kotlin:kotlin-gradle-plugin*"],
+      "enabled": false
+    }
   ]
 }
