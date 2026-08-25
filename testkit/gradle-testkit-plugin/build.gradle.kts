@@ -7,7 +7,7 @@ plugins {
   id("com.github.gmazzo.buildconfig")
 }
 
-version = "0.20"
+version = "0.21-SNAPSHOT"
 val isSnapshot: Boolean = version.toString().endsWith("SNAPSHOT")
 val isRelease: Boolean = !isSnapshot
 
