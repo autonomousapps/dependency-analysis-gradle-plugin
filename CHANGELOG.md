@@ -1,5 +1,32 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.19.0
+* [feat]: ':printDuplicateDependencies' will now store the console output in a file on disk.
+* [fix]: incorrect Android-variant configuration advice.
+* [fix]: merge binary classes from all jar artifacts when building map.
+* [fix]: track component identifiers as input to tasks that write them to output.
+* [fix]: handle mixed source sets better.
+* [fix]: make `ArtifactsReportTask` cacheable again.
+* [fix]: simplify `kotlin-metadata-jvm` runtime handling.
+* [refactor]: use non-deprecated API in KMP analysis.
+* [refactor]: add `ExpensiveJar` type to hold `BinaryClasses`, removing them from `ExplodedJar`.
+* [test]: add test to ensure cache correctness.
+* [maintenance]: build with (and test against) Gradle 9.7.1 and KGP 2.4.0.
+* [maintenance]: update (and test against) AGP 9.3.1.
+* [security]: (GH actions) add 'persist-credentials: false' and disable all permissions by default.
+* [docs]: update issue templates and add a PR template.
+* [docs]: add GH workflow for creating GH releases.
+* [chore]: do not skip metadata version check.
+* [chore]: enable feature preview: `NO_IMPLICIT_LOOKUP_IN_PARENT_PROJECTS`.
+* [chore]: update dependency org.apache.groovy:groovy to v4.0.33.
+* [chore]: update dependency com.android.tools.metalava:metalava to v1.0.0-alpha15.
+* [chore]: update dependency com.github.ben-manes.caffeine:caffeine to v3.2.4.
+* [chore]: update dependency org.jspecify:jspecify to v1.0.1.
+* [chore]: update dependency org.junit:junit-bom to v5.14.4.
+* [chore]: update Develocity to latest.
+* [chore]: configure Renovate.
+* [chore]: add 'setup-testlens' action to CI workflow.
+
 # Version 3.18.0
 * [feat]: isolate usage of "kotlin-metadata-jvm" to workers and downgrade Kotlin version used by the plugin.
 * [feat]: allow to exclude ABI by source path.
