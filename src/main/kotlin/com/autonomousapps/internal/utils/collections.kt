@@ -59,9 +59,11 @@ private fun String.isAnalyzableClassFileName(): Boolean {
 }
 
 private fun File.isAnalyzableClassFile(): Boolean {
-  return extension == "class" &&
-    !name.endsWith("module-info.class") &&
-    !isUnsupportedMultiReleaseClass(invariantSeparatorsPath)
+  return extension == "class"
+    && !name.endsWith("module-info.class")
+    && !isUnsupportedMultiReleaseClass(invariantSeparatorsPath)
+    // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1829
+    && length() > 0
 }
 
 /**
