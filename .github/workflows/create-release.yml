@@ -4,11 +4,6 @@ on:
   push:
     tags:
       - v*
-  workflow_dispatch:
-    inputs:
-      reason:
-        description: 'Reason for manual run'
-        required: false
 
 permissions:
   contents: write
