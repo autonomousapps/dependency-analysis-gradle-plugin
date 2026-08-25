@@ -17,6 +17,8 @@ on:
         description: 'Reason for manual run'
         required: false
 
+permissions: {}
+
 concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
