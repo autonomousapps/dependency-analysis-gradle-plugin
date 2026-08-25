@@ -1,5 +1,12 @@
 Gradle TestKit Support Changelog
 
+# Version 0.28
+* [feat]: allow users to create subprojects with leading ':'.
+* [feat]: update `GradleProperties` with new IP-related flags.
+* [feat]: add more properties to `GradleProperties`.
+* [feat]: add `GradleProperties.DO_NOT_SKIP_METADATA_VERSION_CHECK`.
+* [feat]: expose `GradleProperties` constants as `@JvmField`'s.
+
 # Version 0.27
 * [feat]: add fluent API for `AndroidLayout`.
 * [feat]: support `exclusiveContent` repositories.
