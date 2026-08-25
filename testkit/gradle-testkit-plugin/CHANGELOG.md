@@ -1,26 +1,29 @@
 Gradle TestKit Plugin Changelog
 
+# Version 0.20
+* [feat]: update default testkit-support version to latest.
+
 # Version 0.19
-* [Feat]: update default testkit-support version to latest.
-* [Feat]: update default testkit-truth version to latest.
+* [feat]: update default testkit-support version to latest.
+* [feat]: update default testkit-truth version to latest.
 
 # Version 0.18
-* [Feat] Update default support lib version to 0.23.
-* [Feat] Update default truth version to 1.7.0.
+* [feat] Update default support lib version to 0.23.
+* [feat] Update default truth version to 1.7.0.
 * Compiled against Kotlin 2.2 and Gradle 9.4.1.
 
 # Version 0.17
-* [Feat] Update default support lib version to 0.21.
+* [feat] Update default support lib version to 0.21.
 
 # Version 0.16
 * [Fix] set apiVersion and languageVersion to 2.0 for Gradle 8.11 support.
 
 # Version 0.15
-* [Feat]: Build with Gradle 9.0.0 and update to non-nullable types.
-* [Feat] Update default support lib version to 0.19.
+* [feat]: Build with Gradle 9.0.0 and update to non-nullable types.
+* [feat] Update default support lib version to 0.19.
 
 # Version 0.14
-* [Feat]: support functional tests of Gradle 'libraries' as well as plugins.
+* [feat]: support functional tests of Gradle 'libraries' as well as plugins.
 
 # Version 0.13
 * [New] Update default support lib version to 0.18.
