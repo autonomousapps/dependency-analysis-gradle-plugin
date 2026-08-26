@@ -452,6 +452,10 @@ private class GraphVisitor(
     }
   }
 
+  /**
+   * This checks if [coordinates] provides a symbol for a superclass missing from THIS module's source code. It does NOT
+   * check if [coordinates] (or any dependency) has superclasses missing from the compile classpath.
+   */
   private fun isForMissingSuperclass(
     coordinates: Coordinates,
     context: GraphViewVisitor.Context,

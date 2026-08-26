@@ -90,7 +90,10 @@ internal data class ProjectVariant(
    * The set of super classes and interfaces not available from [codeSource] (therefore "external" to "this" module).
    */
   val externalSupers: Set<String> by unsafeLazy {
-    val supers = codeSource.mapNotNullToOrderedSet { src -> src.superClass }
+    val supers = codeSource
+      .mapNotNull { src -> src.superClass }
+      .filterNotToOrderedSet { it == "java.lang.Object" }
+
     val interfaces = codeSource.flatMapToOrderedSet { src -> src.interfaces }
     // These super classes and interfaces are not available from "this" module, so must come from dependencies.
     val externalSupers = supers - classNames
