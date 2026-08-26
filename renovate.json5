@@ -45,6 +45,7 @@
     {
       "description": "Ignore updates to KGP",
       "matchPackageNames": ["org.jetbrains.kotlin:kotlin-gradle-plugin*"],
+      "matchDepNames": ["org.jetbrains.kotlin.jvm"],
       "enabled": false
     }
   ]
