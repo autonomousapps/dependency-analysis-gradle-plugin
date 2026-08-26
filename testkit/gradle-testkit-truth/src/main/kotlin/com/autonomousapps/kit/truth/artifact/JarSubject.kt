@@ -36,7 +36,7 @@ public class JarSubject private constructor(
     val actual = assertNonNull(actual) { "jar was null" }
 
     // Open zip, copy entry to temp dir, close zip.
-    val tempResource = FileSystems.newFileSystem(actual, null).use { fs ->
+    val tempResource = FileSystems.newFileSystem(actual, null as ClassLoader?).use { fs ->
       val resource = fs.getPath(path)
       if (resource.notExists()) {
         failWithActual(Fact.simpleFact("No resource found at '$path' in '$actual'"))

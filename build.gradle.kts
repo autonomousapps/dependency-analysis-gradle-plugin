@@ -225,7 +225,6 @@ val functionalTest = tasks.named("functionalTest", Test::class) {
     "jvm" -> {
       include("com/autonomousapps/jvm/**")
 
-      // We advertise that we support Java 11
       javaLauncher.set(javaToolchains.launcherFor {
         languageVersion.set(JavaLanguageVersion.of(17))
       })

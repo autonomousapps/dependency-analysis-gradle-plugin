@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm
 
+import com.autonomousapps.jvm.projects.KafkaServerProject
 import com.autonomousapps.jvm.projects.MissingSuperclassProject
 import com.autonomousapps.utils.Colors
+import spock.lang.Ignore
+import spock.lang.Issue
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
@@ -74,5 +77,23 @@ final class MissingSuperclassSpec extends AbstractJvmSpec {
 
     where:
     gradleVersion << [GRADLE_LATEST]
+  }
+
+  // Leaving this has kind of extra documentation that this isn't a supported use-case (currently at least)
+  @Ignore
+  @Issue("https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1828")
+  def "advises keeping superclass dependency for kafka-server (#gradleVersion)"() {
+    given:
+    def project = new KafkaServerProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth', '--rerun-tasks')
+
+    then:
+    assertThat(project.actualProjectAdvice()).containsExactlyElementsIn(project.expectedProjectAdvice())
+
+    where:
+    gradleVersion << gradleVersions()
   }
 }
