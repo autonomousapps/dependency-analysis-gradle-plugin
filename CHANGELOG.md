@@ -594,7 +594,7 @@ dependencyAnalysis {
 * `resolveExternalDependencies` is configuration-cache compatible.
 * Resolve Kotlin deprecations.
 
-# Version 1.23.0, 1.23.1
+# Version 1.23.1
 * [New] DSL now permits custom behavior per sourceSet.
 * [Fixed] Fix issues with sourceSet-based analysis. (Custom sourceSets, the test sourceSet.)
 * [Fixed] There is now parity between Kotlin-JVM library analysis and java-library analysis.
@@ -690,7 +690,7 @@ Thanks [Josh Friend](https://github.com/joshfriend))
 
 Thanks as well to [Adam Ahmed](https://github.com/oheyadam) for modernizing the GHA workflows!
 
-# Version 1.14.0, 1.14.1
+# Version 1.14.1
 * [New] Support analysis of androidTest source sets.
 * [Fixed] Improve sorting of duplicate versions.
 * [Fixed] Only check AGP version on root project.
@@ -698,7 +698,7 @@ Thanks as well to [Adam Ahmed](https://github.com/oheyadam) for modernizing the 
 * Extracted new graph-support library.
 * Bug fixes and performance improvements.
 
-# Version 1.13.0, 1.13.1
+# Version 1.13.1
 * [New] `./gradlew printDuplicateDependencies` will generate a report and print to console all external dependencies in
   the build for which various subprojects resolve varying versions. This is an indication that your build might benefit
   from a platform.
@@ -711,7 +711,7 @@ Thanks as well to [Adam Ahmed](https://github.com/oheyadam) for modernizing the 
 # Version 1.12.0
 * [Fixed] Analysis fails when an Android manifest doesn't have a package declaration.
 
-# Version 1.11.0, 1.11.1, 1.11.2, 1.11.3
+# Version 1.11.3
 * [New] Very experimental `fixDependencies` task will automatically apply dependency advice to your build scripts,
   modifying those scripts in-place. Issue reports are welcome.
 * [New] `reason` can be used to learn more about module-structure-related advice. For example
