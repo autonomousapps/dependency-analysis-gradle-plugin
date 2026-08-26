@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.19.1
+* [fix]: an 'analyzable class file' should have non-zero length.
+
 # Version 3.19.0
 * [feat]: ':printDuplicateDependencies' will now store the console output in a file on disk.
 * [fix]: incorrect Android-variant configuration advice.
