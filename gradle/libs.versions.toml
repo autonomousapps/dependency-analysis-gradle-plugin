@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 [versions]
 agp = "8.10.0"
-agp-common = "32.0.0"
+agp-common = "32.4.0"
 antlr-base = "4.13.2"
 antlr-shadowed = "4.13.2.2"
 asm-relocated = "9.9.0"
