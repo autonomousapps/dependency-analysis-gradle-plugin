@@ -318,20 +318,46 @@ public data class KmpSourceKind(
         compileClasspathName = when (sourceSetName) {
           // jvmMain => jvmCompileClasspath (jvmMain is special)
           JVM_MAIN_NAME -> "jvmCompileClasspath"
+
           // androidMain => androidCompileClasspath (androidMain is special)
           ANDROID_MAIN_NAME -> "androidCompileClasspath"
-          // jvmTest => jvmTestCompileClasspath
-          else -> "${sourceSetName}CompileClasspath"
+
+          else -> {
+            if (isProbablyJvmMain(sourceSetName)) {
+              // desktopMaim => desktopCompileClasspath
+              "${sourceSetName.substringBefore("Main")}CompileClasspath"
+            } else {
+              // jvmTest => jvmTestCompileClasspath
+              "${sourceSetName}CompileClasspath"
+            }
+          }
         },
         runtimeClasspathName = when (sourceSetName) {
           // jvmMain => jvmRuntimeClasspath (jvmMain is special)
           JVM_MAIN_NAME -> "jvmRuntimeClasspath"
+
           // androidMain => androidRuntimeClasspath (androidMain is special)
           ANDROID_MAIN_NAME -> "androidRuntimeClasspath"
-          // jvmTest => jvmTestRuntimeClasspath
-          else -> "${sourceSetName}RuntimeClasspath"
+
+          else -> {
+            if (isProbablyJvmMain(sourceSetName)) {
+              // desktopMaim => desktopRuntimeClasspath
+              "${sourceSetName.substringBefore("Main")}RuntimeClasspath"
+            } else {
+              // jvmTest => jvmTestRuntimeClasspath
+              "${sourceSetName}RuntimeClasspath"
+            }
+          }
         },
       )
+    }
+
+    /**
+     * Returns true if [sourceSetName] is probably from `jvm("sourceSetName")`. Explicitly ignores the `commonMain`
+     * source set because that's special.
+     */
+    private fun isProbablyJvmMain(sourceSetName: String): Boolean {
+      return sourceSetName != COMMON_MAIN_NAME && sourceSetName.endsWith("Main")
     }
   }
 }

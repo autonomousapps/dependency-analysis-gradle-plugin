@@ -321,6 +321,8 @@ internal class ConfigurationNamesTest {
       "jvmMain",
       "jvmTest",
       "jvmIntegrationTest",
+      "desktopMain",
+      "desktopTest",
       "androidMain",
       "androidDeviceTest",
       "androidHostTest",
@@ -363,6 +365,11 @@ internal class ConfigurationNamesTest {
         "jvmMainAnnotationProcessor, jvmMain",
         "jvmIntegrationTestAnnotationProcessor, jvmIntegrationTest",
         "jvmTestAnnotationProcessor, jvmTest",
+
+        "desktopMainApi, desktopMain",
+        "desktopMainCompileOnly, desktopMain",
+        "desktopMainImplementation, desktopMain",
+        "desktopMainRuntimeOnly, desktopMain",
 
         "kapt, jvmMain",
         "kaptIntegrationTest, jvmIntegrationTest",
@@ -426,6 +433,11 @@ internal class ConfigurationNamesTest {
         "jvmIntegrationTestCompileOnly, true",
         "jvmIntegrationTestImplementation, true",
         "jvmIntegrationTestRuntimeOnly, true",
+
+        "desktopMainApi, true",
+        "desktopMainCompileOnly, true",
+        "desktopMainImplementation, true",
+        "desktopMainRuntimeOnly, true",
 
         // annotation processors
         "annotationProcessor, true",
