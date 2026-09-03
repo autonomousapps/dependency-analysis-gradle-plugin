@@ -107,6 +107,17 @@ final class AdviceHelper {
     return new ProjectAdvice(projectPath, advice, pluginAdvice, moduleAdvice, Warning.empty(), shouldFail)
   }
 
+  static ProjectAdvice projectAdvice(
+    String projectPath,
+    Set<Advice> advice,
+    Set<PluginAdvice> pluginAdvice,
+    Set<ModuleAdvice> moduleAdvice,
+    Warning warning,
+    boolean shouldFail
+  ) {
+    return new ProjectAdvice(projectPath, advice, pluginAdvice, moduleAdvice, warning, shouldFail)
+  }
+
   private static GradleVariantIdentification defaultGVI(String capability) {
     new GradleVariantIdentification(capability ? [capability] as Set : [] as Set, [:])
   }

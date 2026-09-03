@@ -149,6 +149,17 @@ internal data class ProjectVariant(
       .flatMapToOrderedSet { it.imports }
   }
 
+  /**
+   * Uses a similar heuristic to
+   * [InlineMember.candidateImports][com.autonomousapps.model.internal.InlineMemberCapability.InlineMember.candidateImports]
+   */
+  val candidateInlineImports: Set<String> by unsafeLazy {
+    // e.g., `androidx.core.net.toUri` -> `androidx.core.net`
+    kotlinImports
+      .map { it.substringBeforeLast('.') }
+      .filterToOrderedSet { it.isNotEmpty() }
+  }
+
   internal fun dependencies(dependenciesDir: Directory): Set<Dependency> {
     return classpath.asSequence()
       .plus(annotationProcessors)
