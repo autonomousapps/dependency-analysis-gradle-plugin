@@ -590,7 +590,7 @@ internal class ScribeTestGroovy {
       assertThat(text).isEqualTo(
         """
           android {
-            compileSdkVersion 34
+            compileSdkVersion 37
             defaultConfig {
               applicationId 'com.example'
               minSdkVersion 23

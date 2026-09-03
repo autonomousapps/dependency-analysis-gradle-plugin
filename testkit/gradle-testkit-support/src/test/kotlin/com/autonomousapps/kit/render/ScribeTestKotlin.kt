@@ -592,7 +592,7 @@ internal class ScribeTestKotlin {
       assertThat(text).isEqualTo(
         """
           android {
-            compileSdk = 34
+            compileSdk = 37
             defaultConfig {
               applicationId = "com.example"
               minSdk = 23

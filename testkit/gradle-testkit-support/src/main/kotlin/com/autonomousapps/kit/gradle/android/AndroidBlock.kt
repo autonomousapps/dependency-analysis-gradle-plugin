@@ -106,7 +106,7 @@ public class AndroidBlock @JvmOverloads constructor(
 
   public class Builder {
     public var namespace: String? = null
-    public var compileSdkVersion: Int = 34
+    public var compileSdkVersion: Int = 37
     public var defaultConfig: DefaultConfig = DefaultConfig.DEFAULT_APP
     public var buildTypes: BuildTypes? = null
     public var compileOptions: CompileOptions = CompileOptions.DEFAULT
@@ -149,7 +149,7 @@ public class AndroidBlock @JvmOverloads constructor(
       namespace: String? = null,
     ): AndroidBlock = AndroidBlock(
       namespace = namespace,
-      compileSdkVersion = 34,
+      compileSdkVersion = 37,
       defaultConfig = DefaultConfig.DEFAULT_APP,
       compileOptions = CompileOptions.DEFAULT,
     )
@@ -162,7 +162,7 @@ public class AndroidBlock @JvmOverloads constructor(
       namespace: String? = null,
     ): AndroidBlock = AndroidBlock(
       namespace = namespace,
-      compileSdkVersion = 34,
+      compileSdkVersion = 37,
       defaultConfig = DefaultConfig.DEFAULT_LIB,
       compileOptions = CompileOptions.DEFAULT,
     )
@@ -176,7 +176,7 @@ public class AndroidBlock @JvmOverloads constructor(
       namespace: String? = null,
     ): AndroidBlock = AndroidBlock(
       namespace = namespace,
-      compileSdkVersion = 34,
+      compileSdkVersion = 37,
       targetProjectPath = targetProjectPath,
       defaultConfig = DefaultConfig.DEFAULT_TEST,
       compileOptions = CompileOptions.DEFAULT,
