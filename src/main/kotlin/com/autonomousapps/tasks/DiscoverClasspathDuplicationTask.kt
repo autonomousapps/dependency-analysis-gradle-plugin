@@ -92,7 +92,7 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
         // only warn about duplicates if it's about a class that's actually used.
         .filterKeys {
           val fqcn = it.replace('/', '.').removeSuffix(".class")
-          fqcn in project.usedClasses || fqcn in project.usedAnnotationClassesBySrc
+          fqcn in project.usedClasses || fqcn in project.usedAnnotationClassesBySrc || fqcn.substringBeforeLast('.') in project.candidateInlineImports
         }
         // filter out "duplicates" where the GAV is identical. This can be an issue with, say, Kotlin, which adds
         // variants of the same dependency with different capabilities. Not user-actionable.
