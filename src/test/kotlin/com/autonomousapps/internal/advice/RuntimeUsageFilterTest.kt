@@ -138,6 +138,10 @@ internal class RuntimeUsageFilterTest {
   }
 
   // --- Package heuristic tests ---
+  //
+  // These exercise the opt-in package heuristic (Strategy 2). It is DISABLED by default, so each
+  // test supplies an explicit configuration. [APPIAN] reproduces the behavior that used to be
+  // hardcoded in this class.
 
   @Test
   fun `project dep matched by package heuristic is suppressed`() {
@@ -165,11 +169,45 @@ internal class RuntimeUsageFilterTest {
     val filter = RuntimeUsageFilter(
       runtimeDepsReports = mapOf(project to runtimeReport),
       depToClasses = emptyMap(), // no type usage data available
+      heuristic = APPIAN,
     )
 
     val filtered = filter.filter(listOf(projectAdvice))
     assertTrue(filtered.single().dependencyAdvice.isEmpty(),
       "Dep should be suppressed because 'enduserreporting' matches the class package"
+    )
+  }
+
+  @Test
+  fun `heuristic match is NOT suppressed when heuristic disabled (default)`() {
+    val project = ":appian-libraries:ae"
+    val dep = ":appian-libraries:end-user-reporting:end-user-reporting-migration"
+
+    val advice = Advice.ofRemove(
+      coordinates = ProjectCoordinates(dep, gvi),
+      fromConfiguration = "implementation"
+    )
+    val projectAdvice = ProjectAdvice(
+      projectPath = project,
+      dependencyAdvice = setOf(advice),
+      pluginAdvice = emptySet(),
+    )
+
+    val runtimeReport = RuntimeDepsReport(
+      projectPath = project,
+      runtimeReferencedClasses = setOf("com.appiancorp.enduserreporting.persistence.migration.AddPhqUsersToSsaRolemapMigration"),
+      componentScanPackages = emptySet(),
+    )
+
+    // Default constructor -> heuristic DISABLED. Without type usage data, nothing suppresses it.
+    val filter = RuntimeUsageFilter(
+      runtimeDepsReports = mapOf(project to runtimeReport),
+      depToClasses = emptyMap(),
+    )
+
+    val filtered = filter.filter(listOf(projectAdvice))
+    assertEquals(1, filtered.single().dependencyAdvice.size,
+      "With the heuristic disabled, the package-name match must NOT suppress the advice"
     )
   }
 
@@ -197,6 +235,7 @@ internal class RuntimeUsageFilterTest {
     val filter = RuntimeUsageFilter(
       runtimeDepsReports = mapOf(project to runtimeReport),
       depToClasses = emptyMap(),
+      heuristic = APPIAN,
     )
 
     val filtered = filter.filter(listOf(projectAdvice))
@@ -229,6 +268,7 @@ internal class RuntimeUsageFilterTest {
     val filter = RuntimeUsageFilter(
       runtimeDepsReports = mapOf(project to runtimeReport),
       depToClasses = emptyMap(),
+      heuristic = APPIAN,
     )
 
     val filtered = filter.filter(listOf(projectAdvice))
@@ -240,20 +280,67 @@ internal class RuntimeUsageFilterTest {
   // --- extractPackageSegments tests ---
 
   @Test
-  fun `extractPackageSegments for project deps`() {
-    val segments = RuntimeUsageFilter.extractPackageSegments(":appian-libraries:end-user-reporting:end-user-reporting-migration")
-    assertTrue(segments.contains("enduserreporting"))
+  fun `Appian config reproduces the previously hardcoded segments`() {
+    assertTrue(
+      RuntimeUsageFilter.extractPackageSegments(
+        ":appian-libraries:end-user-reporting:end-user-reporting-migration", APPIAN
+      ).contains("enduserreporting")
+    )
+    assertTrue(
+      RuntimeUsageFilter.extractPackageSegments(
+        "com.appian:eng-feature-toggles-client", APPIAN
+      ).contains("featuretoggles")
+    )
+    assertTrue(
+      RuntimeUsageFilter.extractPackageSegments(
+        ":appian-libraries:quick-access:quick-access-api", APPIAN
+      ).contains("quickaccess")
+    )
+
+    // Stopwords are excluded from the Appian output.
+    val segments = RuntimeUsageFilter.extractPackageSegments(
+      ":appian-libraries:maintenance-window:maintenance-window-java", APPIAN
+    )
+    assertFalse(segments.contains("appian"))
+    assertFalse(segments.contains("libraries"))
+    assertTrue(segments.contains("maintenancewindow"))
   }
 
   @Test
-  fun `extractPackageSegments for external deps`() {
-    val segments = RuntimeUsageFilter.extractPackageSegments("com.appian:eng-feature-toggles-client")
-    assertTrue(segments.contains("featuretoggles"))
+  fun `default config is generic and keeps leading segments (no Appian assumptions)`() {
+    val segments = RuntimeUsageFilter.extractPackageSegments(
+      ":my-group:billing:billing-service", DEFAULT
+    )
+    // With skipLeadingSegments=0, the first path segment is retained.
+    assertTrue(segments.contains("billing"))
+    assertTrue(segments.contains("service"))
+    // No Appian-specific stripping/stopwords applied.
+    assertTrue(
+      RuntimeUsageFilter.extractPackageSegments(":appian-libraries:foo:foo-java", DEFAULT)
+        .contains("libraries"),
+      "Default config must not treat 'libraries' as a stopword"
+    )
   }
 
-  @Test
-  fun `extractPackageSegments for quick-access`() {
-    val segments = RuntimeUsageFilter.extractPackageSegments(":appian-libraries:quick-access:quick-access-api")
-    assertTrue(segments.contains("quickaccess"))
+  internal companion object {
+    /** Reproduces the behavior that used to be hardcoded in RuntimeUsageFilter. */
+    val APPIAN = RuntimeUsageFilter.PackageHeuristicSettings(
+      enabled = true,
+      stripPrefixes = setOf("appian-", "eng-"),
+      stripSuffixes = setOf("-java", "-api", "-impl", "-core", "-db", "-contracts", "-client"),
+      skipLeadingSegments = 1,
+      stopwords = setOf("appian", "libraries"),
+      minSegmentLength = 4,
+    )
+
+    /** Generic enabled config with no project-specific tuning. */
+    val DEFAULT = RuntimeUsageFilter.PackageHeuristicSettings(
+      enabled = true,
+      stripPrefixes = emptySet(),
+      stripSuffixes = setOf("-java", "-api", "-impl", "-core", "-db", "-contracts", "-client"),
+      skipLeadingSegments = 0,
+      stopwords = emptySet(),
+      minSegmentLength = 4,
+    )
   }
 }

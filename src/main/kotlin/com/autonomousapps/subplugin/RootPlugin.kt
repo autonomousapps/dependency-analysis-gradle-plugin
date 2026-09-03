@@ -135,6 +135,13 @@ internal class RootPlugin(private val project: Project) {
         t.typeUsageReports.setFrom(typeUsagesResolver.internal.map { it.artifactsFor("json").artifactFiles })
         t.publicClassesReports.setFrom(publicClassesResolver.internal.map { it.artifactsFor("json").artifactFiles })
         t.runtimeDepsReports.setFrom(runtimeDepsResolver.internal.map { it.artifactsFor("json").artifactFiles })
+        val runtimeUsageConfig = dagpExtension.runtimeUsageHandler.config()
+        t.heuristicEnabled.set(runtimeUsageConfig.enabled)
+        t.heuristicStripPrefixes.set(runtimeUsageConfig.stripPrefixes)
+        t.heuristicStripSuffixes.set(runtimeUsageConfig.stripSuffixes)
+        t.heuristicSkipLeadingSegments.set(runtimeUsageConfig.skipLeadingSegments)
+        t.heuristicStopwords.set(runtimeUsageConfig.stopwords)
+        t.heuristicMinSegmentLength.set(runtimeUsageConfig.minSegmentLength)
         t.outputDir.set(layout.buildDirectory.dir("dagp-filtered-advice"))
       }
 

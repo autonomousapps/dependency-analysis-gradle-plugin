@@ -36,6 +36,7 @@ public abstract class AbstractExtension @Inject constructor(
   internal val reportingHandler: ReportingHandler = dslService.get().reportingHandler
   internal val usageHandler: UsageHandler = dslService.get().usageHandler
   internal val typeUsageHandler: TypeUsageHandler = objects.newInstance(TypeUsageHandler::class.java)
+  internal val runtimeUsageHandler: RuntimeUsageHandler = objects.newInstance(RuntimeUsageHandler::class.java)
 
   private val adviceOutput = objects.fileProperty()
   private val typeUsageOutputs = objects.mapProperty(String::class.java, RegularFile::class.java)

@@ -39,6 +39,9 @@ import javax.inject.Inject
  *
  *   // Configure type usage analysis filtering.
  *   typeUsage { ... }
+ *
+ *   // Configure runtime-usage filtering (Spring/Liquibase detection + optional package heuristic).
+ *   runtimeUsage { ... }
  * }
  * ```
  */
@@ -87,6 +90,11 @@ public abstract class DependencyAnalysisExtension @Inject constructor(
   /** Customize type usage analysis filtering. See [TypeUsageHandler] for more information. */
   public fun typeUsage(action: Action<TypeUsageHandler>) {
     action.execute(typeUsageHandler)
+  }
+
+  /** Customize runtime-usage filtering. See [RuntimeUsageHandler] for more information. */
+  public fun runtimeUsage(action: Action<RuntimeUsageHandler>) {
+    action.execute(runtimeUsageHandler)
   }
 
   internal companion object {

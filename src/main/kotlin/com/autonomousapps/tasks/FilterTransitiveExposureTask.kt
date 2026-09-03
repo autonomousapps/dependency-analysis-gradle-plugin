@@ -14,6 +14,8 @@ import com.autonomousapps.internal.advice.RuntimeUsageFilter
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -63,6 +65,30 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
   @get:InputFiles
   public abstract val runtimeDepsReports: ConfigurableFileCollection
 
+  /** Whether the optional runtime-usage package heuristic is enabled. */
+  @get:Input
+  public abstract val heuristicEnabled: Property<Boolean>
+
+  /** Prefixes to strip from external-dependency artifact names before matching. */
+  @get:Input
+  public abstract val heuristicStripPrefixes: SetProperty<String>
+
+  /** Suffixes to strip from dependency artifact/module names before matching. */
+  @get:Input
+  public abstract val heuristicStripSuffixes: SetProperty<String>
+
+  /** For project deps, number of leading path segments to skip. */
+  @get:Input
+  public abstract val heuristicSkipLeadingSegments: Property<Int>
+
+  /** Words ignored when producing match segments. */
+  @get:Input
+  public abstract val heuristicStopwords: SetProperty<String>
+
+  /** Minimum length for a segment to be considered a match candidate. */
+  @get:Input
+  public abstract val heuristicMinSegmentLength: Property<Int>
+
   /** Output directory for filtered project health reports. */
   @get:OutputDirectory
   public abstract val outputDir: DirectoryProperty
@@ -74,6 +100,12 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
       it.typeUsageReports.setFrom(typeUsageReports)
       it.publicClassesReports.setFrom(publicClassesReports)
       it.runtimeDepsReports.setFrom(runtimeDepsReports)
+      it.heuristicEnabled.set(heuristicEnabled)
+      it.heuristicStripPrefixes.set(heuristicStripPrefixes)
+      it.heuristicStripSuffixes.set(heuristicStripSuffixes)
+      it.heuristicSkipLeadingSegments.set(heuristicSkipLeadingSegments)
+      it.heuristicStopwords.set(heuristicStopwords)
+      it.heuristicMinSegmentLength.set(heuristicMinSegmentLength)
       it.outputDir.set(outputDir)
     }
   }
@@ -83,6 +115,12 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
     public val typeUsageReports: ConfigurableFileCollection
     public val publicClassesReports: ConfigurableFileCollection
     public val runtimeDepsReports: ConfigurableFileCollection
+    public val heuristicEnabled: Property<Boolean>
+    public val heuristicStripPrefixes: SetProperty<String>
+    public val heuristicStripSuffixes: SetProperty<String>
+    public val heuristicSkipLeadingSegments: Property<Int>
+    public val heuristicStopwords: SetProperty<String>
+    public val heuristicMinSegmentLength: Property<Int>
     public val outputDir: DirectoryProperty
   }
 
@@ -175,9 +213,19 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
         }
       }
 
+      val heuristicSettings = RuntimeUsageFilter.PackageHeuristicSettings(
+        enabled = parameters.heuristicEnabled.getOrElse(false),
+        stripPrefixes = parameters.heuristicStripPrefixes.getOrElse(emptySet()),
+        stripSuffixes = parameters.heuristicStripSuffixes.getOrElse(emptySet()),
+        skipLeadingSegments = parameters.heuristicSkipLeadingSegments.getOrElse(0),
+        stopwords = parameters.heuristicStopwords.getOrElse(emptySet()),
+        minSegmentLength = parameters.heuristicMinSegmentLength.getOrElse(4),
+      )
+
       val runtimeFilter = RuntimeUsageFilter(
         runtimeDepsReports = runtimeReports,
         depToClasses = depToClasses,
+        heuristic = heuristicSettings,
       )
 
       var totalSuppressed = 0
@@ -239,12 +287,17 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
               if (!advice.isAnyRemove()) return@filter true
               val depIdentifier = advice.coordinates.identifier
               val classesProvidedByDep = depToClasses[depIdentifier]
-              val shouldSuppress = if (classesProvidedByDep != null) {
+              // Strategy 1: type-usage-backed match.
+              val strategy1 = if (classesProvidedByDep != null) {
                 report.runtimeReferencedClasses.any { it in classesProvidedByDep } ||
                   report.componentScanPackages.any { pkg ->
                     classesProvidedByDep.any { it.startsWith("$pkg.") }
                   }
               } else false
+
+              // Strategy 2: optional package-naming heuristic (no-op when disabled).
+              val shouldSuppress = strategy1 ||
+                RuntimeUsageFilter.matchesByPackageHeuristic(depIdentifier, report, heuristicSettings)
 
               if (shouldSuppress) {
                 runtimeSuppressed++

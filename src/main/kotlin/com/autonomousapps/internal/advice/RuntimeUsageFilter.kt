@@ -22,6 +22,12 @@ internal class RuntimeUsageFilter(
   private val runtimeDepsReports: Map<String, RuntimeDepsReport>,
   /** Map: dependency identifier -> set of class FQCNs it provides (from type usage data) */
   private val depToClasses: Map<String, Set<String>>,
+  /**
+   * Configuration for the optional package-naming heuristic (Strategy 2). When
+   * [PackageHeuristicSettings.enabled] is false (the default), only type-usage-backed matching
+   * (Strategy 1) is applied.
+   */
+  private val heuristic: PackageHeuristicSettings = PackageHeuristicSettings.DISABLED,
 ) {
 
   fun filter(projectAdvices: List<ProjectAdvice>): List<ProjectAdvice> {
@@ -62,12 +68,12 @@ internal class RuntimeUsageFilter(
       }
     }
 
-    // Strategy 2: Package heuristic matching
+    // Strategy 2: Package heuristic matching (opt-in; disabled by default).
     // For project deps like ":appian-libraries:end-user-reporting:end-user-reporting-migration"
     // match against classes whose package contains segments from the dep identifier.
     // For external deps like "com.appian:eng-feature-toggles-client"
     // match against classes whose package relates to the group/artifact.
-    if (matchesByPackageHeuristic(depIdentifier, report)) return true
+    if (heuristic.enabled && matchesByPackageHeuristic(depIdentifier, report)) return true
 
     return false
   }
@@ -82,77 +88,114 @@ internal class RuntimeUsageFilter(
    * and check if any referenced class's package relates to it.
    */
   private fun matchesByPackageHeuristic(depIdentifier: String, report: RuntimeDepsReport): Boolean {
-    val depPackageSegments = extractPackageSegments(depIdentifier)
-    if (depPackageSegments.isEmpty()) return false
+    return matchesByPackageHeuristic(depIdentifier, report, heuristic)
+  }
 
-    // Check runtime-referenced classes
-    for (fqcn in report.runtimeReferencedClasses) {
-      val classPackage = fqcn.substringBeforeLast('.').lowercase()
-      if (depPackageSegments.any { segment -> classPackage.contains(segment) }) {
-        return true
-      }
+  /**
+   * Plain, serialization-free settings for the package heuristic. Mirrors
+   * [com.autonomousapps.extension.RuntimeUsageHandler.Config] but is decoupled from Gradle types so
+   * it can be constructed directly in tests and in worker actions.
+   */
+  internal data class PackageHeuristicSettings(
+    val enabled: Boolean,
+    /** Prefixes stripped from external-dependency artifact names before matching. */
+    val stripPrefixes: Set<String>,
+    /** Suffixes stripped from dependency artifact/module names before matching. */
+    val stripSuffixes: Set<String>,
+    /** For project deps, number of leading path segments to skip. */
+    val skipLeadingSegments: Int,
+    /** Words ignored when producing match segments. */
+    val stopwords: Set<String>,
+    /** Minimum length for a segment to be considered a match candidate. */
+    val minSegmentLength: Int,
+  ) {
+    internal companion object {
+      val DISABLED: PackageHeuristicSettings = PackageHeuristicSettings(
+        enabled = false,
+        stripPrefixes = emptySet(),
+        stripSuffixes = emptySet(),
+        skipLeadingSegments = 0,
+        stopwords = emptySet(),
+        minSegmentLength = 4,
+      )
     }
-
-    // Check @ComponentScan packages
-    for (pkg in report.componentScanPackages) {
-      val pkgLower = pkg.lowercase()
-      if (depPackageSegments.any { segment -> pkgLower.contains(segment) }) {
-        return true
-      }
-    }
-
-    return false
   }
 
   companion object {
     /**
-     * Extract meaningful package segments from a dependency identifier.
-     *
-     * - `:appian-libraries:end-user-reporting:end-user-reporting-migration` → ["enduserreporting", "enduser", "reporting", "migration"]
-     * - `com.appian:eng-feature-toggles-client` → ["featuretoggles", "feature", "toggles"]
-     * - `:appian-libraries:quick-access:quick-access-api` → ["quickaccess", "quick", "access"]
-     * - `:appian-libraries:maintenance-window:maintenance-window-java` → ["maintenancewindow", "maintenance", "window"]
-     *
-     * Returns normalized (lowercase, no dashes) segments that can be matched against package names.
+     * Returns true if [depIdentifier]'s configured package segments match any runtime-referenced
+     * class package or `@ComponentScan` package in [report], per [settings]. Returns false when the
+     * heuristic is disabled. This is the reusable core of Strategy 2, callable outside the filter.
      */
-    internal fun extractPackageSegments(depIdentifier: String): Set<String> {
+    internal fun matchesByPackageHeuristic(
+      depIdentifier: String,
+      report: RuntimeDepsReport,
+      settings: PackageHeuristicSettings,
+    ): Boolean {
+      if (!settings.enabled) return false
+      val depPackageSegments = extractPackageSegments(depIdentifier, settings)
+      if (depPackageSegments.isEmpty()) return false
+
+      for (fqcn in report.runtimeReferencedClasses) {
+        val classPackage = fqcn.substringBeforeLast('.').lowercase()
+        if (depPackageSegments.any { segment -> classPackage.contains(segment) }) return true
+      }
+      for (pkg in report.componentScanPackages) {
+        val pkgLower = pkg.lowercase()
+        if (depPackageSegments.any { segment -> pkgLower.contains(segment) }) return true
+      }
+      return false
+    }
+
+    /**
+     * Extract meaningful package segments from a dependency identifier, driven by [settings].
+     *
+     * The structural logic is generic: for project dependencies (`:group:module:artifact`) it takes
+     * the path segments after [PackageHeuristicSettings.skipLeadingSegments]; for external modules
+     * (`group:artifact`) it uses the artifact name. It then strips the configured prefixes/suffixes,
+     * lowercases, removes dashes, and emits both the concatenated form and the individual words that
+     * are at least [PackageHeuristicSettings.minSegmentLength] long and not in
+     * [PackageHeuristicSettings.stopwords].
+     *
+     * Example with `stripPrefixes=["appian-","eng-"]`, `skipLeadingSegments=1`,
+     * `stopwords=["appian","libraries"]`:
+     * - `:appian-libraries:end-user-reporting:end-user-reporting-migration` → ["enduserreporting", "enduser", "reporting", "migration", ...]
+     * - `com.appian:eng-feature-toggles-client` → ["featuretoggles", "feature", "toggles"]
+     */
+    internal fun extractPackageSegments(
+      depIdentifier: String,
+      settings: PackageHeuristicSettings,
+    ): Set<String> {
       val segments = mutableSetOf<String>()
+      val minLen = settings.minSegmentLength
 
       val rawParts: List<String> = if (depIdentifier.startsWith(":")) {
-        // Project dependency: take the last meaningful path segment(s)
+        // Project dependency: take the meaningful path segment(s) after any leading grouping segments.
         depIdentifier.split(":")
           .filter { it.isNotBlank() }
-          .drop(1) // skip "appian-libraries" or similar prefix
+          .drop(settings.skipLeadingSegments)
       } else {
-        // External module: use artifact name
-        listOf(depIdentifier.substringAfter(":")
-          .removeSuffix("-client")
-          .removeSuffix("-api")
-          .removeSuffix("-impl")
-          .removeSuffix("-core")
-          .removePrefix("appian-")
-          .removePrefix("eng-"))
+        // External module: use artifact name, stripping configured prefixes/suffixes.
+        var artifact = depIdentifier.substringAfter(":")
+        for (suffix in settings.stripSuffixes) artifact = artifact.removeSuffix(suffix)
+        for (prefix in settings.stripPrefixes) artifact = artifact.removePrefix(prefix)
+        listOf(artifact)
       }
 
       for (part in rawParts) {
-        val cleaned = part
-          .removeSuffix("-java")
-          .removeSuffix("-api")
-          .removeSuffix("-db")
-          .removeSuffix("-contracts")
-          .removeSuffix("-impl")
-          .removeSuffix("-core")
+        var cleaned = part
+        for (suffix in settings.stripSuffixes) cleaned = cleaned.removeSuffix(suffix)
 
         // Add the full concatenated form (e.g., "maintenancewindow")
         val concatenated = cleaned.replace("-", "").lowercase()
-        if (concatenated.length >= 4) {
+        if (concatenated.length >= minLen && concatenated !in settings.stopwords) {
           segments.add(concatenated)
         }
 
         // Also add individual dash-separated words (e.g., "maintenance", "window")
         for (word in cleaned.split("-")) {
           val w = word.lowercase()
-          if (w.length >= 4 && w != "appian" && w != "libraries") {
+          if (w.length >= minLen && w !in settings.stopwords) {
             segments.add(w)
           }
         }
