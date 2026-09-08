@@ -147,9 +147,12 @@ internal class RootPlugin(private val project: Project) {
 
     val generateBuildHealthTask = tasks.register("generateBuildHealth", GenerateBuildHealthTask::class.java) { t ->
       // Use filtered advice (transitive exposure false positives removed).
-      // The filter task writes filtered ProjectAdvice JSONs into its output directory.
+      // The filter task writes filtered ProjectAdvice JSONs into its output directory; feed the
+      // directory *contents* (not the directory itself) to GenerateBuildHealthTask, which reads
+      // each entry as a JSON file.
       t.projectHealthReports.setFrom(
-        files(layout.buildDirectory.dir("dagp-filtered-advice")).builtBy(filterTransitiveExposureTask)
+        fileTree(layout.buildDirectory.dir("dagp-filtered-advice")) { it.include("**/*.json") }
+          .builtBy(filterTransitiveExposureTask)
       )
       t.projectMetadataReports.setFrom(projectMetadataResolver.internal.map { it.artifactsFor("json").artifactFiles })
       t.reportingConfig.set(dagpExtension.reportingHandler.config())
