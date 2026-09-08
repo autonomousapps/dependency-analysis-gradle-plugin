@@ -15,6 +15,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
@@ -89,6 +90,18 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
   @get:Input
   public abstract val heuristicMinSegmentLength: Property<Int>
 
+  /** Include-only coordinate regex patterns for advice (empty = include all). */
+  @get:Input
+  public abstract val includeCoordinates: ListProperty<String>
+
+  /** Exclude coordinate regex patterns for advice (applied after include). */
+  @get:Input
+  public abstract val excludeCoordinates: ListProperty<String>
+
+  /** Downstream hops to traverse for transitive-exposure check (>= 1). */
+  @get:Input
+  public abstract val transitiveDepth: Property<Int>
+
   /** Output directory for filtered project health reports. */
   @get:OutputDirectory
   public abstract val outputDir: DirectoryProperty
@@ -106,6 +119,9 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
       it.heuristicSkipLeadingSegments.set(heuristicSkipLeadingSegments)
       it.heuristicStopwords.set(heuristicStopwords)
       it.heuristicMinSegmentLength.set(heuristicMinSegmentLength)
+      it.includeCoordinates.set(includeCoordinates)
+      it.excludeCoordinates.set(excludeCoordinates)
+      it.transitiveDepth.set(transitiveDepth)
       it.outputDir.set(outputDir)
     }
   }
@@ -121,6 +137,9 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
     public val heuristicSkipLeadingSegments: Property<Int>
     public val heuristicStopwords: SetProperty<String>
     public val heuristicMinSegmentLength: Property<Int>
+    public val includeCoordinates: ListProperty<String>
+    public val excludeCoordinates: ListProperty<String>
+    public val transitiveDepth: Property<Int>
     public val outputDir: DirectoryProperty
   }
 
@@ -129,6 +148,17 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
       val outDir = parameters.outputDir.get().asFile
       outDir.deleteRecursively()
       outDir.mkdirs()
+
+      val transitiveDepth = parameters.transitiveDepth.getOrElse(1).coerceAtLeast(1)
+      val includeRegexes = parameters.includeCoordinates.getOrElse(emptyList()).map { it.toRegex() }
+      val excludeRegexes = parameters.excludeCoordinates.getOrElse(emptyList()).map { it.toRegex() }
+
+      // Include if no include patterns, or any include matches; then drop if any exclude matches.
+      fun coordinateIncluded(identifier: String): Boolean {
+        val included = includeRegexes.isEmpty() || includeRegexes.any { it.containsMatchIn(identifier) }
+        if (!included) return false
+        return excludeRegexes.none { it.containsMatchIn(identifier) }
+      }
 
       // 1. Parse all type usage reports
       val typeUsageByProject = parameters.typeUsageReports.files
@@ -230,6 +260,7 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
 
       var totalSuppressed = 0
       var runtimeSuppressed = 0
+      var coordinateFiltered = 0
 
       allAdvice.forEachIndexed { idx, projectAdvice ->
         val projectPath = projectAdvice.projectPath
@@ -259,15 +290,15 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
             val depPublicClasses = publicClassesByProject[depProjectPath]?.types.orEmpty()
             if (depPublicClasses.isEmpty()) return@filter true // Can't check, keep advice
 
-            // Check if any consumer of this project uses classes from the dep
-            val isTransitivelyExposed = consumers.any { consumerPath ->
-              val consumerUsage = typeUsageByProject[consumerPath] ?: return@any false
-              // Check what classes the consumer uses from ALL its project deps
-              val allClassesConsumerUses = consumerUsage.projectDependencies.values
-                .flatMapTo(mutableSetOf()) { it }
-              // If consumer uses any class that the dep provides → transitive exposure
-              depPublicClasses.any { it in allClassesConsumerUses }
-            }
+            // Check if any consumer of this project (up to transitiveDepth hops) uses classes
+            // from the dep.
+            val isTransitivelyExposed = isUsedByConsumers(
+              projectPath = projectPath,
+              depPublicClasses = depPublicClasses,
+              dependedBy = dependedBy,
+              typeUsageByProject = typeUsageByProject,
+              maxDepth = transitiveDepth,
+            )
 
             if (isTransitivelyExposed) {
               totalSuppressed++
@@ -309,8 +340,20 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
           }
         } ?: afterTransitiveFilter
 
+        // Apply the coordinate filter over ALL remaining advice (add/remove/change).
+        val afterCoordinateFilter =
+          if (includeRegexes.isEmpty() && excludeRegexes.isEmpty()) {
+            afterRuntimeFilter
+          } else {
+            afterRuntimeFilter.filterTo(mutableSetOf()) { advice ->
+              val keep = coordinateIncluded(advice.coordinates.identifier)
+              if (!keep) coordinateFiltered++
+              keep
+            }
+          }
+
         val filteredProjectAdvice = projectAdvice.copy(
-          dependencyAdvice = afterRuntimeFilter
+          dependencyAdvice = afterCoordinateFilter
         )
 
         outDir.resolve("${idx}.json").bufferWriteJson(filteredProjectAdvice)
@@ -318,9 +361,49 @@ public abstract class FilterTransitiveExposureTask @Inject constructor(
 
       // Log summary
       println("(dependency analysis) Transitive exposure filter: suppressed $totalSuppressed removal suggestions")
+      if (coordinateFiltered > 0) {
+        println("(dependency analysis) Coordinate filter: removed $coordinateFiltered advice entries not matching include/exclude patterns")
+      }
       if (runtimeSuppressed > 0) {
         println("(dependency analysis) Runtime usage filter: suppressed $runtimeSuppressed removal suggestions")
       }
+    }
+
+    /**
+     * Returns true if any consumer of [projectPath], up to [maxDepth] hops away, uses any class in
+     * [depPublicClasses]. Traverses the reverse dependency graph [dependedBy] breadth-first. This
+     * catches multi-hop transitive-exposure chains like A -> B -> C where C uses classes from a dep
+     * declared in A. [maxDepth] of 1 checks only direct consumers.
+     */
+    private fun isUsedByConsumers(
+      projectPath: String,
+      depPublicClasses: Set<String>,
+      dependedBy: Map<String, Set<String>>,
+      typeUsageByProject: Map<String, AggregateTypeUsageReport>,
+      maxDepth: Int,
+    ): Boolean {
+      val visited = mutableSetOf<String>()
+      val queue = ArrayDeque<Pair<String, Int>>()
+      dependedBy[projectPath]?.forEach { queue.add(it to 1) }
+
+      while (queue.isNotEmpty()) {
+        val (current, depth) = queue.removeFirst()
+        if (!visited.add(current)) continue
+
+        val consumerUsage = typeUsageByProject[current]
+        if (consumerUsage != null) {
+          val classesConsumerUses = consumerUsage.projectDependencies.values
+            .flatMapTo(mutableSetOf()) { it }
+          if (depPublicClasses.any { it in classesConsumerUses }) return true
+        }
+
+        if (depth < maxDepth) {
+          dependedBy[current]?.forEach { next ->
+            if (next !in visited) queue.add(next to depth + 1)
+          }
+        }
+      }
+      return false
     }
   }
 }

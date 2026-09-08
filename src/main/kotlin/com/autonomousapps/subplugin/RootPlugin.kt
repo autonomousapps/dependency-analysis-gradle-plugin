@@ -142,6 +142,10 @@ internal class RootPlugin(private val project: Project) {
         t.heuristicSkipLeadingSegments.set(runtimeUsageConfig.skipLeadingSegments)
         t.heuristicStopwords.set(runtimeUsageConfig.stopwords)
         t.heuristicMinSegmentLength.set(runtimeUsageConfig.minSegmentLength)
+        val adviceFilterConfig = dagpExtension.adviceFilterHandler.config()
+        t.includeCoordinates.set(adviceFilterConfig.includeCoordinates)
+        t.excludeCoordinates.set(adviceFilterConfig.excludeCoordinates)
+        t.transitiveDepth.set(adviceFilterConfig.transitiveDepth)
         t.outputDir.set(layout.buildDirectory.dir("dagp-filtered-advice"))
       }
 

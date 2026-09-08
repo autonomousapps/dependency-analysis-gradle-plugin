@@ -97,6 +97,11 @@ public abstract class DependencyAnalysisExtension @Inject constructor(
     action.execute(runtimeUsageHandler)
   }
 
+  /** Restrict/refine build-health advice by coordinate. See [AdviceFilterHandler]. */
+  public fun advice(action: Action<AdviceFilterHandler>) {
+    action.execute(adviceFilterHandler)
+  }
+
   internal companion object {
     fun of(project: Project): DependencyAnalysisExtension = project
       .extensions
