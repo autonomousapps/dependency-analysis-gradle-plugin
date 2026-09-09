@@ -109,11 +109,10 @@ public data class AndroidSourceKind(
   }
 
   override fun sourceSetMatches(sourceSetName: String): Boolean {
-    // debugRuntimeClasspath, debugUnitTestRuntimeClasspath, debugAndroidTest
     return sourceSetName == name
       || sourceSetName == base().name
-      // sourceSetName=debugAndroidTest, name=debug, kind=ANDROID_TEST; base().name=androidTest. Therefore debugAndroidTest
-      || sourceSetName == "$name${base().name.capitalizeSafely()}"
+      // sourceSetName=androidTestDebug, name=debug, kind=ANDROID_TEST; base().name=androidTest => androidTestDebug
+      || sourceSetName == "${base().name}${name.capitalizeSafely()}"
   }
 
   override fun compareTo(other: SourceKind): Int {

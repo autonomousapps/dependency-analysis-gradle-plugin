@@ -4,6 +4,8 @@ package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AllVariantsProject
 import com.autonomousapps.android.projects.DebugUsageProject
+import com.autonomousapps.android.projects.VariantsProject
+import spock.lang.Issue
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
@@ -32,6 +34,24 @@ final class VariantSpec extends AbstractAndroidSpec {
   def "debug-test usages are reported as such (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DebugUsageProject(agpVersion)
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertAbout(buildHealth())
+      .that(project.actualBuildHealth())
+      .isEquivalentIgnoringModuleAdviceAndWarnings(project.expectedBuildHealth)
+
+    where:
+    [gradleVersion, agpVersion] << gradleAgpMatrix()
+  }
+
+  @Issue("https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1859")
+  def "analysis doesn't crash on source set name matching (#gradleVersion AGP #agpVersion)"() {
+    given:
+    def project = new VariantsProject(agpVersion)
     gradleProject = project.gradleProject
 
     when:
