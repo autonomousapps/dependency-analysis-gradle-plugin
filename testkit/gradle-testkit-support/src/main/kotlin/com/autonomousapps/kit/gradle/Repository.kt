@@ -91,7 +91,10 @@ public sealed class Repository : Repositories.Element {
     }
   }
 
+  public fun asRepositories(): Repositories = Repositories(this)
+
   public companion object {
+    @JvmField public val JITPACK: Repository = ofMaven("https://jitpack.io")
     @JvmField public val GOOGLE: Repository = Method("google()")
     @JvmField public val GRADLE_PLUGIN_PORTAL: Repository = Method("gradlePluginPortal()")
     @JvmField public val MAVEN_CENTRAL: Repository = Method("mavenCentral()")

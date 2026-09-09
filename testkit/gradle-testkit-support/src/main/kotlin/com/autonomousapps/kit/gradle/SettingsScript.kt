@@ -75,6 +75,17 @@ public class SettingsScript @JvmOverloads constructor(
       this.plugins = Plugins(plugins.toMutableList())
     }
 
+    public fun withDependencyRepositories(vararg repositories: Repository) {
+      val repos = Repositories(*repositories)
+      dependencyResolutionManagement = dependencyResolutionManagement
+        ?.let { drm -> drm + repos }
+        ?: DependencyResolutionManagement(repos)
+    }
+
+    public fun withPluginRepositories(vararg repositories: Repository) {
+      pluginManagement += Repositories(*repositories)
+    }
+
     public fun build(): SettingsScript {
       return SettingsScript(
         imports = imports,

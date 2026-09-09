@@ -52,6 +52,9 @@ public class Repositories @JvmOverloads constructor(
   }
 
   public companion object {
+    @JvmStatic
+    public fun of(vararg repositories: Repository): Repositories = Repositories(repositories.toMutableList())
+
     @JvmField
     public val EMPTY: Repositories = Repositories(mutableListOf())
 

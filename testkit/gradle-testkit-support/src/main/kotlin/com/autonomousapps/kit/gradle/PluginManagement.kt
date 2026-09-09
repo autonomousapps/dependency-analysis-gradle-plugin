@@ -15,6 +15,8 @@ public class PluginManagement(
     repositories.render(s)
   }
 
+  public operator fun plus(other: Repositories): PluginManagement = PluginManagement(repositories + other)
+
   public companion object {
     @JvmField
     public val DEFAULT: PluginManagement = PluginManagement(

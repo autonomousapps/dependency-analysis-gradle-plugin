@@ -6,9 +6,9 @@ import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
 public class DependencyResolutionManagement @JvmOverloads constructor(
-  private val repositories: Repositories?,
-  private val repositoriesMode: RepositoriesMode? = null,
-  private val versionCatalogs: VersionCatalogs? = null,
+  public val repositories: Repositories?,
+  public val repositoriesMode: RepositoriesMode? = null,
+  public val versionCatalogs: VersionCatalogs? = null,
 ) : Element.Block {
 
   public enum class RepositoriesMode : Element.Line {
@@ -29,6 +29,15 @@ public class DependencyResolutionManagement @JvmOverloads constructor(
     repositoriesMode?.render(s)
     repositories?.render(s)
     versionCatalogs?.render(s)
+  }
+
+  public operator fun plus(other: Repositories): DependencyResolutionManagement {
+    val newRepositories = if (repositories != null) repositories + other else other
+    return DependencyResolutionManagement(
+      repositories = newRepositories,
+      repositoriesMode = repositoriesMode,
+      versionCatalogs = versionCatalogs,
+    )
   }
 
   public class Builder {
