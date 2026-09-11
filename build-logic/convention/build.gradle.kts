@@ -29,7 +29,6 @@ tasks {
     compilerOptions {
       jvmTarget = libs.versions.jdkVersion.map(JvmTarget::fromTarget)
       freeCompilerArgs = listOf(
-        "-Xinline-classes",
         "-opt-in=kotlin.RequiresOptIn",
         "-Xsam-conversions=class",
       )
