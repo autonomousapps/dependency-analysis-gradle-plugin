@@ -28,7 +28,8 @@ internal class JarExploder(
   private val logger = getLogger<ExplodeJarTask>()
 
   /** [ExplodedJar]s computed during this run (cache misses), keyed by artifact path, to merge back into the cache. */
-  val newEntries: MutableMap<String, ExpensiveJar> = LinkedHashMap()
+  private val _newEntries = linkedMapOf<String, ExpensiveJar>()
+  val newEntries: Map<String, ExpensiveJar> get() = _newEntries
 
   private val expensiveJars = artifacts.asSequence()
     .filter {
@@ -54,9 +55,7 @@ internal class JarExploder(
     return map.efficient()
   }
 
-  fun explodedJars(): Set<ExplodedJar> {
-    return expensiveJars.mapToOrderedSet { it.explodedJar }
-  }
+  fun explodedJars(): Set<ExplodedJar> = expensiveJars.mapToOrderedSet { it.explodedJar }
 
   private fun Sequence<PhysicalArtifact>.toExpensiveJars(): Set<ExpensiveJar> =
     map { artifact ->
@@ -86,7 +85,7 @@ internal class JarExploder(
           coordinates = artifact.coordinates,
           explodedJar = explodedJar,
           binaryClasses = explodingJar.binaryClasses,
-        ).also { newEntries[key] = it }
+        ).also { _newEntries[key] = it }
       }
     }.toSortedSet()
 

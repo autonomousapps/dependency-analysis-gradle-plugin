@@ -163,7 +163,8 @@ internal class KotlinMagicFinder(
   val typealiases: Set<TypealiasDependency>
 
   /** [KotlinCapabilities] computed during this run (cache misses), keyed by artifact path, to merge into the cache. */
-  val newEntries: MutableMap<String, KotlinCapabilities> = LinkedHashMap()
+  private val _newEntries = linkedMapOf<String, KotlinCapabilities>()
+  val newEntries: Map<String, KotlinCapabilities> get() = _newEntries
 
   init {
     val inlineMembersMut = mutableSetOf<InlineMemberDependency>()
@@ -174,7 +175,7 @@ internal class KotlinMagicFinder(
         it.isJar() || it.containsClassFiles()
       }.map { artifact ->
         val key = artifact.cacheKey()
-        val capabilities = seedCache[key] ?: findKotlinMagic(artifact, artifact.mode).also { newEntries[key] = it }
+        val capabilities = seedCache[key] ?: findKotlinMagic(artifact, artifact.mode).also { _newEntries[key] = it }
         artifact to capabilities
       }.forEach { (artifact, capabilities) ->
         if (capabilities.inlineMembers.isNotEmpty()) {
