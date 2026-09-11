@@ -5,10 +5,13 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.analysis.KotlinMagicFinder
+import com.autonomousapps.internal.analysis.partitionBy
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.internal.InlineMemberCapability
 import com.autonomousapps.model.internal.PhysicalArtifact
 import com.autonomousapps.model.internal.TypealiasCapability
+import com.autonomousapps.model.internal.intermediates.producer.InlineMemberDependency
+import com.autonomousapps.model.internal.intermediates.producer.TypealiasDependency
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -63,47 +66,68 @@ public abstract class FindKotlinMagicTask @Inject constructor(
   @get:OutputFile
   public abstract val outputErrors: RegularFileProperty
 
+  // TODO(tsr): should I follow the same JarExploderConfigurer pattern I implemented for ExplodeJarTask? Not sure how
+  //  much I like that.
   @TaskAction
   public fun action() {
+    val inlineMembersOutput = outputInlineMembers.getAndDelete()
+    val typeAliasesOutput = outputTypealiases.getAndDelete()
+
     // Pass the shared cache content to the work action, which requires serializable data only
     val cache = inMemoryCacheProvider.get()
-    val seed = artifacts.fromJsonList<PhysicalArtifact>()
-      .mapNotNull { artifact ->
-        val key = artifact.cacheKey()
-        cache.kotlinCapabilities(key)?.let { key to it }
-      }
-      .toMap()
 
-    val seedFile = File(temporaryDir, "kotlin-magic-cache-seed.json").apply { bufferWriteJsonMap(seed) }
+    val artifacts = artifacts.fromJsonList<PhysicalArtifact>().filter(PhysicalArtifact::isValidArtifact)
+    // We only need to pass in the misses for analysis. This avoids the redundant de/serialization round-trip for the
+    // hits. Get the full set of artifacts, then partition into hits & misses. Finally, write misses (things to be
+    // analyzed) into work action input file.
+    val (hits, misses) = artifacts.partitionBy(
+      { it.cacheKey() },
+      { k -> cache.kotlinCapabilities(k) },
+    )
+
+    // Work action output (new entries to be merged with old).
     val newEntriesFile = File(temporaryDir, "kotlin-magic-cache-new.json")
+    // PhysicalArtifacts that haven't yet been analyzed (can't be found in the cache).
+    val artifactsToAnalyze = temporaryDir.resolve("artifacts-misses.json.gz")
+      .apply { bufferWriteJsonList(misses, compress = true) }
 
     workerExecutor.classLoaderIsolation {
       // kotlin-metadata-jvm is not on the main plugin classpath (issue 1671); add it for the isolated worker only.
       it.classpath.from(kotlinMetadataClasspath)
     }.submit(Action::class.java) {
-      it.artifacts.set(artifacts)
-      it.inlineUsageReport.set(outputInlineMembers)
-      it.typealiasReport.set(outputTypealiases)
+      it.physicalArtifacts.set(artifactsToAnalyze)
       it.errorsReport.set(outputErrors)
-      it.cacheSeed.set(seedFile)
       it.newCacheEntries.set(newEntriesFile)
     }
 
     // Block so we can merge the worker's results back into the shared cache.
     workerExecutor.await()
-    newEntriesFile.fromJsonMap<String, KotlinCapabilities>().forEach { (key, capabilities) ->
-      cache.inlineMembers(key, capabilities)
+
+    val newEntries = newEntriesFile.fromJsonMap<String, KotlinCapabilities>()
+    newEntries.forEach { (key, capabilities) -> cache.inlineMembers(key, capabilities) }
+
+    // merge new with old for writing out as task outputs
+    val inlineMembers = sortedSetOf<InlineMemberDependency>()
+    val typealiases = sortedSetOf<TypealiasDependency>()
+    artifacts.forEach { a ->
+      val key = a.cacheKey()
+      val capabilities = (hits[key] ?: newEntries[key]) ?: error("Missing value for '$key'.")
+      if (capabilities.inlineMembers.isNotEmpty()) {
+        inlineMembers += InlineMemberDependency.newInstance(a.coordinates, capabilities.inlineMembers)
+      }
+      if (capabilities.typealiases.isNotEmpty()) {
+        typealiases += TypealiasDependency.newInstance(a.coordinates, capabilities.typealiases)
+      }
     }
+
+    // Finally, write output
+    inlineMembersOutput.bufferWriteJsonSet(inlineMembers)
+    typeAliasesOutput.bufferWriteJsonSet(typealiases)
   }
 
   public interface Parameters : WorkParameters {
-    public val artifacts: RegularFileProperty
-    public val inlineUsageReport: RegularFileProperty
-    public val typealiasReport: RegularFileProperty
+    public val physicalArtifacts: RegularFileProperty
     public val errorsReport: RegularFileProperty
-
-    /** [`Map<String, KotlinCapabilities>`][KotlinCapabilities] of already-cached results, keyed by artifact path. */
-    public val cacheSeed: RegularFileProperty
 
     /** [`Map<String, KotlinCapabilities>`][KotlinCapabilities] of cache misses, for the task to merge back. */
     public val newCacheEntries: RegularFileProperty
@@ -114,21 +138,13 @@ public abstract class FindKotlinMagicTask @Inject constructor(
     private val logger = getLogger<FindKotlinMagicTask>()
 
     override fun execute() {
-      val inlineUsageReportFile = parameters.inlineUsageReport.getAndDelete()
-      val typealiasReportFile = parameters.typealiasReport.getAndDelete()
-      val errorsReport = parameters.errorsReport.getAndDelete()
       val newCacheEntries = parameters.newCacheEntries.getAndDelete()
+      val errorsReport = parameters.errorsReport.getAndDelete()
 
       val finder = KotlinMagicFinder(
-        seedCache = parameters.cacheSeed.fromJsonMap(),
-        artifacts = parameters.artifacts.fromJsonList<PhysicalArtifact>(),
+        artifacts = parameters.physicalArtifacts.fromJsonList<PhysicalArtifact>(compressed = true),
         errorsReport = errorsReport,
       )
-      val inlineMembers = finder.inlineMembers
-      val typealiases = finder.typealiases
-
-      inlineUsageReportFile.bufferWriteJsonSet(inlineMembers)
-      typealiasReportFile.bufferWriteJsonSet(typealiases)
 
       newCacheEntries.bufferWriteJsonMap(finder.newEntries)
 
