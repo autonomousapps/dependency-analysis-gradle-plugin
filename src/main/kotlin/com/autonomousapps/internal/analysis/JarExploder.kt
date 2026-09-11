@@ -1,7 +1,9 @@
 // Copyright (c) 2026. Tony Robalik.
 // SPDX-License-Identifier: Apache-2.0
-package com.autonomousapps.internal
+package com.autonomousapps.internal.analysis
 
+import com.autonomousapps.internal.ClassNameAndAnnotationsVisitor
+import com.autonomousapps.internal.ClassNames
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.asSequenceOfClassFiles
 import com.autonomousapps.internal.utils.efficient
@@ -32,10 +34,7 @@ internal class JarExploder(
   val newEntries: Map<String, ExpensiveJar> get() = _newEntries
 
   private val expensiveJars = artifacts.asSequence()
-    .filter {
-      // We know how to analyze jars, and directories containing class files
-      it.isJar() || it.containsClassFiles()
-    }
+    .filter(PhysicalArtifact::isValidArtifact)
     .toExpensiveJars()
 
   fun binaryClasses(): Map<Coordinates, Set<BinaryClass>> {

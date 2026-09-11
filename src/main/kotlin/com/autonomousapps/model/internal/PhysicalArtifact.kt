@@ -28,15 +28,16 @@ internal data class PhysicalArtifact(
   }
 
   init {
-    check(isJar() || containsClassFiles()) {
+    check(isValidArtifact()) {
       "'files' must either be a jar or a 1+ directories that contains class files. Was '$files'"
     }
   }
 
   val mode: Mode = if (isJar()) Mode.ZIP else Mode.CLASSES
 
+  fun isValidArtifact(): Boolean = isJar() || containsOnlyClassFiles()
   fun isJar(): Boolean = isJar(files)
-  fun containsClassFiles(): Boolean = containsClassFiles(files)
+  fun containsOnlyClassFiles(): Boolean = containsOnlyClassFiles(files)
 
   fun jarFile(): File {
     require(isJar()) { "Expected jar file. Was '$files'." }
@@ -44,7 +45,7 @@ internal data class PhysicalArtifact(
   }
 
   fun classFiles(): Sequence<File> {
-    require(containsClassFiles()) { "Expected directory(ies) containing class files. Was '$files'." }
+    require(containsOnlyClassFiles()) { "Expected directory(ies) containing class files. Was '$files'." }
     return sequenceOfClassFiles(files)
   }
 
@@ -83,13 +84,13 @@ internal data class PhysicalArtifact(
      * [ArtifactsReportTask][com.autonomousapps.tasks.ArtifactsReportTask.artifacts] sometimes contains empty
      * directories from Gradle transforms, and these are not valid as [PhysicalArtifact]s.
      */
-    private fun isValidArtifact(files: Set<File>): Boolean = isJar(files) || containsClassFiles(files)
+    private fun isValidArtifact(files: Set<File>): Boolean = isJar(files) || containsOnlyClassFiles(files)
 
     private fun isJar(files: Set<File>): Boolean {
       return files.size == 1 && files.single().name.endsWith(".jar")
     }
 
-    private fun containsClassFiles(files: Set<File>): Boolean {
+    private fun containsOnlyClassFiles(files: Set<File>): Boolean {
       return files.reallyAll {
         it.walkBottomUp().any { f -> f.name.endsWith(".class") }
       }
