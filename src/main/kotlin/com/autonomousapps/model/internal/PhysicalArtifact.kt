@@ -49,9 +49,7 @@ internal data class PhysicalArtifact(
     return sequenceOfClassFiles(files)
   }
 
-  fun cacheKey(): String {
-    return files.joinToString(separator = ",") { it.absolutePath }
-  }
+  fun cacheKey(): String = files.joinToString(separator = ",") { it.absolutePath }
 
   override fun compareTo(other: PhysicalArtifact): Int {
     return compareBy<PhysicalArtifact>(PhysicalArtifact::coordinates)

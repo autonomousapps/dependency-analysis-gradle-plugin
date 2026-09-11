@@ -6,16 +6,12 @@ import com.autonomousapps.internal.ClassNameAndAnnotationsVisitor
 import com.autonomousapps.internal.ClassNames
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.asSequenceOfClassFiles
-import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.getLogger
-import com.autonomousapps.internal.utils.mapToOrderedSet
-import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.KtFile
 import com.autonomousapps.model.internal.PhysicalArtifact
 import com.autonomousapps.model.internal.PhysicalArtifact.Mode
 import com.autonomousapps.model.internal.intermediates.ExplodingJar
 import com.autonomousapps.model.internal.intermediates.producer.AndroidLinterDependency
-import com.autonomousapps.model.internal.intermediates.producer.BinaryClass
 import com.autonomousapps.model.internal.intermediates.producer.ExpensiveJar
 import com.autonomousapps.model.internal.intermediates.producer.ExplodedJar
 import com.autonomousapps.tasks.ExplodeJarTask
@@ -24,69 +20,44 @@ import java.util.zip.ZipFile
 internal class JarExploder(
   artifacts: List<PhysicalArtifact>,
   private val androidLinters: Set<AndroidLinterDependency>,
-  private val seedCache: Map<String, ExpensiveJar>,
 ) {
 
   private val logger = getLogger<ExplodeJarTask>()
 
-  /** [ExplodedJar]s computed during this run (cache misses), keyed by artifact path, to merge back into the cache. */
   private val _newEntries = linkedMapOf<String, ExpensiveJar>()
+
+  /** [ExplodedJar]s computed during this run (cache misses), keyed by artifact path, to merge back into the cache. */
   val newEntries: Map<String, ExpensiveJar> get() = _newEntries
 
-  private val expensiveJars = artifacts.asSequence()
-    .filter(PhysicalArtifact::isValidArtifact)
-    .toExpensiveJars()
-
-  fun binaryClasses(): Map<Coordinates, Set<BinaryClass>> {
-    val map = sortedMapOf<Coordinates, MutableSet<BinaryClass>>()
-
-    // Account for the fact that multiple artifacts can currently have the same Coordinates. This happens when a
-    // dependency has multiple artifacts, including some with classifiers. For example, `org.threeten:threetenbp:1.6.0`
-    // has a standard jar, and a jar with a `-no-tzdb` classifier. This functions merges both jars into a single set of
-    // `BinaryClass`es.
-    // https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1814
-    expensiveJars.forEach { jar ->
-      map.merge(jar.coordinates, jar.binaryClasses.toMutableSet()) { acc, inc ->
-        acc.apply { addAll(inc) }
-      }
-    }
-
-    return map.efficient()
+  init {
+    artifacts.asSequence().cacheExpensiveJars()
   }
 
-  fun explodedJars(): Set<ExplodedJar> = expensiveJars.mapToOrderedSet { it.explodedJar }
-
-  private fun Sequence<PhysicalArtifact>.toExpensiveJars(): Set<ExpensiveJar> =
-    map { artifact ->
+  private fun Sequence<PhysicalArtifact>.cacheExpensiveJars() {
+    forEach { artifact ->
       val key = artifact.cacheKey()
-      // A cache hit reuses the file-content-derived analysis, but the cached ExpensiveJar also carries the coordinates
-      // of whichever artifact first populated this path in the build-scoped cache. Rebind to THIS artifact's identity;
-      // otherwise a file shared by two dependencies (e.g. a classifier variant resolved by multiple projects) leaks the
-      // other's coordinates and produces wrong advice. Note that Gradle does not provide the classifier in any public
-      // API, so `Coordinates` does not (cannot?) model it.
-      // tl;dr: two Coordinates, one physical artifact.
-      val cached = seedCache[key]
-      if (cached != null) {
-        cached.withCoordinates(artifact.coordinates)
+
+      val explodingJar = if (artifact.isJar()) {
+        explode(artifact, Mode.ZIP)
       } else {
-        val explodingJar = if (artifact.isJar()) {
-          explode(artifact, Mode.ZIP)
-        } else {
-          explode(artifact, Mode.CLASSES)
-        }
-
-        val explodedJar = ExplodedJar(
-          artifact = artifact,
-          exploding = explodingJar
-        )
-
-        ExpensiveJar(
-          coordinates = artifact.coordinates,
-          explodedJar = explodedJar,
-          binaryClasses = explodingJar.binaryClasses,
-        ).also { _newEntries[key] = it }
+        explode(artifact, Mode.CLASSES)
       }
-    }.toSortedSet()
+
+      val explodedJar = ExplodedJar(
+        artifact = artifact,
+        exploding = explodingJar
+      )
+
+      val expensiveJar = ExpensiveJar(
+        coordinates = artifact.coordinates,
+        explodedJar = explodedJar,
+        binaryClasses = explodingJar.binaryClasses,
+      )
+
+      // The point of this class
+      _newEntries[key] = expensiveJar
+    }
+  }
 
   /**
    * Analyzes bytecode in order to extract class names and some basic structural information from the jar or

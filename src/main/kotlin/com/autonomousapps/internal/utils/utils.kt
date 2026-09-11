@@ -66,9 +66,7 @@ internal inline fun <reified T> RegularFile.fromJsonSet(
 /** Buffers reads of the RegularFile from disk to the set. */
 internal inline fun <reified T> File.fromJsonSet(
   compressed: Boolean = false,
-): Set<T> {
-  return bufferRead(compressed).use { getJsonSetAdapter<T>().fromJson(it)!! }
-}
+): Set<T> = bufferRead(compressed).use { getJsonSetAdapter<T>().fromJson(it)!! }
 
 /** Buffers reads of the RegularFileProperty from disk to the set. */
 internal inline fun <reified T> RegularFileProperty.fromJsonList(

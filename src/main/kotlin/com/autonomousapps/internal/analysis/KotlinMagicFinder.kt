@@ -12,8 +12,6 @@ import com.autonomousapps.model.internal.InlineMemberCapability
 import com.autonomousapps.model.internal.KtFile
 import com.autonomousapps.model.internal.PhysicalArtifact
 import com.autonomousapps.model.internal.TypealiasCapability
-import com.autonomousapps.model.internal.intermediates.producer.InlineMemberDependency
-import com.autonomousapps.model.internal.intermediates.producer.TypealiasDependency
 import com.autonomousapps.tasks.FindKotlinMagicTask
 import com.autonomousapps.tasks.KotlinCapabilities
 import java.io.File
@@ -22,7 +20,6 @@ import kotlin.metadata.*
 import kotlin.metadata.jvm.KotlinClassMetadata
 
 internal class KotlinMagicFinder(
-  private val seedCache: Map<String, KotlinCapabilities>,
   artifacts: List<PhysicalArtifact>,
   private val errorsReport: File,
 ) {
@@ -30,35 +27,20 @@ internal class KotlinMagicFinder(
   private val logger = getLogger<FindKotlinMagicTask>()
   var didWriteErrors = false
 
-  val inlineMembers: Set<InlineMemberDependency>
-  val typealiases: Set<TypealiasDependency>
+  private val _newEntries = linkedMapOf<String, KotlinCapabilities>()
 
   /** [KotlinCapabilities] computed during this run (cache misses), keyed by artifact path, to merge into the cache. */
-  private val _newEntries = linkedMapOf<String, KotlinCapabilities>()
   val newEntries: Map<String, KotlinCapabilities> get() = _newEntries
 
   init {
-    val inlineMembersMut = mutableSetOf<InlineMemberDependency>()
-    val typealiasesMut = mutableSetOf<TypealiasDependency>()
-
     artifacts.asSequence()
-      .filter(PhysicalArtifact::isValidArtifact)
-      .map { artifact ->
+      .forEach { artifact ->
         val key = artifact.cacheKey()
-        val capabilities = seedCache[key] ?: findKotlinMagic(artifact, artifact.mode).also { _newEntries[key] = it }
-        artifact to capabilities
-      }
-      .forEach { (artifact, capabilities) ->
-        if (capabilities.inlineMembers.isNotEmpty()) {
-          inlineMembersMut += InlineMemberDependency.newInstance(artifact.coordinates, capabilities.inlineMembers)
-        }
-        if (capabilities.typealiases.isNotEmpty()) {
-          typealiasesMut += TypealiasDependency.newInstance(artifact.coordinates, capabilities.typealiases)
-        }
-      }
+        val capabilities = findKotlinMagic(artifact, artifact.mode)
 
-    inlineMembers = inlineMembersMut
-    typealiases = typealiasesMut
+        // The point of this class
+        _newEntries[key] = capabilities
+      }
   }
 
   /**

@@ -14,6 +14,15 @@ internal data class ExpensiveJar(
   val binaryClasses: Set<BinaryClass>,
 ) : Comparable<ExpensiveJar> {
 
+  /**
+   * A cache hit reuses the file-content-derived analysis, but the cached ExpensiveJar also carries the coordinates of
+   * whichever artifact first populated this path in the build-scoped cache. Rebind to THIS artifact's identity;
+   * otherwise a file shared by two dependencies (e.g. a classifier variant resolved by multiple projects) leaks the
+   * other's coordinates and produces wrong advice. Note that Gradle does not provide the classifier in any public API,
+   * so `Coordinates` does not (cannot?) model it.
+   *
+   * tl;dr: two Coordinates, one physical artifact.
+   */
   fun withCoordinates(other: Coordinates): ExpensiveJar = copy(
     coordinates = other,
     explodedJar = explodedJar.copy(coordinates = other)
