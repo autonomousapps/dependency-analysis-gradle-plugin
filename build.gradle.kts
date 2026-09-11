@@ -76,6 +76,11 @@ buildConfig {
   buildConfigField("String", "KOTLIN_METADATA_VERSION", libs.versions.kotlinMetadataRuntime.map { "\"$it\"" })
 }
 
+// https://docs.gradle.org/current/userguide/gradle_daemon.html#sec:daemon_jvm_criteria
+tasks.updateDaemonJvm {
+  languageVersion = libs.versions.jdkVersion.map(JavaLanguageVersion::of)
+}
+
 val main = sourceSets["main"]
 val commonTest = sourceSets.create("commonTest") {
   java {
