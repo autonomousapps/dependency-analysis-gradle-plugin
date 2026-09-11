@@ -4,7 +4,7 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.JarExploder
+import com.autonomousapps.internal.analysis.JarExploder
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.internal.PhysicalArtifact
 import com.autonomousapps.model.internal.intermediates.producer.AndroidLinterDependency

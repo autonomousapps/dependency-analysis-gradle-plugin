@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.analysis.JarExploder
 import com.autonomousapps.internal.asm.ClassWriter
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.model.GradleVariantIdentification
@@ -22,8 +23,8 @@ internal class JarExploderTest {
    * Regression test for https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1692.
    *
    * A multi-release JAR may ship classes for a Java version newer than the JVM (and bundled ASM) running the analysis.
-   * Such classes would crash ASM's `ClassReader`.
-   * [JarExploder] must skip them and still successfully analyze the rest of the jar.
+   * Such classes would crash ASM's `ClassReader`. [JarExploder][com.autonomousapps.internal.analysis.JarExploder] must
+   * skip them and still successfully analyze the rest of the jar.
    */
   @Test fun `does not fail on multi-release classes targeting a future Java version`(@TempDir dir: File) {
     val futureVersion = Runtime.version().feature() + 1
