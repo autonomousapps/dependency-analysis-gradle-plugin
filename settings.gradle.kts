@@ -50,6 +50,7 @@ pluginManagement {
 
 plugins {
   id("com.gradle.develocity") version "4.5.1"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.8.0"
   id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
@@ -83,16 +84,37 @@ dependencyResolutionManagement {
 val version = providers.gradleProperty("VERSION").get()
 
 develocity {
+  server = "https://community.develocity.cloud"
+  projectId = "autonomousapps"
+
   buildScan {
+    // these must stay local to this block: a script-level `val` captured by the `onlyIf`
+    // lambda below is a script object reference, which the configuration cache rejects
     val isCI = providers.environmentVariable("CI").isPresent
     val isEnabled = providers.gradleProperty("dependency.analysis.scans.publish").getOrElse("false").toBoolean()
 
-    publishing.onlyIf { isCI || isEnabled }
-    termsOfUseUrl = "https://gradle.com/terms-of-service"
-    termsOfUseAgree = "yes"
+    uploadInBackground = !isCI
+    publishing.onlyIf { it.isAuthenticated && (isCI || isEnabled) }
+    obfuscation {
+      ipAddresses { addresses -> addresses.map { _ -> "0.0.0.0" } }
+    }
 
-    tag(if (isCI) "CI" else "Local")
     tag(version)
+  }
+}
+
+buildCache {
+  local {
+    isEnabled = true
+  }
+
+  remote(develocity.buildCache) {
+    val isCI = providers.environmentVariable("CI").isPresent
+
+    isEnabled = true
+    // Check access key presence to avoid build cache errors on PR builds when access key is not present
+    val accessKey = providers.environmentVariable("DEVELOCITY_ACCESS_KEY").isPresent
+    isPush = isCI && accessKey
   }
 }
 
