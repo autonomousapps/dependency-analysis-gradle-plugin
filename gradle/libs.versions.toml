@@ -18,7 +18,9 @@ gradleTestKitPlugin = "0.17"
 grammar = "0.7"
 groovy = "4.0.33"
 guava = "33.7.1-jre"
+# Target 11 for Gradle 8 compat. This is not unused.
 javaTarget = "11"
+# Build with 17 for Gradle 9 compat.
 jdkVersion = "17"
 jspecify = "1.0.1"
 junit = "5.14.4"

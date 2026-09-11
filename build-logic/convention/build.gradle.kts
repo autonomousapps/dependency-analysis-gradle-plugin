@@ -20,14 +20,14 @@ tasks.withType<ValidatePlugins>().configureEach {
 
 tasks {
   withType<GroovyCompile>().configureEach {
-    options.release = libs.versions.javaTarget.map(String::toInt)
+    options.release = libs.versions.jdkVersion.map(String::toInt)
   }
   withType<JavaCompile>().configureEach {
-    options.release = libs.versions.javaTarget.map(String::toInt)
+    options.release = libs.versions.jdkVersion.map(String::toInt)
   }
   withType<KotlinCompile>().configureEach {
     compilerOptions {
-      jvmTarget = libs.versions.javaTarget.map(JvmTarget::fromTarget)
+      jvmTarget = libs.versions.jdkVersion.map(JvmTarget::fromTarget)
       freeCompilerArgs = listOf(
         "-Xinline-classes",
         "-opt-in=kotlin.RequiresOptIn",

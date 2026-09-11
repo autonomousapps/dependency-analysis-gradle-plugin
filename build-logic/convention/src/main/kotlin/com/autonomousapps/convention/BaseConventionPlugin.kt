@@ -36,7 +36,8 @@ internal class BaseConventionPlugin(private val project: Project) {
     val publishedVersion = convention.publishedVersion
 
     val jdkVersion = JavaLanguageVersion.of(versionCatalog.findVersion("jdkVersion").orElseThrow().requiredVersion)
-    val javaTarget = versionCatalog.findVersion("javaTarget").orElseThrow().requiredVersion.toInt()
+    val javaTarget = versionCatalog.findVersion("javaTarget").orElseThrow().requiredVersion
+    val javaTargetInt = javaTarget.toInt()
 
     extensions.configure(JavaPluginExtension::class.java) { j ->
       // This breaks publishing for some reason when using gradle-maven-publish-plugin
@@ -49,10 +50,12 @@ internal class BaseConventionPlugin(private val project: Project) {
       // }
     }
     tasks.withType(JavaCompile::class.java).configureEach { t ->
-      t.options.release.set(javaTarget)
+      t.options.release.set(javaTargetInt)
     }
     tasks.withType(GroovyCompile::class.java).configureEach { t ->
-      t.options.release.set(javaTarget)
+      // Groovy doesn't have a 'release' concept, so we must use source/target compatibility.
+      t.sourceCompatibility = javaTarget
+      t.targetCompatibility = javaTarget
     }
 
     tasks.withType(AbstractArchiveTask::class.java).configureEach { t ->
@@ -60,7 +63,7 @@ internal class BaseConventionPlugin(private val project: Project) {
       t.isReproducibleFileOrder = true
     }
 
-    // We only use the Jupiter platform (JUnit 5)
+    // We only use the Jupiter platform (JUnit 5+)
     configurations.configureEach {
       it.exclude(mapOf("group" to "junit", "module" to "junit"))
       it.exclude(mapOf("group" to "org.junit.vintage", "module" to "junit-vintage-engine"))

@@ -14,6 +14,8 @@ import org.gradle.plugin.devel.tasks.ValidatePlugins
 
 public abstract class PluginConventionPlugin : Plugin<Project> {
 
+  private lateinit var versionCatalog: VersionCatalog
+
   override fun apply(target: Project): Unit = target.run {
     pluginManager.run {
       apply("java-gradle-plugin")
@@ -22,15 +24,15 @@ public abstract class PluginConventionPlugin : Plugin<Project> {
     }
     BaseConventionPlugin(this).configure()
 
-    val versionCatalog = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
+    versionCatalog = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
 
-    configureGroovy(versionCatalog)
+    configureGroovy()
     configureKotlin()
     configurePlugins()
     configurePublishing()
   }
 
-  private fun Project.configureGroovy(versionCatalog: VersionCatalog) {
+  private fun Project.configureGroovy() {
     val javaTarget = versionCatalog.findVersion("javaTarget").orElseThrow().requiredVersion
 
     tasks.withType(GroovyCompile::class.java).configureEach { t ->
