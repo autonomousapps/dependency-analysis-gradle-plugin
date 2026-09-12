@@ -35,7 +35,7 @@ kotlinForAndroidtests = "2.2.21"
 # The kotlin-metadata-jvm version, used in isolated workers, can be the latest released unless there are breaking changes in it.
 kotlinMetadataRuntime = "2.4.10"
 kotlinDokka = "2.2.0"
-kotlin-editor-core = "0.25"
+kotlin-editor-core = "0.26"
 kotlin-editor-relocated = "0.25.0"
 # 0.36.0 requires JDK 17
 mavenPublish = "0.35.0"
