@@ -76,15 +76,18 @@ dependencyResolutionManagement {
   }
 }
 
-val isCI = System.getenv("CI") != null
-
 develocity {
   server = "https://community.develocity.cloud"
   projectId = "autonomousapps"
 
   buildScan {
+    // these must stay local to this block: a script-level `val` captured by the `onlyIf`
+    // lambda below is a script object reference, which the configuration cache rejects
+    val isCI = providers.environmentVariable("CI").isPresent
+    val isEnabled = providers.gradleProperty("dependency.analysis.scans.publish").getOrElse("false").toBoolean()
+
     uploadInBackground = !isCI
-    publishing.onlyIf { it.isAuthenticated }
+    publishing.onlyIf { it.isAuthenticated && (isCI || isEnabled) }
     obfuscation {
       ipAddresses { addresses -> addresses.map { _ -> "0.0.0.0" } }
     }
@@ -97,10 +100,12 @@ buildCache {
   }
 
   remote(develocity.buildCache) {
+    val isCI = providers.environmentVariable("CI").isPresent
+
     isEnabled = true
     // Check access key presence to avoid build cache errors on PR builds when access key is not present
-    val accessKey = System.getenv("DEVELOCITY_ACCESS_KEY")
-    isPush = isCI && accessKey != null
+    val accessKey = providers.environmentVariable("DEVELOCITY_ACCESS_KEY").isPresent
+    isPush = isCI && accessKey
   }
 }
 
