@@ -125,10 +125,25 @@ internal enum class Bucket(val value: String) {
       declarations: Set<Declaration>,
       configurationNames: ConfigurationNames,
     ): Boolean {
+      // TODO: cleanup code and docs
       return usages.reallyAll { usage ->
-        buckets.any { bucket -> bucket == usage.bucket } && declarations.any { declaration ->
-          buckets.any { bucket -> bucket.matches(declaration, configurationNames) }
-        }
+        val anyBucket = buckets.any { bucket -> bucket == usage.bucket }
+        val declarationMatches = { declarationMatches(buckets, declarations, configurationNames) }
+        anyBucket && declarationMatches()
+
+//        anyBucket && declarations.any { declaration ->
+//          buckets.any { bucket -> bucket.matches(declaration, configurationNames) }
+//        }
+      }
+    }
+
+    private fun declarationMatches(
+      buckets: List<Bucket>,
+      declarations: Set<Declaration>,
+      configurationNames: ConfigurationNames,
+    ): Boolean {
+      return declarations.isEmpty() || declarations.any { declaration ->
+        buckets.any { bucket -> bucket.matches(declaration, configurationNames) }
       }
     }
   }
