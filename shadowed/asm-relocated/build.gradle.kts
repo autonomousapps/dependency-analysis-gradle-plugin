@@ -5,7 +5,7 @@ plugins {
 }
 
 version = "9.9.0"
-val versionAsm = "9.9"
+val versionAsm = "9.10.1"
 
 dagp {
   version(version)
