@@ -140,46 +140,5 @@ public class AndroidBlock @JvmOverloads constructor(
   public companion object {
     @JvmStatic
     public fun ofNamespace(namespace: String): AndroidBlock = AndroidBlock(namespace = namespace)
-
-    @Deprecated("Use the constructor")
-    @JvmOverloads
-    @JvmStatic
-    public fun defaultAndroidAppBlock(
-      isKotlinApplied: Boolean = false,
-      namespace: String? = null,
-    ): AndroidBlock = AndroidBlock(
-      namespace = namespace,
-      compileSdkVersion = 37,
-      defaultConfig = DefaultConfig.DEFAULT_APP,
-      compileOptions = CompileOptions.DEFAULT,
-    )
-
-    @Deprecated("Use the constructor")
-    @JvmOverloads
-    @JvmStatic
-    public fun defaultAndroidLibBlock(
-      isKotlinApplied: Boolean = false,
-      namespace: String? = null,
-    ): AndroidBlock = AndroidBlock(
-      namespace = namespace,
-      compileSdkVersion = 37,
-      defaultConfig = DefaultConfig.DEFAULT_LIB,
-      compileOptions = CompileOptions.DEFAULT,
-    )
-
-    @Deprecated("Use the constructor")
-    @JvmOverloads
-    @JvmStatic
-    public fun defaultAndroidTestBlock(
-      targetProjectPath: String,
-      isKotlinApplied: Boolean = false,
-      namespace: String? = null,
-    ): AndroidBlock = AndroidBlock(
-      namespace = namespace,
-      compileSdkVersion = 37,
-      targetProjectPath = targetProjectPath,
-      defaultConfig = DefaultConfig.DEFAULT_TEST,
-      compileOptions = CompileOptions.DEFAULT,
-    )
   }
 }

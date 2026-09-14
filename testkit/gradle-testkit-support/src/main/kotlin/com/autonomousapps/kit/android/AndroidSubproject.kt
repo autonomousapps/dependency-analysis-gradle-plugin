@@ -8,6 +8,8 @@ import com.autonomousapps.kit.SourceType
 import com.autonomousapps.kit.Subproject
 import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.gradle.android.CompileOptions
+import com.autonomousapps.kit.gradle.android.DefaultConfig
 import com.autonomousapps.kit.gradle.kotlin.Kotlin
 
 public class AndroidSubproject(
@@ -57,7 +59,11 @@ public class AndroidSubproject(
     private fun defaultBuildScriptBuilder(): BuildScript.Builder {
       return BuildScript.Builder().apply {
         plugins = mutableListOf()
-        android = AndroidBlock.defaultAndroidAppBlock()
+        android = AndroidBlock(
+          compileSdkVersion = 37,
+          defaultConfig = DefaultConfig.DEFAULT_APP,
+          compileOptions = CompileOptions.DEFAULT,
+        )
         dependencies = mutableListOf()
         additions = ""
       }
