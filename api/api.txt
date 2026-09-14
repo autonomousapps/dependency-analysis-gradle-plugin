@@ -663,8 +663,10 @@ package com.autonomousapps.model.source {
     field public static final String ANDROID_TEST_KIND = "ANDROID_TEST";
     field public static final String ANDROID_TEST_NAME = "androidTest";
     field public static final String CUSTOM_JVM_KIND = "CUSTOM_JVM";
+    field public static final String MAIN_COMPILE_CLASSPATH = "compileClasspath";
     field public static final String MAIN_KIND = "MAIN";
     field public static final String MAIN_NAME = "main";
+    field public static final String MAIN_RUNTIME_CLASSPATH = "runtimeClasspath";
     field public static final String TEST_FIXTURES_NAME = "testFixtures";
     field public static final String TEST_KIND = "TEST";
     field public static final String TEST_NAME = "test";
