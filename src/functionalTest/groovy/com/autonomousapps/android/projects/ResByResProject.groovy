@@ -29,11 +29,11 @@ final class ResByResProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
           bs.plugins(androidApp())
-          bs.android = defaultAndroidAppBlock(false)
+          bs.android = defaultAndroidAppBlock()
           bs.dependencies(
             project('implementation', ':res1'),
             project('implementation', ':res2'),
@@ -69,9 +69,9 @@ final class ResByResProject extends AbstractAndroidProject {
   private void configureResLib(AndroidSubproject.Builder lib, String name) {
     lib.withBuildScript { bs ->
       bs.plugins(androidLib(false))
-      bs.android = defaultAndroidLibBlock(false, "com.example.$name")
+      bs.android = defaultAndroidLibBlock("com.example.$name")
     }
-    lib.manifest = libraryManifest("com.example.$name")
+    lib.manifest = null
     lib.strings = new AndroidStringRes(
       '''\
         <resources>

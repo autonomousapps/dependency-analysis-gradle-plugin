@@ -40,7 +40,7 @@ final class DaggerKaptProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { r ->
         r.withBuildScript { bs ->
           bs.plugins += rootKapt

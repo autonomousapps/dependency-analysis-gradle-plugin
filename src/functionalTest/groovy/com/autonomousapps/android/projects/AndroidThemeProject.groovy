@@ -26,11 +26,11 @@ final class AndroidThemeProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
           bs.plugins = androidApp(false)
-          bs.android = defaultAndroidAppBlock(false, 'com.consumer')
+          bs.android = defaultAndroidAppBlock('com.consumer')
           bs.dependencies = [
             project('implementation', ':producer'),
           ]
@@ -52,7 +52,7 @@ final class AndroidThemeProject extends AbstractAndroidProject {
       .withAndroidSubproject('producer') { producer ->
         producer.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
+          bs.android = defaultAndroidLibBlock('com.example.producer')
           bs.dependencies = [
             appcompat('implementation'),
           ]

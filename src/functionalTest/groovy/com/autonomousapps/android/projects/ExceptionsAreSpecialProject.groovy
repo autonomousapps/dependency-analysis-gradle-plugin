@@ -25,11 +25,11 @@ final class ExceptionsAreSpecialProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidLibProject('consumer') { s ->
         s.sources = consumerSources()
         s.withBuildScript { bs ->
-          bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
+          bs.android = defaultAndroidLibBlock('com.example.consumer')
           bs.plugins(androidLib(false))
           bs.dependencies(
             HILT_IMPL,

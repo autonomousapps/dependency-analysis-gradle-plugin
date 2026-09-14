@@ -31,10 +31,9 @@ final class MixedJavaKotlinTestFixturesProject extends AbstractAndroidProject {
       }
       .withAndroidLibProject('consumer') { lib ->
         lib.sources = consumerSources
-        lib.manifest = libraryManifest('example.consumer')
         lib.withBuildScript { bs ->
           bs.plugins(androidLib(true))
-          bs.android = defaultAndroidLibBlock(true).tap {
+          bs.android = defaultAndroidLibBlock().tap {
             testFixturesOptions = new TestFixturesOptions(true)
           }
           bs.dependencies(testImplementation(':producer').onTestFixtures())

@@ -23,7 +23,7 @@ final class KmpAndroidProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { app ->
         app.manifest = AndroidManifest.simpleApp()
         app.sources = sourcesConsumer

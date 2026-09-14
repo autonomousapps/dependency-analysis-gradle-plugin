@@ -28,7 +28,7 @@ final class KotlinTestJunitProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { subproject ->
         subproject.sources = appSources
         subproject.styles = AndroidStyleRes.DEFAULT

@@ -21,7 +21,7 @@ final class AndroidTestsAreIgnorableProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { r ->
         r.withBuildScript { bs ->
           bs.withGroovy(
@@ -42,7 +42,7 @@ final class AndroidTestsAreIgnorableProject extends AbstractAndroidProject {
         lib.manifest = null
         lib.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
-          bs.android = defaultAndroidLibBlock(false, 'my.android.lib')
+          bs.android = defaultAndroidLibBlock('my.android.lib')
           bs.dependencies = [
             commonsCollections('androidTestImplementation'),
           ]

@@ -28,11 +28,11 @@ final class ConstantsProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
           bs.plugins = androidApp()
-          bs.android = defaultAndroidAppBlock(true, 'com.example.app')
+          bs.android = defaultAndroidAppBlock('com.example.app')
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(
             implementation(':lib'),
@@ -50,7 +50,7 @@ final class ConstantsProject extends AbstractAndroidProject {
       .withAndroidLibProject('lib') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
-          bs.android = defaultAndroidLibBlock(true, 'mutual.aid.lib')
+          bs.android = defaultAndroidLibBlock('mutual.aid.lib')
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(kotlinStdLib('implementation'))
         }
@@ -59,7 +59,7 @@ final class ConstantsProject extends AbstractAndroidProject {
       .withAndroidLibProject('lib2') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
-          bs.android = defaultAndroidLibBlock(true, 'mutual.aid.lib2')
+          bs.android = defaultAndroidLibBlock('mutual.aid.lib2')
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(kotlinStdLib('implementation'))
         }
@@ -68,7 +68,7 @@ final class ConstantsProject extends AbstractAndroidProject {
       .withAndroidLibProject('libstar') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
-          bs.android = defaultAndroidLibBlock(true, 'mutual.aid.libstar')
+          bs.android = defaultAndroidLibBlock('mutual.aid.libstar')
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(kotlinStdLib('implementation'))
         }

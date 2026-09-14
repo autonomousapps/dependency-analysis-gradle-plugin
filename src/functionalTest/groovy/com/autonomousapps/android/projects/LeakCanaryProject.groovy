@@ -29,7 +29,7 @@ final class LeakCanaryProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { app ->
         app.sources = appSources()
         app.styles = AndroidStyleRes.DEFAULT

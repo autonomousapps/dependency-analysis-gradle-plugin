@@ -36,7 +36,7 @@ final class UnitTestSingleVariantProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { s ->
         s.sources = appSources()
         s.styles = AndroidStyleRes.DEFAULT
@@ -44,7 +44,7 @@ final class UnitTestSingleVariantProject extends AbstractAndroidProject {
         s.manifest = AndroidManifest.app('my.android.app')
         s.withBuildScript { bs ->
           bs.plugins(androidApp(true))
-          bs.android = defaultAndroidAppBlock(true)
+          bs.android = defaultAndroidAppBlock()
           bs.additions = appFlavors()
           bs.androidComponents = androidComponentsForApp()
           bs.kotlin = Kotlin.DEFAULT

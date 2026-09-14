@@ -33,7 +33,7 @@ final class CoreKtxProject extends AbstractAndroidProject {
       .withAndroidLibProject('lib') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins(androidLib(true))
-          bs.android = defaultAndroidLibBlock(true)
+          bs.android = defaultAndroidLibBlock()
           bs.dependencies(
             implementation('androidx.core:core:1.19.0'),
             implementation('androidx.fragment:fragment:1.6.2'),

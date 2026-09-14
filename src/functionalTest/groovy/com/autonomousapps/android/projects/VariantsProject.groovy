@@ -54,7 +54,7 @@ final class VariantsProject extends AbstractAndroidProject {
         )
         app.withBuildScript { bs ->
           bs.plugins = androidApp(false)
-          bs.android = defaultAndroidAppBlock(false, 'example.app')
+          bs.android = defaultAndroidAppBlock('example.app')
           bs.dependencies(
             junit('testImplementation'),
             androidTestCore,

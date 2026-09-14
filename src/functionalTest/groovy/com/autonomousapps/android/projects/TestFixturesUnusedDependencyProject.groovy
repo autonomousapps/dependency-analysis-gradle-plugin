@@ -27,7 +27,7 @@ final class TestFixturesUnusedDependencyProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { r ->
         r.gradleProperties = GradleProperties.minimalAndroidProperties() +
           "android.experimental.enableTestFixturesKotlinSupport=true"
@@ -40,10 +40,10 @@ final class TestFixturesUnusedDependencyProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('lib') { s ->
         s.sources = libWithFixturesSources
-        s.manifest = libraryManifest('lib.with.fixtures')
+        s.manifest = null
         s.withBuildScript { bs ->
           bs.plugins = androidLib(true)
-          bs.android = defaultAndroidLibBlock(true).tap {
+          bs.android = defaultAndroidLibBlock().tap {
             testFixturesOptions = new TestFixturesOptions(true)
           }
           bs.kotlin = Kotlin.DEFAULT

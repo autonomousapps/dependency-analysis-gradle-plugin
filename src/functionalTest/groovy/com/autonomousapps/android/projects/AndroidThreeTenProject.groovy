@@ -30,7 +30,7 @@ final class AndroidThreeTenProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { r ->
         r.withBuildScript { bs ->
           bs.additions = additions

@@ -25,11 +25,11 @@ final class MixedSourceProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidLibProject('consumer') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
+          bs.android = defaultAndroidLibBlock('com.example.consumer')
           bs.dependencies = [
             project('implementation', ':lib'),
           ]

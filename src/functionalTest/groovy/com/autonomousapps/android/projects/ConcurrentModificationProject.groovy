@@ -25,7 +25,7 @@ final class ConcurrentModificationProject extends AbstractAndroidProject {
         lib.sources = consumerSources
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false)
+          bs.android = defaultAndroidLibBlock()
           bs.dependencies(
             project('implementation', ':producer'),
             project('testFixturesImplementation', ':producer'),

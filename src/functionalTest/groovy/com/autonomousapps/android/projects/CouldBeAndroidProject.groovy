@@ -54,7 +54,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { root ->
         root.withBuildScript { bs ->
           bs.withGroovy("""\
@@ -72,7 +72,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
           bs.plugins = androidApp(false)
-          bs.android = defaultAndroidAppBlock(false)
+          bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
             appcompat('implementation'),
             project('implementation', ':assets'),
@@ -85,7 +85,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
       .withAndroidLibProject('assets') { assets ->
         assets.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')
+          bs.android = defaultAndroidLibBlock('com.example.lib.assets')
         }
         assets.withFile(
           'src/main/assets/some_fancy_asset.txt',
@@ -96,7 +96,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
       .withAndroidLibProject('lib-android-java-deps') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
+          bs.android = defaultAndroidLibBlock('com.example.lib')
           bs.dependencies = [
             project('implementation', ':lib-java'),
             commonsCollections('implementation'),
@@ -106,7 +106,7 @@ final class CouldBeAndroidProject extends AbstractAndroidProject {
       .withAndroidLibProject('lib-android-android-deps') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
+          bs.android = defaultAndroidLibBlock('com.example.lib')
           bs.dependencies = [
             project('implementation', ':assets')
           ]

@@ -40,14 +40,14 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
     }
 
     private GradleProject build() {
-      return newAndroidGradleProjectBuilder(agpVersion)
+      return newAndroidGradleProjectBuilder()
       // TODO(tsr): use withAndroidLibProject() instead
         .withAndroidSubproject('proj') { s ->
           s.sources = sources
           s.manifest = null
           s.withBuildScript { bs ->
             bs.plugins = androidLib(false)
-            bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
+            bs.android = defaultAndroidLibBlock('com.example.proj')
             bs.dependencies = [commonsIO, commonsCollections, commonsMath, junit]
             bs.withGroovy("""\
             androidComponents {
@@ -110,7 +110,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
     }
 
     private GradleProject build() {
-      return newAndroidGradleProjectBuilder(agpVersion)
+      return newAndroidGradleProjectBuilder()
       // TODO(tsr): use withAndroidLibProject() instead
         .withAndroidSubproject('proj') { s ->
           s.sources = sources
@@ -118,7 +118,7 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
           s.manifest = null
           s.withBuildScript { bs ->
             bs.plugins = androidLib(false)
-            bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
+            bs.android = defaultAndroidLibBlock('com.example.proj')
             bs.dependencies = [okHttp, junit]
           }
         }
@@ -179,14 +179,14 @@ abstract class AndroidTestDependenciesProject extends AbstractAndroidProject {
     }
 
     private GradleProject build() {
-      return newAndroidGradleProjectBuilder(agpVersion)
+      return newAndroidGradleProjectBuilder()
       // TODO(tsr): use withAndroidLibProject() instead
         .withAndroidSubproject('proj') { s ->
           s.sources = sources
           s.manifest = null
           s.withBuildScript { bs ->
             bs.plugins = androidLib(false)
-            bs.android = defaultAndroidLibBlock(false, 'com.example.proj')
+            bs.android = defaultAndroidLibBlock('com.example.proj')
           }
         }
         .write()

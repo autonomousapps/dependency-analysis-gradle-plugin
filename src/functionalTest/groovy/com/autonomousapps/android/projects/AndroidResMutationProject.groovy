@@ -68,12 +68,11 @@ final class AndroidResMutationProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidLibProject('lib') { lib ->
-        lib.manifest = libraryManifest('com.example.lib')
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
-          bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
+          bs.android = defaultAndroidLibBlock('com.example.lib')
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(
             implementation(':res'),
@@ -86,20 +85,18 @@ final class AndroidResMutationProject extends AbstractAndroidProject {
       .withAndroidLibProject('res') { res ->
         res.withBuildScript { bs ->
           bs.plugins(androidLib(false))
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib.res')
+          bs.android = defaultAndroidLibBlock('com.example.lib.res')
         }
-        res.manifest = libraryManifest('com.example.lib.res')
         res.strings = AndroidStringRes.DEFAULT
       }
       .withAndroidLibProject('layouts') { res ->
         res.withBuildScript { bs ->
           bs.plugins(androidLib(false))
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib.layouts')
+          bs.android = defaultAndroidLibBlock('com.example.lib.layouts')
           bs.dependencies(
             constraintLayout('implementation'),
           )
         }
-        res.manifest = libraryManifest('com.example.lib.layouts')
         res.layouts = [androidLayout]
       }
       .write()

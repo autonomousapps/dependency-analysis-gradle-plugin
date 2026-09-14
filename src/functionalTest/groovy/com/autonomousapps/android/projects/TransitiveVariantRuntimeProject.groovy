@@ -25,20 +25,18 @@ final class TransitiveVariantRuntimeProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidLibProject('consumer') { s ->
-        s.manifest = libraryManifest()
         s.withBuildScript { bs ->
           bs.plugins(androidLib(false))
-          bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
+          bs.android = defaultAndroidLibBlock('com.example.consumer')
           bs.dependencies(unused)
         }
       }
       .withAndroidLibProject('unused') { s ->
-        s.manifest = libraryManifest()
         s.withBuildScript { bs ->
           bs.plugins(androidLib(false))
-          bs.android = defaultAndroidLibBlock(false, 'com.example.unused')
+          bs.android = defaultAndroidLibBlock('com.example.unused')
           bs.dependencies(conscryptUber)
         }
       }

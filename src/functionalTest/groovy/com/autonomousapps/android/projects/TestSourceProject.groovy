@@ -29,7 +29,7 @@ final class TestSourceProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { subproject ->
         subproject.sources = appSources
         subproject.styles = AndroidStyleRes.DEFAULT
@@ -51,7 +51,7 @@ final class TestSourceProject extends AbstractAndroidProject {
         subproject.manifest = null
         subproject.withBuildScript { bs ->
           bs.plugins = androidLib(true)
-          bs.android = defaultAndroidLibBlock(true, 'my.android.lib')
+          bs.android = defaultAndroidLibBlock('my.android.lib')
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [junit('implementation')]
         }
