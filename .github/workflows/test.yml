@@ -29,6 +29,9 @@ concurrency:
 
 jobs:
   gradle:
+    permissions:
+      contents: read
+      pull-requests: write
     strategy:
       matrix:
         os: [ ubuntu-latest ]
