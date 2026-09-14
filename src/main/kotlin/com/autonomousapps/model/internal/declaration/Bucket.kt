@@ -74,12 +74,13 @@ internal enum class Bucket(val value: String) {
      */
     private val VISIBLE_TO_TEST_RUNTIME = listOf(API, IMPL, RUNTIME_ONLY)
 
-    fun determineVisibility(
+    fun determineVisibilityForTests(
       usages: Set<Usage>,
       declarations: Set<Declaration>,
       configurationNames: ConfigurationNames,
+      onlyCompileOnly: Boolean,
     ): Visibility {
-      val compileVisibility = isVisibleToTestCompileClasspath(usages, declarations, configurationNames)
+      val compileVisibility = !onlyCompileOnly && isVisibleToTestCompileClasspath(usages, declarations, configurationNames)
       val runtimeVisibility = isVisibleToTestRuntimeClasspath(usages, declarations, configurationNames)
 
       return Visibility(forCompile = compileVisibility, forRuntime = runtimeVisibility)

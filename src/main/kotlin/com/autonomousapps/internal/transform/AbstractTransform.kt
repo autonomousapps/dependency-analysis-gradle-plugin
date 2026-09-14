@@ -4,6 +4,7 @@ package com.autonomousapps.internal.transform
 
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.graph.Graphs.children
+import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.graph.Graphs.root
 import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.unsafeLazy
@@ -41,8 +42,9 @@ internal abstract class AbstractTransform(
    * Returns the set of direct (non-transitive) dependencies from [dependencyGraph], associated with the source sets
    * ([Variant.variant][SourceKind]) they're related to.
    *
-   * These are _direct_ dependencies that are not _declared_ because they're coming from associated classpaths. For
-   * example, the `test` source set extends from the `main` source set (and also the compile and runtime classpaths).
+   * These are _direct_ dependencies that are not necessarily _declared_ because they're coming from associated
+   * classpaths. For example, the `test` source set extends from the `main` source set (and also the compile and runtime
+   * classpaths).
    */
   protected val directDependencies: SetMultimap<String, SourceKind> by unsafeLazy {
     newSetMultimap<String, SourceKind>().apply {
@@ -72,6 +74,33 @@ internal abstract class AbstractTransform(
         }
       }
     }
+  }
+
+  protected fun isOnlyThroughCompileOnly(coordinates: Coordinates): Boolean {
+    val directMainNodes = directDependencies.entries().filter { it.value.isMainKind() }.map { it.key }
+
+    return directMainNodes
+      // would be false if empty
+      .all { main ->
+        val compileGraph = dependencyGraph.values.find { it.configurationName == "compileClasspath" }!! // TODO
+        val hasPathToTarget = compileGraph.graph
+          .reachableNodes { it.normalizedIdentifier(buildPath) == main }
+          .map { it.normalized(buildPath) }
+          .contains(coordinates.normalized(buildPath))
+
+        val onlyCompileOnly = if (hasPathToTarget) {
+          val mainDeclarations = declarations
+            .filter { it.identifier == main }
+            .filter { DependencyScope.sourceSetName(it.configurationName) == "main" }
+
+          // would be false if empty
+          mainDeclarations.all { it.configurationName == "compileOnly" }
+        } else {
+          false
+        }
+
+        onlyCompileOnly
+      }
   }
 
   /** Use coordinates/variant of the original declaration when reporting remove/change as it is more precise. */
