@@ -1,7 +1,31 @@
 Dependency Analysis Plugin Changelog
 
-# Unreleased
+# Version 3.19.2
 * [fix]: Updated asm to 9.10.1 (and use latest asm-relocated).
+* [fix]: don't duplicate advise for `main` -> `test` and main -> `androidTest`.
+* [fix]: de/serialize less stuff to `ExplodeJarWorkAction` and `FindKotlinMagicTask`.
+* [fix]: don't crash when analyzing KMP project with 'jvm("foo")' target.
+* [fix]: compute source set name correctly.
+* [fix]: warn about duplicate classes relating to Kotlin inline members.
+* [fix]: update moshix to v0.37.0.
+* [fix]: update kotlin.editor.core to v0.26.
+* [fix]: update gradletestkitplugin to v0.20.
+* [fix]: update gradle.publish.plugin to v2.2.1.
+* [fix]: update dependency commons-io:commons-io to v2.22.0.
+* [fix]: update dependency com.google.guava:guava to v33.7.1-jre.
+* [fix]: update dependency com.google.errorprone:error_prone_annotations to v2.50.0.
+* [fix]: update dependency com.android.tools:common to v32.4.0.
+* [refactor]: move compute classes to separate package.
+* [refactor]: don't expose mutable type outside compute class.
+* [chore]: onboard to the OSS Community Develocity Instance.
+* [chore]: configure and run `updateDaemonJvm` task.
+* [chore]: remove unnecessary freeCompilerArg (since Kotlin 2.4).
+* [chore]: compile build-logic with JDK 17.
+* [chore]: reorder workflow and make names more terse.
+* [chore]: update plugin com.gradle.develocity to v4.5.1.
+* [chore]: update build-logic's KGP to 2.4.0 (matching main build).
+* [docs]: improve kdoc for `ArtifactsExpander`.
+* [docs]: clarify that `checkSuperClasses()` is only for source code, not for external deps.
 
 # Version 3.19.1
 * [fix]: an 'analyzable class file' should have non-zero length.
