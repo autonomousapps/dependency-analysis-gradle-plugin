@@ -2,7 +2,7 @@ Dependency Analysis Plugin Changelog
 
 # Version 3.19.2
 * [fix]: Updated asm to 9.10.1 (and use latest asm-relocated).
-* [fix]: don't duplicate advise for `main` -> `test` and main -> `androidTest`.
+* [fix]: don't duplicate advise for `main` -> `test` and `main` -> `androidTest`.
 * [fix]: de/serialize less stuff to `ExplodeJarWorkAction` and `FindKotlinMagicTask`.
 * [fix]: don't crash when analyzing KMP project with 'jvm("foo")' target.
 * [fix]: compute source set name correctly.
