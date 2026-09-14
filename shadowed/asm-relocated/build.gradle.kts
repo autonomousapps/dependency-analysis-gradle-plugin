@@ -4,8 +4,8 @@ plugins {
   id("build-logic.lib.java")
 }
 
-version = "9.9.0"
-val versionAsm = "9.9"
+version = "9.10.1.0"
+val versionAsm = "9.10.1"
 
 dagp {
   version(version)
@@ -19,6 +19,12 @@ dagp {
 dependencies {
   runtimeOnly("org.ow2.asm:asm:$versionAsm")
   runtimeOnly("org.ow2.asm:asm-tree:$versionAsm")
+
+  testImplementation(platform(libs.junit.bom))
+  testImplementation(libs.junit.api)
+  testImplementation(libs.truth)
+  testRuntimeOnly(libs.junit.engine)
+  testRuntimeOnly(libs.junit.launcher)
 }
 
 configurations.all {
@@ -40,6 +46,10 @@ tasks.shadowJar {
       it.moduleGroup.startsWith("org.jetbrains")
     }
   }
+}
+
+tasks.processTestResources {
+  from(tasks.shadowJar).rename { "shadow.jar" }
 }
 
 val javaComponent = components["java"] as AdhocComponentWithVariants
