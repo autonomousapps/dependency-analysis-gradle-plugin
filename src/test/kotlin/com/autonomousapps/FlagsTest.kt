@@ -3,6 +3,7 @@
 package com.autonomousapps
 
 import com.google.common.truth.Truth.assertThat
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 internal class FlagsTest {
@@ -18,5 +19,9 @@ internal class FlagsTest {
     }
 
     assertThat(matching).containsExactly(":annos", ":proj", ":foo:property")
+  }
+
+  @Test fun `should fail`() {
+    Assertions.fail<Unit>("Testing GHA and gradle build scan integration")
   }
 }
