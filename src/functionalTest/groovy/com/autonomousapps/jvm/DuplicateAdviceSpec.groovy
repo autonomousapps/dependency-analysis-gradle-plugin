@@ -10,7 +10,6 @@ import static com.google.common.truth.Truth.assertThat
 
 final class DuplicateAdviceSpec extends AbstractJvmSpec {
 
-  // TODO: add case for androidTest as well (and validate it makes sense)
   @Issue("https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1818")
   def "does not advise adding to both main and test scopes (#gradleVersion)"() {
     given:
@@ -18,7 +17,7 @@ final class DuplicateAdviceSpec extends AbstractJvmSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, 'buildHealth', '--rerun-tasks')
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
 
     then:
     assertThat(project.actualBuildHealth()).isEqualTo(project.expectedBuildHealth)

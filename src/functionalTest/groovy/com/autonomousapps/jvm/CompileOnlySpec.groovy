@@ -154,7 +154,6 @@ final class CompileOnlySpec extends AbstractJvmSpec {
 
     when:
     build(gradleVersion, gradleProject.rootDir, 'buildHealth')
-//    build(gradleVersion, gradleProject.rootDir, ':consumer:projectHealth', '--rerun-tasks')
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth())

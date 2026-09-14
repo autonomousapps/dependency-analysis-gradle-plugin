@@ -24,7 +24,7 @@ final class DrawableFileProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
           bs.plugins = androidApp(false)
