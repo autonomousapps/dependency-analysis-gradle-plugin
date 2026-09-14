@@ -147,6 +147,7 @@ final class CompileOnlySpec extends AbstractJvmSpec {
   // verifying that `compileOnly(project(":direct"))` doesn't somehow "leak" to `testImplementation(project(":direct"))`
   // that is, we still get the advice to add `testImplementation(project(":transitive-impl"))` even though we should
   // NEVER get advice to add `implementation(project(":transitive-impl))`.
+  // nb: this same behavior DOES NOT EXIST for Android and KMP.
   def "runtimeClasspath protection doesn't leak into other source sets (#gradleVersion)"() {
     given:
     def project = CompileOnlyTransitiveProject.usingSeparateSourceSet()

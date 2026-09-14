@@ -9,10 +9,11 @@ import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertAbout
 
+@SuppressWarnings('GroovyAssignabilityCheck')
 final class DuplicateAdviceSpec extends AbstractAndroidSpec {
 
   @Issue("https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1818")
-  def "does not advise adding to both main and test scopes (#gradleVersion AGP #agpVersion)"() {
+  def "does not advise adding to all of main, test, and androidTest scopes (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new DuplicateAdviceProject(agpVersion)
     gradleProject = project.gradleProject

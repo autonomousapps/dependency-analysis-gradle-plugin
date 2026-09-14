@@ -4,7 +4,6 @@ package com.autonomousapps.internal.transform
 
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.graph.Graphs.children
-import com.autonomousapps.graph.Graphs.reachableNodes
 import com.autonomousapps.graph.Graphs.root
 import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.unsafeLazy
@@ -22,14 +21,13 @@ import com.autonomousapps.model.source.SourceKind
 import com.google.common.collect.SetMultimap
 import org.gradle.api.attributes.Category
 
-@Suppress("UnstableApiUsage")
 internal abstract class AbstractTransform(
   protected val coordinates: Coordinates,
   protected val declarations: Set<Declaration>,
   protected val explicitSourceSets: Set<String>,
   protected val configurationNames: ConfigurationNames,
   protected val buildPath: String,
-  private val dependencyGraph: Map<String, DependencyGraphView>,
+  protected val dependencyGraph: Map<String, DependencyGraphView>,
   private val isKaptApplied: Boolean,
 ) : Usage.Transform {
 
@@ -74,30 +72,6 @@ internal abstract class AbstractTransform(
         }
       }
     }
-  }
-
-  // TODO: move to JvmTransform, since only used there?
-  protected fun isOnlyThroughCompileOnly(coordinates: Coordinates): Boolean {
-    val directMainDependencies = directDependencies.entries().filter { it.value.isMainKind() }.map { it.key }
-
-    return directMainDependencies
-      // would be false if empty
-      .all { directMain ->
-        // TODO: cleanup hard-coded strings
-        val compileGraph = dependencyGraph.values.find { it.configurationName == "compileClasspath" }
-
-        val hasPathToTarget = compileGraph?.graph
-          ?.reachableNodes { it.normalizedIdentifier(buildPath) == directMain }
-          ?.map { it.normalized(buildPath) }
-          ?.contains(coordinates.normalized(buildPath))
-          ?: false
-
-        // onlyCompileOnly
-        hasPathToTarget && declarations
-          .filter { it.identifier == directMain }
-          .filter { DependencyScope.sourceSetName(it.configurationName) == "main" }
-          .all { it.configurationName == "compileOnly" }
-      }
   }
 
   /** Use coordinates/variant of the original declaration when reporting remove/change as it is more precise. */

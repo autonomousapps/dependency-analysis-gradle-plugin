@@ -67,7 +67,7 @@ internal class KmpTransform(
     //    runtimeOnly if there's no detected compile-time usage, but the thing has runtime capabilities. Now we want to
     //    say, _add_ this thing to runtimeOnly, if it has runtime capabilities.
     // nb: deliberately *not* calling `isOnlyThroughCompileOnly()`. Would never return true.
-    val visibility = Bucket.determineVisibilityForTests(mainUsages, mainDeclarations, configurationNames, false)
+    val visibility = Bucket.determineVisibilityForTests(mainUsages, mainDeclarations, configurationNames)
 
     /*
      * Main usages.

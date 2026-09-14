@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.transform
 
+import com.autonomousapps.graph.Graphs.reachableNodes
+import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
@@ -66,7 +68,7 @@ internal class JvmTransform(
     //    the compile classpath based on detected usage in the bytecode. We also already suggest moving things to
     //    runtimeOnly if there's no detected compile-time usage, but the thing has runtime capabilities. Now we want to
     //    say, _add_ this thing to runtimeOnly, if it has runtime capabilities.
-    val onlyCompileOnly = isOnlyThroughCompileOnly(coordinates)
+    val onlyCompileOnly = { isOnlyThroughCompileOnly(coordinates) }
     val visibility = Bucket.determineVisibilityForTests(mainUsages, mainDeclarations, configurationNames, onlyCompileOnly)
 
     /*
@@ -317,5 +319,31 @@ internal class JvmTransform(
       .filterNot { isDeclaredInRelatedSourceSet(advice, it) }
       .map { downgradeTestDependencies(it) }
       .toSet()
+  }
+
+  /**
+   * Determines if [coordinates] are only on the compile classpath through one or more direct dependencies that are
+   * declared `compileOnly`.
+   */
+  private fun isOnlyThroughCompileOnly(coordinates: Coordinates): Boolean {
+    val directMainDependencies = directDependencies.entries().filter { it.value.isMainKind() }.map { it.key }
+
+    return directMainDependencies
+      // would be false if empty
+      .all { directMain ->
+        val compileGraph = dependencyGraph.values.find { it.configurationName == SourceKind.MAIN_COMPILE_CLASSPATH }
+
+        val hasPathToTarget = compileGraph?.graph
+          ?.reachableNodes { it.normalizedIdentifier(buildPath) == directMain }
+          ?.map { it.normalized(buildPath) }
+          ?.contains(coordinates.normalized(buildPath))
+          ?: false
+
+        // onlyCompileOnly
+        hasPathToTarget && declarations
+          .filter { it.identifier == directMain }
+          .filter { DependencyScope.sourceSetName(it.configurationName) == SourceKind.MAIN_KIND }
+          .all { it.configurationName == Bucket.COMPILE_ONLY.value }
+      }
   }
 }

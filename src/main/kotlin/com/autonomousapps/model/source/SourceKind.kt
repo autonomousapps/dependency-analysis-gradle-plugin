@@ -61,6 +61,9 @@ public sealed class SourceKind : Comparable<SourceKind>, Serializable {
     const val ANDROID_TEST_FIXTURES_KIND = "ANDROID_TEST_FIXTURES"
     const val ANDROID_TEST_KIND = "ANDROID_TEST"
     const val CUSTOM_JVM_KIND = "CUSTOM_JVM"
+
+    const val MAIN_COMPILE_CLASSPATH = "compileClasspath"
+    const val MAIN_RUNTIME_CLASSPATH = "runtimeClasspath"
   }
 }
 
@@ -149,12 +152,12 @@ public data class AndroidSourceKind(
         name = variantName,
         kind = MAIN_KIND,
         compileClasspathName = if (variantName == MAIN_NAME) {
-          "compileClasspath"
+          MAIN_COMPILE_CLASSPATH
         } else {
           "${variantName}CompileClasspath"
         },
         runtimeClasspathName = if (variantName == MAIN_NAME) {
-          "runtimeClasspath"
+          MAIN_RUNTIME_CLASSPATH
         } else {
           "${variantName}RuntimeClasspath"
         },
@@ -253,12 +256,12 @@ public data class JvmSourceKind(
           else -> CUSTOM_JVM_KIND
         },
         compileClasspathName = if (sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME) {
-          "compileClasspath"
+          MAIN_COMPILE_CLASSPATH
         } else {
           "${sourceSetName}CompileClasspath"
         },
         runtimeClasspathName = if (sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME) {
-          "runtimeClasspath"
+          MAIN_RUNTIME_CLASSPATH
         } else {
           "${sourceSetName}RuntimeClasspath"
         },
@@ -278,8 +281,10 @@ public data class KmpSourceKind(
 
   override fun base(): KmpSourceKind = this
 
-  // TODO: not a relevant concept for KMP?
+  /** Not relevant for KMP. */
   override fun isMainKind(): Boolean = false
+
+  /** Not relevant for KMP. */
   override fun isTestKind(): Boolean = false
 
   override fun runtimeMatches(classpaths: Collection<String>): Boolean = runtimeClasspathName in classpaths
