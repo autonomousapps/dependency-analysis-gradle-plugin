@@ -342,7 +342,7 @@ internal class JvmTransform(
         // onlyCompileOnly
         hasPathToTarget && declarations
           .filter { it.identifier == directMain }
-          .filter { DependencyScope.sourceSetName(it.configurationName) == SourceKind.MAIN_KIND }
+          .filter { DependencyScope.sourceSetName(it.configurationName) == SourceKind.MAIN_NAME }
           .all { it.configurationName == Bucket.COMPILE_ONLY.value }
       }
   }

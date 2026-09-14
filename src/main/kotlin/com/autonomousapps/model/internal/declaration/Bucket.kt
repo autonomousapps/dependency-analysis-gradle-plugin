@@ -91,8 +91,8 @@ internal enum class Bucket(val value: String) {
       onlyCompileOnly: () -> Boolean = { false },
     ): Visibility {
       // onlyCompileOnly() is a lambda because it's expensive, and therefore we do it last.
-      val compileVisibility =
-        isVisibleToTestCompileClasspath(usages, declarations, configurationNames) && !onlyCompileOnly()
+      val compileVisibility = isVisibleToTestCompileClasspath(usages, declarations, configurationNames)
+        && !onlyCompileOnly()
       val runtimeVisibility = isVisibleToTestRuntimeClasspath(usages, declarations, configurationNames)
 
       return Visibility(forCompile = compileVisibility, forRuntime = runtimeVisibility)
@@ -138,8 +138,9 @@ internal enum class Bucket(val value: String) {
     ): Boolean {
       return usages.reallyAll { usage ->
         val anyBucket = buckets.any { bucket -> bucket == usage.bucket }
-        val declarationMatches =
-          { declarations.isEmpty() || declarationMatches(buckets, declarations, configurationNames) }
+        val declarationMatches = {
+          declarations.isEmpty() || declarationMatches(buckets, declarations, configurationNames)
+        }
         anyBucket && declarationMatches()
       }
     }
