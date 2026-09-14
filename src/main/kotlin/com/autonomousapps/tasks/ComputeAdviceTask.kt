@@ -301,7 +301,7 @@ internal class PluginAdviceBuilder(
 }
 
 internal class DependencyAdviceBuilder(
-  projectPath: String,
+  private val projectPath: String,
   private val buildPath: String,
   private val bundles: Bundles,
   private val dependencyUsages: Map<Coordinates, Set<Usage>>,
@@ -321,12 +321,12 @@ internal class DependencyAdviceBuilder(
   val bundledTraces: MutableSet<BundleTrace> = sortedSetOf()
 
   init {
-    advice = computeDependencyAdvice(projectPath)
+    advice = computeDependencyAdvice()
       .plus(computeAnnotationProcessorAdvice())
       .toSortedSet()
   }
 
-  private fun computeDependencyAdvice(projectPath: String): Sequence<Advice> {
+  private fun computeDependencyAdvice(): Sequence<Advice> {
     val declarations = declarations
       .filterToOrderedSet { configurationNames.isForRegularDependency(it.configurationName) }
 

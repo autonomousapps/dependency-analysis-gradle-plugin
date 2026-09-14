@@ -34,6 +34,9 @@ public sealed class SourceKind : Comparable<SourceKind>, Serializable {
   /** Typically just `this` However, in the case of [AndroidSourceKind], strips the variant (flavor/buildType) away. */
   internal abstract fun base(): SourceKind
 
+  internal abstract fun isMainKind(): Boolean
+  internal abstract fun isTestKind(): Boolean
+
   /**
    * Returns true if [runtimeClasspathName] has a match in [classpaths]. Match need not be exact, e.g. in the case where
    * some classpaths extend others. At time of writing, this is only relevant for Android projects. JVM projects require
@@ -58,6 +61,9 @@ public sealed class SourceKind : Comparable<SourceKind>, Serializable {
     const val ANDROID_TEST_FIXTURES_KIND = "ANDROID_TEST_FIXTURES"
     const val ANDROID_TEST_KIND = "ANDROID_TEST"
     const val CUSTOM_JVM_KIND = "CUSTOM_JVM"
+
+    const val MAIN_COMPILE_CLASSPATH = "compileClasspath"
+    const val MAIN_RUNTIME_CLASSPATH = "runtimeClasspath"
   }
 }
 
@@ -79,6 +85,9 @@ public data class AndroidSourceKind(
       else -> error("Expected one of 'main', 'test', or 'androidTest'. Was '$kind'.")
     }
   }
+
+  override fun isMainKind(): Boolean = kind == MAIN_KIND
+  override fun isTestKind(): Boolean = kind == TEST_KIND
 
   override fun runtimeMatches(classpaths: Collection<String>): Boolean {
     return if (runtimeClasspathName in VIRTUAL_CLASSPATHS) {
@@ -143,12 +152,12 @@ public data class AndroidSourceKind(
         name = variantName,
         kind = MAIN_KIND,
         compileClasspathName = if (variantName == MAIN_NAME) {
-          "compileClasspath"
+          MAIN_COMPILE_CLASSPATH
         } else {
           "${variantName}CompileClasspath"
         },
         runtimeClasspathName = if (variantName == MAIN_NAME) {
-          "runtimeClasspath"
+          MAIN_RUNTIME_CLASSPATH
         } else {
           "${variantName}RuntimeClasspath"
         },
@@ -218,6 +227,8 @@ public data class JvmSourceKind(
 ) : SourceKind(), Serializable {
 
   override fun base(): JvmSourceKind = this
+  override fun isMainKind(): Boolean = kind == MAIN_KIND
+  override fun isTestKind(): Boolean = kind == TEST_KIND
   override fun runtimeMatches(classpaths: Collection<String>): Boolean = runtimeClasspathName in classpaths
   override fun sourceSetMatches(sourceSetName: String): Boolean = sourceSetName == name
 
@@ -245,12 +256,12 @@ public data class JvmSourceKind(
           else -> CUSTOM_JVM_KIND
         },
         compileClasspathName = if (sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME) {
-          "compileClasspath"
+          MAIN_COMPILE_CLASSPATH
         } else {
           "${sourceSetName}CompileClasspath"
         },
         runtimeClasspathName = if (sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME) {
-          "runtimeClasspath"
+          MAIN_RUNTIME_CLASSPATH
         } else {
           "${sourceSetName}RuntimeClasspath"
         },
@@ -269,6 +280,13 @@ public data class KmpSourceKind(
 ) : SourceKind(), Serializable {
 
   override fun base(): KmpSourceKind = this
+
+  /** Not relevant for KMP. */
+  override fun isMainKind(): Boolean = false
+
+  /** Not relevant for KMP. */
+  override fun isTestKind(): Boolean = false
+
   override fun runtimeMatches(classpaths: Collection<String>): Boolean = runtimeClasspathName in classpaths
   override fun sourceSetMatches(sourceSetName: String): Boolean = sourceSetName == name
 

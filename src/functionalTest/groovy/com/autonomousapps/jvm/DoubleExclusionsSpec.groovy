@@ -9,18 +9,18 @@ import static com.google.common.truth.Truth.assertThat
 
 final class DoubleExclusionsSpec extends AbstractJvmSpec {
 
-    def "project can declare exclusion twice (#gradleVersion)"() {
-        given:
-        def project = new DoubleExclusionsProject()
-        gradleProject = project.gradleProject
+  def "project can declare exclusion twice (#gradleVersion)"() {
+    given:
+    def project = new DoubleExclusionsProject()
+    gradleProject = project.gradleProject
 
-        when:
-        build(gradleVersion, gradleProject.rootDir, "buildHealth")
+    when:
+    build(gradleVersion, gradleProject.rootDir, "buildHealth")
 
-        then:
-        assertThat(project.actualProjectAdvice().isEmpty())
+    then:
+    assertThat(project.actualProjectAdvice().isEmpty())
 
-        where:
-        gradleVersion << gradleVersions()
-    }
+    where:
+    gradleVersion << gradleVersions()
+  }
 }

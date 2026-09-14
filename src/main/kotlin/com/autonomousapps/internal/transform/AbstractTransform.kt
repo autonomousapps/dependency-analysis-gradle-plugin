@@ -21,14 +21,13 @@ import com.autonomousapps.model.source.SourceKind
 import com.google.common.collect.SetMultimap
 import org.gradle.api.attributes.Category
 
-@Suppress("UnstableApiUsage")
 internal abstract class AbstractTransform(
   protected val coordinates: Coordinates,
   protected val declarations: Set<Declaration>,
   protected val explicitSourceSets: Set<String>,
   protected val configurationNames: ConfigurationNames,
   protected val buildPath: String,
-  private val dependencyGraph: Map<String, DependencyGraphView>,
+  protected val dependencyGraph: Map<String, DependencyGraphView>,
   private val isKaptApplied: Boolean,
 ) : Usage.Transform {
 
@@ -41,8 +40,9 @@ internal abstract class AbstractTransform(
    * Returns the set of direct (non-transitive) dependencies from [dependencyGraph], associated with the source sets
    * ([Variant.variant][SourceKind]) they're related to.
    *
-   * These are _direct_ dependencies that are not _declared_ because they're coming from associated classpaths. For
-   * example, the `test` source set extends from the `main` source set (and also the compile and runtime classpaths).
+   * These are _direct_ dependencies that are not necessarily _declared_ because they're coming from associated
+   * classpaths. For example, the `test` source set extends from the `main` source set (and also the compile and runtime
+   * classpaths).
    */
   protected val directDependencies: SetMultimap<String, SourceKind> by unsafeLazy {
     newSetMultimap<String, SourceKind>().apply {

@@ -74,12 +74,25 @@ internal enum class Bucket(val value: String) {
      */
     private val VISIBLE_TO_TEST_RUNTIME = listOf(API, IMPL, RUNTIME_ONLY)
 
-    fun determineVisibility(
+    /**
+     * TODO(tsr): this as a concept isn't really working. It's kind of like I'm trying to predict where the usage
+     *  analysis will ultimately go to prevent certain kinds of "redundant" advice. E.g., in typical projects, if
+     *  something is declared on `implementation`, it's already visible to `test` source (and `androidTest` source for
+     *  Android projects). (To say nothing about KMP.) In such a case, I don't want to tell users to re-declare on
+     *  `testImplementation` or `androidTestImplementation`. At the same time, if something is declared on
+     *  `compileOnly`, then it (and its graph) is *not* visible to `test` or `androidTest` source sets. This function is
+     *  trying to act as a little shim to handle these edge cases, when something more comprehensive and modeled is
+     *  probably called for.
+     */
+    fun determineVisibilityForTests(
       usages: Set<Usage>,
       declarations: Set<Declaration>,
       configurationNames: ConfigurationNames,
+      onlyCompileOnly: () -> Boolean = { false },
     ): Visibility {
+      // onlyCompileOnly() is a lambda because it's expensive, and therefore we do it last.
       val compileVisibility = isVisibleToTestCompileClasspath(usages, declarations, configurationNames)
+        && !onlyCompileOnly()
       val runtimeVisibility = isVisibleToTestRuntimeClasspath(usages, declarations, configurationNames)
 
       return Visibility(forCompile = compileVisibility, forRuntime = runtimeVisibility)
@@ -97,9 +110,7 @@ internal enum class Bucket(val value: String) {
       usages: Set<Usage>,
       declarations: Set<Declaration>,
       configurationNames: ConfigurationNames,
-    ): Boolean {
-      return isVisibleIn(VISIBLE_TO_TEST_COMPILE, usages, declarations, configurationNames)
-    }
+    ): Boolean = isVisibleIn(VISIBLE_TO_TEST_COMPILE, usages, declarations, configurationNames)
 
     /**
      * A dependency is visible from main to test source iff it is in the correct bucket ([VISIBLE_TO_TEST_RUNTIME])
@@ -126,9 +137,21 @@ internal enum class Bucket(val value: String) {
       configurationNames: ConfigurationNames,
     ): Boolean {
       return usages.reallyAll { usage ->
-        buckets.any { bucket -> bucket == usage.bucket } && declarations.any { declaration ->
-          buckets.any { bucket -> bucket.matches(declaration, configurationNames) }
+        val anyBucket = buckets.any { bucket -> bucket == usage.bucket }
+        val declarationMatches = {
+          declarations.isEmpty() || declarationMatches(buckets, declarations, configurationNames)
         }
+        anyBucket && declarationMatches()
+      }
+    }
+
+    private fun declarationMatches(
+      buckets: List<Bucket>,
+      declarations: Set<Declaration>,
+      configurationNames: ConfigurationNames,
+    ): Boolean {
+      return declarations.any { declaration ->
+        buckets.any { bucket -> bucket.matches(declaration, configurationNames) }
       }
     }
   }
