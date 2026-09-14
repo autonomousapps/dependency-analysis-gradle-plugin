@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Unreleased
+* [fix]: Updated asm to 9.10.1 (and use latest asm-relocated).
+
 # Version 3.19.1
 * [fix]: an 'analyzable class file' should have non-zero length.
 
