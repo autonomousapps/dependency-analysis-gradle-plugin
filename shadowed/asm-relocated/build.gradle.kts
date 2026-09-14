@@ -52,6 +52,10 @@ tasks.processTestResources {
   from(tasks.shadowJar).rename { "shadow.jar" }
 }
 
+tasks.withType<PublishToMavenRepository>().configureEach {
+  dependsOn(tasks.check)
+}
+
 val javaComponent = components["java"] as AdhocComponentWithVariants
 listOf("apiElements", "runtimeElements")
   .map { configurations[it] }
