@@ -76,30 +76,27 @@ internal abstract class AbstractTransform(
     }
   }
 
+  // TODO: move to JvmTransform, since only used there?
   protected fun isOnlyThroughCompileOnly(coordinates: Coordinates): Boolean {
-    val directMainNodes = directDependencies.entries().filter { it.value.isMainKind() }.map { it.key }
+    val directMainDependencies = directDependencies.entries().filter { it.value.isMainKind() }.map { it.key }
 
-    return directMainNodes
+    return directMainDependencies
       // would be false if empty
-      .all { main ->
-        val compileGraph = dependencyGraph.values.find { it.configurationName == "compileClasspath" }!! // TODO
-        val hasPathToTarget = compileGraph.graph
-          .reachableNodes { it.normalizedIdentifier(buildPath) == main }
-          .map { it.normalized(buildPath) }
-          .contains(coordinates.normalized(buildPath))
+      .all { directMain ->
+        // TODO: cleanup hard-coded strings
+        val compileGraph = dependencyGraph.values.find { it.configurationName == "compileClasspath" }
 
-        val onlyCompileOnly = if (hasPathToTarget) {
-          val mainDeclarations = declarations
-            .filter { it.identifier == main }
-            .filter { DependencyScope.sourceSetName(it.configurationName) == "main" }
+        val hasPathToTarget = compileGraph?.graph
+          ?.reachableNodes { it.normalizedIdentifier(buildPath) == directMain }
+          ?.map { it.normalized(buildPath) }
+          ?.contains(coordinates.normalized(buildPath))
+          ?: false
 
-          // would be false if empty
-          mainDeclarations.all { it.configurationName == "compileOnly" }
-        } else {
-          false
-        }
-
-        onlyCompileOnly
+        // onlyCompileOnly
+        hasPathToTarget && declarations
+          .filter { it.identifier == directMain }
+          .filter { DependencyScope.sourceSetName(it.configurationName) == "main" }
+          .all { it.configurationName == "compileOnly" }
       }
   }
 

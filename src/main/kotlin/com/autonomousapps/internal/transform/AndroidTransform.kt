@@ -66,8 +66,8 @@ internal class AndroidTransform(
     //    the compile classpath based on detected usage in the bytecode. We also already suggest moving things to
     //    runtimeOnly if there's no detected compile-time usage, but the thing has runtime capabilities. Now we want to
     //    say, _add_ this thing to runtimeOnly, if it has runtime capabilities.
-    val onlyCompileOnly = isOnlyThroughCompileOnly(coordinates)
-    val visibility = Bucket.determineVisibilityForTests(mainUsages, mainDeclarations, configurationNames, onlyCompileOnly)
+    // nb: deliberately *not* calling `isOnlyThroughCompileOnly()`. Too complicated to implement. Only JVM gets this.
+    val visibility = Bucket.determineVisibilityForTests(mainUsages, mainDeclarations, configurationNames, false)
 
     /*
      * Main usages.
