@@ -27,7 +27,7 @@ final class TestFixturesDuplicatedWithMainProject extends AbstractAndroidProject
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { r ->
         r.gradleProperties = GradleProperties.minimalAndroidProperties() +
           "android.experimental.enableTestFixturesKotlinSupport=true"
@@ -37,22 +37,22 @@ final class TestFixturesDuplicatedWithMainProject extends AbstractAndroidProject
         s.manifest = AndroidManifest.appEmpty()
         s.withBuildScript { bs ->
           bs.plugins(androidApp(true))
-          bs.android = defaultAndroidAppBlock(true,"com.example.app").tap {
+          bs.android = defaultAndroidAppBlock('com.example.app').tap {
             testFixturesOptions = TestFixturesOptions.enabled()
           }
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(
-            project("implementation", ":lib-test-utils"),
-            project("testFixturesImplementation", ":lib-test-utils"),
+            project('implementation', ':lib-test-utils'),
+            project('testFixturesImplementation', ':lib-test-utils'),
           )
         }
       }
       .withAndroidSubproject('lib') { s ->
         s.sources = sourcesWithTestFixtures
-        s.manifest = libraryManifest('lib.with.fixtures')
+        s.manifest = null
         s.withBuildScript { bs ->
           bs.plugins(androidLib(true))
-          bs.android = defaultAndroidLibBlock(true).tap {
+          bs.android = defaultAndroidLibBlock().tap {
             testFixturesOptions = TestFixturesOptions.enabled()
           }
           bs.kotlin = Kotlin.DEFAULT

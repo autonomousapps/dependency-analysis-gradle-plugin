@@ -10,6 +10,8 @@ import com.autonomousapps.kit.gradle.BuildscriptBlock
 import com.autonomousapps.kit.gradle.GradleProperties
 import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.kit.gradle.android.AndroidBlock
+import com.autonomousapps.kit.gradle.android.CompileOptions
+import com.autonomousapps.kit.gradle.android.DefaultConfig
 import com.autonomousapps.kit.gradle.dependencies.Plugins
 
 abstract class AbstractAndroidProject extends AbstractProject {
@@ -84,26 +86,39 @@ abstract class AbstractAndroidProject extends AbstractProject {
     this(getKotlinVersion(), agpVersion)
   }
 
-  protected AndroidBlock defaultAndroidAppBlock(
-    boolean withKotlin = true,
-    String namespace = DEFAULT_APP_NAMESPACE
-  ) {
-    return AndroidBlock.defaultAndroidAppBlock(withKotlin, namespace)
+  protected AndroidBlock defaultAndroidAppBlock(String namespace = DEFAULT_APP_NAMESPACE) {
+    return new AndroidBlock(
+      namespace,
+      37,
+      DefaultConfig.DEFAULT_APP,
+      /* buildTypes */ null,
+      CompileOptions.DEFAULT,
+    )
   }
 
-  protected AndroidBlock defaultAndroidLibBlock(
-    boolean withKotlin = true,
-    String namespace = DEFAULT_LIB_NAMESPACE
-  ) {
-    return AndroidBlock.defaultAndroidLibBlock(withKotlin, namespace)
+  protected AndroidBlock defaultAndroidLibBlock(String namespace = DEFAULT_LIB_NAMESPACE) {
+    return new AndroidBlock(
+      namespace,
+      37,
+      DefaultConfig.DEFAULT_LIB,
+      /* buildTypes */ null,
+      CompileOptions.DEFAULT,
+    )
   }
 
   protected AndroidBlock defaultAndroidTestBlock(
     String targetProjectPath,
-    boolean withKotlin = true,
     String namespace = DEFAULT_TEST_NAMESPACE
   ) {
-    return AndroidBlock.defaultAndroidTestBlock(targetProjectPath, withKotlin, namespace)
+    return new AndroidBlock(
+      namespace,
+      37,
+      DefaultConfig.DEFAULT_TEST,
+      /* buildTypes */ null,
+      CompileOptions.DEFAULT,
+      /* testFixturesOptions*/ null,
+      targetProjectPath,
+    )
   }
 
   protected AndroidManifest appManifest(String namespace = DEFAULT_APP_NAMESPACE) {
@@ -112,15 +127,6 @@ abstract class AbstractAndroidProject extends AbstractProject {
 
   protected AndroidManifest appEmpty() {
     return AndroidManifest.appEmpty()
-  }
-
-  protected AndroidManifest libraryManifest(String namespace = DEFAULT_LIB_NAMESPACE) {
-    return null
-  }
-
-  @Deprecated
-  protected GradleProject.Builder newAndroidGradleProjectBuilder(String agpVersion) {
-    return newAndroidGradleProjectBuilder()
   }
 
   protected GradleProject.Builder newAndroidGradleProjectBuilder() {

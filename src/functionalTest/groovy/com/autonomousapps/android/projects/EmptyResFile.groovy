@@ -23,11 +23,11 @@ final class EmptyResFile extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
           bs.plugins = androidApp(false)
-          bs.android = defaultAndroidAppBlock(false)
+          bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
             appcompat("implementation")
           ]

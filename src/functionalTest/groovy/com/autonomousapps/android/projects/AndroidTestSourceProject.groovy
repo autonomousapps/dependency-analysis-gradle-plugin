@@ -30,7 +30,7 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { r ->
         r.withBuildScript { bs ->
           if (withKapt) {
@@ -55,7 +55,7 @@ final class AndroidTestSourceProject extends AbstractAndroidProject {
         subproject.manifest = null
         subproject.withBuildScript { bs ->
           bs.plugins(androidLib())
-          bs.android = defaultAndroidLibBlock(true, 'my.android.lib')
+          bs.android = defaultAndroidLibBlock('my.android.lib')
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(junit('implementation'))
         }

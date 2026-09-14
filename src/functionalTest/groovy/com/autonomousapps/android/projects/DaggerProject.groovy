@@ -28,7 +28,7 @@ final class DaggerProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { r ->
         r.withBuildScript { bs ->
           bs.plugins += rootKapt
@@ -39,7 +39,7 @@ final class DaggerProject extends AbstractAndroidProject {
         s.manifest = null
         s.sources = sources
         s.withBuildScript { bs ->
-          bs.android = defaultAndroidLibBlock(true)
+          bs.android = defaultAndroidLibBlock()
           bs.kotlin = Kotlin.DEFAULT
           bs.plugins(androidLib() + kapt())
           bs.dependencies = [

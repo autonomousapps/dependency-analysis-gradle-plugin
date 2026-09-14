@@ -28,11 +28,11 @@ final class ExternalApplicationProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
           bs.plugins = androidApp(false)
-          bs.android = defaultAndroidAppBlock(false)
+          bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
             appcompat('implementation'),
             project('implementation', ':lib'),
@@ -45,7 +45,7 @@ final class ExternalApplicationProject extends AbstractAndroidProject {
       .withAndroidLibProject('lib') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false)
+          bs.android = defaultAndroidLibBlock()
         }
         lib.sources = libSources
       }

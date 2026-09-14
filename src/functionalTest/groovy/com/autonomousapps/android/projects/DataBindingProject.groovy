@@ -26,11 +26,11 @@ final class DataBindingProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
           bs.plugins = androidApp()
-          bs.android = defaultAndroidAppBlock(true, 'com.example.app')
+          bs.android = defaultAndroidAppBlock('com.example.app')
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(appcompat('implementation'))
           bs.withGroovy('android.buildFeatures.dataBinding true')

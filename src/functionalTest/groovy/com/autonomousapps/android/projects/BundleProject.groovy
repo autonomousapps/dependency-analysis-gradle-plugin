@@ -24,13 +24,13 @@ final class BundleProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('lib') { a ->
         a.sources = sources
-        a.manifest = libraryManifest()
+        a.manifest = null
         a.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false)
+          bs.android = defaultAndroidLibBlock()
           bs.dependencies = [
             firebaseAnalyticsKtx("api")
           ]

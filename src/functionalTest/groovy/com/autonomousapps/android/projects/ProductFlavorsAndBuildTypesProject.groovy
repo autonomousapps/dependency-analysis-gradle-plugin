@@ -28,11 +28,11 @@ final class ProductFlavorsAndBuildTypesProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidLibProject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
+          bs.android = defaultAndroidLibBlock('com.example.consumer')
           bs.dependencies(CONSCRYPT, DEBUG, FIRE, FIRE_DEBUG)
           bs.withGroovy(
             '''\
@@ -59,7 +59,6 @@ final class ProductFlavorsAndBuildTypesProject extends AbstractAndroidProject {
           )
         }
         consumer.sources = consumerSources()
-        consumer.manifest = libraryManifest('com.example.consumer')
       }
     // build types
       .withSubproject('debug') { lib ->

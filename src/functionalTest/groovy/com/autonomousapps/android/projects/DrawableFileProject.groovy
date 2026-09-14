@@ -28,7 +28,7 @@ final class DrawableFileProject extends AbstractAndroidProject {
       .withAndroidSubproject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
           bs.plugins = androidApp(false)
-          bs.android = defaultAndroidAppBlock(false)
+          bs.android = defaultAndroidAppBlock()
           bs.dependencies = [project('implementation', ':producer')]
         }
         // Empty style res and custom manifest to catch the right resource usage. Else, it would find
@@ -45,9 +45,9 @@ final class DrawableFileProject extends AbstractAndroidProject {
       .withAndroidSubproject('producer') { producer ->
         producer.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false)
+          bs.android = defaultAndroidLibBlock()
         }
-        producer.manifest = libraryManifest('com.example.producer')
+        producer.manifest = null
         producer.withFile('src/main/res/drawable/logo.xml', """\
         <?xml version="1.0" encoding="utf-8"?>
         <layer-list xmlns:android="http://schemas.android.com/apk/res/android">

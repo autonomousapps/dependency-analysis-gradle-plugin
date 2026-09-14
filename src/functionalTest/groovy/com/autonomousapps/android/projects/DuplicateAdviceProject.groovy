@@ -25,10 +25,9 @@ final class DuplicateAdviceProject extends AbstractAndroidProject {
     return newAndroidGradleProjectBuilder()
       .withAndroidLibProject('consumer') { s ->
         s.sources = sources
-        s.manifest = null // TODO(tsr): fix defaults for android libs
         s.withBuildScript { bs ->
           bs.plugins(androidLib(false))
-          bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
+          bs.android = defaultAndroidLibBlock('com.example.consumer')
           bs.dependencies(OKHTTP)
         }
       }

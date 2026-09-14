@@ -27,7 +27,7 @@ final class AndroidKotlinInlineProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('lib') { l ->
         l.manifest = null

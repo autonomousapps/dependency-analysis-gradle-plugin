@@ -23,7 +23,7 @@ final class KaptProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { root ->
         root.withBuildScript { bs ->
           bs.plugins += rootKapt
@@ -43,10 +43,10 @@ final class KaptProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('lib') { a ->
         a.sources = sources
-        a.manifest = libraryManifest()
+        a.manifest = null
         a.withBuildScript { bs ->
           bs.plugins(androidLib(true) + kapt())
-          bs.android = defaultAndroidLibBlock(true)
+          bs.android = defaultAndroidLibBlock()
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(dependencies)
         }

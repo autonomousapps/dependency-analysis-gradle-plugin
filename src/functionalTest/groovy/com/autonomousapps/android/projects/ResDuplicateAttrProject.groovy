@@ -27,17 +27,16 @@ final class ResDuplicateAttrProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidLibProject('lib-a') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib_a')
+          bs.android = defaultAndroidLibBlock('com.example.lib_a')
           bs.dependencies(
             project('implementation', ':lib-b'),
             constraintLayout('implementation'),
           )
         }
-        lib.manifest = libraryManifest('com.example.lib_a')
         lib.sources = libASources
         lib.layouts = [
           new AndroidLayout(
@@ -71,7 +70,7 @@ final class ResDuplicateAttrProject extends AbstractAndroidProject {
       .withAndroidLibProject('lib-b') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib_b')
+          bs.android = defaultAndroidLibBlock('com.example.lib_b')
           bs.dependencies(recyclerView('api'))
         }
         lib.sources = libBSources

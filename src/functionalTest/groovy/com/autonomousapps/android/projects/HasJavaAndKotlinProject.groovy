@@ -24,13 +24,13 @@ final class HasJavaAndKotlinProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('lib') { a ->
-        a.manifest = libraryManifest()
+        a.manifest = null
         a.sources = sources
         a.withBuildScript { bs ->
           bs.plugins = androidLib(true)
-          bs.android = defaultAndroidLibBlock(true)
+          bs.android = defaultAndroidLibBlock()
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(
             // Used by Kotlin class

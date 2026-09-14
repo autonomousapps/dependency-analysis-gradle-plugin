@@ -27,12 +27,12 @@ final class AttrResWithNullProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
     // TODO(tsr): use withAndroidLibProject() instead
       .withAndroidSubproject('consumer') { consumer ->
         consumer.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
+          bs.android = defaultAndroidLibBlock('com.example.consumer')
           bs.dependencies = [
             Dependency.project('implementation', ':producer'),
             ANDROIDX_ANNOTATION,
@@ -60,7 +60,7 @@ final class AttrResWithNullProject extends AbstractAndroidProject {
       .withAndroidSubproject('producer') { producer ->
         producer.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false, 'com.example.producer')
+          bs.android = defaultAndroidLibBlock('com.example.producer')
           bs.dependencies = [
             ANDROIDX_ANNOTATION,
             APPCOMPAT,

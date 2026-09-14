@@ -28,7 +28,7 @@ final class PublicTypeUsageProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { r ->
         r.withBuildScript { bs ->
           bs.plugins += [plugins.kspNoApply, plugins.hiltNoApply]
@@ -71,7 +71,7 @@ final class PublicTypeUsageProject extends AbstractAndroidProject {
       .withAndroidLibProject('module-fire') { module ->
         module.withBuildScript { bs ->
           bs.plugins(androidLib() + hilt())
-          bs.android = defaultAndroidLibBlock(true, "com.example.${packageOf(module)}")
+          bs.android = defaultAndroidLibBlock("com.example.${packageOf(module)}")
           bs.dependencies(moduleDependencies())
           bs.additions = excludeTypes()
         }
@@ -89,7 +89,7 @@ final class PublicTypeUsageProject extends AbstractAndroidProject {
       .withAndroidLibProject('module-water') { module ->
         module.withBuildScript { bs ->
           bs.plugins(androidLib() + hilt())
-          bs.android = defaultAndroidLibBlock(true, "com.example.${packageOf(module)}")
+          bs.android = defaultAndroidLibBlock("com.example.${packageOf(module)}")
           bs.dependencies(moduleDependencies())
         }
         module.sources = moduleSources()

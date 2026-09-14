@@ -30,7 +30,7 @@ final class AndroidTestSmokeProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { app ->
         app.sources = appSources()
         app.styles = AndroidStyleRes.DEFAULT
@@ -52,7 +52,7 @@ final class AndroidTestSmokeProject extends AbstractAndroidProject {
         test.manifest = null
         test.withBuildScript { bs ->
           bs.plugins(androidTest())
-          bs.android = defaultAndroidTestBlock(':app', true)
+          bs.android = defaultAndroidTestBlock(':app')
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(okHttp)
         }

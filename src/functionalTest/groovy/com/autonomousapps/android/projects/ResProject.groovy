@@ -34,7 +34,7 @@ final class ResProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
           bs.plugins(androidApp())
@@ -65,15 +65,14 @@ final class ResProject extends AbstractAndroidProject {
       .withAndroidLibProject('lib') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins(androidLib(false))
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
+          bs.android = defaultAndroidLibBlock('com.example.lib')
         }
         lib.colors = AndroidColorRes.DEFAULT
-        lib.manifest = libraryManifest('com.example.lib')
       }
       .withAndroidLibProject('lib2') { lib2 ->
         lib2.withBuildScript { bs ->
           bs.plugins(androidLib(false))
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
+          bs.android = defaultAndroidLibBlock('com.example.lib2')
         }
         lib2.withFile('src/main/res/values/resources.xml', '''\
         <resources>

@@ -52,7 +52,7 @@ final class KtxProject extends AbstractAndroidProject {
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
           bs.plugins = androidApp()
-          bs.android = defaultAndroidAppBlock(true, 'com.example.app')
+          bs.android = defaultAndroidAppBlock('com.example.app')
           bs.dependencies(
             kotlinStdLib('implementation'),
             appcompat('implementation'),

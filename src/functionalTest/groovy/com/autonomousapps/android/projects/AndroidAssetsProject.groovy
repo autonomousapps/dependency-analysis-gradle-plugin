@@ -28,11 +28,11 @@ final class AndroidAssetsProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
           bs.plugins = [Plugins.androidApp, Plugins.dependencyAnalysisNoVersion]
-          bs.android = defaultAndroidAppBlock(false)
+          bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
             appcompat('implementation'),
             project('implementation', ':assets'),
@@ -43,10 +43,9 @@ final class AndroidAssetsProject extends AbstractAndroidProject {
         app.colors = AndroidColorRes.DEFAULT
       }
       .withAndroidLibProject('lib') { lib ->
-        lib.manifest = libraryManifest('com.example.lib')
         lib.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
+          bs.android = defaultAndroidLibBlock('com.example.lib')
           bs.dependencies = [
             project('implementation', ':assets'),
           ]
@@ -55,11 +54,10 @@ final class AndroidAssetsProject extends AbstractAndroidProject {
       .withAndroidLibProject('assets') { assets ->
         assets.withBuildScript { bs ->
           bs.plugins = [Plugins.androidLib, Plugins.dependencyAnalysisNoVersion]
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')
+          bs.android = defaultAndroidLibBlock('com.example.lib.assets')
         }
         assets.withFile('src/main/assets/some_fancy_asset.txt',
           'https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/657')
-        assets.manifest = libraryManifest('com.example.lib.assets')
       }
       .write()
   }

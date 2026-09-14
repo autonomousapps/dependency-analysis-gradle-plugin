@@ -32,7 +32,7 @@ final class TestDependenciesProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { s ->
         s.sources = sourcesApp
         s.styles = AndroidStyleRes.DEFAULT
@@ -40,7 +40,7 @@ final class TestDependenciesProject extends AbstractAndroidProject {
         s.manifest = AndroidManifest.app('my.android.app')
         s.withBuildScript { bs ->
           bs.plugins = androidApp(false)
-          bs.android = defaultAndroidAppBlock(false)
+          bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
             project('implementation', ':lib'),
             appcompat('implementation'),
@@ -51,10 +51,10 @@ final class TestDependenciesProject extends AbstractAndroidProject {
       }
       .withAndroidSubproject('lib') { s ->
         s.sources = sourcesLib
-        s.manifest = libraryManifest('my.android.lib')
+        s.manifest = null
         s.withBuildScript { bs ->
           bs.plugins = androidLib()
-          bs.android = defaultAndroidLibBlock(true)
+          bs.android = defaultAndroidLibBlock()
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = [
             commonsCollections('api'),

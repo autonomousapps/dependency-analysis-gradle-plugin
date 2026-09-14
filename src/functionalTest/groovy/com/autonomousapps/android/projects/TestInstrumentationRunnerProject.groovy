@@ -29,12 +29,12 @@ final class TestInstrumentationRunnerProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { app ->
         app.manifest = AndroidManifest.simpleApp()
         app.withBuildScript { bs ->
           bs.plugins(androidApp(false))
-          bs.android = defaultAndroidAppBlock(false).tap {
+          bs.android = defaultAndroidAppBlock().tap {
             defaultConfig.testInstrumentationRunner = "$TEST_RUNNER_PACKAGE.$TEST_RUNNER_CLASS"
           }
           bs.dependencies(testRunner)
@@ -44,7 +44,7 @@ final class TestInstrumentationRunnerProject extends AbstractAndroidProject {
         lib.sources = sourcesTestRunner
         lib.withBuildScript { bs ->
           bs.plugins(androidLib(false))
-          bs.android = defaultAndroidLibBlock(false, TEST_RUNNER_PACKAGE)
+          bs.android = defaultAndroidLibBlock(TEST_RUNNER_PACKAGE)
           bs.dependencies(api('androidx.test:runner:1.5.2'))
         }
       }

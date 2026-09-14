@@ -26,12 +26,11 @@ final class TransitiveRuntimeProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidLibProject('consumer') { s ->
-        s.manifest = libraryManifest()
         s.withBuildScript { bs ->
           bs.plugins(androidLib(false))
-          bs.android = defaultAndroidLibBlock(false, 'com.example.consumer')
+          bs.android = defaultAndroidLibBlock('com.example.consumer')
           bs.dependencies(
             implementation(':unused'),
             testImplementation(':unused-for-test')
@@ -39,10 +38,9 @@ final class TransitiveRuntimeProject extends AbstractAndroidProject {
         }
       }
       .withAndroidLibProject('unused') { s ->
-        s.manifest = libraryManifest()
         s.withBuildScript { bs ->
           bs.plugins(androidLib(false))
-          bs.android = defaultAndroidLibBlock(false, 'com.example.unused')
+          bs.android = defaultAndroidLibBlock('com.example.unused')
           bs.dependencies(conscryptUber)
         }
       }

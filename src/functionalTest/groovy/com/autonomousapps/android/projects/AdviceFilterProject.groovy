@@ -45,7 +45,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { r ->
         r.withBuildScript { bs ->
           bs.additions = rootAdditions
@@ -57,7 +57,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
         app.colors = AndroidColorRes.DEFAULT
         app.withBuildScript { bs ->
           bs.plugins = androidAppPlugins()
-          bs.android = defaultAndroidAppBlock(isLessThanAgp9)
+          bs.android = defaultAndroidAppBlock()
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = appDependencies
           bs.additions = appAdditions
@@ -67,7 +67,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
         lib.sources = libAndroidSources
         lib.withBuildScript { bs ->
           bs.plugins = androidLibPlugins()
-          bs.android = defaultAndroidLibBlock(isLessThanAgp9)
+          bs.android = defaultAndroidLibBlock()
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies = androidLibDependencies
         }

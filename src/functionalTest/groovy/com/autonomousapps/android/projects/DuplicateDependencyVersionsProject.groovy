@@ -23,11 +23,11 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { app ->
         app.withBuildScript { bs ->
           bs.plugins = androidApp(false)
-          bs.android = defaultAndroidAppBlock(false)
+          bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
             appcompat('implementation'),
             project('implementation', ':lib1'),
@@ -38,7 +38,7 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
       .withAndroidLibProject('lib1') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib1')
+          bs.android = defaultAndroidLibBlock('com.example.lib1')
           bs.dependencies = [
             new Dependency('implementation', 'junit:junit:4.11'),
           ]
@@ -47,7 +47,7 @@ final class DuplicateDependencyVersionsProject extends AbstractAndroidProject {
       .withAndroidLibProject('lib2') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib2')
+          bs.android = defaultAndroidLibBlock('com.example.lib2')
           bs.dependencies = [
             new Dependency('api', 'junit:junit:4.13')
           ]

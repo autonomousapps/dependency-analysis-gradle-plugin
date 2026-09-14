@@ -24,15 +24,14 @@ final class NativeLibProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidLibProject('lib') { lib ->
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib')
+          bs.android = defaultAndroidLibBlock('com.example.lib')
           bs.dependencies(implementation(graphicsCore))
         }
         lib.colors = AndroidColorRes.DEFAULT
-        lib.manifest = libraryManifest('com.example.lib')
       }
       .write()
   }

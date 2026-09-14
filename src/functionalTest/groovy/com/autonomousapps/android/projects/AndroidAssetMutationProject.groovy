@@ -37,12 +37,11 @@ final class AndroidAssetMutationProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidLibProject('lib') { lib ->
-        lib.manifest = libraryManifest('com.example.lib')
         lib.withBuildScript { bs ->
           bs.plugins(androidLib())
-          bs.android = defaultAndroidLibBlock(true, 'com.example.lib')
+          bs.android = defaultAndroidLibBlock('com.example.lib')
           bs.kotlin = Kotlin.DEFAULT
           bs.dependencies(
             implementation(':assets'),
@@ -55,9 +54,8 @@ final class AndroidAssetMutationProject extends AbstractAndroidProject {
       .withAndroidLibProject('assets') { assets ->
         assets.withBuildScript { bs ->
           bs.plugins(androidLib(false))
-          bs.android = defaultAndroidLibBlock(false, 'com.example.lib.assets')
+          bs.android = defaultAndroidLibBlock('com.example.lib.assets')
         }
-        assets.manifest = libraryManifest('com.example.lib.assets')
         assets.withFile(ASSET_PATH, 'delete me!')
       }
       .write()

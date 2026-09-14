@@ -26,10 +26,9 @@ final class CompileOnlyProject extends AbstractAndroidProject {
   private GradleProject build() {
     return newAndroidGradleProjectBuilder()
       .withAndroidLibProject('lib') { lib ->
-        lib.manifest = libraryManifest()
         lib.withBuildScript { bs ->
           bs.plugins = androidLib(false)
-          bs.android = defaultAndroidLibBlock(false)
+          bs.android = defaultAndroidLibBlock()
           bs.dependencies = [
             commonsText('compileOnly'),
           ]

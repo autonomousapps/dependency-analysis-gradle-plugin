@@ -27,14 +27,14 @@ final class TimberProject extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withAndroidSubproject('app') { s ->
         s.styles = AndroidStyleRes.DEFAULT
         s.colors = AndroidColorRes.DEFAULT
         s.manifest = AndroidManifest.app('com.example.MainApplication')
         s.withBuildScript { bs ->
           bs.plugins = androidApp(false)
-          bs.android = defaultAndroidAppBlock(false)
+          bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
             appcompat('implementation'),
             timber('implementation')

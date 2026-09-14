@@ -34,7 +34,7 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
   }
 
   private GradleProject build() {
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { r ->
         r.withBuildScript { bs ->
           bs.additions = additions
@@ -47,7 +47,7 @@ final class AndroidProjectWithKmpDependencies extends AbstractAndroidProject {
         s.colors = AndroidColorRes.DEFAULT
         s.withBuildScript { bs ->
           bs.plugins(androidApp())
-          bs.android = defaultAndroidAppBlock(true)
+          bs.android = defaultAndroidAppBlock()
           bs.dependencies = [
             kotlinStdLib('implementation'),
             appcompat('implementation'),

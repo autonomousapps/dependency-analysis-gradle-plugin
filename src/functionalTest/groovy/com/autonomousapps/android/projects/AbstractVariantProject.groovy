@@ -45,7 +45,7 @@ abstract class AbstractVariantProject extends AbstractAndroidProject {
       properties += GradleProperties.enableConfigurationCache()
     }
 
-    return newAndroidGradleProjectBuilder(agpVersion)
+    return newAndroidGradleProjectBuilder()
       .withRootProject { root ->
         root.gradleProperties = properties
         root.withBuildScript { bs ->
