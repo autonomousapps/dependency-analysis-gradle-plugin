@@ -190,11 +190,6 @@ dependencies {
 // additive (vs testSourceSets() which _sets_)
 gradlePlugin.testSourceSet(smokeTestSourceSet)
 
-// CI cannot handle too much parallelization. Runs out of metaspace.
-fun maxParallelForks() =
-  if (isCi) 1
-  else Runtime.getRuntime().availableProcessors() / 2
-
 val isCi = providers.environmentVariable("CI")
   .map { it.toBoolean() }
   .getOrElse(false)
@@ -202,13 +197,18 @@ val isCi = providers.environmentVariable("CI")
 // This will slow down tests on CI, but maybe it won't run out of metaspace.
 fun forkEvery(): Long = if (isCi) 40 else 0
 
+// CI cannot handle too much parallelization. Runs out of metaspace.
+fun maxParallelForks() =
+  if (isCi) 1
+  else Runtime.getRuntime().availableProcessors() / 2
+
 // Add a task to run the functional tests
 // quickTest only runs against the latest gradle version. For iterating faster
 fun quickTest(): Boolean = providers
   .systemProperty("funcTest.quick")
   .isPresent
 
-val functionalTest = tasks.named("functionalTest", Test::class) {
+val functionalTest = tasks.named<Test>("functionalTest") {
   // forking JVMs is very expensive, and only necessary with full test runs
   forkEvery = forkEvery()
   maxParallelForks = maxParallelForks()
