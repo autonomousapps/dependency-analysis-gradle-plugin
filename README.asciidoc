@@ -1,5 +1,10 @@
 = Dependency Analysis Gradle Plugin
 
+Every team needs a build engineer, but not all teams can afford to have one on staff. Need help? I am available for
+https://github.com/autonomousapps[consulting].
+
+'''
+
 image::https://img.shields.io/maven-metadata/v.svg?label=release&metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fcom%2Fautonomousapps%2Fdependency-analysis%2Fcom.autonomousapps.dependency-analysis.gradle.plugin%2Fmaven-metadata.xml[Latest version,link="https://mvnrepository.com/artifact/com.autonomousapps.dependency-analysis/com.autonomousapps.dependency-analysis.gradle.plugin"]
 image::https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fcom%2Fautonomousapps%2Fdependency-analysis-gradle-plugin%2Fmaven-metadata.xml[Latest snapshot,link="https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/com/autonomousapps/dependency-analysis-gradle-plugin/"]
 image::https://github.com/autonomousapps/dependency-analysis-gradle-plugin/actions/workflows/test.yml/badge.svg[Build status,link="https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/actions/workflows/test.yml"]
