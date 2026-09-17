@@ -39,7 +39,7 @@ jobs:
     steps:
       # https://github.com/actions/runner-images/issues/2840
       - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # 1.3.1
+        uses: jlumbroso/free-disk-space@3f13feab2962a87273d379ebc36ea159527e6cc9 # v1.3.2
         with:
           # this might remove tools that are actually needed,
           # if set to "true" but frees about 6 GB
