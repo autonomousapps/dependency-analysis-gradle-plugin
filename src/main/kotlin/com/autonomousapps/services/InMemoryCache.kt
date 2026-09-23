@@ -53,7 +53,7 @@ public abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
 
   internal companion object {
     private const val SHARED_SERVICES_IN_MEMORY_CACHE = "inMemoryCache"
-    private const val DEFAULT_CACHE_VALUE = -1L
+    private const val DEFAULT_CACHE_VALUE = 300L
 
     // To share service across the whole build tree - https://github.com/gradle/gradle/issues/14697
     private fun Gradle.rootBuild(): Gradle = parent?.rootBuild() ?: this
