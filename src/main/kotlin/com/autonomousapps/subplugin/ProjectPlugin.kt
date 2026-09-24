@@ -1173,9 +1173,13 @@ internal class ProjectPlugin(private val project: Project) {
       t.output.set(paths.filteredAdvicePath)
     }
 
+    val isAssemblyModule = pluginManager.hasPlugin("com.gradleup.shadow") ||
+      pluginManager.hasPlugin("com.github.johnrengelman.shadow")
+
     val writeProjectMetadata = tasks.register("writeProjectMetadata", WriteProjectMetadataTask::class.java) { t ->
       t.projectPath.set(theProjectPath)
       t.projectType.set(projectType)
+      t.assembly.set(isAssemblyModule)
       t.output.set(paths.projectMetadataPath)
     }
 

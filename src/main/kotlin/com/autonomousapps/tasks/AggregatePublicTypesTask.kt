@@ -58,7 +58,9 @@ public abstract class AggregatePublicTypesTask @Inject constructor(
 
       val reports = parameters.abiReports.flatMap { it.fromJsonSet<ExplodingAbi>() }
       val classNames = reports.mapToOrderedSet { it.className }
-      val publicTypes = PublicTypes(parameters.projectPath.get(), classNames)
+      // Types this project leaks from its own dependencies, which downstream consumers can therefore reach.
+      val exposedTypes = reports.flatMapTo(sortedSetOf()) { it.exposedClasses }
+      val publicTypes = PublicTypes(parameters.projectPath.get(), classNames, exposedTypes)
 
       output.bufferWriteJson(publicTypes)
     }

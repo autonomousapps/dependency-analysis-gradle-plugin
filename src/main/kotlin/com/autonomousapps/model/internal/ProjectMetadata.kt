@@ -12,6 +12,9 @@ import com.squareup.moshi.JsonClass
 public data class ProjectMetadata(
   public val projectPath: String,
   public val projectType: ProjectType,
+
+  /** True for shadow/fat-jar modules, which legitimately declare dependencies they never reference. */
+  public val isAssembly: Boolean = false,
 ) : Comparable<ProjectMetadata> {
   override fun compareTo(other: ProjectMetadata): Int {
     return compareBy<ProjectMetadata>(ProjectMetadata::projectPath)

@@ -19,6 +19,9 @@ internal data class PublicTypes(
 
   /** Types that have public visibility. */
   val types: Set<String>,
+
+  /** External types exposed in this project's public ABI, leaked from its dependencies. */
+  val exposedTypes: Set<String> = emptySet(),
 ) : Comparable<PublicTypes> {
 
   override fun compareTo(other: PublicTypes): Int {
