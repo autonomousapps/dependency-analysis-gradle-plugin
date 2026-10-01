@@ -508,9 +508,8 @@ internal abstract class AbstractDependencyAnalyzer(
       ResolveExternalDependenciesTask::class.java,
     ) { t ->
       t.configureTask(
-        project = project,
-        compileClasspath = project.configurations.getByName(compileConfigurationName),
-        runtimeClasspath = project.configurations.getByName(runtimeConfigurationName),
+        compileClasspath = project.configurations.named(compileConfigurationName),
+        runtimeClasspath = project.configurations.named(runtimeConfigurationName),
         jarAttr = attributeValueJar,
       )
       t.output.set(outputPaths.externalDependenciesPath)

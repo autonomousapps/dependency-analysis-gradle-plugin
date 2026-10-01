@@ -11,6 +11,7 @@ import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ModuleCoordinates
 import org.gradle.api.DefaultTask
+import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.FileCollectionDependency
@@ -30,13 +31,13 @@ public abstract class ResolveExternalDependenciesTask : DefaultTask() {
     description = "Resolves external dependencies for compile and runtime classpaths."
   }
 
-  @get:Internal
+  @get:Input
   public abstract val compileClasspathResult: Property<ResolvedComponentResult>
 
   @get:Internal
   public abstract val compileClasspathFileCoordinates: SetProperty<Coordinates>
 
-  @get:Internal
+  @get:Input
   public abstract val runtimeClasspathResult: Property<ResolvedComponentResult>
 
   @get:Internal
@@ -55,27 +56,30 @@ public abstract class ResolveExternalDependenciesTask : DefaultTask() {
   public abstract val output: RegularFileProperty
 
   internal fun configureTask(
-    project: Project,
-    compileClasspath: Configuration,
-    runtimeClasspath: Configuration,
+    compileClasspath: NamedDomainObjectProvider<Configuration>,
+    runtimeClasspath: NamedDomainObjectProvider<Configuration>,
     jarAttr: String,
   ) {
-    compileClasspathResult.set(compileClasspath.incoming.resolutionResult.rootComponent)
-    compileClasspathFileCoordinates.set(project.provider {
-      compileClasspath.allDependencies
-        .filterIsInstance<FileCollectionDependency>()
-        .mapNotNullToSet { it.toCoordinates() }
-    })
+    compileClasspathResult.set(compileClasspath.flatMap { it.incoming.resolutionResult.rootComponent })
+    compileClasspathFileCoordinates.set(
+      compileClasspath.map { c ->
+        c.allDependencies
+          .filterIsInstance<FileCollectionDependency>()
+          .mapNotNullToSet { it.toCoordinates() }
+      }
+    )
 
-    runtimeClasspathResult.set(runtimeClasspath.incoming.resolutionResult.rootComponent)
-    runtimeClasspathFileCoordinates.set(project.provider {
-      runtimeClasspath.allDependencies
-        .filterIsInstance<FileCollectionDependency>()
-        .mapNotNullToSet { it.toCoordinates() }
-    })
+    runtimeClasspathResult.set(runtimeClasspath.flatMap { it.incoming.resolutionResult.rootComponent })
+    runtimeClasspathFileCoordinates.set(
+      runtimeClasspath.map { c ->
+        c.allDependencies
+          .filterIsInstance<FileCollectionDependency>()
+          .mapNotNullToSet { it.toCoordinates() }
+      }
+    )
 
-    compileFiles.setFrom(project.provider { compileClasspath.externalArtifactsFor(jarAttr).artifactFiles })
-    runtimeFiles.setFrom(project.provider { runtimeClasspath.externalArtifactsFor(jarAttr).artifactFiles })
+    compileFiles.setFrom(compileClasspath.map { it.externalArtifactsFor(jarAttr).artifactFiles })
+    runtimeFiles.setFrom(runtimeClasspath.map { it.externalArtifactsFor(jarAttr).artifactFiles })
   }
 
   @TaskAction public fun action() {
