@@ -404,9 +404,7 @@ internal abstract class AbstractDependencyAnalyzer(
     return project.tasks.register("explodeJar$taskNameSuffix", ExplodeJarTask::class.java) { t ->
       InMemoryCache.register(t.inMemoryCache, project)
       t.compileClasspath.setFrom(
-        project.configurations.getByName(compileConfigurationName)
-          .artifactsFor(attributeValueJar)
-          .artifactFiles
+        project.configurations.named(compileConfigurationName).map { it.artifactsFor(attributeValueJar).artifactFiles }
       )
       t.physicalArtifacts.set(artifactsReport.flatMap { it.output })
       androidLintTask?.let { t2 -> t.androidLinters.set(t2.flatMap { it.output }) }
@@ -421,9 +419,7 @@ internal abstract class AbstractDependencyAnalyzer(
     return project.tasks.register("findKotlinMagic$taskNameSuffix", FindKotlinMagicTask::class.java) { t ->
       InMemoryCache.register(t.inMemoryCacheProvider, project)
       t.compileClasspath.setFrom(
-        project.configurations.getByName(compileConfigurationName)
-          .artifactsFor(attributeValueJar)
-          .artifactFiles
+        project.configurations.named(compileConfigurationName).map { it.artifactsFor(attributeValueJar).artifactFiles }
       )
       t.artifacts.set(artifactsReport.flatMap { it.output })
       t.kotlinMetadataClasspath.setFrom(KotlinMetadataClasspath.of(project))
@@ -452,16 +448,10 @@ internal abstract class AbstractDependencyAnalyzer(
         t.buildPath.set(project.buildPath(compileConfigurationName))
 
         t.compileClasspath.set(
-          project.configurations.getByName(compileConfigurationName)
-            .incoming
-            .resolutionResult
-            .rootComponent
+          project.configurations.named(compileConfigurationName).flatMap { it.incoming.resolutionResult.rootComponent }
         )
         t.runtimeClasspath.set(
-          project.configurations.getByName(runtimeConfigurationName)
-            .incoming
-            .resolutionResult
-            .rootComponent
+          project.configurations.named(runtimeConfigurationName).flatMap { it.incoming.resolutionResult.rootComponent }
         )
         t.output.set(outputPaths.projectGraphDir)
       }
@@ -484,9 +474,8 @@ internal abstract class AbstractDependencyAnalyzer(
   final override fun registerGraphViewTask(findDeclarationsTask: TaskProvider<FindDeclarationsTask>): TaskProvider<GraphViewTask> {
     return project.tasks.register("graphView$taskNameSuffix", GraphViewTask::class.java) { t ->
       t.configureTask(
-        project = project,
-        compileClasspath = project.configurations.getByName(compileConfigurationName),
-        runtimeClasspath = project.configurations.getByName(runtimeConfigurationName),
+        compileClasspath = project.configurations.named(compileConfigurationName),
+        runtimeClasspath = project.configurations.named(runtimeConfigurationName),
         jarAttr = attributeValueJar
       )
       t.buildPath.set(project.buildPath(compileConfigurationName))
