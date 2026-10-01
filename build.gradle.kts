@@ -101,9 +101,9 @@ sourceSets.maybeCreate("functionalTest").apply {
   runtimeClasspath += output + compileClasspath
 }
 
-val functionalTestImplementation = configurations
-  .getByName("functionalTestImplementation")
-  .extendsFrom(configurations.getByName("testImplementation"))
+val functionalTestImplementation = configurations.named("functionalTestImplementation") {
+  extendsFrom(configurations.named("testImplementation"))
+}
 
 val compileFunctionalTestKotlin = tasks.named("compileFunctionalTestKotlin")
 tasks.named<AbstractCompile>("compileFunctionalTestGroovy") {
@@ -116,9 +116,9 @@ val smokeTestSourceSet = sourceSets.create("smokeTest") {
   compileClasspath += main.output + configurations["testRuntimeClasspath"]
   runtimeClasspath += output + compileClasspath
 }
-val smokeTestImplementation = configurations
-  .getByName("smokeTestImplementation")
-  .extendsFrom(functionalTestImplementation)
+val smokeTestImplementation = configurations.named("smokeTestImplementation") {
+  extendsFrom(functionalTestImplementation)
+}
 
 gradleTestKitSupport {
   withSupportLibrary()
