@@ -7,7 +7,6 @@ import com.google.common.graph.Graph
 import com.google.common.graph.GraphBuilder
 import com.google.common.graph.Graphs as GuavaGraphs
 
-@Suppress("UnstableApiUsage") // Guava graphs
 public object Graphs {
 
   /**
