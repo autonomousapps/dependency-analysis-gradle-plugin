@@ -10,11 +10,12 @@ import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.internal.intermediates.producer.NativeLibDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.FileCollection
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
+import java.io.File
 
 @CacheableTask
 public abstract class FindNativeLibsTask : DefaultTask() {
@@ -23,43 +24,35 @@ public abstract class FindNativeLibsTask : DefaultTask() {
     description = "Produces a report of all dependencies that supply native libs"
   }
 
-  private lateinit var androidJni: ArtifactCollection
-
-  public fun setAndroidJni(androidJni: ArtifactCollection) {
-    this.androidJni = androidJni
-    androidJniIdentifiers.set(androidJni.identifiers())
-  }
+  // A ResolvedArtifactResult cannot be a task input
+  @get:Internal
+  public abstract val androidJni: SetProperty<ResolvedArtifactResult>
 
   @Optional // Only available on Android
   @PathSensitive(PathSensitivity.RELATIVE)
   @InputFiles
-  public fun getAndroidJniFiles(): FileCollection? {
-    if (!::androidJni.isInitialized) return null
-    return androidJni.artifactFiles
+  public fun getAndroidJniFiles(): Provider<List<File>>? {
+    if (!androidJni.isPresent) return null
+    return androidJni.map { artifactResults -> artifactResults.map { it.file } }
   }
 
-  /** The output contains artifact coordinates, which aren't reflected in [getAndroidJniFiles]. See [identifiers]. */
-  @get:Input
-  public abstract val androidJniIdentifiers: ListProperty<String>
+  @Input
+  public fun getAndroidJniIdentifiers(): Provider<List<String>> = androidJni.identifiers()
 
-  private lateinit var dylibs: ArtifactCollection
-
-  public fun setMacNativeLibs(dylibs: ArtifactCollection) {
-    this.dylibs = dylibs
-    macNativeLibIdentifiers.set(dylibs.identifiers())
-  }
+  // A ResolvedArtifactResult cannot be a task input
+  @get:Internal
+  public abstract val dylibs: SetProperty<ResolvedArtifactResult>
 
   @Optional // Only available on JVM
   @PathSensitive(PathSensitivity.RELATIVE)
   @InputFiles
-  public fun getMacNativeLibs(): FileCollection? {
-    if (!::dylibs.isInitialized) return null
-    return dylibs.artifactFiles
+  public fun getMacNativeLibs(): Provider<List<File>>? {
+    if (!dylibs.isPresent) return null
+    return dylibs.map { artifactResults -> artifactResults.map { it.file } }
   }
 
-  /** The output contains artifact coordinates, which aren't reflected in [getMacNativeLibs]. See [identifiers]. */
-  @get:Input
-  public abstract val macNativeLibIdentifiers: ListProperty<String>
+  @Input
+  public fun getMacNativeLibIdentifiers(): Provider<List<String>> = dylibs.identifiers()
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
@@ -75,9 +68,9 @@ public abstract class FindNativeLibsTask : DefaultTask() {
   }
 
   private fun findAndroidNativeDependencies(): Set<NativeLibDependency> {
-    if (!::androidJni.isInitialized) return emptySet()
+    if (!androidJni.isPresent) return emptySet()
 
-    return androidJni.mapNotNullToOrderedSet { jniDep ->
+    return androidJni.get().mapNotNullToOrderedSet { jniDep ->
       val soFiles = jniDep.file.walkBottomUp()
         .filter { it.isFile }
         .map { it.name }
@@ -94,9 +87,9 @@ public abstract class FindNativeLibsTask : DefaultTask() {
   }
 
   private fun findMacNativeDependencies(): Set<NativeLibDependency> {
-    if (!::dylibs.isInitialized) return emptySet()
+    if (!dylibs.isPresent) return emptySet()
 
-    return dylibs.mapNotNullToOrderedSet { maybeMacArtifact ->
+    return dylibs.get().mapNotNullToOrderedSet { maybeMacArtifact ->
       val dylibs = maybeMacArtifact.file.walkBottomUp()
         .filter { it.isFile }
         .map { it.name }

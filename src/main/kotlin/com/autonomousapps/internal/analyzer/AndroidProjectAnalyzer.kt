@@ -111,9 +111,12 @@ internal abstract class AndroidAnalyzer(
   }
 
   final override fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask> {
-    return project.tasks.register("findNativeLibs$taskNameSuffix", FindNativeLibsTask::class.java) {
-      it.setAndroidJni(project.configurations.getByName(compileConfigurationName).artifactsFor(ArtifactAttributes.ANDROID_JNI))
-      it.output.set(outputPaths.nativeDependenciesPath)
+    return project.tasks.register("findNativeLibs$taskNameSuffix", FindNativeLibsTask::class.java) { t ->
+      t.androidJni.set(
+        project.configurations.named(compileConfigurationName)
+          .flatMap { c -> c.artifactsFor(ArtifactAttributes.ANDROID_JNI).resolvedArtifacts }
+      )
+      t.output.set(outputPaths.nativeDependenciesPath)
     }
   }
 

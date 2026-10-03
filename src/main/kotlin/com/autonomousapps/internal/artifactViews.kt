@@ -6,11 +6,12 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
-import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.Category
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 
 /**
@@ -30,7 +31,27 @@ internal fun Configuration.artifactsFor(attrValue: String): ArtifactCollection =
  * wouldn't invalidate the file inputs.
  */
 internal fun ArtifactCollection.identifiers(): Provider<List<String>> {
-  return resolvedArtifacts.map { artifacts -> artifacts.map { it.id.componentIdentifier.displayName }.sorted() }
+  return resolvedArtifacts.identifiers()
+}
+
+/**
+ * Returns the component identifiers of the artifacts in this collection (sorted for consistency).
+ * A task that writes these identifiers into its output must declare them as an [Input][org.gradle.api.tasks.Input].
+ * Otherwise, the task would keep stale identifiers in its output, since a version bump with byte-identical files
+ * wouldn't invalidate the file inputs.
+ */
+internal fun Provider<Set<ResolvedArtifactResult>>.identifiers(): Provider<List<String>> {
+  return map { artifacts -> artifacts.map { it.id.componentIdentifier.displayName }.sorted() }
+}
+
+/**
+ * Returns the component identifiers of the artifacts in this collection (sorted for consistency).
+ * A task that writes these identifiers into its output must declare them as an [Input][org.gradle.api.tasks.Input].
+ * Otherwise, the task would keep stale identifiers in its output, since a version bump with byte-identical files
+ * wouldn't invalidate the file inputs.
+ */
+internal fun SetProperty<ResolvedArtifactResult>.identifiers(): Provider<List<String>> {
+  return map { artifacts -> artifacts.map { it.id.componentIdentifier.displayName }.sorted() }
 }
 
 /** Captures things like the Gradle version catalog and Gradle API jar. */
