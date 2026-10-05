@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.utils
 
+import com.autonomousapps.internal.ArtifactDetails
 import com.autonomousapps.internal.utils.OpaqueNames.GRADLE_VERSION_CATALOG
 import com.autonomousapps.model.*
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.*
-import org.gradle.api.artifacts.Dependency
-import org.gradle.api.artifacts.ModuleDependency
-import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentSelector
@@ -69,6 +67,10 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
 private fun ProjectComponentIdentifier.projectPath(): String {
   return (this as? DefaultProjectComponentIdentifier)?.projectPath
     ?: error("${toCoordinates(GradleVariantIdentification.EMPTY)} is not a DefaultProjectComponentIdentifier")
+}
+
+internal fun ArtifactDetails.toCoordinates(): Coordinates {
+  return id.componentIdentifier.wrapInIncludedBuildCoordinates(variant)
 }
 
 internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
@@ -152,6 +154,7 @@ private fun ComponentIdentifier.toIdentifier(): String = when (this) {
       displayName
     }
   }
+
   else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
 }.intern()
 

@@ -89,10 +89,7 @@ internal abstract class JvmAnalyzer(
 
   override fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask> {
     return project.tasks.register("findNativeLibs$taskNameSuffix", FindNativeLibsTask::class.java) { t ->
-      t.dylibs.set(
-        project.configurations.named(compileConfigurationName)
-          .flatMap { c -> c.artifactsFor(ArtifactAttributes.DYLIB).resolvedArtifacts }
-      )
+      t.withDylibs(project.configurations.named(compileConfigurationName).flatMap { c -> c.artifactsFor(ArtifactAttributes.DYLIB).resolvedArtifacts })
       t.output.set(outputPaths.nativeDependenciesPath)
     }
   }

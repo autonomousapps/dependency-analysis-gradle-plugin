@@ -25,21 +25,6 @@ abstract class AbstractFunctionalSpec extends Specification {
 
   protected GradleProject gradleProject = null
 
-  /**
-   * <a href="https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#default-environment-variables">Default environment variables on Github Actions</a>
-   */
-  private static boolean isCi = System.getenv("CI") == "true"
-
-//  def cleanup() {
-//    // Delete fixtures on CI to prevent disk space growing out of bounds
-//    if (gradleProject != null && isCi) {
-//      try {
-//        gradleProject.rootDir.deleteDir()
-//      } catch (Throwable t) {
-//      }
-//    }
-//  }
-
   protected static String kgpVersionFrom(GradleVersion gradleVersion) {
     if (gradleVersion < GradleVersion.version('9.0.0')) {
       // TODO(tsr): causes Kotlin compilation failure. Possibly related to
