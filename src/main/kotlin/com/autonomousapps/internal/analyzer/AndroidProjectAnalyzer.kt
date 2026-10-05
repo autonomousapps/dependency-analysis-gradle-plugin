@@ -118,24 +118,26 @@ internal abstract class AndroidAnalyzer(
     }
   }
 
-  final override fun registerFindAndroidLintersTask(): TaskProvider<FindAndroidLinters> =
-    project.tasks.register("findAndroidLinters$taskNameSuffix", FindAndroidLinters::class.java) {
-      it.setLintJars(
-        project.configurations.getByName(compileConfigurationName).artifactsFor(ArtifactAttributes.ANDROID_LINT)
+  final override fun registerFindAndroidLintersTask(): TaskProvider<FindAndroidLinters> {
+    return project.tasks.register("findAndroidLinters$taskNameSuffix", FindAndroidLinters::class.java) {
+      it.withLintJars(
+        project.configurations.named(compileConfigurationName).resolvedArtifactsFor(ArtifactAttributes.ANDROID_LINT)
       )
       it.output.set(outputPaths.androidLintersPath)
     }
+  }
 
-  final override fun registerFindAndroidAssetProvidersTask(): TaskProvider<FindAndroidAssetProviders> =
-    project.tasks.register("findAndroidAssetProviders$taskNameSuffix", FindAndroidAssetProviders::class.java) {
+  final override fun registerFindAndroidAssetProvidersTask(): TaskProvider<FindAndroidAssetProviders> {
+    return project.tasks.register("findAndroidAssetProviders$taskNameSuffix", FindAndroidAssetProviders::class.java) {
       it.setAssets(
         project.configurations.getByName(runtimeConfigurationName).artifactsFor(ArtifactAttributes.ANDROID_ASSETS)
       )
       it.output.set(outputPaths.androidAssetsPath)
     }
+  }
 
-  final override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> =
-    project.tasks.register("findDeclaredProcs$taskNameSuffix", FindDeclaredProcsTask::class.java) {
+  final override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> {
+    return project.tasks.register("findDeclaredProcs$taskNameSuffix", FindDeclaredProcsTask::class.java) {
       InMemoryCache.register(it.inMemoryCacheProvider, project)
       kaptConf()?.let { configuration ->
         it.setKaptArtifacts(configuration.incoming.artifacts)
@@ -146,6 +148,7 @@ internal abstract class AndroidAnalyzer(
 
       it.output.set(outputPaths.declaredProcPath)
     }
+  }
 
   private fun kaptConfName(): String {
     return when (sourceKind.kind) {
