@@ -4,8 +4,8 @@
 
 package com.autonomousapps.tasks
 
+import com.autonomousapps.internal.ArtifactDetails
 import com.autonomousapps.internal.ManifestParser
-import com.autonomousapps.internal.identifiers
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapNotNullToOrderedSet
@@ -13,12 +13,13 @@ import com.autonomousapps.model.internal.AndroidManifestCapability.Component
 import com.autonomousapps.model.internal.intermediates.producer.AndroidManifestDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.FileCollection
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
+import java.io.File
 
 @CacheableTask
 public abstract class ManifestComponentsExtractionTask : DefaultTask() {
@@ -27,20 +28,17 @@ public abstract class ManifestComponentsExtractionTask : DefaultTask() {
     description = "Produces a report of packages, from other components, that are included via Android manifests"
   }
 
-  private lateinit var manifestArtifacts: ArtifactCollection
+  @get:Nested
+  public abstract val manifestDetails: ListProperty<ArtifactDetails>
 
-  public fun setArtifacts(manifestArtifacts: ArtifactCollection) {
-    this.manifestArtifacts = manifestArtifacts
-    manifestIdentifiers.set(manifestArtifacts.identifiers())
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val manifestFiles: ListProperty<File>
+
+  internal fun withManifests(artifacts: Provider<Set<ResolvedArtifactResult>>) {
+    manifestDetails.set(ArtifactDetails.of(artifacts))
+    manifestFiles.set(ArtifactDetails.files(artifacts))
   }
-
-  @PathSensitive(PathSensitivity.NAME_ONLY)
-  @InputFiles
-  public fun getManifestFiles(): FileCollection = manifestArtifacts.artifactFiles
-
-  /** The output contains artifact coordinates, which aren't reflected in [getManifestFiles]. See [identifiers]. */
-  @get:Input
-  public abstract val manifestIdentifiers: ListProperty<String>
 
   @get:Input
   public abstract val namespace: Property<String>
@@ -51,14 +49,20 @@ public abstract class ManifestComponentsExtractionTask : DefaultTask() {
   @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
+    val details = manifestDetails.get()
+    val files = manifestFiles.get()
+    require(details.size == files.size) {
+      "Expected 'details.size == files.size'. Got details.size=${details.size}, files.size=${files.size}"
+    }
+
     val parser = ManifestParser(namespace.get())
 
-    val manifests: Set<AndroidManifestDependency> = manifestArtifacts.mapNotNullToOrderedSet { manifest ->
+    val manifests: Set<AndroidManifestDependency> = details.zip(files).mapNotNullToOrderedSet { (details, file) ->
       try {
-        val parseResult = parser.parse(manifest.file, true)
+        val parseResult = parser.parse(file, true)
         AndroidManifestDependency.newInstance(
           componentMap = parseResult.components.toComponentMap(),
-          artifact = manifest,
+          artifact = details,
         )
       } catch (_: GradleException) {
         null
