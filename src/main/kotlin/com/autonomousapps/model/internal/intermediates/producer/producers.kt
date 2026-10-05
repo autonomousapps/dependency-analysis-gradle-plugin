@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates.producer
 
+import com.autonomousapps.internal.ArtifactDetails
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.MapSetComparator
 import com.autonomousapps.internal.utils.efficient
@@ -48,7 +49,7 @@ internal data class AndroidManifestDependency(
   companion object {
     fun newInstance(
       componentMap: Map<AndroidManifestCapability.Component, Set<String>>,
-      artifact: ResolvedArtifactResult,
+      artifact: ArtifactDetails,
     ): AndroidManifestDependency {
       return AndroidManifestDependency(artifact.toCoordinates(), componentMap.toSortedMap().efficient())
     }

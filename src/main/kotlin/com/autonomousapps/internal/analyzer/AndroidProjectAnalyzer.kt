@@ -73,7 +73,7 @@ internal abstract class AndroidAnalyzer(
       "extractPackageNameFromManifest$taskNameSuffix",
       ManifestComponentsExtractionTask::class.java,
     ) {
-      it.setArtifacts(project.configurations.getByName(compileConfigurationName).artifactsFor("android-manifest"))
+      it.withManifests(project.configurations.named(compileConfigurationName).resolvedArtifactsFor("android-manifest"))
       it.namespace.set(agp.namespace())
       it.output.set(outputPaths.manifestPackagesPath)
     }
