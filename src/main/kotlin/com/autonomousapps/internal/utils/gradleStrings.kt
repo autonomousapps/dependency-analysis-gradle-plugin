@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.utils
 
+import com.autonomousapps.internal.ArtifactDetails
 import com.autonomousapps.internal.utils.OpaqueNames.GRADLE_VERSION_CATALOG
 import com.autonomousapps.model.*
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.*
-import org.gradle.api.artifacts.Dependency
-import org.gradle.api.artifacts.ModuleDependency
-import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentSelector
@@ -69,6 +67,10 @@ private fun ResolvedDependencyResult.compositeRequest(): IncludedBuildCoordinate
 private fun ProjectComponentIdentifier.projectPath(): String {
   return (this as? DefaultProjectComponentIdentifier)?.projectPath
     ?: error("${toCoordinates(GradleVariantIdentification.EMPTY)} is not a DefaultProjectComponentIdentifier")
+}
+
+internal fun ArtifactDetails.toCoordinates(): Coordinates {
+  return id.componentIdentifier.wrapInIncludedBuildCoordinates(variant)
 }
 
 internal fun ResolvedArtifactResult.toCoordinates(): Coordinates {
@@ -135,6 +137,7 @@ private fun ComponentIdentifier.toCoordinates(gradleVariantIdentification: Gradl
  */
 private fun ComponentIdentifier.toIdentifier(): String = when (this) {
   is ProjectComponentIdentifier -> projectPath
+
   is ModuleComponentIdentifier -> {
     // flat JAR/AAR files have no group. I don't trust that, if absent, it will be blank rather
     // than null.
@@ -142,8 +145,10 @@ private fun ComponentIdentifier.toIdentifier(): String = when (this) {
     if (moduleIdentifier.group.isNullOrBlank()) moduleIdentifier.name
     else moduleIdentifier.toString()
   }
+
   // e.g. "Gradle API"
   is OpaqueComponentIdentifier -> displayName
+
   // for a file dependency
   is OpaqueComponentArtifactIdentifier -> {
     if (OpaqueNames.isGradleVersionCatalog(file.toString())) {
@@ -152,6 +157,7 @@ private fun ComponentIdentifier.toIdentifier(): String = when (this) {
       displayName
     }
   }
+
   else -> throw GradleException("Cannot identify ComponentIdentifier subtype. Was ${javaClass.simpleName}, named $this")
 }.intern()
 
