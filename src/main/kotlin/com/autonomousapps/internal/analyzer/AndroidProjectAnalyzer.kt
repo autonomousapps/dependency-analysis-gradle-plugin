@@ -129,8 +129,8 @@ internal abstract class AndroidAnalyzer(
 
   final override fun registerFindAndroidAssetProvidersTask(): TaskProvider<FindAndroidAssetProviders> {
     return project.tasks.register("findAndroidAssetProviders$taskNameSuffix", FindAndroidAssetProviders::class.java) {
-      it.setAssets(
-        project.configurations.getByName(runtimeConfigurationName).artifactsFor(ArtifactAttributes.ANDROID_ASSETS)
+      it.withAssets(
+        project.configurations.named(runtimeConfigurationName).resolvedArtifactsFor(ArtifactAttributes.ANDROID_ASSETS)
       )
       it.output.set(outputPaths.androidAssetsPath)
     }

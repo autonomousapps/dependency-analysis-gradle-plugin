@@ -2,18 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.identifiers
+import com.autonomousapps.internal.ArtifactDetails
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.internal.intermediates.producer.AndroidAssetDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.FileCollection
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
+import java.io.File
 
 @CacheableTask
 public abstract class FindAndroidAssetProviders : DefaultTask() {
@@ -22,20 +23,17 @@ public abstract class FindAndroidAssetProviders : DefaultTask() {
     description = "Produces a report of dependencies that supply Android assets"
   }
 
-  private lateinit var assetDirs: ArtifactCollection
+  @get:Nested
+  public abstract val assetDetails: ListProperty<ArtifactDetails>
 
-  public fun setAssets(assets: ArtifactCollection) {
-    this.assetDirs = assets
-    assetIdentifiers.set(assets.identifiers())
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val assetFiles: ListProperty<File>
+
+  internal fun withAssets(artifacts: Provider<Set<ResolvedArtifactResult>>) {
+    assetDetails.set(ArtifactDetails.of(artifacts))
+    assetFiles.set(ArtifactDetails.files(artifacts))
   }
-
-  @PathSensitive(PathSensitivity.RELATIVE)
-  @InputFiles
-  public fun getAssetArtifactFiles(): FileCollection = assetDirs.artifactFiles
-
-  /** The output contains artifact coordinates, which aren't reflected in [getAssetArtifactFiles]. See [identifiers]. */
-  @get:Input
-  public abstract val assetIdentifiers: ListProperty<String>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
@@ -43,20 +41,25 @@ public abstract class FindAndroidAssetProviders : DefaultTask() {
   @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
-    val assetProviders: Set<AndroidAssetDependency> = assetDirs.asSequence()
+    val details = assetDetails.get()
+    val files = assetFiles.get()
+    require(details.size == files.size) {
+      "Expected 'details.size == files.size'. Got details.size=${details.size}, files.size=${files.size}"
+    }
+
+    val assetProviders: Set<AndroidAssetDependency> = details.zip(files).asSequence()
       // Sometimes the file doesn't exist. Is this a bug? A feature? Who knows?
       // We only want non-empty directories.
-      .filter { it.file.exists() }
-      .filter { it.file.isDirectory }
-      .filter { it.file.listFiles()!!.isNotEmpty() }
-      .mapNotNull { artifact ->
+      .filter { (_, file) -> file.exists() }
+      .filter { (_, file) -> file.isDirectory }
+      .filter { (_, file) -> file.listFiles()!!.isNotEmpty() }
+      .mapNotNull { (detail, dir) ->
         try {
-          val dir = artifact.file
           val assets = dir.listFiles()!!.map {
             it.toRelativeString(dir)
           }
           AndroidAssetDependency.newInstance(
-            coordinates = artifact.toCoordinates(),
+            coordinates = detail.toCoordinates(),
             assets = assets
           )
         } catch (_: GradleException) {
