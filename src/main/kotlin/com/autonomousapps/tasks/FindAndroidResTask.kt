@@ -4,17 +4,20 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.identifiers
-import com.autonomousapps.internal.utils.*
-import com.autonomousapps.model.internal.AndroidResCapability
+import com.autonomousapps.internal.ArtifactDetails
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
+import com.autonomousapps.internal.utils.flatMapToSet
+import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
+import com.autonomousapps.model.internal.AndroidResCapability
 import com.autonomousapps.model.internal.intermediates.producer.AndroidResDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.FileCollection
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
@@ -30,40 +33,29 @@ public abstract class FindAndroidResTask : DefaultTask() {
     description = "Produces a report of all R import candidates from set of dependencies"
   }
 
-  private lateinit var androidSymbols: ArtifactCollection
+  @get:Nested
+  public abstract val androidSymbolDetails: ListProperty<ArtifactDetails>
 
-  public fun setAndroidSymbols(resources: ArtifactCollection) {
-    this.androidSymbols = resources
-    androidSymbolIdentifiers.set(resources.identifiers())
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val androidSymbolFiles: ListProperty<File>
+
+  internal fun withAndroidSymbols(artifacts: Provider<Set<ResolvedArtifactResult>>) {
+    androidSymbolDetails.set(ArtifactDetails.of(artifacts))
+    androidSymbolFiles.set(ArtifactDetails.files(artifacts))
   }
 
-  /** Artifact type "android-symbol-with-package-name". All Android libraries seem to have this. */
-  @PathSensitive(PathSensitivity.NAME_ONLY)
-  @InputFiles
-  public fun getAndroidSymbols(): FileCollection = androidSymbols.artifactFiles
+  @get:Nested
+  public abstract val androidPublicResDetails: ListProperty<ArtifactDetails>
 
-  /** The output contains artifact coordinates, which aren't reflected in [getAndroidSymbols]. See [identifiers]. */
-  @get:Input
-  public abstract val androidSymbolIdentifiers: ListProperty<String>
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val androidPublicResFiles: ListProperty<File>
 
-  private lateinit var androidPublicRes: ArtifactCollection
-
-  public fun setAndroidPublicRes(androidPublicRes: ArtifactCollection) {
-    this.androidPublicRes = androidPublicRes
-    androidPublicResIdentifiers.set(androidPublicRes.identifiers())
+  internal fun withAndroidPublicRes(artifacts: Provider<Set<ResolvedArtifactResult>>) {
+    androidPublicResDetails.set(ArtifactDetails.of(artifacts))
+    androidPublicResFiles.set(ArtifactDetails.files(artifacts))
   }
-
-  /**
-   * Artifact type "android-public-res". Appears to only be for platform dependencies that bother to include a
-   * `public.xml`.
-   */
-  @PathSensitive(PathSensitivity.NAME_ONLY)
-  @InputFiles
-  public fun getAndroidPublicRes(): FileCollection = androidPublicRes.artifactFiles
-
-  /** The output contains artifact coordinates, which aren't reflected in [getAndroidPublicRes]. See [identifiers]. */
-  @get:Input
-  public abstract val androidPublicResIdentifiers: ListProperty<String>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
@@ -72,33 +64,42 @@ public abstract class FindAndroidResTask : DefaultTask() {
   public fun action() {
     val outputFile = output.getAndDelete()
 
-    val publicRes = androidResFrom(androidPublicRes, true)
-    val allRes = androidResFrom(androidSymbols, false, publicRes.flatMapToSet { it.lines })
+    val publicRes = androidResFrom(androidPublicResDetails, androidPublicResFiles, true)
+    val allRes = androidResFrom(androidSymbolDetails, androidSymbolFiles, false, publicRes.flatMapToSet { it.lines })
 
     outputFile.bufferWriteJsonSet((allRes + publicRes).toSortedSet())
   }
 
   private fun androidResFrom(
-    artifacts: ArtifactCollection,
+    details: ListProperty<ArtifactDetails>,
+    files: ListProperty<File>,
     isPublicRes: Boolean,
     publicLinesFilter: Set<AndroidResCapability.Line> = emptySet()
   ): Set<AndroidResDependency> {
-    return artifacts.mapNotNullToSet { resArtifact ->
-      try {
-        val (import, lines) = parseResFile(resArtifact.file, isPublicRes, publicLinesFilter)
-        if (import != null) {
-          AndroidResDependency.newInstance(
-            coordinates = resArtifact.toCoordinates(),
-            import = import,
-            lines = lines
-          )
-        } else {
+    val details = details.get()
+    val files = files.get()
+    require(details.size == files.size) {
+      "Expected 'details.size == files.size'. Got details.size=${details.size}, files.size=${files.size}"
+    }
+
+    return details.zip(files).asSequence()
+      .mapNotNull { (details, file) ->
+        try {
+          val (import, lines) = parseResFile(file, isPublicRes, publicLinesFilter)
+          if (import != null) {
+            AndroidResDependency.newInstance(
+              coordinates = details.toCoordinates(),
+              import = import,
+              lines = lines,
+            )
+          } else {
+            null
+          }
+        } catch (_: GradleException) {
           null
         }
-      } catch (_: GradleException) {
-        null
       }
-    }
+      .toSortedSet()
   }
 
   private fun parseResFile(
@@ -136,8 +137,8 @@ public abstract class FindAndroidResTask : DefaultTask() {
 
     operator fun Set<AndroidResDependency>.plus(other: Set<AndroidResDependency>): Set<AndroidResDependency> {
       val sink = mutableMapOf<Coordinates, AndroidResDependency>()
-      map { sink[it.coordinates] = it }
-      other.map {
+      forEach { sink[it.coordinates] = it }
+      other.forEach {
         sink.merge(it.coordinates, it) { acc, inc ->
           val import = if (acc.import == NOT_AN_IMPORT) inc.import else acc.import
           check(import != NOT_AN_IMPORT) { "Not an import! ${it.coordinates}." }

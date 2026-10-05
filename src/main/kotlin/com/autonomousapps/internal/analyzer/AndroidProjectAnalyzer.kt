@@ -81,11 +81,11 @@ internal abstract class AndroidAnalyzer(
 
   final override fun registerFindAndroidResTask(): TaskProvider<FindAndroidResTask> {
     return project.tasks.register("findAndroidResImports$taskNameSuffix", FindAndroidResTask::class.java) {
-      it.setAndroidSymbols(
-        project.configurations.getByName(compileConfigurationName).artifactsFor("android-symbol-with-package-name")
+      it.withAndroidSymbols(
+        project.configurations.named(compileConfigurationName).resolvedArtifactsFor("android-symbol-with-package-name")
       )
-      it.setAndroidPublicRes(
-        project.configurations.getByName(compileConfigurationName).artifactsFor("android-public-res")
+      it.withAndroidPublicRes(
+        project.configurations.named(compileConfigurationName).resolvedArtifactsFor("android-public-res")
       )
       it.output.set(outputPaths.androidResPath)
     }
