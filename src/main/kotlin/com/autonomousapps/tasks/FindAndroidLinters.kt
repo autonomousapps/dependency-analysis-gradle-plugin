@@ -2,24 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
+import com.autonomousapps.internal.ArtifactDetails
 import com.autonomousapps.internal.LINT_ISSUE_REGISTRY_PATH
 import com.autonomousapps.internal.MANIFEST_PATH
-import com.autonomousapps.internal.identifiers
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.internal.intermediates.producer.AndroidLinterDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.FileCollection
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.*
 import java.io.BufferedReader
 import java.io.File
 import java.util.zip.ZipFile
@@ -35,19 +31,17 @@ public abstract class FindAndroidLinters : DefaultTask() {
     description = "Produces a report of dependencies that supply Android linters"
   }
 
-  private lateinit var lintJars: ArtifactCollection
+  @get:Nested
+  public abstract val lintDetails: ListProperty<ArtifactDetails>
 
-  public fun setLintJars(lintJars: ArtifactCollection) {
-    this.lintJars = lintJars
-    lintJarIdentifiers.set(lintJars.identifiers())
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val lintFiles: ListProperty<File>
+
+  internal fun withLintJars(artifacts: Provider<Set<ResolvedArtifactResult>>) {
+    lintDetails.set(ArtifactDetails.of(artifacts))
+    lintFiles.set(ArtifactDetails.files(artifacts))
   }
-
-  @Classpath
-  public fun getLintArtifactFiles(): FileCollection = lintJars.artifactFiles
-
-  /** The output contains artifact coordinates, which aren't reflected in [getLintArtifactFiles]. See [identifiers]. */
-  @get:Input
-  public abstract val lintJarIdentifiers: ListProperty<String>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
@@ -55,14 +49,20 @@ public abstract class FindAndroidLinters : DefaultTask() {
   @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
-    val linters: Set<AndroidLinterDependency> = lintJars.asSequence()
+    val details = lintDetails.get()
+    val files = lintFiles.get()
+    require(details.size == files.size) {
+      "Expected 'details.size == files.size'. Got details.size=${details.size}, files.size=${files.size}"
+    }
+
+    val linters: Set<AndroidLinterDependency> = details.zip(files).asSequence()
       // Sometimes the file doesn't exist. Is this a bug? A feature? Who knows?
-      .filter { it.file.exists() }
-      .mapNotNull {
+      .filter { (_, file) -> file.exists() }
+      .mapNotNull { (details, file) ->
         try {
           AndroidLinterDependency(
-            coordinates = it.toCoordinates(),
-            lintRegistry = findLintRegistry(it.file)
+            coordinates = details.toCoordinates(),
+            lintRegistry = findLintRegistry(file)
           )
         } catch (_: GradleException) {
           null
@@ -75,7 +75,6 @@ public abstract class FindAndroidLinters : DefaultTask() {
 
   private fun findLintRegistry(jar: File): String {
     ZipFile(jar).use { zip ->
-
       val manifestEntry: String? = zip.getEntry(MANIFEST_PATH)?.run {
         zip.getInputStream(this).bufferedReader().use(BufferedReader::readLines)
           .find { it.startsWith("Lint-Registry") }
