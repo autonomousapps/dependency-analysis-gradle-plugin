@@ -4,11 +4,8 @@
 
 package com.autonomousapps.internal.analyzer
 
-import com.autonomousapps.internal.ArtifactAttributes
-import com.autonomousapps.internal.KotlinMetadataClasspath
-import com.autonomousapps.internal.OutputPaths
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
-import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.services.InMemoryCache
@@ -87,7 +84,9 @@ internal abstract class AndroidAnalyzer(
       it.setAndroidSymbols(
         project.configurations.getByName(compileConfigurationName).artifactsFor("android-symbol-with-package-name")
       )
-      it.setAndroidPublicRes(project.configurations.getByName(compileConfigurationName).artifactsFor("android-public-res"))
+      it.setAndroidPublicRes(
+        project.configurations.getByName(compileConfigurationName).artifactsFor("android-public-res")
+      )
       it.output.set(outputPaths.androidResPath)
     }
   }
@@ -112,20 +111,26 @@ internal abstract class AndroidAnalyzer(
 
   final override fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask> {
     return project.tasks.register("findNativeLibs$taskNameSuffix", FindNativeLibsTask::class.java) { t ->
-      t.withAndroidJni(project.configurations.named(compileConfigurationName).flatMap { c -> c.artifactsFor(ArtifactAttributes.ANDROID_JNI).resolvedArtifacts })
+      t.withAndroidJni(
+        project.configurations.named(compileConfigurationName).resolvedArtifactsFor(ArtifactAttributes.ANDROID_JNI)
+      )
       t.output.set(outputPaths.nativeDependenciesPath)
     }
   }
 
   final override fun registerFindAndroidLintersTask(): TaskProvider<FindAndroidLinters> =
     project.tasks.register("findAndroidLinters$taskNameSuffix", FindAndroidLinters::class.java) {
-      it.setLintJars(project.configurations.getByName(compileConfigurationName).artifactsFor(ArtifactAttributes.ANDROID_LINT))
+      it.setLintJars(
+        project.configurations.getByName(compileConfigurationName).artifactsFor(ArtifactAttributes.ANDROID_LINT)
+      )
       it.output.set(outputPaths.androidLintersPath)
     }
 
   final override fun registerFindAndroidAssetProvidersTask(): TaskProvider<FindAndroidAssetProviders> =
     project.tasks.register("findAndroidAssetProviders$taskNameSuffix", FindAndroidAssetProviders::class.java) {
-      it.setAssets(project.configurations.getByName(runtimeConfigurationName).artifactsFor(ArtifactAttributes.ANDROID_ASSETS))
+      it.setAssets(
+        project.configurations.getByName(runtimeConfigurationName).artifactsFor(ArtifactAttributes.ANDROID_ASSETS)
+      )
       it.output.set(outputPaths.androidAssetsPath)
     }
 

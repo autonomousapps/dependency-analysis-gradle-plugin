@@ -34,12 +34,8 @@ public abstract class FindNativeLibsTask : DefaultTask() {
   public abstract val androidJniFiles: ListProperty<File>
 
   internal fun withAndroidJni(androidJni: Provider<Set<ResolvedArtifactResult>>) {
-    androidJniDetails.set(androidJni.map {
-      it.map { artifact -> ArtifactDetails(artifact.id, artifact.variant) }
-    })
-    androidJniFiles.set(androidJni.map {
-      it.map { artifact -> artifact.file }
-    })
+    androidJniDetails.set(ArtifactDetails.of(androidJni))
+    androidJniFiles.set(ArtifactDetails.files(androidJni))
   }
 
   @get:Optional // Only available on JVM
@@ -52,12 +48,8 @@ public abstract class FindNativeLibsTask : DefaultTask() {
   public abstract val dylibsFiles: ListProperty<File>
 
   internal fun withDylibs(dylibs: Provider<Set<ResolvedArtifactResult>>) {
-    dylibsDetails.set(dylibs.map {
-      it.map { artifact -> ArtifactDetails(artifact.id, artifact.variant) }
-    })
-    dylibsFiles.set(dylibs.map {
-      it.map { artifact -> artifact.file }
-    })
+    dylibsDetails.set(ArtifactDetails.of(dylibs))
+    dylibsFiles.set(ArtifactDetails.files(dylibs))
   }
 
   @get:OutputFile

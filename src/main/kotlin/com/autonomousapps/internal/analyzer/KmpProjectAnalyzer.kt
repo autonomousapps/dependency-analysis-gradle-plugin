@@ -5,7 +5,7 @@ package com.autonomousapps.internal.analyzer
 import com.autonomousapps.internal.ArtifactAttributes
 import com.autonomousapps.internal.KotlinMetadataClasspath
 import com.autonomousapps.internal.OutputPaths
-import com.autonomousapps.internal.artifactsFor
+import com.autonomousapps.internal.resolvedArtifactsFor
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.services.InMemoryCache
@@ -85,7 +85,9 @@ internal class KmpProjectAnalyzer(
 
   override fun registerFindNativeLibsTask(): TaskProvider<FindNativeLibsTask> {
     return project.tasks.register("findNativeLibs$taskNameSuffix", FindNativeLibsTask::class.java) { t ->
-      t.withDylibs(project.configurations.named(compileConfigurationName).flatMap { c -> c.artifactsFor(ArtifactAttributes.DYLIB).resolvedArtifacts })
+      t.withDylibs(
+        project.configurations.named(compileConfigurationName).resolvedArtifactsFor(ArtifactAttributes.DYLIB)
+      )
       t.output.set(outputPaths.nativeDependenciesPath)
     }
   }

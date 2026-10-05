@@ -137,6 +137,7 @@ private fun ComponentIdentifier.toCoordinates(gradleVariantIdentification: Gradl
  */
 private fun ComponentIdentifier.toIdentifier(): String = when (this) {
   is ProjectComponentIdentifier -> projectPath
+
   is ModuleComponentIdentifier -> {
     // flat JAR/AAR files have no group. I don't trust that, if absent, it will be blank rather
     // than null.
@@ -144,8 +145,10 @@ private fun ComponentIdentifier.toIdentifier(): String = when (this) {
     if (moduleIdentifier.group.isNullOrBlank()) moduleIdentifier.name
     else moduleIdentifier.toString()
   }
+
   // e.g. "Gradle API"
   is OpaqueComponentIdentifier -> displayName
+
   // for a file dependency
   is OpaqueComponentArtifactIdentifier -> {
     if (OpaqueNames.isGradleVersionCatalog(file.toString())) {

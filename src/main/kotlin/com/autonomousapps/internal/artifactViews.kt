@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
+import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
@@ -23,6 +24,10 @@ internal val CATEGORY = Attribute.of("org.gradle.category", String::class.java)
 private val attributeKey = Attribute.of("artifactType", String::class.java)
 
 internal fun Configuration.artifactsFor(attrValue: String): ArtifactCollection = artifactViewFor(attrValue).artifacts
+
+internal fun NamedDomainObjectProvider<Configuration>.resolvedArtifactsFor(attrValue: String): Provider<Set<ResolvedArtifactResult>> {
+  return flatMap { c -> c.artifactsFor(attrValue).resolvedArtifacts }
+}
 
 /**
  * Returns the component identifiers of the artifacts in this collection (sorted for consistency).
