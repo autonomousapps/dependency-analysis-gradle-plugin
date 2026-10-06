@@ -94,12 +94,22 @@ public open class Issue @Inject constructor(
   /**
    * All provided elements will be filtered out of the final advice. For example:
    * ```
-   * exclude(":lib", "com.some:thing")
+   * exclude(":lib", "com.some:thing", "com.some:*")
    * ```
    * tells the plugin to exclude those dependencies in the final advice.
+   *
+   * A '*' matches zero or more characters, including separators such as ':'.
    */
   public fun exclude(vararg ignore: String) {
-    excludes.addAll(ignore.map { Exclusion.ExactMatch(it) }.toSet())
+    excludes.addAll(
+      ignore.map { name ->
+        if ('*' in name) {
+          Exclusion.PatternMatch(Regex(name.split('*').joinToString(".*") { Regex.escape(it) }))
+        } else {
+          Exclusion.ExactMatch(name)
+        }
+      }.toSet()
+    )
   }
 
   /**
