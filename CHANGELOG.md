@@ -1,6 +1,7 @@
 Dependency Analysis Plugin Changelog
 
 # Version 3.19.2
+* [fix]: add a default value to `InMemoryCache` to bound its size and prevent unbounded heap growth on large builds.
 * [fix]: Updated asm to 9.10.1 (and use latest asm-relocated).
 * [fix]: don't duplicate advise for `main` -> `test` and `main` -> `androidTest`.
 * [fix]: de/serialize less stuff to `ExplodeJarWorkAction` and `FindKotlinMagicTask`.
