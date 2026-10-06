@@ -3,21 +3,21 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.TASK_GROUP_DEP
-import com.autonomousapps.internal.identifiers
+import com.autonomousapps.internal.ArtifactDetails
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.model.internal.ProjectVariant
 import com.autonomousapps.model.source.AndroidSourceKind
 import org.gradle.api.DefaultTask
-import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
-import java.util.TreeSet
+import java.io.File
+import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
@@ -33,19 +33,17 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
     classpathName.set(name)
   }
 
-  private lateinit var classpath: ArtifactCollection
+  @get:Nested
+  public abstract val classpathDetails: ListProperty<ArtifactDetails>
 
-  public fun setClasspath(artifacts: ArtifactCollection) {
-    this.classpath = artifacts
-    classpathIdentifiers.set(artifacts.identifiers())
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val classpathFiles: ListProperty<File>
+
+  internal fun withClasspath(artifacts: Provider<Set<ResolvedArtifactResult>>) {
+    classpathDetails.set(ArtifactDetails.of(artifacts))
+    classpathFiles.set(ArtifactDetails.files(artifacts))
   }
-
-  @Classpath
-  public fun getClasspath(): FileCollection = classpath.artifactFiles
-
-  /** The output contains artifact coordinates, which aren't reflected in [getClasspath]. See [identifiers]. */
-  @get:Input
-  public abstract val classpathIdentifiers: ListProperty<String>
 
   @get:Input
   public abstract val classpathName: Property<String>
@@ -61,7 +59,11 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
     val output = output.getAndDelete()
 
     val project = syntheticProject.fromJson<ProjectVariant>(compressed = true)
-    val duplicates = ClasspathAnalyzer(project, classpathName.get(), classpath).duplicates()
+    val duplicates = ClasspathAnalyzer(
+      project,
+      classpathName.get(),
+      ArtifactDetails.sequenced(classpathDetails, classpathFiles),
+    ).duplicates()
 
     output.bufferWriteJsonSet(duplicates)
   }
@@ -69,7 +71,7 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
   internal class ClasspathAnalyzer(
     private val project: ProjectVariant,
     private val classpathName: String,
-    artifacts: ArtifactCollection,
+    artifacts: Sequence<Pair<ArtifactDetails, File>>,
   ) {
 
     // map of class files to dependencies that contain them
@@ -78,7 +80,7 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
     init {
       artifacts
         .filterNonGradle()
-        .filter { it.file.name.endsWith(".jar") }
+        .filter { (_, file) -> file.name.endsWith(".jar") }
         .forEach(::inspectJar)
     }
 
@@ -111,10 +113,11 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
         }
     }
 
-    private fun inspectJar(artifact: ResolvedArtifactResult) {
-      ZipFile(artifact.file).use { zip ->
-
-        val coordinates = artifact.toCoordinates()
+    private fun inspectJar(artifact: Pair<ArtifactDetails, File>) {
+      val artifactDetails = artifact.first
+      val artifactFile = artifact.second
+      ZipFile(artifactFile).use { zip ->
+        val coordinates = artifactDetails.toCoordinates()
 
         // Create multimap of class name to [dependencies]
         zip.asSequenceOfClassFiles()

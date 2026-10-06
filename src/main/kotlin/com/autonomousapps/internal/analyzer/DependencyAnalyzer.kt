@@ -362,9 +362,7 @@ internal abstract class AbstractDependencyAnalyzer(
       DiscoverClasspathDuplicationTask::class.java,
     ) { t ->
       t.withClasspathName(DuplicateClass.COMPILE_CLASSPATH_NAME)
-      t.setClasspath(
-        project.configurations.getByName(compileConfigurationName).artifactsFor(attributeValueJar)
-      )
+      t.withClasspath(project.configurations.named(compileConfigurationName).resolvedArtifactsFor(attributeValueJar))
       t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       t.output.set(outputPaths.duplicateCompileClasspathPath)
     }
@@ -378,9 +376,7 @@ internal abstract class AbstractDependencyAnalyzer(
       DiscoverClasspathDuplicationTask::class.java,
     ) { t ->
       t.withClasspathName(DuplicateClass.RUNTIME_CLASSPATH_NAME)
-      t.setClasspath(
-        project.configurations.getByName(runtimeConfigurationName).artifactsFor(attributeValueJar)
-      )
+      t.withClasspath(project.configurations.named(runtimeConfigurationName).resolvedArtifactsFor(attributeValueJar))
       t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
       t.output.set(outputPaths.duplicateCompileRuntimePath)
     }
