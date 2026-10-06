@@ -64,25 +64,18 @@ public abstract class FindAndroidResTask : DefaultTask() {
   public fun action() {
     val outputFile = output.getAndDelete()
 
-    val publicRes = androidResFrom(androidPublicResDetails, androidPublicResFiles, true)
-    val allRes = androidResFrom(androidSymbolDetails, androidSymbolFiles, false, publicRes.flatMapToSet { it.lines })
+    val publicRes = androidResFrom(ArtifactDetails.sequenced(androidPublicResDetails, androidPublicResFiles), true)
+    val allRes = androidResFrom(ArtifactDetails.sequenced(androidSymbolDetails, androidSymbolFiles), false, publicRes.flatMapToSet { it.lines })
 
     outputFile.bufferWriteJsonSet((allRes + publicRes).toSortedSet())
   }
 
   private fun androidResFrom(
-    details: ListProperty<ArtifactDetails>,
-    files: ListProperty<File>,
+    artifacts: Sequence<Pair<ArtifactDetails, File>>,
     isPublicRes: Boolean,
     publicLinesFilter: Set<AndroidResCapability.Line> = emptySet()
   ): Set<AndroidResDependency> {
-    val details = details.get()
-    val files = files.get()
-    require(details.size == files.size) {
-      "Expected 'details.size == files.size'. Got details.size=${details.size}, files.size=${files.size}"
-    }
-
-    return details.zip(files).asSequence()
+    return artifacts
       .mapNotNull { (details, file) ->
         try {
           val (import, lines) = parseResFile(file, isPublicRes, publicLinesFilter)

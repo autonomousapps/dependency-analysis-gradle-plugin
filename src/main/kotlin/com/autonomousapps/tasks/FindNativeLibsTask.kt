@@ -5,7 +5,6 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.ArtifactDetails
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.mapNotNullToOrderedSet
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.internal.intermediates.producer.NativeLibDependency
 import org.gradle.api.DefaultTask
@@ -66,58 +65,46 @@ public abstract class FindNativeLibsTask : DefaultTask() {
   }
 
   private fun findAndroidNativeDependencies(): Set<NativeLibDependency> {
-    if (!androidJniDetails.isPresent) return emptySet()
-
-    val details = androidJniDetails.get()
-    val files = androidJniFiles.get()
-    require(details.size == files.size) {
-      "Expected 'details.size == files.size'. Got details.size=${details.size}, files.size=${files.size}"
-    }
-
-    return details.zip(files).mapNotNullToOrderedSet { (details, file) ->
-      val soFiles = file.walkBottomUp()
-        .filter { it.isFile }
-        .map { it.name }
-        .toSortedSet()
-      try {
-        NativeLibDependency.newInstance(
-          coordinates = details.toCoordinates(),
-          fileNames = soFiles,
-        )
-      } catch (_: GradleException) {
-        null
-      }
-    }
-  }
-
-  private fun findMacNativeDependencies(): Set<NativeLibDependency> {
-    if (!dylibsDetails.isPresent) return emptySet()
-
-    val details = dylibsDetails.get()
-    val files = dylibsFiles.get()
-    require(details.size == files.size) {
-      "Expected 'details.size == files.size'. Got details.size=${details.size}, files.size=${files.size}"
-    }
-
-    return details.zip(files).mapNotNullToOrderedSet { (details, file) ->
-      val dylibs = file.walkBottomUp()
-        .filter { it.isFile }
-        .map { it.name }
-        .filter { it.endsWith(".dylib") }
-        .toSortedSet()
-
-      if (dylibs.isNotEmpty()) {
+    return ArtifactDetails.sequenced(androidJniDetails, androidJniFiles)
+      .mapNotNull { (details, file) ->
+        val soFiles = file.walkBottomUp()
+          .filter { it.isFile }
+          .map { it.name }
+          .toSortedSet()
         try {
           NativeLibDependency.newInstance(
             coordinates = details.toCoordinates(),
-            fileNames = dylibs,
+            fileNames = soFiles,
           )
         } catch (_: GradleException) {
           null
         }
-      } else {
-        null
       }
-    }
+      .toSortedSet()
+  }
+
+  private fun findMacNativeDependencies(): Set<NativeLibDependency> {
+    return ArtifactDetails.sequenced(dylibsDetails, dylibsFiles)
+      .mapNotNull { (details, file) ->
+        val dylibs = file.walkBottomUp()
+          .filter { it.isFile }
+          .map { it.name }
+          .filter { it.endsWith(".dylib") }
+          .toSortedSet()
+
+        if (dylibs.isNotEmpty()) {
+          try {
+            NativeLibDependency.newInstance(
+              coordinates = details.toCoordinates(),
+              fileNames = dylibs,
+            )
+          } catch (_: GradleException) {
+            null
+          }
+        } else {
+          null
+        }
+      }
+      .toSortedSet()
   }
 }

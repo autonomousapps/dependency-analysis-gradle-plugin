@@ -41,13 +41,7 @@ public abstract class FindAndroidAssetProviders : DefaultTask() {
   @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
-    val details = assetDetails.get()
-    val files = assetFiles.get()
-    require(details.size == files.size) {
-      "Expected 'details.size == files.size'. Got details.size=${details.size}, files.size=${files.size}"
-    }
-
-    val assetProviders: Set<AndroidAssetDependency> = details.zip(files).asSequence()
+    val assetProviders: Set<AndroidAssetDependency> = ArtifactDetails.sequenced(assetDetails, assetFiles)
       // Sometimes the file doesn't exist. Is this a bug? A feature? Who knows?
       // We only want non-empty directories.
       .filter { (_, file) -> file.exists() }
