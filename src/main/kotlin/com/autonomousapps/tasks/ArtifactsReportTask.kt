@@ -42,8 +42,13 @@ public abstract class ArtifactsReportTask : DefaultTask() {
   @get:InputFiles
   public abstract val jarFiles: ListProperty<File>
 
-  /** This artifact collection is the result of resolving the compile or runtime classpath for jar artifacts. */
-  internal fun withJarArtifacts(artifacts: Provider<Set<ResolvedArtifactResult>>) {
+  /**
+   * This artifact collection is the result of resolving the compile or runtime classpath for jar artifacts.
+   *
+   * This needs to be public because `ComponentWithMultipleArtifactsSpec.one component can have multiple Jars produced by a transform`
+   * configures it.
+   */
+  public fun withJarArtifacts(artifacts: Provider<Set<ResolvedArtifactResult>>) {
     jarDetails.set(ArtifactDetails.of(artifacts))
     jarFiles.set(ArtifactDetails.files(artifacts))
   }
