@@ -224,7 +224,7 @@ internal data class ServiceLoaderDependency(
     fun newInstance(
       providerFile: String,
       providerClasses: Set<String>,
-      artifact: ResolvedArtifactResult,
+      artifact: ArtifactDetails,
     ): ServiceLoaderDependency {
       return ServiceLoaderDependency(
         artifact.toCoordinates(),

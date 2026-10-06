@@ -3,25 +3,21 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.ANNOTATION_PROCESSOR_PATH
+import com.autonomousapps.internal.ArtifactDetails
 import com.autonomousapps.internal.SERVICE_LOADER_PATH
-import com.autonomousapps.internal.identifiers
-import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.strings.isHashComment
+import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.filterNonGradle
-import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.internal.intermediates.producer.ServiceLoaderDependency
 import org.gradle.api.DefaultTask
-import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.*
 import java.io.BufferedReader
+import java.io.File
 import java.util.zip.ZipFile
 
 /**
@@ -37,19 +33,17 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
     description = "Produces a report of all dependencies that include Java ServiceLoaders"
   }
 
-  private lateinit var compileClasspath: ArtifactCollection
+  @get:Nested
+  public abstract val compileClasspathDetails: ListProperty<ArtifactDetails>
 
-  public fun setCompileClasspath(artifacts: ArtifactCollection) {
-    this.compileClasspath = artifacts
-    compileClasspathIdentifiers.set(artifacts.identifiers())
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFiles
+  public abstract val compileClasspathFiles: ListProperty<File>
+
+  internal fun withCompileClasspath(artifacts: Provider<Set<ResolvedArtifactResult>>) {
+    compileClasspathDetails.set(ArtifactDetails.of(artifacts))
+    compileClasspathFiles.set(ArtifactDetails.files(artifacts))
   }
-
-  @Classpath
-  public fun getCompileClasspath(): FileCollection = compileClasspath.artifactFiles
-
-  /** The output contains artifact coordinates, which aren't reflected in [getCompileClasspath]. See [identifiers]. */
-  @get:Input
-  public abstract val compileClasspathIdentifiers: ListProperty<String>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
@@ -58,12 +52,14 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
     val outputFile = output.getAndDelete()
 
     // TODO(tsr): there's a bug here. If a service loader is coming from another subproject in the same build, then
-    //  compileClasspath contains a directory that includes only class files. It doesn't not contain any resources
-    //  files, which is where the service loader definition would be.
-    val serviceLoaders = compileClasspath
+    //  compileClasspath contains a directory that includes only class files. It doesn't contain any resources files,
+    //  which is where the service loader definition would be.
+    val serviceLoaders: Set<ServiceLoaderDependency> = ArtifactDetails
+      .sequenced(compileClasspathDetails, compileClasspathFiles)
       .filterNonGradle()
-      .filter { it.file.name.endsWith(".jar") }
-      .flatMapToSet { findServiceLoaders(it) }
+      .filter { (_, file) -> file.name.endsWith(".jar") }
+      .flatMap { findServiceLoaders(it) }
+      .toSortedSet()
 
     outputFile.bufferWriteJsonSet(serviceLoaders)
   }
@@ -71,13 +67,15 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
   // E.g. org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.5 -->
   // 1. META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory
   // 2. META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler
-  private fun findServiceLoaders(artifact: ResolvedArtifactResult): Set<ServiceLoaderDependency> {
-    return ZipFile(artifact.file).use { zip ->
+  private fun findServiceLoaders(artifact: Pair<ArtifactDetails, File>): Set<ServiceLoaderDependency> {
+    val artifactDetails = artifact.first
+    val artifactFile = artifact.second
 
+    return ZipFile(artifactFile).use { zip ->
       zip.entries().asSequence()
-        .filter { it.name.startsWith(SERVICE_LOADER_PATH) }
-        .filterNot { it.name.startsWith(ANNOTATION_PROCESSOR_PATH) }
-        .filterNot { it.isDirectory }
+        .filter { e -> e.name.startsWith(SERVICE_LOADER_PATH) }
+        .filterNot { e -> e.name.startsWith(ANNOTATION_PROCESSOR_PATH) }
+        .filterNot { e -> e.isDirectory }
         .mapNotNull { serviceFile ->
           val providerClasses = zip.getInputStream(serviceFile)
             .bufferedReader().use(BufferedReader::readLines).asSequence()
@@ -86,7 +84,7 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
             // remove blank lines
             .filterNot(String::isBlank)
             // ignore comments
-            .filter { !it.startsWith("#") }
+            .filterNot(String::isHashComment)
             .toSortedSet()
 
           // Unclear why this would ever be empty.
@@ -95,17 +93,18 @@ public abstract class FindServiceLoadersTask : DefaultTask() {
             ServiceLoaderDependency.newInstance(
               providerFile = serviceFile.name.removePrefix(SERVICE_LOADER_PATH),
               providerClasses = providerClasses,
-              artifact = artifact
+              artifact = artifactDetails,
             )
           } else {
             val contents = zip.getInputStream(serviceFile).bufferedReader().use(BufferedReader::readText)
             logger.debug(
-              "${artifact.file.name} has a services file at path ${serviceFile.name}, but there are no services! " +
+              "${artifactFile.name} has a services file at path ${serviceFile.name}, but there are no services! " +
                 "File contents:\n<<$contents>>"
             )
             null
           }
-        }.toSortedSet()
+        }
+        .toSortedSet()
     }
   }
 }

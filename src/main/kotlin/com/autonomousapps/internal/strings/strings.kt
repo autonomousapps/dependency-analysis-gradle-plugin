@@ -15,3 +15,9 @@ internal fun String.dotty() = replace('/', '.')
 
 /** Replace all '.' characters with '/' characters. */
 internal fun String.slashy() = replace('.', '/')
+
+/** Returns true if `this` starts with `#`. If [trim], trims `this` first. */
+internal fun String.isHashComment(trim: Boolean = false): Boolean {
+  val s = if (trim) trim() else this
+  return s.startsWith("#")
+}

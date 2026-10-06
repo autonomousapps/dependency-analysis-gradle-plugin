@@ -60,6 +60,17 @@ internal fun SetProperty<ResolvedArtifactResult>.identifiers(): Provider<List<St
 }
 
 /** Captures things like the Gradle version catalog and Gradle API jar. */
+internal fun NamedDomainObjectProvider<Configuration>.resolvedOpaqueComponentArtifacts(): Provider<Set<ResolvedArtifactResult>> {
+  return flatMap { c ->
+    c.incoming.artifactView { view ->
+      view
+        .componentFilter { id -> id is OpaqueComponentArtifactIdentifier }
+        .lenient(true)
+    }.artifacts.resolvedArtifacts
+  }
+}
+
+/** Captures things like the Gradle version catalog and Gradle API jar. */
 internal fun Configuration.opaqueComponentArtifacts(): ArtifactCollection = incoming.artifactView { view ->
   view
     .componentFilter { id -> id is OpaqueComponentArtifactIdentifier }
@@ -71,7 +82,8 @@ private fun Configuration.artifactViewFor(attrValue: String): ArtifactView = inc
   it.lenient(true)
 }
 
-internal fun Configuration.externalArtifactsFor(attrValue: String): ArtifactCollection = externalArtifactViewFor(attrValue).artifacts
+internal fun Configuration.externalArtifactsFor(attrValue: String): ArtifactCollection =
+  externalArtifactViewFor(attrValue).artifacts
 
 private fun Configuration.externalArtifactViewFor(attrValue: String): ArtifactView = incoming.artifactView {
   it.attributes.attribute(attributeKey, attrValue)

@@ -3,6 +3,7 @@
 package com.autonomousapps.model.internal
 
 import com.autonomousapps.PROJECT_LOGGER
+import com.autonomousapps.internal.ArtifactDetails
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.reallyAll
 import com.autonomousapps.internal.utils.sequenceOfClassFiles
@@ -57,9 +58,9 @@ internal data class PhysicalArtifact(
       .compare(this, other)
   }
 
-  companion object {
-    internal fun of(
-      artifact: ResolvedArtifactResult,
+  internal companion object {
+    fun of(
+      artifact: ArtifactDetails,
       files: Set<File>,
     ): PhysicalArtifact? {
       if (!isValidArtifact(files)) {
