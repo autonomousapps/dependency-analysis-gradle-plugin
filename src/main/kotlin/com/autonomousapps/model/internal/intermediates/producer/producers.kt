@@ -125,7 +125,7 @@ internal data class AnnotationProcessorDependency(
     fun newInstance(
       processor: String,
       supportedAnnotationTypes: Set<String>,
-      artifact: ResolvedArtifactResult,
+      artifact: ArtifactDetails,
     ): AnnotationProcessorDependency {
       return AnnotationProcessorDependency(
         artifact.toCoordinates(),

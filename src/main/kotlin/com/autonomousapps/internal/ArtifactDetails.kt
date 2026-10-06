@@ -30,6 +30,16 @@ public data class ArtifactDetails(
     ): Sequence<Pair<ArtifactDetails, File>> = zipped(details, files).asSequence()
 
     fun zipped(details: ListProperty<ArtifactDetails>, files: ListProperty<File>): List<Pair<ArtifactDetails, File>> {
+      // If both are missing, that's fine, we assume this is an @Optional situation
+      if (!details.isPresent && !files.isPresent) {
+        return emptyList()
+      }
+      // If only one is missing, that's an error
+      require(details.isPresent && files.isPresent) {
+        "Expected both 'details' and 'files' to be present. Got details=${details.isPresent} and files=${files.isPresent}"
+      }
+
+      // Both are present and must be the same length, or it's an error
       val details = details.get()
       val files = files.get()
       require(details.size == files.size) {
@@ -38,5 +48,8 @@ public data class ArtifactDetails(
 
       return details.zip(files)
     }
+
+    fun List<Pair<ArtifactDetails, File>>.artifacts(): List<ArtifactDetails> = map { it.first }
+    fun List<Pair<ArtifactDetails, File>>.files(): List<File> = map { it.second }
   }
 }

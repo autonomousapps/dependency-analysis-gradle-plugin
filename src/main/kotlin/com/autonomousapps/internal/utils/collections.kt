@@ -3,24 +3,12 @@
 package com.autonomousapps.internal.utils
 
 import com.autonomousapps.internal.ArtifactDetails
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import java.io.File
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
-
-/**
- * Takes an [ArtifactCollection] and filters out all [OpaqueComponentIdentifier]s, which seem to be jars from the Gradle
- * distribution, e.g. "Gradle API", "Gradle TestKit", and "Gradle Kotlin DSL". They are often not very useful for
- * analysis.
- */
-internal fun ArtifactCollection.filterNonGradle(): List<ResolvedArtifactResult> = filterNot {
-  // e.g. "Gradle API", "Gradle TestKit", "Gradle Kotlin DSL"
-  it.id.componentIdentifier is OpaqueComponentIdentifier
-}
 
 internal fun Sequence<Pair<ArtifactDetails, File>>.filterNonGradle() = filterNot { (detail, _) ->
   // e.g. "Gradle API", "Gradle TestKit", "Gradle Kotlin DSL"
@@ -67,23 +55,8 @@ private fun File.isAnalyzableClassFile(): Boolean {
     && length() > 0
 }
 
-/**
- * Transforms a [ZipFile] into a collection of [ZipEntry]s, which contains only class files (and not
- * the module-info.class file).
- */
-internal fun ZipFile.asClassFiles(): Set<ZipEntry> {
-  return entries().toList().filterToSetOfClassFiles()
-}
-
 internal fun ZipFile.asSequenceOfClassFiles(): Sequence<ZipEntry> {
   return entries().asSequence().filter {
-    it.name.isAnalyzableClassFileName()
-  }
-}
-
-/** Filters a collection of [ZipEntry]s to contain only class files (and not the module-info.class file). */
-internal fun Iterable<ZipEntry>.filterToSetOfClassFiles(): Set<ZipEntry> {
-  return filterToSet {
     it.name.isAnalyzableClassFileName()
   }
 }
@@ -189,40 +162,6 @@ internal inline fun <T, R : Any> Iterable<T>.mapNotNullToSet(transform: (T) -> R
 
 internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (T) -> R?): Set<R> {
   return mapNotNullTo(TreeSet(), transform)
-}
-
-internal inline fun <T, R : Any, V : Any> Iterable<T>.mapSecondNotNull(
-  transform: (T) -> Pair<R, V?>
-): List<Pair<R, V>> {
-  return mapNotNull {
-    val pair = transform(it)
-    if (pair.second != null) {
-      @Suppress("UNCHECKED_CAST")
-      pair as Pair<R, V>
-    } else {
-      null
-    }
-  }
-}
-
-internal inline fun <T, R : Any, V : Any> Sequence<T>.mapSecondNotNull(
-  crossinline transform: (T) -> Pair<R, V?>
-): Sequence<Pair<R, V>> {
-  return mapNotNull {
-    val pair = transform(it)
-    if (pair.second != null) {
-      @Suppress("UNCHECKED_CAST")
-      pair as Pair<R, V>
-    } else {
-      null
-    }
-  }
-}
-
-internal inline fun <T : Any, K : Any, V : Any> Sequence<T>.associateNotNull(
-  crossinline transform: (T) -> Pair<K, V>?
-): Map<K, V> {
-  return mapNotNull { transform(it) }.toMap()
 }
 
 /**
@@ -365,35 +304,6 @@ internal fun <K, V> Map<K, V>.efficient(): Map<K, V> = when {
   isEmpty() -> emptyMap()
   size == 1 -> Collections.singletonMap(keys.first(), values.first())
   else -> this
-}
-
-/**
- * Given a list of pairs, where the pairs are key -> (value as Set) pairs, merge into a map (not
- * losing any values).
- */
-internal fun <T, U> List<Pair<T, MutableSet<U>>>.mergedMapSets(): Map<T, Set<U>> {
-  return foldRight(linkedMapOf<T, MutableSet<U>>()) { (key, values), map ->
-    map.apply {
-      merge(key, values) { old, new -> old.apply { addAll(new) } }
-    }
-  }
-}
-
-internal inline fun <reified K, reified V> Map<K, Set<V>>.mergeWith(other: Map<K, Set<V>>): Map<K, Set<V>>
-  where K : Comparable<K>, V : Comparable<V> {
-
-  val merged = sortedMapOf<K, SortedSet<V>>()
-
-  forEach { k, v ->
-    merged.put(k, v.toSortedSet())
-  }
-  other.forEach { k, v ->
-    merged.merge(k, v.toSortedSet()) { acc, inc ->
-      acc.apply { addAll(inc) }
-    }
-  }
-
-  return merged
 }
 
 internal inline fun <C> C.ifNotEmpty(block: (C) -> Unit) where C : Collection<*> {

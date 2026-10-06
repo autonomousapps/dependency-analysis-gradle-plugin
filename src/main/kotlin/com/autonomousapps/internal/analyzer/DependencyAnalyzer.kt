@@ -11,6 +11,7 @@ import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
+import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
@@ -561,14 +562,14 @@ internal abstract class AbstractDependencyAnalyzer(
     }
   }
 
-  protected fun kaptConf(): Configuration? = try {
-    project.configurations.getByName(kaptConfigurationName)
+  protected fun kaptConf(): NamedDomainObjectProvider<Configuration>? = try {
+    project.configurations.named(kaptConfigurationName)
   } catch (_: UnknownDomainObjectException) {
     null
   }
 
-  protected fun annotationProcessorConf(): Configuration? = try {
-    project.configurations.getByName(annotationProcessorConfigurationName)
+  protected fun annotationProcessorConf(): NamedDomainObjectProvider<Configuration>? = try {
+    project.configurations.named(annotationProcessorConfigurationName)
   } catch (_: UnknownDomainObjectException) {
     null
   }
