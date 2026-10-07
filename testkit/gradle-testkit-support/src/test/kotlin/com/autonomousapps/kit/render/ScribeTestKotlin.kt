@@ -67,6 +67,52 @@ internal class ScribeTestKotlin {
       """.trimIndent()
       )
     }
+
+    @Test fun `can render repositories with configure actions`() {
+      // Given
+      val exclusiveContentRepo = Repository.ExclusiveContent(
+        repo = Repository.ofMaven("https://repo.foo.bar/"),
+        filters = listOf("includeGroup(\"com.foo.bar\")")
+      )
+      val urlRepo = Repository
+        .ofMaven("https://repo.foo.bar/")
+        .withConfigureAction("authentication { create<AwsImAuthentication>(\"awsIm\") }")
+      val repositories = Repositories(
+        Repository.GOOGLE.withConfigureAction("metadataSources { gradleMetadata() }"),
+        Repository.MAVEN_CENTRAL,
+        Repository.SNAPSHOTS,
+        exclusiveContentRepo,
+        urlRepo,
+      )
+
+      // When
+      val text = repositories.render(scribe)
+
+      // Then
+      assertThat(text).isEqualTo(
+        """
+        repositories {
+          google {
+            metadataSources { gradleMetadata() }
+          }
+          mavenCentral()
+          maven(url = "https://central.sonatype.com/repository/maven-snapshots/")
+          exclusiveContent {
+            forRepository {
+              maven(url = "https://repo.foo.bar/")
+            }
+            filter {
+              includeGroup("com.foo.bar")
+            }
+          }
+          maven(url = https://repo.foo.bar/) {
+            authentication { create<AwsImAuthentication>("awsIm") }
+          }
+        }
+        
+      """.trimIndent()
+      )
+    }
   }
 
   @Nested inner class SettingsTest {
