@@ -121,6 +121,7 @@ internal class RootOutputPaths(private val project: Project) {
   val publicTypeUsagePath = file("$ROOT_DIR/public-type-usage-report.json")
   val publicTypeUsageConsolePath = file("$ROOT_DIR/public-type-usage-report.txt")
   val workPlanDir = dir("$ROOT_DIR/work-plan")
+  val filteredAdviceDir = dir("$ROOT_DIR/filtered-advice")
 }
 
 internal class RedundantSubPluginOutputPaths(private val project: Project) {
