@@ -76,13 +76,7 @@ public abstract class FindAndroidResTask : DefaultTask() {
     isPublicRes: Boolean,
     publicLinesFilter: Set<AndroidResCapability.Line> = emptySet()
   ): Set<AndroidResDependency> {
-    val details = details.get()
-    val files = files.get()
-    require(details.size == files.size) {
-      "Expected 'details.size == files.size'. Got details.size=${details.size}, files.size=${files.size}"
-    }
-
-    return details.zip(files).asSequence()
+    return ArtifactDetails.sequenced(details, files)
       .mapNotNull { (details, file) ->
         try {
           val (import, lines) = parseResFile(file, isPublicRes, publicLinesFilter)

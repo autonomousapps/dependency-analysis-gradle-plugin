@@ -8,7 +8,6 @@ import com.autonomousapps.internal.ArtifactDetails
 import com.autonomousapps.internal.ManifestParser
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.internal.utils.mapNotNullToOrderedSet
 import com.autonomousapps.model.internal.AndroidManifestCapability.Component
 import com.autonomousapps.model.internal.intermediates.producer.AndroidManifestDependency
 import org.gradle.api.DefaultTask
@@ -49,25 +48,21 @@ public abstract class ManifestComponentsExtractionTask : DefaultTask() {
   @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
-    val details = manifestDetails.get()
-    val files = manifestFiles.get()
-    require(details.size == files.size) {
-      "Expected 'details.size == files.size'. Got details.size=${details.size}, files.size=${files.size}"
-    }
-
     val parser = ManifestParser(namespace.get())
 
-    val manifests: Set<AndroidManifestDependency> = details.zip(files).mapNotNullToOrderedSet { (details, file) ->
-      try {
-        val parseResult = parser.parse(file, true)
-        AndroidManifestDependency.newInstance(
-          componentMap = parseResult.components.toComponentMap(),
-          artifact = details,
-        )
-      } catch (_: GradleException) {
-        null
+    val manifests: Set<AndroidManifestDependency> = ArtifactDetails.sequenced(manifestDetails, manifestFiles)
+      .mapNotNull { (details, file) ->
+        try {
+          val parseResult = parser.parse(file, true)
+          AndroidManifestDependency.newInstance(
+            componentMap = parseResult.components.toComponentMap(),
+            artifact = details,
+          )
+        } catch (_: GradleException) {
+          null
+        }
       }
-    }
+      .toSortedSet()
 
     outputFile.bufferWriteJsonSet(manifests)
   }
