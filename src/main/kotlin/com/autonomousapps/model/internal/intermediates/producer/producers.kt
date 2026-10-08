@@ -125,6 +125,18 @@ internal data class AnnotationProcessorDependency(
     fun newInstance(
       processor: String,
       supportedAnnotationTypes: Set<String>,
+      artifact: ArtifactDetails,
+    ): AnnotationProcessorDependency {
+      return AnnotationProcessorDependency(
+        artifact.toCoordinates(),
+        processor,
+        supportedAnnotationTypes.toSortedSet().efficient()
+      )
+    }
+
+    fun newInstance(
+      processor: String,
+      supportedAnnotationTypes: Set<String>,
       artifact: ResolvedArtifactResult,
     ): AnnotationProcessorDependency {
       return AnnotationProcessorDependency(
@@ -221,6 +233,18 @@ internal data class ServiceLoaderDependency(
 ) : DependencyView<ServiceLoaderDependency> {
 
   companion object {
+    fun newInstance(
+      providerFile: String,
+      providerClasses: Set<String>,
+      artifact: ArtifactDetails,
+    ): ServiceLoaderDependency {
+      return ServiceLoaderDependency(
+        artifact.toCoordinates(),
+        providerFile,
+        providerClasses.toSortedSet().efficient(),
+      )
+    }
+
     fun newInstance(
       providerFile: String,
       providerClasses: Set<String>,
