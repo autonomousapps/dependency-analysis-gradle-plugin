@@ -34,8 +34,7 @@ public abstract class FindAndroidLinters : DefaultTask() {
   @get:Nested
   public abstract val lintDetails: ListProperty<ArtifactDetails>
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
-  @get:InputFiles
+  @get:Classpath
   public abstract val lintFiles: ListProperty<File>
 
   internal fun withLintJars(artifacts: Provider<Set<ResolvedArtifactResult>>) {
