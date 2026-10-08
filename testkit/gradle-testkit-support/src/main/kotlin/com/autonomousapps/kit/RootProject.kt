@@ -52,6 +52,13 @@ public class RootProject(
       }
     }
 
+    /** Enables build scans for the project, using the Develocity public scans server. */
+    public fun enablePublicBuildScans() {
+      withSettingsScript {
+        usePublicBuildScans = true
+      }
+    }
+
     public fun withBuildScript(block: BuildScript.Builder.() -> Unit) {
       val builder = buildScriptBuilder ?: defaultBuildScriptBuilder()
       buildScript = with(builder) {

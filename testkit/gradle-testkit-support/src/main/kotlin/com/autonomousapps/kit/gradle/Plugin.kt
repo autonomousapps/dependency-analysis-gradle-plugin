@@ -69,5 +69,8 @@ public class Plugin @JvmOverloads constructor(
     @JvmStatic public val jvmTestSuite: Plugin = Plugin("jvm-test-suite")
     @JvmStatic public val scala: Plugin = Plugin("scala")
     @JvmStatic public val war: Plugin = Plugin("war")
+
+    /** @see <a href="https://docs.develocity.ai/gradle/4.5/gradle-plugin/">Develocity</a> */
+    @JvmStatic public val develocity: Plugin = Plugin("com.gradle.develocity", "4.6.0")
   }
 }

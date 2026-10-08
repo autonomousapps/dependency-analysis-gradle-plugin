@@ -13,10 +13,27 @@ public class SettingsScript @JvmOverloads constructor(
   public var dependencyResolutionManagement: DependencyResolutionManagement? = DependencyResolutionManagement.DEFAULT,
   public var rootProjectName: String = "the-project",
   public var subprojects: Set<String> = emptySet(),
+  public val usePublicBuildScans: Boolean = false,
 
   /** For random stuff, as-yet unmodeled. */
   public var additions: String = "",
 ) {
+
+  init {
+    if (usePublicBuildScans) {
+      plugins.plugins += Plugin.develocity
+      additions += System.lineSeparator()
+      additions += """
+          develocity {
+            buildScan {
+              publishing.onlyIf { true }
+              termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
+              termsOfUseAgree.set("yes")
+            }
+          }
+        """.trimIndent()
+    }
+  }
 
   public fun render(scribe: Scribe): String = buildString {
     imports?.let { i -> append(scribe.use { s -> i.render(s) }) }
@@ -64,6 +81,8 @@ public class SettingsScript @JvmOverloads constructor(
     public var rootProjectName: String = "the-project"
     public var subprojects: Set<String> = emptySet()
 
+    public var usePublicBuildScans: Boolean = false
+
     /** For random stuff, as-yet unmodeled. */
     public var additions: String = ""
 
@@ -95,6 +114,7 @@ public class SettingsScript @JvmOverloads constructor(
         dependencyResolutionManagement = dependencyResolutionManagement,
         rootProjectName = rootProjectName,
         subprojects = subprojects,
+        usePublicBuildScans = usePublicBuildScans,
         additions = additions,
       )
     }

@@ -13,7 +13,7 @@ public class Plugins(
 
   override val name: String = "plugins"
 
-  public val isEmpty: Boolean = plugins.isEmpty()
+  public val isEmpty: Boolean get() = plugins.isEmpty()
 
   override fun render(scribe: Scribe): String = scribe.block(this) { s ->
     plugins.forEach { it.render(s) }
