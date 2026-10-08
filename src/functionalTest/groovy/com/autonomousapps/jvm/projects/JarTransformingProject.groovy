@@ -57,6 +57,15 @@ final class JarTransformingProject extends AbstractProject {
                   lenient(true)
                 }.artifacts
               }
+              //withJarArtifacts(
+              //  configurations.named('compileClasspath').flatMap { c ->
+              //    c.incoming.artifactView {
+              //      attributes.attribute(artifactType, "jar")
+              //      attributes.attribute(split, true)
+              //      lenient(true)
+              //    }.artifacts.resolvedArtifacts
+              //  }
+              //)
             }
           }
           

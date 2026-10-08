@@ -66,6 +66,17 @@ internal fun Configuration.opaqueComponentArtifacts(): ArtifactCollection = inco
     .lenient(true)
 }.artifacts
 
+/** Captures things like the Gradle version catalog and Gradle API jar. */
+internal fun NamedDomainObjectProvider<Configuration>.resolvedOpaqueComponentArtifacts(): Provider<Set<ResolvedArtifactResult>> {
+  return flatMap { c ->
+    c.incoming.artifactView { view ->
+      view
+        .componentFilter { id -> id is OpaqueComponentArtifactIdentifier }
+        .lenient(true)
+    }.artifacts.resolvedArtifacts
+  }
+}
+
 private fun Configuration.artifactViewFor(attrValue: String): ArtifactView = incoming.artifactView {
   it.attributes.attribute(attributeKey, attrValue)
   it.lenient(true)
