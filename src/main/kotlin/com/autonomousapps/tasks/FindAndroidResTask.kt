@@ -36,7 +36,8 @@ public abstract class FindAndroidResTask : DefaultTask() {
   @get:Nested
   public abstract val androidSymbolDetails: ListProperty<ArtifactDetails>
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  /** Artifact type "android-symbol-with-package-name". All Android libraries seem to have this. */
+  @get:PathSensitive(PathSensitivity.NAME_ONLY)
   @get:InputFiles
   public abstract val androidSymbolFiles: ListProperty<File>
 
@@ -48,7 +49,11 @@ public abstract class FindAndroidResTask : DefaultTask() {
   @get:Nested
   public abstract val androidPublicResDetails: ListProperty<ArtifactDetails>
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  /**
+   * Artifact type "android-public-res". Appears to only be for platform dependencies that bother to include a
+   * `public.xml`.
+   */
+  @get:PathSensitive(PathSensitivity.NAME_ONLY)
   @get:InputFiles
   public abstract val androidPublicResFiles: ListProperty<File>
 

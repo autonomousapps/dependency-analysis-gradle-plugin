@@ -30,7 +30,7 @@ public abstract class ManifestComponentsExtractionTask : DefaultTask() {
   @get:Nested
   public abstract val manifestDetails: ListProperty<ArtifactDetails>
 
-  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:PathSensitive(PathSensitivity.NAME_ONLY)
   @get:InputFiles
   public abstract val manifestFiles: ListProperty<File>
 
