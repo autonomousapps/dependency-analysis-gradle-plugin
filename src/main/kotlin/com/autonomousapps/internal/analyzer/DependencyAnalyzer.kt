@@ -17,6 +17,7 @@ import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 
@@ -221,32 +222,37 @@ internal abstract class AbstractDependencyAnalyzer(
   override val testInstrumentationRunner: Provider<String> = project.provider { null }
 
   final override fun registerArtifactsReportForCompileTask(): TaskProvider<ArtifactsReportTask> {
-    return project.tasks.register("artifactsReport$taskNameSuffix", ArtifactsReportTask::class.java) { t ->
-      t.setConfiguration(project.configurations.named(compileConfigurationName)) { c ->
-        c.artifactsFor(attributeValueJar)
-      }
-      t.setOpaqueConfiguration(project.configurations.named(compileConfigurationName)) { c ->
-        c.opaqueComponentArtifacts()
-      }
-      t.buildPath.set(project.buildPath(compileConfigurationName))
-
-      t.output.set(outputPaths.compileArtifactsPath)
-      t.excludedIdentifiersOutput.set(outputPaths.excludedIdentifiersPath)
-    }
+    return registerArtifactsReportTaskFor(
+      "artifactsReport$taskNameSuffix",
+      compileConfigurationName,
+      output = outputPaths.compileArtifactsPath,
+      excludedIdentifiersOutput = outputPaths.excludedIdentifiersPath,
+    )
   }
 
   final override fun registerArtifactsReportForRuntimeTask(): TaskProvider<ArtifactsReportTask> {
-    return project.tasks.register("artifactsReportRuntime$taskNameSuffix", ArtifactsReportTask::class.java) { t ->
-      t.setConfiguration(project.configurations.named(runtimeConfigurationName)) { c ->
-        c.artifactsFor(attributeValueJar)
-      }
-      t.setOpaqueConfiguration(project.configurations.named(runtimeConfigurationName)) { c ->
-        c.opaqueComponentArtifacts()
-      }
-      t.buildPath.set(project.buildPath(runtimeConfigurationName))
+    return registerArtifactsReportTaskFor(
+      "artifactsReportRuntime$taskNameSuffix",
+      runtimeConfigurationName,
+      output = outputPaths.runtimeArtifactsPath,
+      excludedIdentifiersOutput = outputPaths.excludedIdentifiersRuntimePath,
+    )
+  }
 
-      t.output.set(outputPaths.runtimeArtifactsPath)
-      t.excludedIdentifiersOutput.set(outputPaths.excludedIdentifiersRuntimePath)
+  private fun registerArtifactsReportTaskFor(
+    taskName: String,
+    configurationName: String,
+    output: Provider<RegularFile>,
+    excludedIdentifiersOutput: Provider<RegularFile>,
+  ): TaskProvider<ArtifactsReportTask> {
+    return project.tasks.register(taskName, ArtifactsReportTask::class.java) { t ->
+      val classpath = project.configurations.named(configurationName)
+      t.setConfiguration(classpath) { c -> c.artifactsFor(attributeValueJar) }
+      t.setOpaqueConfiguration(classpath) { c -> c.opaqueComponentArtifacts() }
+      t.buildPath.set(project.buildPath(configurationName))
+
+      t.output.set(output)
+      t.excludedIdentifiersOutput.set(excludedIdentifiersOutput)
     }
   }
 
