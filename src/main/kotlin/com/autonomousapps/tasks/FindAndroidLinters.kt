@@ -49,13 +49,7 @@ public abstract class FindAndroidLinters : DefaultTask() {
   @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
-    val details = lintDetails.get()
-    val files = lintFiles.get()
-    require(details.size == files.size) {
-      "Expected 'details.size == files.size'. Got details.size=${details.size}, files.size=${files.size}"
-    }
-
-    val linters: Set<AndroidLinterDependency> = details.zip(files).asSequence()
+    val linters: Set<AndroidLinterDependency> = ArtifactDetails.sequenced(lintDetails, lintFiles)
       // Sometimes the file doesn't exist. Is this a bug? A feature? Who knows?
       .filter { (_, file) -> file.exists() }
       .mapNotNull { (details, file) ->
