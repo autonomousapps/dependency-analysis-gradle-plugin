@@ -71,5 +71,7 @@ public data class Artifact(
     }
 
     private fun Provider<*>.isAvailable(): String = if (isPresent) "available" else "not available"
+
+    internal fun List<Artifact>.artifactFiles(): List<File> = map { it.file }
   }
 }

@@ -4,11 +4,13 @@
 
 package com.autonomousapps.internal.analyzer
 
-import com.autonomousapps.internal.*
+import com.autonomousapps.internal.ArtifactAttributes
+import com.autonomousapps.internal.KotlinMetadataClasspath
+import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.android.AndroidGradlePluginFactory
+import com.autonomousapps.internal.resolvedArtifactsFor
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.source.SourceKind
-import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
@@ -133,20 +135,6 @@ internal abstract class AndroidAnalyzer(
         project.configurations.named(runtimeConfigurationName).resolvedArtifactsFor(ArtifactAttributes.ANDROID_ASSETS)
       )
       it.output.set(outputPaths.androidAssetsPath)
-    }
-  }
-
-  final override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> {
-    return project.tasks.register("findDeclaredProcs$taskNameSuffix", FindDeclaredProcsTask::class.java) {
-      InMemoryCache.register(it.inMemoryCacheProvider, project)
-      kaptConf()?.let { configuration ->
-        it.setKaptArtifacts(configuration.incoming.artifacts)
-      }
-      annotationProcessorConf()?.let { configuration ->
-        it.setAnnotationProcessorArtifacts(configuration.incoming.artifacts)
-      }
-
-      it.output.set(outputPaths.declaredProcPath)
     }
   }
 
