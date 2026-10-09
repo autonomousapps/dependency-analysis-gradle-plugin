@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.ArtifactDetails
+import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.LINT_ISSUE_REGISTRY_PATH
 import com.autonomousapps.internal.MANIFEST_PATH
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
@@ -11,7 +11,9 @@ import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.internal.intermediates.producer.AndroidLinterDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
@@ -31,15 +33,19 @@ public abstract class FindAndroidLinters : DefaultTask() {
     description = "Produces a report of dependencies that supply Android linters"
   }
 
-  @get:Nested
-  public abstract val lintDetails: ListProperty<ArtifactDetails>
+  @get:Input
+  public abstract val lintIds: ListProperty<ComponentArtifactIdentifier>
+
+  @get:Input
+  public abstract val lintVariants: ListProperty<ResolvedVariantResult>
 
   @get:Classpath
   public abstract val lintFiles: ListProperty<File>
 
   internal fun withLintJars(artifacts: Provider<Set<ResolvedArtifactResult>>) {
-    lintDetails.set(ArtifactDetails.of(artifacts))
-    lintFiles.set(ArtifactDetails.files(artifacts))
+    lintIds.set(Artifact.ids(artifacts))
+    lintVariants.set(Artifact.variants(artifacts))
+    lintFiles.set(Artifact.files(artifacts))
   }
 
   @get:OutputFile
@@ -48,14 +54,14 @@ public abstract class FindAndroidLinters : DefaultTask() {
   @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
-    val linters: Set<AndroidLinterDependency> = ArtifactDetails.sequenced(lintDetails, lintFiles)
+    val linters: Set<AndroidLinterDependency> = Artifact.sequenced(lintIds, lintVariants, lintFiles)
       // Sometimes the file doesn't exist. Is this a bug? A feature? Who knows?
-      .filter { (_, file) -> file.exists() }
-      .mapNotNull { (details, file) ->
+      .filter { it.file.exists() }
+      .mapNotNull { artifact ->
         try {
           AndroidLinterDependency(
-            coordinates = details.toCoordinates(),
-            lintRegistry = findLintRegistry(file)
+            coordinates = artifact.toCoordinates(),
+            lintRegistry = findLintRegistry(artifact.file)
           )
         } catch (_: GradleException) {
           null

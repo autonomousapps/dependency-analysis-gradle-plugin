@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.utils
 
-import com.autonomousapps.internal.ArtifactDetails
+import com.autonomousapps.internal.Artifact
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
@@ -28,7 +28,7 @@ internal fun Sequence<ResolvedArtifactResult>.filterNonGradle() = filterNot {
 }
 
 /** e.g. "Gradle API", "Gradle TestKit", "Gradle Kotlin DSL" */
-internal fun Sequence<Pair<ArtifactDetails, File>>.filterNotOpaque() = filterNot { (details, _) ->
+internal fun Sequence<Pair<Artifact, File>>.filterNotOpaque() = filterNot { (details, _) ->
   details.id.componentIdentifier is OpaqueComponentIdentifier
 }
 

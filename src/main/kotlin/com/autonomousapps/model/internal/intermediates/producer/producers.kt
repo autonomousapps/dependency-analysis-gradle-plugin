@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates.producer
 
-import com.autonomousapps.internal.ArtifactDetails
+import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.MapSetComparator
 import com.autonomousapps.internal.utils.efficient
@@ -49,7 +49,7 @@ internal data class AndroidManifestDependency(
   companion object {
     fun newInstance(
       componentMap: Map<AndroidManifestCapability.Component, Set<String>>,
-      artifact: ArtifactDetails,
+      artifact: Artifact,
     ): AndroidManifestDependency {
       return AndroidManifestDependency(artifact.toCoordinates(), componentMap.toSortedMap().efficient())
     }
@@ -125,7 +125,7 @@ internal data class AnnotationProcessorDependency(
     fun newInstance(
       processor: String,
       supportedAnnotationTypes: Set<String>,
-      artifact: ArtifactDetails,
+      artifact: Artifact,
     ): AnnotationProcessorDependency {
       return AnnotationProcessorDependency(
         artifact.toCoordinates(),
@@ -236,7 +236,7 @@ internal data class ServiceLoaderDependency(
     fun newInstance(
       providerFile: String,
       providerClasses: Set<String>,
-      artifact: ArtifactDetails,
+      artifact: Artifact,
     ): ServiceLoaderDependency {
       return ServiceLoaderDependency(
         artifact.toCoordinates(),

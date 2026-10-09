@@ -2,14 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.ArtifactDetails
+import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.internal.intermediates.producer.AndroidAssetDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
@@ -23,16 +25,20 @@ public abstract class FindAndroidAssetProviders : DefaultTask() {
     description = "Produces a report of dependencies that supply Android assets"
   }
 
-  @get:Nested
-  public abstract val assetDetails: ListProperty<ArtifactDetails>
+  @get:Input
+  public abstract val assetIds: ListProperty<ComponentArtifactIdentifier>
+
+  @get:Input
+  public abstract val assetVariants: ListProperty<ResolvedVariantResult>
 
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   public abstract val assetFiles: ListProperty<File>
 
   internal fun withAssets(artifacts: Provider<Set<ResolvedArtifactResult>>) {
-    assetDetails.set(ArtifactDetails.of(artifacts))
-    assetFiles.set(ArtifactDetails.files(artifacts))
+    assetIds.set(Artifact.ids(artifacts))
+    assetVariants.set(Artifact.variants(artifacts))
+    assetFiles.set(Artifact.files(artifacts))
   }
 
   @get:OutputFile
@@ -41,19 +47,20 @@ public abstract class FindAndroidAssetProviders : DefaultTask() {
   @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
-    val assetProviders: Set<AndroidAssetDependency> = ArtifactDetails.sequenced(assetDetails, assetFiles)
+    val assetProviders: Set<AndroidAssetDependency> = Artifact.sequenced(assetIds, assetVariants, assetFiles)
       // Sometimes the file doesn't exist. Is this a bug? A feature? Who knows?
       // We only want non-empty directories.
-      .filter { (_, file) -> file.exists() }
-      .filter { (_, file) -> file.isDirectory }
-      .filter { (_, file) -> file.listFiles()!!.isNotEmpty() }
-      .mapNotNull { (detail, dir) ->
+      .filter { it.file.exists() }
+      .filter { it.file.isDirectory }
+      .filter { it.file.listFiles()!!.isNotEmpty() }
+      .mapNotNull { artifact ->
         try {
-          val assets = dir.listFiles()!!.map {
-            it.toRelativeString(dir)
+          val dir = artifact.file
+          val assets = dir.listFiles()!!.map { f ->
+            f.toRelativeString(dir)
           }
           AndroidAssetDependency.newInstance(
-            coordinates = detail.toCoordinates(),
+            coordinates = artifact.toCoordinates(),
             assets = assets
           )
         } catch (_: GradleException) {
