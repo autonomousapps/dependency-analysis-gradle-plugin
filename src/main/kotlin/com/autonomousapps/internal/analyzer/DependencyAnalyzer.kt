@@ -5,10 +5,7 @@
 package com.autonomousapps.internal.analyzer
 
 import com.autonomousapps.AbstractExtension
-import com.autonomousapps.internal.KotlinMetadataClasspath
-import com.autonomousapps.internal.OutputPaths
-import com.autonomousapps.internal.artifactsFor
-import com.autonomousapps.internal.opaqueComponentArtifacts
+import com.autonomousapps.internal.*
 import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.model.source.SourceKind
@@ -370,36 +367,39 @@ internal abstract class AbstractDependencyAnalyzer(
   final override fun registerDiscoverClasspathDuplicationForCompileTask(
     synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
   ): TaskProvider<DiscoverClasspathDuplicationTask> {
-    return project.tasks.register(
+    return registerDiscoverClasspathDuplicationTask(
       "discoverDuplicationForCompile$taskNameSuffix",
-      DiscoverClasspathDuplicationTask::class.java,
-    ) { t ->
-      t.withClasspathName(DuplicateClass.COMPILE_CLASSPATH_NAME)
-      t.setClasspath(
-        project.configurations
-          .getByName(compileConfigurationName)
-          .artifactsFor(attributeValueJar)
-      )
-      t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
-      t.output.set(outputPaths.duplicateCompileClasspathPath)
-    }
+      DuplicateClass.COMPILE_CLASSPATH_NAME,
+      compileConfigurationName,
+      synthesizeProjectViewTask,
+      outputPaths.duplicateCompileClasspathPath,
+    )
   }
 
   final override fun registerDiscoverClasspathDuplicationForRuntimeTask(
     synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
   ): TaskProvider<DiscoverClasspathDuplicationTask> {
-    return project.tasks.register(
+    return registerDiscoverClasspathDuplicationTask(
       "discoverDuplicationForRuntime$taskNameSuffix",
-      DiscoverClasspathDuplicationTask::class.java,
-    ) { t ->
-      t.withClasspathName(DuplicateClass.RUNTIME_CLASSPATH_NAME)
-      t.setClasspath(
-        project.configurations
-          .getByName(runtimeConfigurationName)
-          .artifactsFor(attributeValueJar)
-      )
+      DuplicateClass.RUNTIME_CLASSPATH_NAME,
+      runtimeConfigurationName,
+      synthesizeProjectViewTask,
+      outputPaths.duplicateCompileRuntimePath,
+    )
+  }
+
+  private fun registerDiscoverClasspathDuplicationTask(
+    taskName: String,
+    classpathName: String,
+    configurationName: String,
+    synthesizeProjectViewTask: TaskProvider<SynthesizeProjectViewTask>,
+    output: Provider<RegularFile>,
+  ): TaskProvider<DiscoverClasspathDuplicationTask> {
+    return project.tasks.register(taskName, DiscoverClasspathDuplicationTask::class.java) { t ->
+      t.withClasspathName(classpathName)
+      t.withClasspath(project.configurations.named(configurationName).resolvedArtifactsFor(attributeValueJar))
       t.syntheticProject.set(synthesizeProjectViewTask.flatMap { it.output })
-      t.output.set(outputPaths.duplicateCompileRuntimePath)
+      t.output.set(output)
     }
   }
 
