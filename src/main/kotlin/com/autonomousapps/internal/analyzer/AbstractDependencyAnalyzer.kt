@@ -5,7 +5,6 @@ package com.autonomousapps.internal.analyzer
 import com.autonomousapps.AbstractExtension
 import com.autonomousapps.internal.KotlinMetadataClasspath
 import com.autonomousapps.internal.artifactsFor
-import com.autonomousapps.internal.opaqueComponentArtifacts
 import com.autonomousapps.internal.resolvedArtifactsFor
 import com.autonomousapps.internal.resolvedOpaqueComponentArtifacts
 import com.autonomousapps.internal.utils.project.buildPath
@@ -251,10 +250,8 @@ internal abstract class AbstractDependencyAnalyzer(
     return project.tasks.register("serviceLoader$taskNameSuffix", FindServiceLoadersTask::class.java) { t ->
       // TODO(tsr): consider this. Wouldn't the runtime classpath be more appropriate for this task? Separate PR to test.
       //  it.setCompileClasspath(configurations.getByName(dependencyAnalyzer.runtimeConfigurationName).artifactsFor(dependencyAnalyzer.attributeValueJar))
-      t.setCompileClasspath(
-        project.configurations
-          .getByName(compileConfigurationName)
-          .artifactsFor(attributeValueJar)
+      t.withCompileClasspath(
+        project.configurations.named(compileConfigurationName).resolvedArtifactsFor(attributeValueJar)
       )
       t.output.set(outputPaths.serviceLoaderDependenciesPath)
     }
