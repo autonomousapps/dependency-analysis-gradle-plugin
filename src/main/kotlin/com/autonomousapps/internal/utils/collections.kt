@@ -3,29 +3,12 @@
 package com.autonomousapps.internal.utils
 
 import com.autonomousapps.internal.Artifact
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import java.io.File
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
-
-/**
- * Takes an [ArtifactCollection] and filters out all [OpaqueComponentIdentifier]s, which seem to be jars from the Gradle
- * distribution, e.g. "Gradle API", "Gradle TestKit", and "Gradle Kotlin DSL". They are often not very useful for
- * analysis.
- */
-internal fun ArtifactCollection.filterNonGradle(): List<ResolvedArtifactResult> = filterNot {
-  // e.g. "Gradle API", "Gradle TestKit", "Gradle Kotlin DSL"
-  it.id.componentIdentifier is OpaqueComponentIdentifier
-}
-
-internal fun Sequence<ResolvedArtifactResult>.filterNonGradle() = filterNot {
-  // e.g. "Gradle API", "Gradle TestKit", "Gradle Kotlin DSL"
-  it.id.componentIdentifier is OpaqueComponentIdentifier
-}
 
 /** e.g. "Gradle API", "Gradle TestKit", "Gradle Kotlin DSL" */
 internal fun Sequence<Artifact>.filterNotOpaque() = filterNot {
@@ -175,10 +158,6 @@ internal fun <T> Iterable<T>.collectionSizeOrDefault(default: Int): Int =
 
 internal inline fun <T, R : Any> Iterable<T>.mapNotNullToSet(transform: (T) -> R?): Set<R> {
   return mapNotNullTo(HashSet(), transform)
-}
-
-internal inline fun <T, R : Any> Iterable<T>.mapNotNullToOrderedSet(transform: (T) -> R?): Set<R> {
-  return mapNotNullTo(TreeSet(), transform)
 }
 
 /**

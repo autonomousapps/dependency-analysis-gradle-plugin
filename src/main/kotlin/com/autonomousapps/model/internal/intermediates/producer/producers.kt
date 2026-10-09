@@ -133,18 +133,6 @@ internal data class AnnotationProcessorDependency(
         supportedAnnotationTypes.toSortedSet().efficient()
       )
     }
-
-    fun newInstance(
-      processor: String,
-      supportedAnnotationTypes: Set<String>,
-      artifact: ResolvedArtifactResult,
-    ): AnnotationProcessorDependency {
-      return AnnotationProcessorDependency(
-        artifact.toCoordinates(),
-        processor,
-        supportedAnnotationTypes.toSortedSet().efficient()
-      )
-    }
   }
 
   override fun compareTo(other: AnnotationProcessorDependency): Int {
