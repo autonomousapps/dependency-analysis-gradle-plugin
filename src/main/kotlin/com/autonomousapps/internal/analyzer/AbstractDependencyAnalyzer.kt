@@ -7,6 +7,7 @@ import com.autonomousapps.internal.KotlinMetadataClasspath
 import com.autonomousapps.internal.artifactsFor
 import com.autonomousapps.internal.opaqueComponentArtifacts
 import com.autonomousapps.internal.resolvedArtifactsFor
+import com.autonomousapps.internal.resolvedOpaqueComponentArtifacts
 import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.model.DuplicateClass
 import com.autonomousapps.services.InMemoryCache
@@ -51,9 +52,12 @@ internal abstract class AbstractDependencyAnalyzer(
   ): TaskProvider<ArtifactsReportTask> {
     return project.tasks.register(taskName, ArtifactsReportTask::class.java) { t ->
       val classpath = project.configurations.named(configurationName)
-      t.setConfiguration(classpath) { c -> c.artifactsFor(attributeValueJar) }
-      t.setOpaqueConfiguration(classpath) { c -> c.opaqueComponentArtifacts() }
+      t.withJarArtifacts(classpath.resolvedArtifactsFor(attributeValueJar))
+      t.withOpaqueJarArtifacts(classpath.resolvedOpaqueComponentArtifacts())
+
       t.buildPath.set(project.buildPath(configurationName))
+      t.resolvedComponentResult.set(classpath.flatMap { it.incoming.resolutionResult.rootComponent })
+      t.excludedIdentifiers.set(classpath.map { c -> c.excludeRules.map { "${it.group}:${it.module}".intern() } })
 
       t.output.set(output)
       t.excludedIdentifiersOutput.set(excludedIdentifiersOutput)
