@@ -5,7 +5,6 @@ package com.autonomousapps.internal
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.artifacts.result.ResolvedVariantResult
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import java.io.File
 
@@ -35,15 +34,15 @@ public data class Artifact(
     }
 
     fun sequenced(
-      ids: ListProperty<ComponentArtifactIdentifier>,
-      variants: ListProperty<ResolvedVariantResult>,
-      files: ListProperty<File>,
+      ids: Provider<List<ComponentArtifactIdentifier>>,
+      variants: Provider<List<ResolvedVariantResult>>,
+      files: Provider<List<File>>,
     ): Sequence<Artifact> = zipped(ids, variants, files).asSequence()
 
     fun zipped(
-      ids: ListProperty<ComponentArtifactIdentifier>,
-      variants: ListProperty<ResolvedVariantResult>,
-      files: ListProperty<File>,
+      ids: Provider<List<ComponentArtifactIdentifier>>,
+      variants: Provider<List<ResolvedVariantResult>>,
+      files: Provider<List<File>>,
     ): List<Artifact> {
       // If all are missing, that's fine, we assume this is an @Optional situation
       if (!ids.isPresent && !variants.isPresent && !files.isPresent) {
