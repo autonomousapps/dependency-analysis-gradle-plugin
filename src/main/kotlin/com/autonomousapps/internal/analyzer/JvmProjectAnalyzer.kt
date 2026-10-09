@@ -10,7 +10,6 @@ import com.autonomousapps.internal.OutputPaths
 import com.autonomousapps.internal.resolvedArtifactsFor
 import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.source.SourceKind
-import com.autonomousapps.services.InMemoryCache
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
 import org.gradle.api.file.FileTree
@@ -70,20 +69,6 @@ internal abstract class JvmAnalyzer(
       it.kotlinMetadataClasspath.setFrom(KotlinMetadataClasspath.of(project))
       it.output.set(outputPaths.abiAnalysisPath)
       it.abiDump.set(outputPaths.abiDumpPath)
-    }
-  }
-
-  final override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> {
-    return project.tasks.register("findDeclaredProcs$taskNameSuffix", FindDeclaredProcsTask::class.java) {
-      InMemoryCache.register(it.inMemoryCacheProvider, project)
-      kaptConf()?.let { configuration ->
-        it.setKaptArtifacts(configuration.incoming.artifacts)
-      }
-      annotationProcessorConf()?.let { configuration ->
-        it.setAnnotationProcessorArtifacts(configuration.incoming.artifacts)
-      }
-
-      it.output.set(outputPaths.declaredProcPath)
     }
   }
 

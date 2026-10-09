@@ -3,25 +3,28 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.ANNOTATION_PROCESSOR_PATH
-import com.autonomousapps.internal.identifiers
+import com.autonomousapps.internal.Artifact
+import com.autonomousapps.internal.Artifact.Companion.artifactFiles
 import com.autonomousapps.internal.utils.bufferWriteJsonList
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.internal.intermediates.producer.AnnotationProcessorDependency
 import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
-import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.file.FileCollection
+import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.Optional
 import java.io.BufferedReader
 import java.io.File
 import java.io.Writer
 import java.net.URL
 import java.net.URLClassLoader
-import java.util.Locale
+import java.util.*
 import java.util.zip.ZipFile
 import javax.annotation.processing.Filer
 import javax.annotation.processing.Messager
@@ -57,37 +60,41 @@ public abstract class FindDeclaredProcsTask : DefaultTask() {
     description = "Produces a report of all supported annotation types and their annotation processors"
   }
 
-  private var kaptArtifacts: ArtifactCollection? = null
-  private var annotationProcessorArtifacts: ArtifactCollection? = null
+  @get:Optional
+  @get:Input
+  public abstract val kaptIds: ListProperty<ComponentArtifactIdentifier>
 
-  public fun setKaptArtifacts(artifacts: ArtifactCollection) {
-    kaptArtifacts = artifacts
-    kaptArtifactIdentifiers.set(artifacts.identifiers())
+  @get:Optional
+  @get:Input
+  public abstract val kaptVariants: ListProperty<ResolvedVariantResult>
+
+  @get:Optional
+  @get:Classpath
+  public abstract val kaptFiles: ListProperty<File>
+
+  internal fun withKaptArtifacts(artifacts: Provider<Set<ResolvedArtifactResult>>) {
+    kaptIds.set(Artifact.ids(artifacts))
+    kaptVariants.set(Artifact.variants(artifacts))
+    kaptFiles.set(Artifact.files(artifacts))
   }
 
-  public fun setAnnotationProcessorArtifacts(artifacts: ArtifactCollection) {
-    annotationProcessorArtifacts = artifacts
-    annotationProcessorArtifactIdentifiers.set(artifacts.identifiers())
+  @get:Optional
+  @get:Input
+  public abstract val annotationProcessorIds: ListProperty<ComponentArtifactIdentifier>
+
+  @get:Optional
+  @get:Input
+  public abstract val annotationProcessorVariants: ListProperty<ResolvedVariantResult>
+
+  @get:Optional
+  @get:Classpath
+  public abstract val annotationProcessorFiles: ListProperty<File>
+
+  internal fun withAnnotationProcessorArtifacts(artifacts: Provider<Set<ResolvedArtifactResult>>) {
+    annotationProcessorIds.set(Artifact.ids(artifacts))
+    annotationProcessorVariants.set(Artifact.variants(artifacts))
+    annotationProcessorFiles.set(Artifact.files(artifacts))
   }
-
-  @Optional
-  @Classpath
-  public fun getKaptArtifactFiles(): FileCollection? = kaptArtifacts?.artifactFiles
-
-  /** The output contains artifact coordinates, which aren't reflected in [getKaptArtifactFiles]. See [identifiers]. */
-  @get:Input
-  public abstract val kaptArtifactIdentifiers: ListProperty<String>
-
-  @Optional
-  @Classpath
-  public fun getAnnotationProcessorArtifactFiles(): FileCollection? = annotationProcessorArtifacts?.artifactFiles
-
-  /**
-   * The output contains artifact coordinates, which aren't reflected in [getAnnotationProcessorArtifactFiles]. See
-   * [identifiers].
-   */
-  @get:Input
-  public abstract val annotationProcessorArtifactIdentifiers: ListProperty<String>
 
   @get:OutputFile
   public abstract val output: RegularFileProperty
@@ -98,28 +105,34 @@ public abstract class FindDeclaredProcsTask : DefaultTask() {
   @TaskAction public fun action() {
     val outputFile = output.getAndDelete()
 
-    val kaptClassLoader = newClassLoader("for-kapt", getKaptArtifactFiles())
-    val apClassLoader = newClassLoader("for-annotation-processor", getAnnotationProcessorArtifactFiles())
+    val kapt = Artifact.zipped(kaptIds, kaptVariants, kaptFiles)
+    val annotationProcessor =
+      Artifact.zipped(annotationProcessorIds, annotationProcessorVariants, annotationProcessorFiles)
+
+    val kaptClassLoader = newClassLoader("for-kapt", kapt.artifactFiles())
+    val apClassLoader = newClassLoader("for-annotation-processor", annotationProcessor.artifactFiles())
 
     val inMemoryCache = inMemoryCacheProvider.get()
-    val kaptProcs = procs(kaptArtifacts, kaptClassLoader, inMemoryCache)
-    val annotationProcessorProcs = procs(annotationProcessorArtifacts, apClassLoader, inMemoryCache)
+    val kaptProcs = procs(kapt, kaptClassLoader, inMemoryCache)
+    val annotationProcessorProcs = procs(annotationProcessor, apClassLoader, inMemoryCache)
     val procs = kaptProcs + annotationProcessorProcs
 
     outputFile.bufferWriteJsonList(procs)
   }
 
-  private fun newClassLoader(name: String, files: FileCollection?): ClassLoader? {
-    val urls = files?.toList()?.map { it.toURI().toURL() }?.toTypedArray()
-    return urls?.let { FirstClassLoader(name, urls, javaClass.classLoader) }
+  private fun newClassLoader(name: String, files: List<File>): ClassLoader? {
+    if (files.isEmpty()) return null
+
+    val urls = files.toList().map { it.toURI().toURL() }.toTypedArray()
+    return FirstClassLoader(name, urls, javaClass.classLoader)
   }
 
   private fun procs(
-    artifacts: ArtifactCollection?,
+    artifacts: List<Artifact>,
     classLoader: ClassLoader?,
     inMemoryCache: InMemoryCache,
   ): List<AnnotationProcessorDependency> {
-    if (artifacts == null) return emptyList()
+    if (artifacts.isEmpty()) return emptyList()
 
     return artifacts
       .mapNotNull { artifact ->
@@ -138,7 +151,7 @@ public abstract class FindDeclaredProcsTask : DefaultTask() {
 
   @Suppress("UNCHECKED_CAST")
   private fun procFor(
-    artifact: ResolvedArtifactResult,
+    artifact: Artifact,
     procName: String,
     classLoader: ClassLoader,
   ): AnnotationProcessorDependency? = try {
