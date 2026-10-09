@@ -28,8 +28,8 @@ internal fun Sequence<ResolvedArtifactResult>.filterNonGradle() = filterNot {
 }
 
 /** e.g. "Gradle API", "Gradle TestKit", "Gradle Kotlin DSL" */
-internal fun Sequence<Pair<Artifact, File>>.filterNotOpaque() = filterNot { (details, _) ->
-  details.id.componentIdentifier is OpaqueComponentIdentifier
+internal fun Sequence<Artifact>.filterNotOpaque() = filterNot {
+  it.id.componentIdentifier is OpaqueComponentIdentifier
 }
 
 private val CURRENT_JVM_FEATURE_VERSION = Runtime.version().feature()
