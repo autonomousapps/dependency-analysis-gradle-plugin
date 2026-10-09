@@ -3,6 +3,7 @@
 package com.autonomousapps.model.internal
 
 import com.autonomousapps.PROJECT_LOGGER
+import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.reallyAll
 import com.autonomousapps.internal.utils.sequenceOfClassFiles
@@ -58,10 +59,7 @@ internal data class PhysicalArtifact(
   }
 
   companion object {
-    internal fun of(
-      artifact: ResolvedArtifactResult,
-      files: Set<File>,
-    ): PhysicalArtifact? {
+    internal fun of(artifact: Artifact, files: Set<File>): PhysicalArtifact? {
       if (!isValidArtifact(files)) {
         PROJECT_LOGGER.debug(
           "{} is not valid as a PhysicalArtifact. {} is neither a jar nor a class-files-containing directory",
