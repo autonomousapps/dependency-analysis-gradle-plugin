@@ -2,14 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.ArtifactDetails
+import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.internal.intermediates.producer.NativeLibDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
@@ -24,31 +26,41 @@ public abstract class FindNativeLibsTask : DefaultTask() {
   }
 
   @get:Optional // Only available on Android
-  @get:Nested
-  public abstract val androidJniDetails: ListProperty<ArtifactDetails>
+  @get:Input
+  public abstract val androidJniIds: ListProperty<ComponentArtifactIdentifier>
+
+  @get:Optional // Only available on Android
+  @get:Input
+  public abstract val androidJniVariants: ListProperty<ResolvedVariantResult>
 
   @get:Optional // Only available on Android
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   public abstract val androidJniFiles: ListProperty<File>
 
-  internal fun withAndroidJni(androidJni: Provider<Set<ResolvedArtifactResult>>) {
-    androidJniDetails.set(ArtifactDetails.of(androidJni))
-    androidJniFiles.set(ArtifactDetails.files(androidJni))
+  internal fun withAndroidJni(artifacts: Provider<Set<ResolvedArtifactResult>>) {
+    androidJniIds.set(Artifact.ids(artifacts))
+    androidJniVariants.set(Artifact.variants(artifacts))
+    androidJniFiles.set(Artifact.files(artifacts))
   }
 
   @get:Optional // Only available on JVM
-  @get:Nested
-  public abstract val dylibsDetails: ListProperty<ArtifactDetails>
+  @get:Input
+  public abstract val dylibsIds: ListProperty<ComponentArtifactIdentifier>
+
+  @get:Optional // Only available on JVM
+  @get:Input
+  public abstract val dylibsVariants: ListProperty<ResolvedVariantResult>
 
   @get:Optional // Only available on JVM
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   public abstract val dylibsFiles: ListProperty<File>
 
-  internal fun withDylibs(dylibs: Provider<Set<ResolvedArtifactResult>>) {
-    dylibsDetails.set(ArtifactDetails.of(dylibs))
-    dylibsFiles.set(ArtifactDetails.files(dylibs))
+  internal fun withDylibs(artifacts: Provider<Set<ResolvedArtifactResult>>) {
+    dylibsIds.set(Artifact.ids(artifacts))
+    dylibsVariants.set(Artifact.variants(artifacts))
+    dylibsFiles.set(Artifact.files(artifacts))
   }
 
   @get:OutputFile
@@ -65,15 +77,15 @@ public abstract class FindNativeLibsTask : DefaultTask() {
   }
 
   private fun findAndroidNativeDependencies(): Set<NativeLibDependency> {
-    return ArtifactDetails.sequenced(androidJniDetails, androidJniFiles)
-      .mapNotNull { (details, file) ->
-        val soFiles = file.walkBottomUp()
+    return Artifact.sequenced(androidJniIds, androidJniVariants, androidJniFiles)
+      .mapNotNull { artifact ->
+        val soFiles = artifact.file.walkBottomUp()
           .filter { it.isFile }
           .map { it.name }
           .toSortedSet()
         try {
           NativeLibDependency.newInstance(
-            coordinates = details.toCoordinates(),
+            coordinates = artifact.toCoordinates(),
             fileNames = soFiles,
           )
         } catch (_: GradleException) {
@@ -84,9 +96,9 @@ public abstract class FindNativeLibsTask : DefaultTask() {
   }
 
   private fun findMacNativeDependencies(): Set<NativeLibDependency> {
-    return ArtifactDetails.sequenced(dylibsDetails, dylibsFiles)
-      .mapNotNull { (details, file) ->
-        val dylibs = file.walkBottomUp()
+    return Artifact.sequenced(dylibsIds, dylibsVariants, dylibsFiles)
+      .mapNotNull { artifact ->
+        val dylibs = artifact.file.walkBottomUp()
           .filter { it.isFile }
           .map { it.name }
           .filter { it.endsWith(".dylib") }
@@ -95,7 +107,7 @@ public abstract class FindNativeLibsTask : DefaultTask() {
         if (dylibs.isNotEmpty()) {
           try {
             NativeLibDependency.newInstance(
-              coordinates = details.toCoordinates(),
+              coordinates = artifact.toCoordinates(),
               fileNames = dylibs,
             )
           } catch (_: GradleException) {

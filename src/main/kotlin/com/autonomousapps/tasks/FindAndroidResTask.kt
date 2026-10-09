@@ -4,7 +4,7 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.ArtifactDetails
+import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.internal.utils.getAndDelete
@@ -14,7 +14,9 @@ import com.autonomousapps.model.internal.AndroidResCapability
 import com.autonomousapps.model.internal.intermediates.producer.AndroidResDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
@@ -33,8 +35,11 @@ public abstract class FindAndroidResTask : DefaultTask() {
     description = "Produces a report of all R import candidates from set of dependencies"
   }
 
-  @get:Nested
-  public abstract val androidSymbolDetails: ListProperty<ArtifactDetails>
+  @get:Input
+  public abstract val androidSymbolIds: ListProperty<ComponentArtifactIdentifier>
+
+  @get:Input
+  public abstract val androidSymbolVariants: ListProperty<ResolvedVariantResult>
 
   /** Artifact type "android-symbol-with-package-name". All Android libraries seem to have this. */
   @get:PathSensitive(PathSensitivity.NAME_ONLY)
@@ -42,12 +47,16 @@ public abstract class FindAndroidResTask : DefaultTask() {
   public abstract val androidSymbolFiles: ListProperty<File>
 
   internal fun withAndroidSymbols(artifacts: Provider<Set<ResolvedArtifactResult>>) {
-    androidSymbolDetails.set(ArtifactDetails.of(artifacts))
-    androidSymbolFiles.set(ArtifactDetails.files(artifacts))
+    androidSymbolIds.set(Artifact.ids(artifacts))
+    androidSymbolVariants.set(Artifact.variants(artifacts))
+    androidSymbolFiles.set(Artifact.files(artifacts))
   }
 
-  @get:Nested
-  public abstract val androidPublicResDetails: ListProperty<ArtifactDetails>
+  @get:Input
+  public abstract val androidPublicResIds: ListProperty<ComponentArtifactIdentifier>
+
+  @get:Input
+  public abstract val androidPublicResVariants: ListProperty<ResolvedVariantResult>
 
   /**
    * Artifact type "android-public-res". Appears to only be for platform dependencies that bother to include a
@@ -58,8 +67,9 @@ public abstract class FindAndroidResTask : DefaultTask() {
   public abstract val androidPublicResFiles: ListProperty<File>
 
   internal fun withAndroidPublicRes(artifacts: Provider<Set<ResolvedArtifactResult>>) {
-    androidPublicResDetails.set(ArtifactDetails.of(artifacts))
-    androidPublicResFiles.set(ArtifactDetails.files(artifacts))
+    androidPublicResIds.set(Artifact.ids(artifacts))
+    androidPublicResVariants.set(Artifact.variants(artifacts))
+    androidPublicResFiles.set(Artifact.files(artifacts))
   }
 
   @get:OutputFile
@@ -69,25 +79,32 @@ public abstract class FindAndroidResTask : DefaultTask() {
   public fun action() {
     val outputFile = output.getAndDelete()
 
-    val publicRes = androidResFrom(androidPublicResDetails, androidPublicResFiles, true)
-    val allRes = androidResFrom(androidSymbolDetails, androidSymbolFiles, false, publicRes.flatMapToSet { it.lines })
+    val publicRes = androidResFrom(androidPublicResIds, androidPublicResVariants, androidPublicResFiles, true)
+    val allRes = androidResFrom(
+      androidSymbolIds,
+      androidSymbolVariants,
+      androidSymbolFiles,
+      false,
+      publicRes.flatMapToSet { it.lines },
+    )
 
     outputFile.bufferWriteJsonSet((allRes + publicRes).toSortedSet())
   }
 
   private fun androidResFrom(
-    details: ListProperty<ArtifactDetails>,
+    ids: ListProperty<ComponentArtifactIdentifier>,
+    variants: ListProperty<ResolvedVariantResult>,
     files: ListProperty<File>,
     isPublicRes: Boolean,
     publicLinesFilter: Set<AndroidResCapability.Line> = emptySet()
   ): Set<AndroidResDependency> {
-    return ArtifactDetails.sequenced(details, files)
-      .mapNotNull { (details, file) ->
+    return Artifact.sequenced(ids, variants, files)
+      .mapNotNull { artifact ->
         try {
-          val (import, lines) = parseResFile(file, isPublicRes, publicLinesFilter)
+          val (import, lines) = parseResFile(artifact.file, isPublicRes, publicLinesFilter)
           if (import != null) {
             AndroidResDependency.newInstance(
-              coordinates = details.toCoordinates(),
+              coordinates = artifact.toCoordinates(),
               import = import,
               lines = lines,
             )

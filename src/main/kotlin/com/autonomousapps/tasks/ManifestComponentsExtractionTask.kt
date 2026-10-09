@@ -4,7 +4,7 @@
 
 package com.autonomousapps.tasks
 
-import com.autonomousapps.internal.ArtifactDetails
+import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.ManifestParser
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
@@ -12,7 +12,9 @@ import com.autonomousapps.model.internal.AndroidManifestCapability.Component
 import com.autonomousapps.model.internal.intermediates.producer.AndroidManifestDependency
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -27,16 +29,20 @@ public abstract class ManifestComponentsExtractionTask : DefaultTask() {
     description = "Produces a report of packages, from other components, that are included via Android manifests"
   }
 
-  @get:Nested
-  public abstract val manifestDetails: ListProperty<ArtifactDetails>
+  @get:Input
+  public abstract val manifestIds: ListProperty<ComponentArtifactIdentifier>
+
+  @get:Input
+  public abstract val manifestVariants: ListProperty<ResolvedVariantResult>
 
   @get:PathSensitive(PathSensitivity.NAME_ONLY)
   @get:InputFiles
   public abstract val manifestFiles: ListProperty<File>
 
   internal fun withManifests(artifacts: Provider<Set<ResolvedArtifactResult>>) {
-    manifestDetails.set(ArtifactDetails.of(artifacts))
-    manifestFiles.set(ArtifactDetails.files(artifacts))
+    manifestIds.set(Artifact.ids(artifacts))
+    manifestVariants.set(Artifact.variants(artifacts))
+    manifestFiles.set(Artifact.files(artifacts))
   }
 
   @get:Input
@@ -50,13 +56,13 @@ public abstract class ManifestComponentsExtractionTask : DefaultTask() {
 
     val parser = ManifestParser(namespace.get())
 
-    val manifests: Set<AndroidManifestDependency> = ArtifactDetails.sequenced(manifestDetails, manifestFiles)
-      .mapNotNull { (details, file) ->
+    val manifests: Set<AndroidManifestDependency> = Artifact.sequenced(manifestIds, manifestVariants, manifestFiles)
+      .mapNotNull { artifact ->
         try {
-          val parseResult = parser.parse(file, true)
+          val parseResult = parser.parse(artifact.file, true)
           AndroidManifestDependency.newInstance(
             componentMap = parseResult.components.toComponentMap(),
-            artifact = details,
+            artifact = artifact,
           )
         } catch (_: GradleException) {
           null

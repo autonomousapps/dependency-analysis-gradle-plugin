@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.utils
 
-import com.autonomousapps.internal.ArtifactDetails
+import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.utils.OpaqueNames.GRADLE_VERSION_CATALOG
 import com.autonomousapps.model.*
 import org.gradle.api.GradleException
@@ -69,7 +69,7 @@ private fun ProjectComponentIdentifier.projectPath(): String {
     ?: error("${toCoordinates(GradleVariantIdentification.EMPTY)} is not a DefaultProjectComponentIdentifier")
 }
 
-internal fun ArtifactDetails.toCoordinates(): Coordinates {
+internal fun Artifact.toCoordinates(): Coordinates {
   return id.componentIdentifier.wrapInIncludedBuildCoordinates(variant)
 }
 
