@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.utils.zip3
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.artifacts.result.ResolvedVariantResult
@@ -61,12 +62,8 @@ public data class Artifact(
         "Expected 'details.size == variants.size == files.size'. Got ids.size=${ids.size}, variants.size=${variants.size}, files.size=${files.size}"
       }
 
-      return ids.zip(variants).zip(files).map { (details, file) ->
-        Artifact(
-          id = details.first,
-          variant = details.second,
-          file = file,
-        )
+      return ids.zip3(variants, files) { id, variant, file ->
+        Artifact(id, variant, file)
       }
     }
 

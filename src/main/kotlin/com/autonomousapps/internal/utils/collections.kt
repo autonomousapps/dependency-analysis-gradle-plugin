@@ -3,6 +3,7 @@
 package com.autonomousapps.internal.utils
 
 import com.autonomousapps.internal.Artifact
+import com.autonomousapps.internal.functions.TriFunction
 import org.gradle.api.file.FileCollection
 import org.gradle.internal.component.local.model.OpaqueComponentIdentifier
 import java.io.File
@@ -315,3 +316,56 @@ internal inline fun <K, V> Map<K, V>.ifNotEmpty(block: (Map<K, V>) -> Unit) {
 }
 
 internal fun <K, V> Map<V, K>.reversed() = entries.associateBy({ it.value }) { it.key }
+
+/**
+ * Returns a list of values built from the elements of `this` collection, the [second] collection, and the [third]
+ * collection with the same index using the provided [transform] function applied to each trio of elements. The returned
+ * list has length of the shortest collection.
+ */
+internal fun <T, U, V, R> Iterable<T>.zip3(
+  second: Iterable<U>,
+  third: Iterable<V>,
+  transform: TriFunction<in T, in U, in V, out R>,
+): List<R> {
+  val list = ArrayList<R>(
+    minOf(
+      collectionSizeOrDefault(10),
+      second.collectionSizeOrDefault(10),
+      third.collectionSizeOrDefault(10),
+    )
+  )
+
+  val first = iterator()
+  val second = second.iterator()
+  val third = third.iterator()
+
+  while (first.hasNext() && second.hasNext() && third.hasNext()) {
+    list.add(transform.apply(first.next(), second.next(), third.next()))
+  }
+
+  return list
+}
+
+/**
+ * Returns a list of [Triple]s built from the elements of `this` collection, the [second] collection, and the [third]
+ * collection with the same index. The returned list has length of the shortest collection.
+ */
+internal fun <T, U, V> Iterable<T>.zip3(second: Iterable<U>, third: Iterable<V>): List<Triple<T, U, V>> {
+  val list = ArrayList<Triple<T, U, V>>(
+    minOf(
+      collectionSizeOrDefault(10),
+      second.collectionSizeOrDefault(10),
+      third.collectionSizeOrDefault(10),
+    )
+  )
+
+  val first = iterator()
+  val second = second.iterator()
+  val third = third.iterator()
+
+  while (first.hasNext() && second.hasNext() && third.hasNext()) {
+    list.add(Triple(first.next(), second.next(), third.next()))
+  }
+
+  return list
+}
