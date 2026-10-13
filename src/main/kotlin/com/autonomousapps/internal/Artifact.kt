@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal
 
+import com.autonomousapps.internal.providers.isAvailable
 import com.autonomousapps.internal.utils.zip3
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
@@ -51,7 +52,7 @@ public data class Artifact(
       }
       // If only one is missing, that's an error
       require(ids.isPresent && variants.isPresent && files.isPresent) {
-        "Expected both 'ids', 'variants', and 'files' to be present. Got ids=${ids.isAvailable()}, variants=${variants.isAvailable()}, and files=${files.isAvailable()}"
+        "Expected 'ids', 'variants', and 'files' to be present. Got ids=${ids.isAvailable()}, variants=${variants.isAvailable()}, and files=${files.isAvailable()}"
       }
 
       // All are present and must be the same length, or it's an error
@@ -66,8 +67,6 @@ public data class Artifact(
         Artifact(id, variant, file)
       }
     }
-
-    private fun Provider<*>.isAvailable(): String = if (isPresent) "available" else "not available"
 
     internal fun List<Artifact>.artifactFiles(): List<File> = map { it.file }
   }

@@ -2,11 +2,55 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates
 
+import com.autonomousapps.internal.utils.LexicographicIterableComparator
+import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
+
+/**
+ * Helps build multiple [DependencyTraceReport]s for a [ComputeUsagesTask][com.autonomousapps.tasks.ComputeUsagesTask]
+ * pass. For most projects, there will be only a single report per variant or source set, but for KMP projects, we emit
+ * separate reports for the compilation under analysis as well as any associated `commonMain` and `commonTest` source
+ * sets.
+ */
+internal class DependencyTraceReports(
+  private val buildType: String?,
+  private val flavor: String?
+) {
+
+  // key is source set name (jvmMain, commonMain, etc.)
+  private val builders = sortedMapOf<String, DependencyTraceReport.Builder>()
+  private val sourceSets = mutableMapOf<Coordinates, String>()
+
+  val reports: Set<DependencyTraceReport> get() = builders.values.mapToOrderedSet { it.build() }
+
+  /**
+   * This must be called for each [coordinates] *before* [bucket] is called. There can be many reasons, there can be
+   * only one bucket.
+   */
+  fun reason(sourceKind: SourceKind, coordinates: Coordinates, kind: DependencyTraceReport.Kind, reason: Reason) {
+    // We associate each `coordinates` with a single SourceKind (source set).
+    sourceSets[coordinates] = sourceKind.name
+
+    // Get or create a new builder, mutating it as well.
+    val builder = builders[sourceKind.name] ?: DependencyTraceReport.Builder(buildType, flavor, sourceKind)
+    builder[coordinates, kind] = reason
+    builders[sourceKind.name] = builder
+  }
+
+  /**
+   * This must be called for each [coordinates] *after* [reason] is called. There can be many reasons, there can be only
+   * one bucket.
+   */
+  fun bucket(coordinates: Coordinates, kind: DependencyTraceReport.Kind, bucket: Bucket) {
+    val key = sourceSets[coordinates] ?: error("No source set for $coordinates")
+    val builder = builders[key] ?: error("No report builder for $coordinates")
+    builder[coordinates, kind] = bucket
+  }
+}
 
 @JsonClass(generateAdapter = false)
 internal data class DependencyTraceReport(
@@ -15,14 +59,30 @@ internal data class DependencyTraceReport(
   val sourceKind: SourceKind,
   val dependencies: Set<Trace>,
   val annotationProcessors: Set<Trace>,
-) {
+) : Comparable<DependencyTraceReport> {
+
+  override fun compareTo(other: DependencyTraceReport): Int {
+    return compareBy(DependencyTraceReport::sourceKind)
+      .thenBy(LexicographicIterableComparator()) { it.dependencies }
+      .thenBy(LexicographicIterableComparator()) { it.annotationProcessors }
+      .thenComparing(compareBy<DependencyTraceReport, String?>(nullsFirst()) { it.buildType })
+      .thenComparing(compareBy<DependencyTraceReport, String?>(nullsFirst()) { it.flavor })
+      .compare(this, other)
+  }
 
   @JsonClass(generateAdapter = false)
   data class Trace(
     val coordinates: Coordinates,
     val bucket: Bucket,
     val reasons: Set<Reason> = emptySet(),
-  )
+  ) : Comparable<Trace> {
+    override fun compareTo(other: Trace): Int {
+      return compareBy(Trace::coordinates)
+        .thenBy(Trace::bucket)
+        .thenBy(LexicographicIterableComparator()) { trace -> trace.reasons.map { it.reason } }
+        .compare(this, other)
+    }
+  }
 
   @JsonClass(generateAdapter = false)
   enum class Kind {
@@ -33,7 +93,7 @@ internal data class DependencyTraceReport(
   class Builder(
     private val buildType: String?,
     private val flavor: String?,
-    private val sourceKind: SourceKind,
+    val sourceKind: SourceKind,
   ) {
 
     private val dependencies = mutableMapOf<Coordinates, Trace>()

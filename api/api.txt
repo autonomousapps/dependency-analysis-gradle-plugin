@@ -53,13 +53,6 @@ package com.autonomousapps {
     field public static final com.autonomousapps.Flags INSTANCE;
   }
 
-  @org.gradle.work.DisableCachingByDefault(because="Writes to console") public abstract class ListSourceFilesTask extends org.gradle.api.DefaultTask {
-    ctor public ListSourceFilesTask();
-    method @org.gradle.api.tasks.TaskAction public final void action();
-    method @InaccessibleFromKotlin @org.gradle.api.tasks.Nested public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.internal.kotlin.multiplatform.FileCollectionMap> getFiles();
-    property @org.gradle.api.tasks.Nested public abstract org.gradle.api.provider.ListProperty<com.autonomousapps.internal.kotlin.multiplatform.FileCollectionMap> files;
-  }
-
 }
 
 package com.autonomousapps.exception {

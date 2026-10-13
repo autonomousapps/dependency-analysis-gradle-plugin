@@ -47,8 +47,18 @@ object Dependencies {
   }
 
   @JvmStatic
-  fun commonsMath(configuration: String): Dependency {
-    return provider.commonsMath(configuration)
+  fun commonsCollections(configuration: String): Dependency {
+    return provider.commonsCollections(configuration)
+  }
+
+  @JvmStatic
+  fun commonsCompress(configuration: String): Dependency {
+    return provider.commonsCompress(configuration)
+  }
+
+  @JvmStatic
+  fun commonsConfiguration2(configuration: String): Dependency {
+    return provider.commonsConfiguration2(configuration)
   }
 
   @JvmStatic
@@ -57,8 +67,13 @@ object Dependencies {
   }
 
   @JvmStatic
-  fun commonsCollections(configuration: String): Dependency {
-    return provider.commonsCollections(configuration)
+  fun commonsLang3(configuration: String): Dependency {
+    return provider.commonsLang3(configuration)
+  }
+
+  @JvmStatic
+  fun commonsMath(configuration: String): Dependency {
+    return provider.commonsMath(configuration)
   }
 
   @JvmStatic

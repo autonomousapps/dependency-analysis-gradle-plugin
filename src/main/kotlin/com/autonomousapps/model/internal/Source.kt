@@ -24,6 +24,9 @@ internal data class CodeSource(
   /** Source language. */
   val kind: Kind,
 
+  /** This value will be non-null for KMP projects, and null otherwise. It's simply the name of the source set. */
+  val kmpSourceSetName: String?,
+
   /** The name of this class. */
   val className: String,
 
@@ -67,6 +70,7 @@ internal data class CodeSource(
     return if (other is CodeSource) {
       compareBy(CodeSource::relativePath)
         .thenComparing(CodeSource::kind)
+        .thenComparing(compareBy<CodeSource, String?>(nullsFirst()) { it.kmpSourceSetName })
         .thenComparing(CodeSource::className)
         .thenComparing(compareBy<CodeSource, String?>(nullsFirst()) { it.superClass })
         .thenBy(LexicographicIterableComparator()) { it.interfaces }

@@ -171,7 +171,7 @@ private class TypeUsageAnalyzer(
           // Determine coordinates: check project classes first, then external
           val coords = classToCoords[typeName]
 
-          if (coords != null || projectClasses.contains(typeName)) {
+          if (coords != null || typeName in projectClasses.mapToSet { it.name }) {
             usageMap
               .getOrPut(coords ?: project.coordinates) { mutableMapOf() }
               .merge(typeName, 1, Int::plus)

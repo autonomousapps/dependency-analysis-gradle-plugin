@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.transform
 
+import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
@@ -20,7 +21,7 @@ internal class KmpTransform(
   configurationNames: ConfigurationNames,
   buildPath: String,
   dependencyGraph: Map<String, DependencyGraphView>,
-  isKaptApplied: Boolean = false,
+  isKaptApplied: Boolean,
 ) : AbstractTransform(
   coordinates = coordinates,
   declarations = declarations,
@@ -30,6 +31,26 @@ internal class KmpTransform(
   buildPath = buildPath,
   isKaptApplied = isKaptApplied,
 ) {
+
+  // TODO(tsr): ultimately I want to replace the original reduce function with something much simpler and more tailored
+  //  to the KMP use-case.
+//  override fun reduce(usages: Set<Usage>): Set<Advice> {
+//    val advice = mutableSetOf<Advice>()
+//    val declarations = declarations.forCoordinates(coordinates)
+//
+//    // TODO I think KMP *only* has "custom JVM usages", so this is redundant
+////    var (mainUsages, testUsages, androidTestFixturesUsages, androidTestUsages, customJvmUsage) = usages.mutPartitionOf(
+////      { it.sourceKind.kind == SourceKind.MAIN_KIND },
+////      { it.sourceKind.kind == SourceKind.TEST_KIND },
+////      { it.sourceKind.kind == SourceKind.ANDROID_TEST_FIXTURES_KIND },
+////      { it.sourceKind.kind == SourceKind.ANDROID_TEST_KIND },
+////      { it.sourceKind.kind == SourceKind.CUSTOM_JVM_KIND },
+////    )
+//
+//
+//    // TODO: not yet implemented!!
+//    return advice
+//  }
 
   override fun reduce(usages: Set<Usage>): Set<Advice> {
     val advice = mutableSetOf<Advice>()
@@ -191,11 +212,10 @@ internal class KmpTransform(
     pureJvmVariant: Boolean = false
   ) {
     val usageIter = usages.iterator()
-    val hasCustomSourceSets = hasCustomSourceSets(usages)
     while (usageIter.hasNext()) {
       val usage = usageIter.next()
       val declarationsForVariant = declarations.filterToSet { declaration ->
-        usage.sourceKind == declaration.findSourceKind(hasCustomSourceSets)
+        usage.sourceKind.name == DependencyScope.sourceSetName(declaration.configurationName)
       }
 
       // We have a declaration on the same variant as the usage. Remove or change it, if necessary.

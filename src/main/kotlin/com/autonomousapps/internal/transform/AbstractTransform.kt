@@ -17,6 +17,7 @@ import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.Usage
+import com.autonomousapps.model.source.KmpSourceKind
 import com.autonomousapps.model.source.SourceKind
 import com.google.common.collect.SetMultimap
 import org.gradle.api.attributes.Category
@@ -109,11 +110,8 @@ internal abstract class AbstractTransform(
   }
 
   protected fun isSingleBucketForSingleVariant(usages: Set<Usage>): Boolean {
-    return if (usages.size == 1) {
-      true
-    } else {
-      usages.mapToSet { it.bucket }.size == 1 && usages.mapToSet { it.sourceKind.base() }.size == 1
-    }
+    return usages.size == 1
+      || usages.mapToSet { it.bucket }.size == 1 && usages.mapToSet { it.sourceKind.base() }.size == 1
   }
 
   protected fun Sequence<Usage>.filterUsed() = filterNot { it.bucket == Bucket.NONE }
@@ -225,7 +223,14 @@ internal abstract class AbstractTransform(
     val anyDowngrade = allAdvice.any { it.isDowngrade() }
     if (anyDowngrade) return false
 
-    val sourceSets = directDependencies[advice.coordinates.identifier].map { it.name }
+    val sourceSets = directDependencies[advice.coordinates.identifier].mapToSet { sourceKind -> sourceKind.name }
+
+    // This is for KMP only, which means it's not really in the right spot.
+    // If the advice is to add something to `commonTest`, and it's already on `<something>Main`, then we assume it's
+    // already visible to `commonTest` and there's no need to explicitly add it. I'm uncertain about this heuristic.
+    if (this is KmpTransform && sourceSetName == KmpSourceKind.COMMON_TEST_NAME && sourceSets.any { it.endsWith("Main") }) {
+      return true
+    }
 
     // There's "no point" in adding a new declaration when that dependency is already available as a direct dependency,
     // UNLESS we also happen to have some advice that might DOWNGRADE/REMOVE that declaration. For example, we might be

@@ -4,9 +4,6 @@ package com.autonomousapps.kmp
 
 import com.autonomousapps.android.AbstractAndroidSpec
 
-/**
- * TODO.
- */
 abstract class AbstractKmpSpec extends AbstractAndroidSpec {
 
 }

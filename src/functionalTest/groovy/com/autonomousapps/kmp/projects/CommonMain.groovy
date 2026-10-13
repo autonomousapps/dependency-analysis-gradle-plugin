@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kmp.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
@@ -13,9 +12,7 @@ import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.gradle.Dependency.api
 import static com.autonomousapps.kit.gradle.Dependency.implementation
 
-final class CommonMain extends AbstractProject {
-
-  private static final String KOTLIN_VERSION = '2.2.21'
+final class CommonMain extends AbstractKmpProject {
 
   final GradleProject gradleProject
 

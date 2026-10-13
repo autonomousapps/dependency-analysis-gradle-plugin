@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kmp.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
@@ -13,9 +12,7 @@ import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.Dependency.api
 import static com.autonomousapps.kit.gradle.Dependency.implementation
 
-final class JvmTargetProject extends AbstractProject {
-
-  private static final String KOTLIN_VERSION = '2.2.21'
+final class JvmTargetProject extends AbstractKmpProject {
 
   static final String CAFFEINE = 'com.github.ben-manes.caffeine:caffeine:3.2.3'
   static final String OKIO = 'com.squareup.okio:okio:3.16.4'
@@ -222,13 +219,32 @@ final class JvmTargetProject extends AbstractProject {
     // commonMainApi("com.squareup.okio:okio:3.16.4") (was commonMainImplementation)
     Advice.ofChange(moduleCoordinates(OKIO), 'commonMainImplementation', 'commonMainApi'),
     // jvmMainImplementation("com.squareup.okhttp3:okhttp:4.6.0")
-    Advice.ofAdd(moduleCoordinates(OK_HTTP), 'jvmMainImplementation'),
+    Advice.ofAdd(moduleCoordinates(OK_HTTP), 'commonMainImplementation'),
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [
     projectAdviceForDependencies(':consumer', consumerAdvice),
     emptyProjectAdviceFor(':producer')
   ]
+
+  final String expectedBuildHealthOutput() {
+    return """\
+      Advice for :consumer
+      Unused dependencies which should be removed:
+        jvmMain.dependencies {
+          api("$CAFFEINE")
+        }
+      
+      These transitive dependencies should be declared directly:
+        commonMain.dependencies {
+          implementation("$OK_HTTP")
+        }
+      
+      Existing dependencies which should be modified to be as indicated:
+        commonMain.dependencies {
+          api("$OKIO") (was commonMainImplementation)
+        }""".stripIndent()
+  }
 
   /*
    * fixDependencies
@@ -253,13 +269,13 @@ final class JvmTargetProject extends AbstractProject {
             api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
             implementation(project(":producer"))
             api("com.squareup.okio:okio:3.16.4")
+            implementation("com.squareup.okhttp3:okhttp:4.6.0")
           }
           commonTest.dependencies {
             implementation(kotlin("test"))
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
           }
           jvmMain.dependencies {
-            implementation("com.squareup.okhttp3:okhttp:4.6.0")
           }
           jvmTest.dependencies {
             implementation(kotlin("test-junit"))

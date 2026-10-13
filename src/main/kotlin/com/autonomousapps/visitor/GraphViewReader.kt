@@ -36,7 +36,7 @@ internal class GraphViewReader(
       binaryClassesProvider = binaryClassesProvider,
     )
     project.excludedIdentifiers.forEach { excludedIdentifier ->
-      visitor.visit(excludedIdentifier)
+      visitor.visit(excludedIdentifier, context)
     }
     dependencies.forEach { dependency ->
       visitor.visit(dependency, context)
@@ -44,7 +44,6 @@ internal class GraphViewReader(
   }
 }
 
-@Suppress("UnstableApiUsage")
 internal class DefaultContext(
   override val project: ProjectVariant,
   override val dependencies: Set<Dependency>,
