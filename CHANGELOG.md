@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.20.0 (unreleased)
+* [breaking]: KMP project analysis requires Kotlin 2.3.0+ and Gradle 9.4.0+.
+
 # Version 3.19.2
 * [fix]: Updated asm to 9.10.1 (and use latest asm-relocated).
 * [fix]: don't duplicate advise for `main` -> `test` and `main` -> `androidTest`.

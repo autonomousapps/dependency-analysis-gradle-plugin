@@ -70,8 +70,8 @@ public abstract class AndroidScoreTask @Inject constructor(
         .filterNot { it.relativePath.endsWith("AndroidManifest.xml") }
         .isNotEmpty()
       val hasBuildConfig = project.codeSource.any { it.relativePath.endsWith("BuildConfig.class") }
-      val usesAndroidClasses = project.usedNonAnnotationClasses.any { it.startsWith("android.") }
-      val importsAndroidClasses = project.imports.any { it.startsWith("android.") }
+      val usesAndroidClasses = project.usedNonAnnotationClasses.any { it.name.startsWith("android.") }
+      val importsAndroidClasses = project.imports.any { it.name.startsWith("android.") }
       val hasAndroidDependencies = androidDependencies.isNotEmpty()
       val hasBuildTypeSourceSplits = project.codeSource
         // Exclude compiled code (which would be in a build dir, and thus not relevant to this question)

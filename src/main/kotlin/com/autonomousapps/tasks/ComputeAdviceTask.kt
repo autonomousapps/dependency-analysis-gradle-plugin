@@ -5,7 +5,6 @@ package com.autonomousapps.tasks
 import com.autonomousapps.extension.DependenciesHandler
 import com.autonomousapps.internal.Bundles
 import com.autonomousapps.internal.UsageContainer
-import com.autonomousapps.internal.advice.KmpCommonDependencies
 import com.autonomousapps.internal.android.ProductFlavor
 import com.autonomousapps.internal.transform.TransformFactory
 import com.autonomousapps.internal.utils.*
@@ -185,7 +184,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
         .run { AndroidScore.ofVariants(this) }
         .toSetOrEmpty()
       val bundleRules = parameters.bundles.get()
-      val traces = parameters.dependencyUsageReports.get().mapToSet { it.fromJson<DependencyTraceReport>() }
+      val traces = parameters.dependencyUsageReports.get().flatMapToOrderedSet { it.fromJsonSet<DependencyTraceReport>() }
       val usageBuilder = UsageBuilder(
         traces = traces,
         // TODO(tsr): it would be clearer to get this from a SyntheticProject
@@ -402,11 +401,13 @@ internal class DependencyAdviceBuilder(
             null
           }
 
+          // TODO(tsr): delete this once fully confident it's not needed. All the tests now pass without it.
+          //  remember to delete the unit tests too.
           // For KMP projects, if the advice is to move the dependency from a commonX source set to a specific target,
           // ignore it for now. If the advice is to move and upgrade, then just upgrade but keep in the same source set.
-          projectType == ProjectType.KMP && advice.isAnyChange() -> {
-            KmpCommonDependencies.ensureUnbroken(advice)
-          }
+          //projectType == ProjectType.KMP && advice.isAnyChange() -> {
+          //  KmpCommonDependencies.ensureUnbroken(advice)
+          //}
 
           else -> advice
         }

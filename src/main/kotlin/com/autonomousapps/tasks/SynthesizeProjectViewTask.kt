@@ -188,6 +188,7 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
           bytecode.className,
           CodeSourceBuilder(className = bytecode.className).apply {
             relativePath = bytecode.relativePath
+            kmpSourceSetName = bytecode.kmpSourceSetName
             superClass = bytecode.superClass
             interfaces.addAll(bytecode.interfaces)
             nonAnnotationClasses.addAll(bytecode.nonAnnotationClasses)
@@ -290,6 +291,7 @@ private class CodeSourceBuilder(val className: String) {
 
   var relativePath: String? = null
   var kind: CodeSource.Kind = CodeSource.Kind.UNKNOWN
+  var kmpSourceSetName: String? = null
   var superClass: String? = null
   val interfaces = sortedSetOf<String>()
   val nonAnnotationClasses = sortedSetOf<String>()
@@ -303,6 +305,7 @@ private class CodeSourceBuilder(val className: String) {
   fun concat(other: CodeSourceBuilder): CodeSourceBuilder {
     other.relativePath?.let { relativePath = it }
     other.superClass?.let { superClass = it }
+    other.kmpSourceSetName?.let { kmpSourceSetName = it }
     interfaces.addAll(other.interfaces)
     nonAnnotationClasses.addAll(other.nonAnnotationClasses)
     nonAnnotationClassesWithinVisibleAnnotation.putAll(other.nonAnnotationClassesWithinVisibleAnnotation)
@@ -317,6 +320,7 @@ private class CodeSourceBuilder(val className: String) {
     val relativePath = checkNotNull(relativePath) { "'relativePath' was null for $className" }
     return CodeSource(
       relativePath = relativePath,
+      kmpSourceSetName = kmpSourceSetName,
       superClass = superClass,
       interfaces = interfaces.efficient(),
       kind = kind,

@@ -20,7 +20,7 @@ internal class AndroidTransform(
   configurationNames: ConfigurationNames,
   buildPath: String,
   dependencyGraph: Map<String, DependencyGraphView>,
-  isKaptApplied: Boolean = false,
+  isKaptApplied: Boolean,
 ) : AbstractTransform(
   coordinates = coordinates,
   declarations = declarations,

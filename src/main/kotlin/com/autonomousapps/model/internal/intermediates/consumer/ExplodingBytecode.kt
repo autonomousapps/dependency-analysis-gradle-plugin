@@ -8,7 +8,11 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = false)
 internal data class ExplodingBytecode(
+  /** May look like `classes/kotlin/jvm/main/common/main/Bar.class`. */
   val relativePath: String,
+
+  /** The name of the source set for KMP projects, or null for non-KMP. */
+  val kmpSourceSetName: String?,
 
   /** The name of this class. */
   val className: String,
@@ -19,7 +23,7 @@ internal data class ExplodingBytecode(
   /** The interfaces of this class (may be empty). */
   val interfaces: Set<String>,
 
-  /** The path to the source file for this class. TODO(tsr): how does this differ from [relativePath]? */
+  /** The path to the source file for this class. May look like `Bar.kt` (at least in KMP). */
   val sourceFile: String?,
 
   /** Every class discovered in the bytecode of [className], and not as an annotation. */
@@ -44,6 +48,7 @@ internal data class ExplodingBytecode(
 
   override fun compareTo(other: ExplodingBytecode): Int {
     return compareBy(ExplodingBytecode::relativePath)
+      .thenComparing(compareBy<ExplodingBytecode, String?>(nullsFirst()) { it.kmpSourceSetName })
       .thenComparing(ExplodingBytecode::className)
       .thenComparing(compareBy<ExplodingBytecode, String?>(nullsFirst()) { it.superClass })
       .thenBy(LexicographicIterableComparator()) { it.interfaces }

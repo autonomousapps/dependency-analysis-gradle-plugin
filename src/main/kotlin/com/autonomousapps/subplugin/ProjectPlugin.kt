@@ -195,8 +195,7 @@ internal class ProjectPlugin(private val project: Project) {
       pluginManager.withPlugin(KOTLIN_MULTIPLATFORM_PLUGIN) {
         logger.log("Adding Android library KMP tasks to $path")
 
-        // Yes, even though this is an Android library. The KMP part is more critical from an analysis perspective. I
-        // think.
+        // Yes, even though this is an Android library. The KMP part is more critical from an analysis perspective.
         isKmpProject = true
 
         checkAgpOnClasspath()
@@ -772,10 +771,12 @@ internal class ProjectPlugin(private val project: Project) {
   private fun Project.configureKotlinMultiplatformProject() {
     val kotlin = extensions.getByType(KotlinMultiplatformExtension::class.java)
 
+    val findKmpSourcesTask = FindKmpSourcesTask.register(this, kotlin)
+
     kotlin
       .targets
       .configureEach { target ->
-//        println("CONFIGURING KOTLIN TARGET ${target.name} (${target.javaClass.simpleName})")
+        //println("CONFIGURING KOTLIN TARGET ${target.name} (${target.javaClass.simpleName})")
         target.compilations
           // TODO(tsr): requiring the `runtimeDependencyConfigurationName` to be non-null seems to be equivalent to only
           //  configuring the JVM and Android targets.
@@ -784,7 +785,7 @@ internal class ProjectPlugin(private val project: Project) {
           //      collections.
           .matching { compilation -> compilation.runtimeDependencyConfigurationName != null }
           .configureEach { compilation ->
-//            println(" COMPILATION ${compilation.name} (${compilation.javaClass.simpleName})")
+            //println(" COMPILATION ${compilation.name} (${compilation.javaClass.simpleName})")
             try {
               val hasAbi = hasAbi(compilation)
               val kmpSourceSet = KmpSourceSet(compilation)
@@ -792,6 +793,7 @@ internal class ProjectPlugin(private val project: Project) {
               val dependencyAnalyzer = KmpProjectAnalyzer(
                 project = this,
                 sourceSet = kmpSourceSet,
+                findKmpSourcesTask = findKmpSourcesTask,
                 hasAbi = hasAbi,
               )
 

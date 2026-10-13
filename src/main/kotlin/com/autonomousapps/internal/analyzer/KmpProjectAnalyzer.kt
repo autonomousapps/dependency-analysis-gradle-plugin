@@ -18,6 +18,7 @@ import java.io.File
 internal class KmpProjectAnalyzer(
   project: Project,
   private val sourceSet: KmpSourceSet,
+  private val findKmpSourcesTask: TaskProvider<FindKmpSourcesTask>,
   private val hasAbi: Boolean,
 ) : AbstractDependencyAnalyzer(project) {
 
@@ -40,31 +41,32 @@ internal class KmpProjectAnalyzer(
   override val outputPaths = OutputPaths(project, variantName)
 
   override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
-    return project.tasks.register("explodeByteCodeSource$taskNameSuffix", ClassListExploderTask::class.java) {
-      it.classes.setFrom(sourceSet.classesDirs)
-      it.output.set(outputPaths.explodingBytecodePath)
+    return project.tasks.register("explodeByteCodeSource$taskNameSuffix", ClassListExploderTask::class.java) { t ->
+      t.classes.setFrom(sourceSet.classesDirs)
+      t.kmpSources.set(findKmpSourcesTask.flatMap { it.output })
+      t.output.set(outputPaths.explodingBytecodePath)
     }
   }
 
   override fun registerCodeSourceExploderTask(): TaskProvider<out CodeSourceExploderTask> {
-    return project.tasks.register("explodeCodeSource$taskNameSuffix", JvmCodeSourceExploderTask::class.java) {
-      it.groovySource.setFrom(getGroovySources())
-      it.javaSource.setFrom(getJavaSources())
-      it.kotlinSource.setFrom(getKotlinSources())
-      it.scalaSource.setFrom(getScalaSources())
-      it.output.set(outputPaths.explodedSourcePath)
+    return project.tasks.register("explodeCodeSource$taskNameSuffix", JvmCodeSourceExploderTask::class.java) { t ->
+      t.groovySource.setFrom(getGroovySources())
+      t.javaSource.setFrom(getJavaSources())
+      t.kotlinSource.setFrom(getKotlinSources())
+      t.scalaSource.setFrom(getScalaSources())
+      t.output.set(outputPaths.explodedSourcePath)
     }
   }
 
   override fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? {
     if (!hasAbi) return null
 
-    return project.tasks.register("abiAnalysis$taskNameSuffix", AbiAnalysisTask::class.java) {
-      it.classes.setFrom(sourceSet.classesDirs)
-      it.exclusions.set(abiExclusions)
-      it.kotlinMetadataClasspath.setFrom(KotlinMetadataClasspath.of(project))
-      it.output.set(outputPaths.abiAnalysisPath)
-      it.abiDump.set(outputPaths.abiDumpPath)
+    return project.tasks.register("abiAnalysis$taskNameSuffix", AbiAnalysisTask::class.java) { t ->
+      t.classes.setFrom(sourceSet.classesDirs)
+      t.exclusions.set(abiExclusions)
+      t.kotlinMetadataClasspath.setFrom(KotlinMetadataClasspath.of(project))
+      t.output.set(outputPaths.abiAnalysisPath)
+      t.abiDump.set(outputPaths.abiDumpPath)
     }
   }
 

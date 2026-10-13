@@ -47,16 +47,28 @@ class DependencyProvider(
     return Dependency(configuration, "com.google.guava:guava:28.2-jre")
   }
 
-  fun commonsMath(configuration: String): Dependency {
-    return Dependency(configuration, "org.apache.commons:commons-math3:3.6.1")
-  }
-
   fun commonsIO(configuration: String): Dependency {
     return Dependency(configuration, "commons-io:commons-io:2.6")
   }
 
   fun commonsCollections(configuration: String): Dependency {
     return Dependency(configuration, "org.apache.commons:commons-collections4:4.4")
+  }
+
+  fun commonsConfiguration2(configuration: String): Dependency {
+    return Dependency(configuration, "org.apache.commons:commons-configuration2:2.14.0")
+  }
+
+  fun commonsCompress(configuration: String): Dependency {
+    return Dependency(configuration, "org.apache.commons:commons-compress:1.28.0")
+  }
+
+  fun commonsLang3(configuration: String): Dependency {
+    return Dependency(configuration, "org.apache.commons:commons-lang3:3.21.0")
+  }
+
+  fun commonsMath(configuration: String): Dependency {
+    return Dependency(configuration, "org.apache.commons:commons-math3:3.6.1")
   }
 
   fun commonsText(configuration: String): Dependency {

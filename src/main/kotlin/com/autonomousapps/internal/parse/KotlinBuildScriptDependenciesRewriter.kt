@@ -307,9 +307,10 @@ internal class KotlinBuildScriptDependenciesRewriter(
             "Expected scope to be non-empty. E.g., \"commonMain\", \"jvmTest\", etc."
           }
 
+          val separator = System.lineSeparator() + localIndent
           rewriter.insertBefore(
             beforeToken,
-            advice.joinToString(prefix = prefix, postfix = postfix, separator = "\n") { a ->
+            advice.joinToString(prefix = prefix, postfix = postfix, separator = separator) { a ->
               printer.toDeclaration(a, scope)
             }
           )

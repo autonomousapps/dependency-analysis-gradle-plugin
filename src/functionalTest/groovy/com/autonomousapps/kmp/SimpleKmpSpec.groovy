@@ -23,24 +23,7 @@ final class SimpleKmpSpec extends AbstractKmpSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     and:
-    assertThat(result.output).contains(
-      """\
-        Advice for :consumer
-        Unused dependencies which should be removed:
-          jvmMain.dependencies {
-            api("${JvmTargetProject.CAFFEINE}")
-          }
-        
-        These transitive dependencies should be declared directly:
-          jvmMain.dependencies {
-            implementation("${JvmTargetProject.OK_HTTP}")
-          }
-      
-        Existing dependencies which should be modified to be as indicated:
-          commonMain.dependencies {
-            api("${JvmTargetProject.OKIO}") (was commonMainImplementation)
-          }""".stripIndent()
-    )
+    assertThat(result.output).contains(project.expectedBuildHealthOutput())
 
     where:
     gradleVersion << gradleVersions()
@@ -58,19 +41,7 @@ final class SimpleKmpSpec extends AbstractKmpSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     and:
-    assertThat(result.output).contains(
-      """\
-        Advice for :consumer
-        Unused dependencies which should be removed:
-          androidMain.dependencies {
-            api("${AndroidTargetProject.CAFFEINE}")
-          }
-                  
-        Existing dependencies which should be modified to be as indicated:
-          commonMain.dependencies {
-            api("${AndroidTargetProject.OKIO}") (was commonMainImplementation)
-          }""".stripIndent()
-    )
+    assertThat(result.output).contains(project.expectedBuildHealthOutput())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
@@ -88,44 +59,7 @@ final class SimpleKmpSpec extends AbstractKmpSpec {
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
     and:
-    assertThat(result.output).contains(
-      """\
-        Advice for :android
-        Unused dependencies which should be removed:
-          androidMain.dependencies {
-            api("${AndroidAndJvmProject.CAFFEINE}")
-          }
-                
-        Existing dependencies which should be modified to be as indicated:
-          commonMain.dependencies {
-            api("${AndroidAndJvmProject.OKIO}") (was commonMainImplementation)
-          }
-        
-        Advice for :jvm
-        Unused dependencies which should be removed:
-          commonMain.dependencies {
-            api("${AndroidAndJvmProject.KOTLINX_COROUTINES_CORE}")
-          }
-        
-        Existing dependencies which should be modified to be as indicated:
-          commonMain.dependencies {
-            api("${AndroidAndJvmProject.OKIO}") (was commonMainImplementation)
-          }
-          
-        Advice for :multiple
-        Unused dependencies which should be removed:
-          androidMain.dependencies {
-            api("${AndroidAndJvmProject.CAFFEINE}")
-          }
-          commonMain.dependencies {
-            api("${AndroidAndJvmProject.KOTLINX_COROUTINES_CORE}")
-          }
-        
-        Existing dependencies which should be modified to be as indicated:
-          commonMain.dependencies {
-            api("${AndroidAndJvmProject.OKIO}") (was commonMainImplementation)
-          }""".stripIndent()
-    )
+    assertThat(result.output).contains(project.expectedBuildHealthOutput())
 
     where:
     [gradleVersion, agpVersion] << gradleAgpMatrix()
