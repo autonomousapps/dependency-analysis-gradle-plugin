@@ -1,0 +1,116 @@
+// Copyright (c) 2026. Tony Robalik.
+// SPDX-License-Identifier: Apache-2.0
+package com.autonomousapps.kmp.projects
+
+import com.autonomousapps.AbstractProject
+import com.autonomousapps.kit.GradleProject
+import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
+import com.autonomousapps.model.Advice
+import com.autonomousapps.model.ProjectAdvice
+
+import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.gradle.Dependency.implementation
+
+final class ReplaceWithTransitiveProject extends AbstractProject {
+
+  private static final String KOTLIN_VERSION = '2.2.21'
+
+  final GradleProject gradleProject
+
+  ReplaceWithTransitiveProject() {
+    super(KOTLIN_VERSION)
+    this.gradleProject = build()
+  }
+
+  private GradleProject build() {
+    return newGradleProjectBuilder(GradleProject.DslKind.KOTLIN)
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.plugins(plugins.dependencyAnalysis, plugins.kotlinMultiplatformNoApply)
+        }
+      }
+      .withSubproject('consumer') { s ->
+        s.sources = consumerSources()
+        s.withBuildScript { bs ->
+          bs.plugins = kmpLibrary
+          bs.kotlinKmp { k ->
+            // https://github.com/veyndan/dependency-analysis-gradle-plugin-playground/blob/1784/build.gradle.kts
+            //jvm()               // This is what `KotlinJvmTarget.default()` does.
+            //iosArm64()          // TODO(tsr): no support yet
+            //iosSimulatorArm64() // TODO(tsr): no support yet
+            k.jvmTarget = KotlinJvmTarget.default()
+            k.sourceSets { sourceSets ->
+              sourceSets.commonMain { commonMain ->
+                commonMain.dependencies(
+                  // Should be `api('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0')`
+                  implementation('androidx.compose.runtime:runtime:1.11.4'),
+                )
+              }
+            }
+          }
+        }
+      }
+      .write()
+  }
+
+  private static List<Source> consumerSources() {
+    return [
+      Source
+        .kotlin(
+          '''
+            package common.main
+            
+            // Provided transitively: `androidx.compose.runtime:runtime -> org.jetbrains.kotlinx:kotlinx-coroutines-core`
+            import kotlinx.coroutines.flow.Flow
+            
+            data class Foo(val bar: Flow<Int>)
+          '''
+        )
+        .withSourceSet('commonMain')
+        .build(),
+    ]
+  }
+
+  /*
+   * buildHealth
+   */
+
+  Set<ProjectAdvice> actualBuildHealth() {
+    return actualProjectAdvice(gradleProject)
+  }
+
+  private final Set<Advice> consumerAdvice = [
+    Advice.ofRemove(moduleCoordinates('androidx.compose.runtime:runtime:1.11.4'), 'commonMainImplementation'),
+    Advice.ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0'), 'commonMainApi'),
+  ]
+
+  final Set<ProjectAdvice> expectedBuildHealth = [
+    projectAdviceForDependencies(':consumer', consumerAdvice),
+  ]
+
+  /*
+   * fixDependencies
+   */
+
+  final String actualBuildscriptContent() {
+    return gradleProject.projectDir('consumer').resolve('build.gradle.kts').text.trim()
+  }
+
+  final String expectedBuildScriptContent() {
+    return '''\
+      plugins {
+        id("org.jetbrains.kotlin.multiplatform")
+        id("com.autonomousapps.dependency-analysis")
+      }
+      
+      kotlin {
+        jvm()
+        sourceSets {
+          commonMain.dependencies {
+            api('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0')
+          }
+        }
+      }'''.stripIndent()
+  }
+}
