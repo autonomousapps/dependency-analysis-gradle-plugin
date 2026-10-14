@@ -51,7 +51,7 @@ public data class Artifact(
       }
       // If only one is missing, that's an error
       require(ids.isPresent && variants.isPresent && files.isPresent) {
-        "Expected both 'ids', 'variants', and 'files' to be present. Got ids=${ids.isAvailable()}, variants=${variants.isAvailable()}, and files=${files.isAvailable()}"
+        "Expected 'ids', 'variants', and 'files' to be present. Got ids=${ids.isAvailable()}, variants=${variants.isAvailable()}, and files=${files.isAvailable()}"
       }
 
       // All are present and must be the same length, or it's an error
@@ -67,6 +67,7 @@ public data class Artifact(
       }
     }
 
+    // TODO: centralize with FileCollectionMap.isAvailable()
     private fun Provider<*>.isAvailable(): String = if (isPresent) "available" else "not available"
 
     internal fun List<Artifact>.artifactFiles(): List<File> = map { it.file }

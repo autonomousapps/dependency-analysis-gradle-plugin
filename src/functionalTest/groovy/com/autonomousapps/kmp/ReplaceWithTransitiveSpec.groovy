@@ -14,8 +14,10 @@ final class ReplaceWithTransitiveSpec extends AbstractKmpSpec {
     def project = new ReplaceWithTransitiveProject()
     gradleProject = project.gradleProject
 
+    // TODO: cleanup
     when: 'buildHealth has expected results'
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+//    build(gradleVersion, gradleProject.rootDir, 'listAllCommonSourceFiles', '--rerun-tasks')
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth', ':consumer:listAllCommonSourceFiles')//, '--rerun-tasks')
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)

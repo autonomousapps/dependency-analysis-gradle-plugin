@@ -195,8 +195,7 @@ internal class ProjectPlugin(private val project: Project) {
       pluginManager.withPlugin(KOTLIN_MULTIPLATFORM_PLUGIN) {
         logger.log("Adding Android library KMP tasks to $path")
 
-        // Yes, even though this is an Android library. The KMP part is more critical from an analysis perspective. I
-        // think.
+        // Yes, even though this is an Android library. The KMP part is more critical from an analysis perspective.
         isKmpProject = true
 
         checkAgpOnClasspath()
@@ -771,6 +770,8 @@ internal class ProjectPlugin(private val project: Project) {
    */
   private fun Project.configureKotlinMultiplatformProject() {
     val kotlin = extensions.getByType(KotlinMultiplatformExtension::class.java)
+
+    ListSourceFilesTask.register(this, kotlin)
 
     kotlin
       .targets

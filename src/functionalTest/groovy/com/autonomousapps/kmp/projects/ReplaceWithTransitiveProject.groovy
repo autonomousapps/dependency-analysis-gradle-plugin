@@ -14,7 +14,7 @@ import static com.autonomousapps.kit.gradle.Dependency.implementation
 
 final class ReplaceWithTransitiveProject extends AbstractProject {
 
-  private static final String KOTLIN_VERSION = '2.2.21'
+  private static final String KOTLIN_VERSION = '2.4.0'
 
   final GradleProject gradleProject
 
@@ -49,6 +49,29 @@ final class ReplaceWithTransitiveProject extends AbstractProject {
               }
             }
           }
+
+          // To ensure our source-finding code accounts for nonstandard and generated directories
+          bs.withKotlin(
+            '''\
+            val generatorTask = project.tasks.register("genSource") {
+              val outputDirectory = project.layout.buildDirectory.dir("gen/kotlin")
+              outputs.dir(outputDirectory)
+              doLast {
+                outputDirectory.get().file("generated.kt").asFile.writeText(
+                  """
+                    fun printHello() {
+                      println("hello")
+                    }
+                  """.trimIndent()
+                )
+              }
+            }
+            
+            kotlin.sourceSets.commonMain.configure {
+              generatedKotlin.srcDir(generatorTask)
+              kotlin.srcDir(project.layout.projectDirectory.dir("src/more/kotlin"))
+            }'''.stripIndent()
+          )
         }
       }
       .write()
@@ -68,6 +91,17 @@ final class ReplaceWithTransitiveProject extends AbstractProject {
           '''
         )
         .withSourceSet('commonMain')
+        .build(),
+      Source
+        .kotlin(
+          '''
+            package common.main.more
+            
+            class More
+          '''
+        )
+      // still part of commonMain (a nonstandard dir)
+        .withSourceSet('more')
         .build(),
     ]
   }

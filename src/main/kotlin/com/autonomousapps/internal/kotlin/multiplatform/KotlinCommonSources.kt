@@ -3,6 +3,7 @@
 package com.autonomousapps.internal.kotlin.multiplatform
 
 import org.gradle.api.NamedDomainObjectSet
+import org.gradle.api.file.FileCollection
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import java.util.concurrent.Callable
@@ -10,7 +11,7 @@ import java.util.concurrent.Callable
 /** Provides lazy access to Kotlin sources in `commonMain` and `commonTest`, including generated sources. */
 internal class KotlinCommonSources private constructor(
   private val kotlinSources: NamedDomainObjectSet<KotlinSourceSet>,
-) : Callable<List<FileCollectionMap>> {
+) {
 
   internal companion object {
     private val commonSources = setOf(
@@ -42,8 +43,6 @@ internal class KotlinCommonSources private constructor(
     }
   }
 
-  override fun call(): List<FileCollectionMap> {
-    // The `map` call realizes the lazy NamedDomainObjectSet, so we delay it till the last moment.
-    return kotlinSources.map { sourceSet -> FileCollectionMap(sourceSet.name, sourceSet.kotlin.sourceDirectories) }
-  }
+  fun names(): Callable<List<String>> = Callable { FileCollectionMap.names(kotlinSources) }
+  fun files(): Callable<List<FileCollection>> = Callable { FileCollectionMap.files(kotlinSources) }
 }
