@@ -33,7 +33,7 @@ public class DependencyAnalysisPlugin : Plugin<Project> {
 
   /** If this is the root project, apply configuration necessary for the root. */
   private fun Project.applyForRoot() {
-    if (this == rootProject) {
+    if (path == isolated.rootProject.path) {
       checkGradleVersion()
       checkAgpVersion()
       RootPlugin(this).apply()
@@ -58,7 +58,7 @@ public class DependencyAnalysisPlugin : Plugin<Project> {
 
     logger.debug("AgpVersion = $current")
     val compatibility = compatibility()
-    if (compatibility != Flags.Compatibility.NONE && !current.isSupported() && this == rootProject) {
+    if (compatibility != Flags.Compatibility.NONE && !current.isSupported() && path == isolated.rootProject.path) {
       val message =
         "The Dependency Analysis plugin is only known to work with versions of AGP between ${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}. Proceed at your own risk."
 

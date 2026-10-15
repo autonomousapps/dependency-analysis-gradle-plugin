@@ -79,7 +79,7 @@ private const val SPRING_BOOT_PLUGIN = "org.springframework.boot"
 /** This "plugin" is applied to every project in a build. */
 internal class ProjectPlugin(private val project: Project) {
 
-  private val dagpExtension: AbstractExtension = if (project == project.rootProject) {
+  private val dagpExtension: AbstractExtension = if (project.path == project.isolated.rootProject.path) {
     project.extensions.getByType(DependencyAnalysisExtension::class.java)
   } else {
     DependencyAnalysisSubExtension.of(project)
