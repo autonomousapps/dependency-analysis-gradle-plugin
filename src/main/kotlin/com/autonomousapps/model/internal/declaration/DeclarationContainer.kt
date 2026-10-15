@@ -19,7 +19,10 @@ public class DeclarationContainer(
       shouldAnalyzeTests: Boolean,
     ): DeclarationContainer {
       return of(
-        configurations = configurations.asSequence().map { c -> SimplifiedConfiguration.of(c) },
+        configurations = configurations
+          .named { name -> configurationNames.isDependencyBucket(name) }
+          .asSequence()
+          .map { c -> SimplifiedConfiguration.of(c) },
         configurationNames = configurationNames,
         shouldAnalyzeTests = shouldAnalyzeTests,
       )
