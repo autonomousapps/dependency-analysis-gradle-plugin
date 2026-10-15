@@ -22,7 +22,7 @@ import org.gradle.api.Project
 internal class RootPlugin(private val project: Project) {
 
   init {
-    check(project == project.rootProject) {
+    check(project.path == project.isolated.rootProject.path) {
       "This plugin must only be applied to the root project. Was ${project.path}."
     }
   }
