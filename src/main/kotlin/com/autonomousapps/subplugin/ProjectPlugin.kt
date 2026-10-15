@@ -809,7 +809,7 @@ internal class ProjectPlugin(private val project: Project) {
       return false
     }
 
-    val hasApiConfiguration = configurations.findByName(sourceSet.apiConfigurationName) != null
+    val hasApiConfiguration = sourceSet.apiConfigurationName in configurations.names
     // The 'test' sourceSet does not have an ABI
     val isNotTest = sourceSet.name != SourceSet.TEST_SOURCE_SET_NAME
     // The 'main' sourceSet for an app project does not have an ABI
@@ -824,8 +824,7 @@ internal class ProjectPlugin(private val project: Project) {
       return false
     }
 
-    // TODO(tsr): configurations.named() is problematic since it's lazy but I need to know NOW if this configuration exists
-    val hasApiConfiguration = configurations.namedOrNull(compilation.defaultSourceSet.apiConfigurationName) != null
+    val hasApiConfiguration = compilation.defaultSourceSet.apiConfigurationName in configurations.names
     // 'xTest' sourceSets do not have an ABI (this is a heuristic)
     val isNotTest = !sourceSetName.endsWith("Test")
     // The 'main' sourceSet for an app project does not have an ABI
