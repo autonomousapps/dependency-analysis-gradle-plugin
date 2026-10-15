@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal
 
-import com.autonomousapps.PROJECT_LOGGER
 import com.autonomousapps.internal.Artifact
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
+import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.reallyAll
 import com.autonomousapps.internal.utils.sequenceOfClassFiles
 import com.autonomousapps.internal.utils.toCoordinates
@@ -59,9 +59,11 @@ internal data class PhysicalArtifact(
   }
 
   companion object {
+    private val logger = getLogger<PhysicalArtifact>()
+
     internal fun of(artifact: Artifact, files: Set<File>): PhysicalArtifact? {
       if (!isValidArtifact(files)) {
-        PROJECT_LOGGER.debug(
+        logger.debug(
           "{} is not valid as a PhysicalArtifact. {} is neither a jar nor a class-files-containing directory",
           artifact,
           files

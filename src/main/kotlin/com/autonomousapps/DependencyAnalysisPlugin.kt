@@ -16,14 +16,12 @@ import org.gradle.api.logging.Logger
 
 internal const val TASK_GROUP_DEP = "dependency-analysis"
 
-/** For use in contexts where a logger isn't easily available */
-internal val PROJECT_LOGGER: Logger = getLogger<DependencyAnalysisPlugin>()
-
 @Suppress("unused")
 public class DependencyAnalysisPlugin : Plugin<Project> {
 
   internal companion object {
     const val ID = "com.autonomousapps.dependency-analysis"
+    private val logger: Logger = getLogger<DependencyAnalysisPlugin>()
   }
 
   override fun apply(project: Project): Unit = project.run {
@@ -35,7 +33,7 @@ public class DependencyAnalysisPlugin : Plugin<Project> {
   private fun Project.applyForRoot() {
     if (path == isolated.rootProject.path) {
       checkGradleVersion()
-      checkAgpVersion()
+      checkAgpVersion(project)
       RootPlugin(this).apply()
     }
   }
@@ -48,7 +46,7 @@ public class DependencyAnalysisPlugin : Plugin<Project> {
   }
 
   /** Warn Android users if they're using an untested version of AGP. */
-  private fun Project.checkAgpVersion() {
+  private fun checkAgpVersion(project: Project) {
     val current = try {
       AgpVersion.current()
     } catch (_: Throwable) {
@@ -57,8 +55,8 @@ public class DependencyAnalysisPlugin : Plugin<Project> {
     }
 
     logger.debug("AgpVersion = $current")
-    val compatibility = compatibility()
-    if (compatibility != Flags.Compatibility.NONE && !current.isSupported() && path == isolated.rootProject.path) {
+    val compatibility = project.compatibility()
+    if (compatibility != Flags.Compatibility.NONE && !current.isSupported() && project.path == project.isolated.rootProject.path) {
       val message =
         "The Dependency Analysis plugin is only known to work with versions of AGP between ${AgpVersion.AGP_MIN.version} and ${AgpVersion.AGP_MAX.version}. You are using ${current.version}. Proceed at your own risk."
 

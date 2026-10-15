@@ -12,6 +12,7 @@ import com.autonomousapps.internal.RootOutputPaths
 import com.autonomousapps.internal.advice.DslKind
 import com.autonomousapps.internal.artifacts.DagpArtifacts
 import com.autonomousapps.internal.artifactsFor
+import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.services.GlobalDslService
@@ -20,6 +21,10 @@ import org.gradle.api.Project
 
 /** This "plugin" is applied to the root project only. */
 internal class RootPlugin(private val project: Project) {
+
+  private companion object {
+    val logger = getLogger<RootPlugin>()
+  }
 
   init {
     check(project.path == project.isolated.rootProject.path) {
@@ -65,17 +70,17 @@ internal class RootPlugin(private val project: Project) {
     artifactDescription = DagpArtifacts.Kind.TYPE_USAGE,
   )
 
-  fun apply() = project.run {
+  fun apply() {
     logger.log("Adding root project tasks")
 
     checkFlags()
     checkGuava()
-    configureRootProject()
+    project.configureRootProject()
   }
 
   /** Check for presence of flags that no longer have an effect. */
-  private fun Project.checkFlags() {
-    val autoApply = providers.gradleProperty(AUTO_APPLY)
+  private fun checkFlags() {
+    val autoApply = project.providers.gradleProperty(AUTO_APPLY)
     if (autoApply.isPresent) {
       if (autoApply.get().toBoolean()) {
         error(

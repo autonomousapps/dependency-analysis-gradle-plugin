@@ -23,6 +23,7 @@ import com.autonomousapps.internal.android.AgpVersion
 import com.autonomousapps.internal.android.ProductFlavor
 import com.autonomousapps.internal.artifacts.DagpArtifacts
 import com.autonomousapps.internal.utils.addAll
+import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.log
 import com.autonomousapps.internal.utils.project.buildPath
 import com.autonomousapps.internal.utils.toJson
@@ -78,6 +79,10 @@ private const val SPRING_BOOT_PLUGIN = "org.springframework.boot"
 
 /** This "plugin" is applied to every project in a build. */
 internal class ProjectPlugin(private val project: Project) {
+
+  private companion object {
+    val logger = getLogger<ProjectPlugin>()
+  }
 
   private val dagpExtension: AbstractExtension = if (project.path == project.isolated.rootProject.path) {
     project.extensions.getByType(DependencyAnalysisExtension::class.java)
@@ -153,47 +158,47 @@ internal class ProjectPlugin(private val project: Project) {
 
   private val dslService = GlobalDslService.of(project)
 
-  fun apply(): Unit = project.run {
+  fun apply() {
     // Conditionally disable analysis on some projects
-    val projectPathRegex = projectPathRegex()
-    if (!projectPathRegex.matches(path)) {
-      logger.info("Skipping dependency analysis of project '$path'. Does not match regex '$projectPathRegex'.")
+    val projectPathRegex = project.projectPathRegex()
+    if (!projectPathRegex.matches(project.path)) {
+      logger.info("Skipping dependency analysis of project '${project.path}'. Does not match regex '$projectPathRegex'.")
       return
     }
 
-    KotlinMetadataClasspath.register(this)
+    KotlinMetadataClasspath.register(project)
 
     // Hydrate dependencies map with version catalog entries
-    dslService.get().withVersionCatalogs(this)
+    dslService.get().withVersionCatalogs(project)
 
-    maybeConfigureExcludes()
+    project.maybeConfigureExcludes()
 
     // Android plugins cannot be wrapped in afterEvaluate because of strict lifecycle checks around access to AGP DSL
     // objects.
-    pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
-      logger.log("Adding Android application tasks to $path")
+    project.pluginManager.withPlugin(ANDROID_APP_PLUGIN) {
+      logger.log("Adding Android application tasks to ${project.path}")
       isAndroidProject = true
       checkAgpOnClasspath()
-      configureAndroidAppProject()
+      project.configureAndroidAppProject()
     }
-    pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
-      logger.log("Adding Android library tasks to $path")
+    project.pluginManager.withPlugin(ANDROID_LIBRARY_PLUGIN) {
+      logger.log("Adding Android library tasks to ${project.path}")
       isAndroidProject = true
       checkAgpOnClasspath()
-      configureAndroidLibProject()
+      project.configureAndroidLibProject()
     }
-    pluginManager.withPlugin(ANDROID_TEST_PLUGIN) {
-      logger.log("Adding Android test tasks to $path")
+    project.pluginManager.withPlugin(ANDROID_TEST_PLUGIN) {
+      logger.log("Adding Android test tasks to ${project.path}")
       isAndroidProject = true
       checkAgpOnClasspath()
-      configureAndroidTestProject()
+      project.configureAndroidTestProject()
     }
 
     // In general, we have to configure AGP modules OUTSIDE of an afterEvaluate. However, this plugin is not sufficient.
     // The Android-KMP-LIB plugin also requires the KMP plugin to be applied.
-    pluginManager.withPlugin(ANDROID_KMP_LIBRARY_PLUGIN) {
-      pluginManager.withPlugin(KOTLIN_MULTIPLATFORM_PLUGIN) {
-        logger.log("Adding Android library KMP tasks to $path")
+    project.pluginManager.withPlugin(ANDROID_KMP_LIBRARY_PLUGIN) {
+      project.pluginManager.withPlugin(KOTLIN_MULTIPLATFORM_PLUGIN) {
+        logger.log("Adding Android library KMP tasks to ${project.path}")
 
         // Yes, even though this is an Android library. The KMP part is more critical from an analysis perspective. I
         // think.
@@ -209,31 +214,31 @@ internal class ProjectPlugin(private val project: Project) {
 
     // Giving up. Wrap the whole thing in afterEvaluate for simplicity and for access to user configuration via
     // extension.
-    afterEvaluate {
-      pluginManager.withPlugin(APPLICATION_PLUGIN) {
+    project.afterEvaluate {
+      project.pluginManager.withPlugin(APPLICATION_PLUGIN) {
         logger.log("Adding JVM tasks to ${project.path}")
         configureJavaAppProject()
       }
-      pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
+      project.pluginManager.withPlugin(JAVA_LIBRARY_PLUGIN) {
         logger.log("Adding JVM tasks to ${project.path}")
         configureJavaLibProject()
       }
-      pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
+      project.pluginManager.withPlugin(KOTLIN_JVM_PLUGIN) {
         logger.log("Adding Kotlin-JVM tasks to ${project.path}")
         checkKgpOnClasspath()
         configureKotlinJvmProject()
       }
-      pluginManager.withPlugin(KOTLIN_MULTIPLATFORM_PLUGIN) {
+      project.pluginManager.withPlugin(KOTLIN_MULTIPLATFORM_PLUGIN) {
         // Since this is in an afterEvaluate, we hopefully can rely on all plugins being applied, so we check if the AGP
         // plugin is applied. If it's not, proceed with KMP analysis.
-        if (!plugins.hasPlugin(ANDROID_KMP_LIBRARY_PLUGIN)) {
+        if (!project.plugins.hasPlugin(ANDROID_KMP_LIBRARY_PLUGIN)) {
           logger.log("Adding Kotlin Multiplatform tasks to ${project.path}")
           isKmpProject = true
           checkKgpOnClasspath()
           configureKotlinMultiplatformProject()
         }
       }
-      pluginManager.withPlugin(JAVA_PLUGIN) {
+      project.pluginManager.withPlugin(JAVA_PLUGIN) {
         configureJavaAppProject(maybeAppProject = true)
       }
     }
@@ -635,9 +640,9 @@ internal class ProjectPlugin(private val project: Project) {
    * The `org.jetbrains.kotlin.jvm` may or may not be applied. If it is applied, this is a kotlin-jvm-app project. If it
    * isn't, a java-jvm-app project.
    */
-  private fun Project.configureJavaAppProject(maybeAppProject: Boolean = false) {
+  private fun configureJavaAppProject(maybeAppProject: Boolean = false) {
     if (maybeAppProject) {
-      if (!isAppProject()) {
+      if (!project.isAppProject()) {
         // This means we only discovered the java plugin, which isn't sufficient
         return
       }
@@ -647,18 +652,18 @@ internal class ProjectPlugin(private val project: Project) {
     // If kotlin-jvm is NOT applied, then go ahead and configure the project as a java-jvm-app
     // project. If it IS applied, do nothing. We will configure this as a kotlin-jvm-app project
     // in `configureKotlinJvmProject()`.
-    if (!pluginManager.hasPlugin(KOTLIN_JVM_PLUGIN)) {
+    if (!project.pluginManager.hasPlugin(KOTLIN_JVM_PLUGIN)) {
       if (configuredForJavaProject.getAndSet(true)) {
-        logger.info("(dependency analysis) $path was already configured")
+        logger.info("(dependency analysis) ${project.path} was already configured")
         return
       }
 
-      val j = JavaSources(this, dagpExtension)
+      val j = JavaSources(project, dagpExtension)
       j.sourceSets.forEach { sourceSet ->
         try {
-          analyzeDependencies(
+          project.analyzeDependencies(
             JavaWithoutAbiAnalyzer(
-              project = this,
+              project = project,
               sourceSet = sourceSet,
               sourceKind = JvmSourceKind.of(sourceSet.name),
             )
@@ -671,25 +676,25 @@ internal class ProjectPlugin(private val project: Project) {
   }
 
   /** Has the `java-library` plugin applied. */
-  private fun Project.configureJavaLibProject() {
-    val j = JavaSources(this, dagpExtension)
+  private fun configureJavaLibProject() {
+    val j = JavaSources(project, dagpExtension)
 
-    configureRedundantJvmPlugin {
+    project.configureRedundantJvmPlugin {
       it.withJava(j.hasJava)
     }
 
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
-      logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
+      logger.info("(dependency analysis) ${project.path} was already configured for the kotlin-jvm plugin")
       redundantJvmPlugin.configure()
       return
     }
 
     if (configuredForJavaProject.getAndSet(true)) {
-      logger.info("(dependency analysis) $path was already configured")
+      logger.info("(dependency analysis) ${project.path} was already configured")
       return
     }
 
-    if (pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
+    if (project.pluginManager.hasPlugin(SPRING_BOOT_PLUGIN)) {
       logger.warn(
         "(dependency analysis) You have both java-library and org.springframework.boot applied. You probably want java, not java-library."
       )
@@ -698,22 +703,22 @@ internal class ProjectPlugin(private val project: Project) {
     j.sourceSets.forEach { sourceSet ->
       try {
         val sourceKind = JvmSourceKind.of(sourceSet.name)
-        val hasAbi = hasAbi(sourceSet)
+        val hasAbi = project.hasAbi(sourceSet)
         val dependencyAnalyzer = if (hasAbi) {
           JavaWithAbiAnalyzer(
-            project = this,
+            project = project,
             sourceSet = sourceSet,
             sourceKind = sourceKind,
             hasAbi = true,
           )
         } else {
           JavaWithoutAbiAnalyzer(
-            project = this,
+            project = project,
             sourceSet = sourceSet,
             sourceKind = sourceKind,
           )
         }
-        analyzeDependencies(dependencyAnalyzer)
+        project.analyzeDependencies(dependencyAnalyzer)
       } catch (_: UnknownTaskException) {
         logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
       }
@@ -725,15 +730,15 @@ internal class ProjectPlugin(private val project: Project) {
    * by implication the `java`) plugin may or may not be applied. If it is, this is an app project.
    * If it isn't, this is a library project.
    */
-  private fun Project.configureKotlinJvmProject() {
-    val k = KotlinSources(this, dagpExtension)
+  private fun configureKotlinJvmProject() {
+    val k = KotlinSources(project, dagpExtension)
 
-    configureRedundantJvmPlugin {
+    project.configureRedundantJvmPlugin {
       it.withKotlin(k.hasKotlin)
     }
 
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
-      logger.info("(dependency analysis) $path was already configured for the java-library plugin")
+      logger.info("(dependency analysis) ${project.path} was already configured for the java-library plugin")
       redundantJvmPlugin.configure()
       return
     }
@@ -741,24 +746,24 @@ internal class ProjectPlugin(private val project: Project) {
     k.sourceSets.forEach { sourceSet ->
       try {
         val sourceKind = JvmSourceKind.of(sourceSet.name)
-        val hasAbi = hasAbi(sourceSet)
+        val hasAbi = project.hasAbi(sourceSet)
 
         val dependencyAnalyzer = if (hasAbi) {
           KotlinJvmLibAnalyzer(
-            project = this,
+            project = project,
             sourceSet = sourceSet,
             sourceKind = sourceKind,
             hasAbi = true,
           )
         } else {
           KotlinJvmAppAnalyzer(
-            project = this,
+            project = project,
             sourceSet = sourceSet,
             sourceKind = sourceKind,
           )
         }
 
-        analyzeDependencies(dependencyAnalyzer)
+        project.analyzeDependencies(dependencyAnalyzer)
       } catch (_: UnknownTaskException) {
         logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
       }
@@ -769,8 +774,8 @@ internal class ProjectPlugin(private val project: Project) {
    * Has the [KOTLIN_MULTIPLATFORM_PLUGIN] plugin applied, and optionally the [ANDROID_KMP_LIBRARY_PLUGIN] plugin as
    * well.
    */
-  private fun Project.configureKotlinMultiplatformProject() {
-    val kotlin = extensions.getByType(KotlinMultiplatformExtension::class.java)
+  private fun configureKotlinMultiplatformProject() {
+    val kotlin = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
 
     kotlin
       .targets
@@ -786,16 +791,16 @@ internal class ProjectPlugin(private val project: Project) {
           .configureEach { compilation ->
 //            println(" COMPILATION ${compilation.name} (${compilation.javaClass.simpleName})")
             try {
-              val hasAbi = hasAbi(compilation)
+              val hasAbi = project.hasAbi(compilation)
               val kmpSourceSet = KmpSourceSet(compilation)
 
               val dependencyAnalyzer = KmpProjectAnalyzer(
-                project = this,
+                project = project,
                 sourceSet = kmpSourceSet,
                 hasAbi = hasAbi,
               )
 
-              analyzeDependencies(dependencyAnalyzer)
+              project.analyzeDependencies(dependencyAnalyzer)
             } catch (_: UnknownTaskException) {
               logger.warn("Skipping tasks creation for KMP target `${target.name}`")
             }
