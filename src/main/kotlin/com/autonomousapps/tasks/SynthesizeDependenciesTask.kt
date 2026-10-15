@@ -6,7 +6,6 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.*
 import com.autonomousapps.model.internal.*
 import com.autonomousapps.model.internal.intermediates.producer.*
-import com.autonomousapps.services.InMemoryCache
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -25,9 +24,6 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
   init {
     description = "Re-synthesize dependencies from analysis"
   }
-
-  @get:Internal
-  public abstract val inMemoryCache: Property<InMemoryCache>
 
   /** Needed to disambiguate other projects that might have otherwise identical inputs. */
   @get:Input
@@ -89,7 +85,6 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
 
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(SynthesizeDependenciesWorkAction::class.java) {
-      it.inMemoryCache.set(inMemoryCache)
       it.compileDependencies.set(compileDependencies)
       it.physicalArtifacts.set(physicalArtifacts)
       it.explodedJars.set(explodedJars)
@@ -106,7 +101,6 @@ public abstract class SynthesizeDependenciesTask @Inject constructor(
   }
 
   public interface SynthesizeDependenciesParameters : WorkParameters {
-    public val inMemoryCache: Property<InMemoryCache>
     public val compileDependencies: RegularFileProperty
     public val physicalArtifacts: RegularFileProperty
     public val explodedJars: RegularFileProperty

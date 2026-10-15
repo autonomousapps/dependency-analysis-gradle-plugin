@@ -219,7 +219,7 @@ internal abstract class AbstractDependencyAnalyzer(
     androidLintTask: TaskProvider<FindAndroidLinters>?,
   ): TaskProvider<ExplodeJarTask> {
     return project.tasks.register("explodeJar$taskNameSuffix", ExplodeJarTask::class.java) { t ->
-      InMemoryCache.register(t.inMemoryCache, project)
+      InMemoryCache.register(t, t.inMemoryCache, project)
       t.compileClasspath.setFrom(
         project.configurations.named(compileConfigurationName).map { it.artifactsFor(attributeValueJar).artifactFiles }
       )
@@ -234,7 +234,7 @@ internal abstract class AbstractDependencyAnalyzer(
 
   final override fun registerFindKotlinMagicTask(artifactsReport: TaskProvider<ArtifactsReportTask>): TaskProvider<FindKotlinMagicTask> {
     return project.tasks.register("findKotlinMagic$taskNameSuffix", FindKotlinMagicTask::class.java) { t ->
-      InMemoryCache.register(t.inMemoryCacheProvider, project)
+      InMemoryCache.register(t, t.inMemoryCacheProvider, project)
       t.compileClasspath.setFrom(
         project.configurations.named(compileConfigurationName).map { it.artifactsFor(attributeValueJar).artifactFiles }
       )
@@ -395,7 +395,7 @@ internal abstract class AbstractDependencyAnalyzer(
 
   final override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> {
     return project.tasks.register("findDeclaredProcs$taskNameSuffix", FindDeclaredProcsTask::class.java) { t ->
-      InMemoryCache.register(t.inMemoryCacheProvider, project)
+      InMemoryCache.register(t, t.inMemoryCacheProvider, project)
       kaptConf()?.let { c ->
         t.withKaptArtifacts(c.flatMap { it.incoming.artifacts.resolvedArtifacts })
       }
