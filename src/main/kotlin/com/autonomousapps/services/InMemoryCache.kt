@@ -11,6 +11,7 @@ import com.autonomousapps.tasks.KotlinCapabilities
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -65,24 +66,26 @@ public abstract class InMemoryCache : BuildService<InMemoryCache.Params> {
 
     // TODO(tsr): consider replacing this with @ServiceReference (from Gradle 8.0). We'd lose the cross-build shared
     //  service, though. But that's getting harder to maintain.
-    fun register(property: Property<InMemoryCache>, project: Project) {
+    fun register(task: Task, property: Property<InMemoryCache>, project: Project) {
       val cacheSize = project.cacheSize(DEFAULT_CACHE_VALUE)
 
-      if (project.isIdea()) {
-        property.set(project.gradle.registerService(cacheSize))
+      val service = if (project.isIdea()) {
+        project.gradle.registerService(cacheSize).also { property.set(it) }
       } else {
         // In a composite build, the root build is used to share the cache across builds if the root build used
         // the same classloader for loading the plugin as the current build.
         // See: https://github.com/gradle/gradle/issues/17559
         val rootService = project.gradle.rootBuild().registerService(cacheSize)
         try {
-          property.set(rootService)
+          rootService.also { property.set(it) }
         } catch (_: IllegalArgumentException) {
           // Root service is not of valid type as it was loaded with a different classloader.
           // Fall back to an isolated service.
-          property.set(project.gradle.registerService(cacheSize))
+          project.gradle.registerService(cacheSize).also { property.set(it) }
         }
       }
+
+      task.usesService(service)
     }
 
     private fun Project.isIdea(): Boolean {
