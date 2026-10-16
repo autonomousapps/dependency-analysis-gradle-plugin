@@ -27,6 +27,10 @@ public abstract class WriteProjectMetadataTask : DefaultTask() {
   @get:Input
   public abstract val projectType: Property<ProjectType>
 
+  /** True for shadow/fat-jar modules. */
+  @get:Input
+  public abstract val assembly: Property<Boolean>
+
   @get:OutputFile
   public abstract val output: RegularFileProperty
 
@@ -36,6 +40,7 @@ public abstract class WriteProjectMetadataTask : DefaultTask() {
     val metadata = ProjectMetadata(
       projectPath = projectPath.get(),
       projectType = projectType.get(),
+      isAssembly = assembly.getOrElse(false),
     )
 
     output.bufferWriteJson(metadata)
