@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Unreleased
+* [feat]: support wildcard in issue exclusions, such as `exclude("com.group:*")`.
+
 # Version 3.19.2
 * [fix]: Updated asm to 9.10.1 (and use latest asm-relocated).
 * [fix]: don't duplicate advise for `main` -> `test` and `main` -> `androidTest`.
