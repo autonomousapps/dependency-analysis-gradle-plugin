@@ -17,6 +17,7 @@ import okio.BufferedSource
 import okio.GzipSink
 import okio.buffer
 import okio.sink
+import okio.source
 import java.io.File
 
 public const val noJsonIndent: String = ""
@@ -192,6 +193,30 @@ public fun File.jsonWriter(compress: Boolean = false): JsonWriter {
   }
 
   return JsonWriter.of(buffer)
+}
+
+/**
+ * Reads a single top-level string property named [name] from the JSON object in this file, without deserializing the
+ * whole document. Nested objects and arrays are skipped, so only a property at the root of the top-level object is
+ * considered.
+ *
+ * Returns `null` if the document is not a JSON object, if the property is absent, or if the property's value is not a
+ * string.
+ */
+public fun File.peekJsonString(name: String): String? {
+  JsonReader.of(source().buffer()).use { reader ->
+    if (reader.peek() != JsonReader.Token.BEGIN_OBJECT) return null
+
+    reader.beginObject()
+    while (reader.hasNext()) {
+      if (reader.nextName() == name) {
+        return if (reader.peek() == JsonReader.Token.STRING) reader.nextString() else null
+      } else {
+        reader.skipValue()
+      }
+    }
+    return null
+  }
 }
 
 @Suppress("unused")
