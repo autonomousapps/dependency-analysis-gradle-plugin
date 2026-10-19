@@ -1,5 +1,8 @@
 Gradle TestKit Support Changelog
 
+# Version 0.30
+* [fix]: repo URLs must be quoted.
+
 # Version 0.29
 * [feat]: bump default `compileSdkVersion` from 34 to 37.
 * [feat]: make it easier to add repositories to a project.
