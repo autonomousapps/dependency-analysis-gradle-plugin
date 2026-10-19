@@ -105,7 +105,7 @@ internal class ScribeTestKotlin {
               includeGroup("com.foo.bar")
             }
           }
-          maven(url = https://repo.foo.bar/) {
+          maven(url = "https://repo.foo.bar/") {
             authentication { create<AwsImAuthentication>("awsIm") }
           }
         }

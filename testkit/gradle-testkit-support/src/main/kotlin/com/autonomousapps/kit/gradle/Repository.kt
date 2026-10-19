@@ -130,7 +130,7 @@ public sealed class Repository : Repositories.Element {
           s.append(")")
         }
       } else {
-        scribe.block("maven(url = $repoUrl)") { s ->
+        scribe.block("maven(url = \"$repoUrl\")") { s ->
           s.line { it.append(configureAction) }
         }
       }
