@@ -1,5 +1,12 @@
 Gradle TestKit Support Changelog
 
+# Version 0.29
+* [feat]: bump default `compileSdkVersion` from 34 to 37.
+* [feat]: make it easier to add repositories to a project.
+* [feat]: removed deprecated factory methods from `AndroidBlock`.
+* [feat]: `Repository.Method` and `.Url` are now configurable.
+* [feat]: add `RootProject.enablePublicBuildScans()` to ease some debugging scenarios.
+
 # Version 0.28
 * [feat]: allow users to create subprojects with leading ':'.
 * [feat]: update `GradleProperties` with new IP-related flags.
