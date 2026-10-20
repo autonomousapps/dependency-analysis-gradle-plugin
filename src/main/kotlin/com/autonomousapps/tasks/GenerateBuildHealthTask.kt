@@ -7,15 +7,13 @@ import com.autonomousapps.extension.DependenciesHandler.Companion.toLambda
 import com.autonomousapps.extension.ReportingHandler
 import com.autonomousapps.extension.getEffectivePostscript
 import com.autonomousapps.internal.advice.DslKind
+import com.autonomousapps.internal.advice.BuildHealthWriter
 import com.autonomousapps.internal.advice.ProjectHealthConsoleReportBuilder
 import com.autonomousapps.internal.utils.Colors
 import com.autonomousapps.internal.utils.Colors.colorize
-import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.model.AndroidScore
-import com.autonomousapps.model.BuildHealth
-import com.autonomousapps.model.BuildHealth.AndroidScoreMetrics
+import com.autonomousapps.internal.utils.peekJsonString
 import com.autonomousapps.model.ProjectAdvice
 import com.autonomousapps.model.internal.ProjectMetadata
 import org.gradle.api.DefaultTask
@@ -24,6 +22,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import java.io.File
 
 @CacheableTask
 public abstract class GenerateBuildHealthTask : DefaultTask() {
@@ -74,22 +73,19 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
     val consoleOutput = consoleOutput.getAndDelete()
     val outputFail = outputFail.getAndDelete()
 
-    var didWrite = false
-    var shouldFail = false
-    var unusedDependencies = 0
-    var undeclaredDependencies = 0
-    var misDeclaredDependencies = 0
-    var compileOnlyDependencies = 0
-    var runtimeOnlyDependencies = 0
-    var processorDependencies = 0
-    val androidMetricsBuilder = AndroidScoreMetrics.Builder()
+    val reportsByPath = sortedMapOf<String, File>().apply {
+      projectHealthReports.files.forEach { file ->
+        val projectPath = file.peekJsonString("projectPath")
+          ?: error("No 'projectPath' in project health report '$file'.")
+        put(projectPath, file)
+      }
+    }
 
-    val advice = projectHealthReports.files.map { it.fromJson<ProjectAdvice>() }
     val metadata = projectMetadataReports.files.asSequence()
       .map { it.fromJson<ProjectMetadata>() }
       .associateBy { it.projectPath }
 
-    if (isFunctionallyEmpty(advice)) {
+    if (isFunctionallyEmpty(reportsByPath.keys)) {
       logger.warn(
         """
           No project health reports found. Is '${DependencyAnalysisPlugin.ID}' not applied to any subprojects in this build?
@@ -98,72 +94,36 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
       )
     }
 
-    val projectAdvice: Set<ProjectAdvice> = advice.asSequence()
-      // we sort here because of the onEach below, where we stream the console output to disk
-      .sortedBy { it.projectPath }
-      .onEach { projectAdvice ->
-        if (projectAdvice.isNotEmpty()) {
-          if (didWrite) {
-            // Add separation between each set of non-empty project advice
-            consoleOutput.appendText("\n\n")
-          }
+    var didWrite = false
 
-          val projectMetadata = metadata[projectAdvice.projectPath]
-            ?: error("Missing metadata for '${projectAdvice.projectPath}'.")
-
-          shouldFail = shouldFail || projectAdvice.shouldFail
-
-          // console report
-          val report = ProjectHealthConsoleReportBuilder(
-            projectAdvice = projectAdvice,
-            projectMetadata = projectMetadata,
-            // For buildHealth, we want to include the postscript only once.
-            postscript = "",
-            dslKind = dslKind.get(),
-            dependencyMap = dependencyMap.get().toLambda(),
-            useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
-            useParenthesesForGroovy = useParenthesesForGroovy.get(),
-          ).text
-          val projectPath = if (projectAdvice.projectPath == ":") "root project" else projectAdvice.projectPath
-          consoleOutput.appendText("Advice for ${projectPath}\n$report")
-          didWrite = true
-
-          // counts
-          projectAdvice.dependencyAdvice.forEach {
-            when {
-              it.isRemove() -> unusedDependencies++
-              it.isAdd() -> undeclaredDependencies++
-              it.isChange() -> misDeclaredDependencies++
-              it.isCompileOnly() -> compileOnlyDependencies++
-              it.isChangeToRuntimeOnly() -> runtimeOnlyDependencies++
-              it.isProcessor() -> processorDependencies++
-            }
-          }
-          projectAdvice.moduleAdvice.filterIsInstance<AndroidScore>().forEach {
-            if (it.shouldBeJvm()) {
-              androidMetricsBuilder.shouldBeJvmCount++
-            } else if (it.couldBeJvm()) {
-              androidMetricsBuilder.couldBeJvmCount++
-            }
-          }
-        }
+    val shouldFail = BuildHealthWriter(output).write(
+      advice = reportsByPath.values.asSequence().map { it.fromJson<ProjectAdvice>() },
+      projectCount = reportsByPath.size,
+    ) { projectAdvice ->
+      if (didWrite) {
+        // Add separation between each set of non-empty project advice
+        consoleOutput.appendText("\n\n")
       }
-      .toSortedSet()
 
-    val buildHealth = BuildHealth(
-      projectAdvice = projectAdvice,
-      shouldFail = shouldFail,
-      projectCount = projectAdvice.size,
-      unusedCount = unusedDependencies,
-      undeclaredCount = undeclaredDependencies,
-      misDeclaredCount = misDeclaredDependencies,
-      compileOnlyCount = compileOnlyDependencies,
-      runtimeOnlyCount = runtimeOnlyDependencies,
-      processorCount = processorDependencies,
-      androidScoreMetrics = androidMetricsBuilder.build(),
-    )
+      val projectMetadata = metadata[projectAdvice.projectPath]
+        ?: error("Missing metadata for '${projectAdvice.projectPath}'.")
 
-    output.bufferWriteJson(buildHealth)
+      // console report
+      val report = ProjectHealthConsoleReportBuilder(
+        projectAdvice = projectAdvice,
+        projectMetadata = projectMetadata,
+        // For buildHealth, we want to include the postscript only once.
+        postscript = "",
+        dslKind = dslKind.get(),
+        dependencyMap = dependencyMap.get().toLambda(),
+        useTypesafeProjectAccessors = useTypesafeProjectAccessors.get(),
+        useParenthesesForGroovy = useParenthesesForGroovy.get(),
+      ).text
+      val projectPath = if (projectAdvice.projectPath == ":") "root project" else projectAdvice.projectPath
+      consoleOutput.appendText("Advice for ${projectPath}\n$report")
+      didWrite = true
+    }
+
     outputFail.writeText(shouldFail.toString())
 
     if (!didWrite) {
@@ -179,13 +139,13 @@ public abstract class GenerateBuildHealthTask : DefaultTask() {
     }
   }
 
-  private fun isFunctionallyEmpty(advice: Collection<ProjectAdvice>): Boolean {
+  private fun isFunctionallyEmpty(projectPaths: Collection<String>): Boolean {
     // if there's no advice, then advice is functionally empty
-    if (advice.isEmpty()) return true
+    if (projectPaths.isEmpty()) return true
 
     // if there's one piece of advice, and it's for the root project, and this build has more than one project, then
     // advice is functionally empty
-    if (advice.size == 1 && advice.singleOrNull { it.projectPath == ":" } != null) {
+    if (projectPaths.size == 1 && projectPaths.singleOrNull { it == ":" } != null) {
       return projectCount.get() != 1
     }
 
