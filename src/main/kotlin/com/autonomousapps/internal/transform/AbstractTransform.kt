@@ -109,11 +109,8 @@ internal abstract class AbstractTransform(
   }
 
   protected fun isSingleBucketForSingleVariant(usages: Set<Usage>): Boolean {
-    return if (usages.size == 1) {
-      true
-    } else {
-      usages.mapToSet { it.bucket }.size == 1 && usages.mapToSet { it.sourceKind.base() }.size == 1
-    }
+    return usages.size == 1
+      || usages.mapToSet { it.bucket }.size == 1 && usages.mapToSet { it.sourceKind.base() }.size == 1
   }
 
   protected fun Sequence<Usage>.filterUsed() = filterNot { it.bucket == Bucket.NONE }
