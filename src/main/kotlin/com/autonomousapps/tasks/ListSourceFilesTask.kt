@@ -7,7 +7,7 @@ import com.autonomousapps.internal.kotlin.multiplatform.FileCollectionMap
 import com.autonomousapps.internal.kotlin.multiplatform.KotlinCommonSources
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
-import com.autonomousapps.model.internal.kmp.SourceMap
+import com.autonomousapps.model.internal.kmp.SourceSetFiles
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
@@ -69,25 +69,23 @@ public abstract class ListSourceFilesTask : DefaultTask() {
     val output = output.getAndDelete()
 
     val base = projectDir.get().asFile
-    val sources = buildSourceMaps(base)
+    val sources = buildSourceSetFiles(base)
 
     output.bufferWriteJsonSet(sources)
   }
 
-  private fun buildSourceMaps(base: File): Set<SourceMap> {
-    val sources = buildSourceMap(base, sourceDirectories)
-    val generatedSources = buildSourceMap(base, generatedSourceDirectories)
+  private fun buildSourceSetFiles(base: File): Set<SourceSetFiles> {
+    val sources = buildSourceSetFiles(base, sourceDirectories)
+    val generatedSources = buildSourceSetFiles(base, generatedSourceDirectories)
 
-    return sortedSetOf<SourceMap>().apply {
+    return sortedSetOf<SourceSetFiles>().apply {
       addAll(sources)
       addAll(generatedSources)
     }
   }
 
-  private fun buildSourceMap(base: File, files: ListProperty<FileCollection>): Set<SourceMap> {
+  private fun buildSourceSetFiles(base: File, files: ListProperty<FileCollection>): Set<SourceSetFiles> {
     return FileCollectionMap.sequenced(names, files)
-      // Ignore source directories with no regular files
-      .filterNot { (_, dirs) -> dirs.asFileTree.files.isEmpty() }
       // `dirs` is a FileCollection where each element is the root directory of a source tree, such as
       // `src/commonMain/kotlin`. We want to preserve the source root and, essentially, associate that root with the set
       // of regular source files contained within. Those regular source files will include their full package and file
@@ -100,13 +98,19 @@ public abstract class ListSourceFilesTask : DefaultTask() {
             .map { f -> f.toRelativeString(dir) }
             .toSortedSet()
 
-          SourceMap(
-            sourceSetName = name,
-            sourceBase = dir.toRelativeString(base),
-            sourceFiles = sourceFiles,
-          )
+          if (sourceFiles.isEmpty()) {
+            // Ignore source directories with no regular files
+            null
+          } else {
+            SourceSetFiles(
+              sourceSetName = name,
+              sourceBase = dir.toRelativeString(base),
+              sourceFiles = sourceFiles,
+            )
+          }
         }
       }
+      .filterNotNull()
       .toSortedSet()
   }
 }

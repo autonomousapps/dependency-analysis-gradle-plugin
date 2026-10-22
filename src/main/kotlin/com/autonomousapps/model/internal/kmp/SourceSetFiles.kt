@@ -4,17 +4,23 @@ package com.autonomousapps.model.internal.kmp
 
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 
-internal data class SourceMap(
+internal data class SourceSetFiles(
   /** e.g., "commonMain", "commonTest". */
   val sourceSetName: String,
   /** e.g., "src/commonMain/kotlin", "build/gen/kotlin". */
   val sourceBase: String,
   /** e.g., "com/foo/Foo.kt", "generated.kt". */
   val sourceFiles: Set<String>,
-) : Comparable<SourceMap> {
-  override fun compareTo(other: SourceMap): Int {
-    return compareBy(SourceMap::sourceSetName)
-      .thenBy(SourceMap::sourceBase)
+) : Comparable<SourceSetFiles> {
+
+  init {
+    assert(sourceFiles.isNotEmpty()) { "Expected non-empty 'sourceFiles'." }
+    assert(sourceBase.isNotBlank()) { "Expected non-blank 'sourceBase'." }
+  }
+
+  override fun compareTo(other: SourceSetFiles): Int {
+    return compareBy(SourceSetFiles::sourceSetName)
+      .thenBy(SourceSetFiles::sourceBase)
       .thenBy(LexicographicIterableComparator()) { it.sourceFiles }
       .compare(this, other)
   }
