@@ -3,12 +3,41 @@
 package com.autonomousapps.model.internal.intermediates
 
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
+import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
+
+internal class DependencyTraceReports(
+  private val buildType: String?,
+  private val flavor: String?
+) {
+
+  // key is source set name (jvmMain, commonMain, etc.)
+  private val map = sortedMapOf<String, DependencyTraceReport.Builder>()
+  private val coordinatesMap = mutableMapOf<Coordinates, String>()
+
+  val reports: Set<DependencyTraceReport> get() {
+    return map.values.mapToOrderedSet { it.build() }
+  }
+
+  fun put(sourceKind: SourceKind, coordinates: Coordinates, kind: DependencyTraceReport.Kind, reason: Reason) {
+    val builder = map[sourceKind.name] ?: DependencyTraceReport.Builder(buildType, flavor, sourceKind)
+    builder[coordinates, kind] = reason
+    map[sourceKind.name] = builder
+
+    coordinatesMap[coordinates] = sourceKind.name
+  }
+
+  fun put(coordinates: Coordinates, kind: DependencyTraceReport.Kind, bucket: Bucket) {
+    val key = coordinatesMap[coordinates] ?: error("impossible!")
+    val builder = map[key] ?: error("impossible!")
+    builder[coordinates, kind] = bucket
+  }
+}
 
 @JsonClass(generateAdapter = false)
 internal data class DependencyTraceReport(
@@ -51,7 +80,7 @@ internal data class DependencyTraceReport(
   class Builder(
     private val buildType: String?,
     private val flavor: String?,
-    private val sourceKind: SourceKind,
+    val sourceKind: SourceKind,
   ) {
 
     private val dependencies = mutableMapOf<Coordinates, Trace>()

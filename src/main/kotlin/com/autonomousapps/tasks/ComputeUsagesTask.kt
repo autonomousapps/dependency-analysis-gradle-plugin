@@ -15,7 +15,10 @@ import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.DependencyTraceReport
 import com.autonomousapps.model.internal.intermediates.DependencyTraceReport.Kind
+import com.autonomousapps.model.internal.intermediates.DependencyTraceReports
 import com.autonomousapps.model.internal.intermediates.Reason
+import com.autonomousapps.model.source.KmpSourceKind
+import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.visitor.GraphViewReader
 import com.autonomousapps.visitor.GraphViewVisitor
 import org.gradle.api.DefaultTask
@@ -150,6 +153,7 @@ public abstract class ComputeUsagesTask @Inject constructor(
       )
       reader.accept(visitor)
 
+      val reports = visitor.reports2.reports
       output.bufferWriteJson(visitor.report)
     }
   }
@@ -168,6 +172,12 @@ private class GraphVisitor(
   }
 
   val report: DependencyTraceReport get() = reportBuilder.build()
+  val reports: Set<DependencyTraceReport> get() {
+    return reportBuilders.values.mapTo(sortedSetOf()) { it.build() }
+  }
+
+  private val primarySourceKind = project.sourceKind
+  val reports2 = DependencyTraceReports(buildType = project.buildType, flavor = project.flavor)
 
   private val reportBuilder = DependencyTraceReport.Builder(
     buildType = project.buildType,
@@ -175,10 +185,12 @@ private class GraphVisitor(
     sourceKind = project.sourceKind,
   )
 
+  private val reportBuilders = mutableMapOf<SourceKind, DependencyTraceReport.Builder>(project.sourceKind to reportBuilder)
+
   override fun visit(excludedIdentifier: ExcludedIdentifier) {
     val coordinates = Coordinates.of(excludedIdentifier.identifier)
-    reportBuilder[coordinates, Kind.DEPENDENCY] = Bucket.NONE
     reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Excluded
+    reportBuilder[coordinates, Kind.DEPENDENCY] = Bucket.NONE
   }
 
   override fun visit(dependency: Dependency, context: GraphViewVisitor.Context) {
@@ -330,7 +342,8 @@ private class GraphVisitor(
      */
 
     if (isApiCandidate) {
-      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.API
+//      reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.API
+      reports2.put(dependencyCoordinates, Kind.DEPENDENCY, Bucket.API)
     } else if (isImplCandidate) {
       reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Bucket.IMPL
     } else if (isCompileOnlyCandidate) {
@@ -425,7 +438,28 @@ private class GraphVisitor(
     }.toSortedSet()
 
     return if (exposedClasses.isNotEmpty()) {
-      reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Abi(exposedClasses)
+      val a = context.project.codeSource.firstOrNull { it.exposedClasses.any { it in capability.classes } }?.kmpCommonSourceSetName
+        ?.run { KmpSourceKind.of(this) }
+      val sk = a ?: primarySourceKind
+      reports2.put(sk, coordinates, Kind.DEPENDENCY, Reason.Abi(exposedClasses))
+
+
+
+//      if (reportBuilder.sourceKind.name != a) {
+//        val s = KmpSourceKind.of(a!!) // TODO validate this is a valid KmpSourceKind (look at compileClasspathName and runtime)
+//        val builder = reportBuilders[s]
+//        if (builder != null) {
+//          builder[coordinates, Kind.DEPENDENCY] = Reason.Abi(exposedClasses)
+//          builder[coordinates, Kind.DEPENDENCY] = Bucket.API
+//        } else {
+//          val newBuilder = DependencyTraceReport.Builder(null, null, s)
+//          newBuilder[coordinates, Kind.DEPENDENCY] = Reason.Abi(exposedClasses)
+//          newBuilder[coordinates, Kind.DEPENDENCY] = Bucket.API
+//          reportBuilders[s] = newBuilder
+//        }
+//      } else {
+//        reportBuilder[coordinates, Kind.DEPENDENCY] = Reason.Abi(exposedClasses)
+//      }
       true
     } else {
       false
