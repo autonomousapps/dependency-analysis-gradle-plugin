@@ -13,6 +13,16 @@ internal class KotlinCommonSources private constructor(
   private val kotlinSources: NamedDomainObjectSet<KotlinSourceSet>,
 ) {
 
+  // TODO: figure out which of these methods I actually need
+  fun names(): Callable<List<String>> = Callable { FileCollectionMap.names(kotlinSources) }
+  fun files(): Callable<List<FileCollection>> = Callable { FileCollectionMap.files(kotlinSources) }
+
+  fun sourceDirectories(): Callable<List<FileCollection>> = Callable { FileCollectionMap.sourceDirectories(kotlinSources) }
+  fun generatedSourceDirectories(): Callable<List<FileCollection>> = Callable { FileCollectionMap.generatedSourceDirectories(kotlinSources) }
+
+  fun kotlin(): Callable<List<FileCollection>> = Callable { FileCollectionMap.kotlin(kotlinSources) }
+  fun generatedKotlin(): Callable<List<FileCollection>> = Callable { FileCollectionMap.generatedKotlin(kotlinSources) }
+
   internal companion object {
     private val commonSources = setOf(
       KotlinSourceSet.COMMON_MAIN_SOURCE_SET_NAME,
@@ -42,7 +52,4 @@ internal class KotlinCommonSources private constructor(
       return KotlinCommonSources(sources)
     }
   }
-
-  fun names(): Callable<List<String>> = Callable { FileCollectionMap.names(kotlinSources) }
-  fun files(): Callable<List<FileCollection>> = Callable { FileCollectionMap.files(kotlinSources) }
 }

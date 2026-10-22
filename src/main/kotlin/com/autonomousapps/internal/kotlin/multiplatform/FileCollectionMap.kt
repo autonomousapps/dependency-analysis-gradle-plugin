@@ -4,6 +4,7 @@ package com.autonomousapps.internal.kotlin.multiplatform
 
 import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
@@ -33,6 +34,22 @@ public data class FileCollectionMap(
       // 2. Any additional directories, configured like `kotlin.sourceSets.commonMain.kotlin.srcDir(project.layout.projectDirectory.dir("src/more/kotlin"))`
       // 3. Any generated source, configured like `kotlin.sourceSets.commonMain.generatedKotlin.srcDir(generatorTask)`
       return kotlinSources.map { it.allKotlinSources }
+    }
+
+    fun sourceDirectories(kotlinSources: NamedDomainObjectSet<KotlinSourceSet>): List<FileCollection> {
+      return kotlinSources.map { it.kotlin.sourceDirectories }
+    }
+
+    fun generatedSourceDirectories(kotlinSources: NamedDomainObjectSet<KotlinSourceSet>): List<FileCollection> {
+      return kotlinSources.map { it.generatedKotlin.sourceDirectories }
+    }
+
+    fun kotlin(kotlinSources: NamedDomainObjectSet<KotlinSourceSet>): List<SourceDirectorySet> {
+      return kotlinSources.map { it.kotlin }
+    }
+
+    fun generatedKotlin(kotlinSources: NamedDomainObjectSet<KotlinSourceSet>): List<SourceDirectorySet> {
+      return kotlinSources.map { it.generatedKotlin }
     }
 
     fun sequenced(

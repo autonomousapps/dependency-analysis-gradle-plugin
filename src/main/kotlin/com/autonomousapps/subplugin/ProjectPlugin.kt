@@ -107,6 +107,7 @@ internal class ProjectPlugin(private val project: Project) {
   private val aggregatePublicTypesTask =
     project.tasks.register("aggregatePublicTypes", AggregatePublicTypesTask::class.java)
 
+  private var listSourceFiles: TaskProvider<ListSourceFilesTask>? = null
   private lateinit var filterAdviceTask: TaskProvider<FilterAdviceTask>
   private lateinit var computeResolvedDependenciesTask: TaskProvider<ComputeResolvedDependenciesTask>
   private lateinit var findDeclarationsTask: TaskProvider<FindDeclarationsTask>
@@ -771,7 +772,8 @@ internal class ProjectPlugin(private val project: Project) {
   private fun Project.configureKotlinMultiplatformProject() {
     val kotlin = extensions.getByType(KotlinMultiplatformExtension::class.java)
 
-    ListSourceFilesTask.register(this, kotlin)
+    // TODO register and wire this appropriately
+    listSourceFiles = ListSourceFilesTask.register(this, kotlin)
 
     kotlin
       .targets

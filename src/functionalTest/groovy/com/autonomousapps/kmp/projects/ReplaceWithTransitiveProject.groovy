@@ -92,6 +92,17 @@ final class ReplaceWithTransitiveProject extends AbstractProject {
         )
         .withSourceSet('commonMain')
         .build(),
+      // This only exists to exercise ListSourceFilesTask
+      Source
+        .kotlin(
+          '''
+            package common.main
+            
+            class Bar
+          '''
+        )
+        .withSourceSet('commonMain')
+        .build(),
       Source
         .kotlin(
           '''
