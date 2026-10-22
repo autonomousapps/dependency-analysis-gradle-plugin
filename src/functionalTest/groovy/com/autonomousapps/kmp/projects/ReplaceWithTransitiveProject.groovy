@@ -57,8 +57,22 @@ final class ReplaceWithTransitiveProject extends AbstractProject {
               val outputDirectory = project.layout.buildDirectory.dir("gen/kotlin")
               outputs.dir(outputDirectory)
               doLast {
+                // no package
                 outputDirectory.get().file("generated.kt").asFile.writeText(
                   """
+                    fun printHello() {
+                      println("hello")
+                    }
+                  """.trimIndent()
+                )
+                
+                // with package
+                val out = outputDirectory.get().file("a/b/generated.kt").asFile
+                out.parentFile.mkdirs()
+                out.writeText(
+                  """
+                    package a.b
+                  
                     fun printHello() {
                       println("hello")
                     }

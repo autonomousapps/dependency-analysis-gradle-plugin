@@ -4,7 +4,8 @@ package com.autonomousapps.model.internal.kmp
 
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 
-internal data class SourceSetFiles(
+/** Only public because it's a task input. */
+public data class SourceSetFiles(
   /** e.g., "commonMain", "commonTest". */
   val sourceSetName: String,
   /** e.g., "src/commonMain/kotlin", "build/gen/kotlin". */

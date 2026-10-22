@@ -795,6 +795,7 @@ internal class ProjectPlugin(private val project: Project) {
               val dependencyAnalyzer = KmpProjectAnalyzer(
                 project = this,
                 sourceSet = kmpSourceSet,
+                findKmpCommonSources = listSourceFiles!!, // TODO can we avoid the `!!`?
                 hasAbi = hasAbi,
               )
 

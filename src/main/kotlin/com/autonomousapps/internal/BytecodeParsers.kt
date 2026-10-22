@@ -10,6 +10,7 @@ import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.internal.kmp.SourceSetFiles
 import org.gradle.api.logging.Logger
 import java.io.File
 
@@ -31,6 +32,7 @@ internal sealed class ClassReferenceParser(private val buildDir: File) {
 /** Given a set of .class files, produce a set of FQCN references present in that set. */
 internal class ClassFilesParser(
   private val classes: Set<File>,
+  private val kmpCommonSources: Set<SourceSetFiles>,
   buildDir: File
 ) : ClassReferenceParser(buildDir) {
 
@@ -40,7 +42,13 @@ internal class ClassFilesParser(
     return classes.asSequenceOfClassFiles()
       .map { classFile ->
         classFile.inputStream().use {
-          BytecodeReader(it.readBytes(), logger, classFile.path, relativize(classFile)).parse()
+          BytecodeReader(
+            bytes = it.readBytes(),
+            kmpCommonSources = kmpCommonSources,
+            logger = logger,
+            classFilePath = classFile.path,
+            relativePath = relativize(classFile),
+          ).parse()
         }
       }
       .toSortedSet()
@@ -49,12 +57,14 @@ internal class ClassFilesParser(
 
 private class BytecodeReader(
   private val bytes: ByteArray,
+  // may be empty
+  private val kmpCommonSources: Set<SourceSetFiles>,
   private val logger: Logger,
   private val classFilePath: String,
   private val relativePath: String,
 ) {
   /**
-   * This (currently, maybe forever) fails to detect constant usage in Kotlin-generated class files.
+   * This (currently, maybe forever) fails to detect constant usage in Kotlin-generated class files. TODO I think this is no longer true!
    * Works just fine for Java (but
    * [not the ecj compiler](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin/issues/735)).
    *
@@ -70,6 +80,17 @@ private class BytecodeReader(
     val classAnalyzer = ClassReader(bytes).let { classReader ->
       ClassAnalyzer(logger).apply {
         classReader.accept(this, 0)
+      }
+    }
+
+    val kmpCommonSource = kmpCommonSources.find { sources ->
+      sources.sourceFiles.any { f ->
+        // a standard source/class file
+        f.removeSuffix(".kt") == classAnalyzer.className
+          // a class created from top-level functions in the root package
+          || f == classAnalyzer.source
+          // a class created from top-level functions in a non-root package
+          || f == classAnalyzer.className.substringBeforeLast('/') +'/' + classAnalyzer.source
       }
     }
 
@@ -92,13 +113,13 @@ private class BytecodeReader(
 
     return ExplodingBytecode(
       relativePath = relativePath,
+      kmpCommonSourceSetName = kmpCommonSource?.sourceSetName,
       className = canonicalize(classAnalyzer.className),
       superClass = classAnalyzer.superClass?.let { canonicalize(it) },
       interfaces = classAnalyzer.interfaces.asSequence().fixup(classAnalyzer),
       sourceFile = classAnalyzer.source,
       nonAnnotationClasses = constantPool.asSequence().plus(usedNonAnnotationClasses).fixup(classAnalyzer),
-      nonAnnotationClassesWithinVisibleAnnotation = usedNonAnnotationClassesWithinVisibleAnnotation.asSequence()
-        .fixup(classAnalyzer),
+      nonAnnotationClassesWithinVisibleAnnotation = usedNonAnnotationClassesWithinVisibleAnnotation.asSequence().fixup(classAnalyzer),
       annotationClasses = usedAnnotationClasses.asSequence().fixup(classAnalyzer),
       inferredConstants = classAnalyzer.getInferredConstants(),
       binaryClassAccesses = classAnalyzer.getBinaryClasses().fixup(classAnalyzer),

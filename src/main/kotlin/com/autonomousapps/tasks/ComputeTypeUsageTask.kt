@@ -92,6 +92,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
       val output = parameters.output.getAndDelete()
 
       // 1. Load data
+      // TODO: use the kmpSourceSetName if available (or maybe it doesn't matter for this task)
       val project = parameters.syntheticProject.fromJson<ProjectVariant>(compressed = true)
       val dependencies = project.dependencies(parameters.dependencies.get())
       val classToCoords = buildClassIndex()

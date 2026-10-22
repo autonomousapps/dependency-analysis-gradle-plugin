@@ -49,87 +49,88 @@ internal class KmpTransform(
     return advice
   }
 
-//  override fun reduce(usages: Set<Usage>): Set<Advice> {
-//    val advice = mutableSetOf<Advice>()
-//
-//    val declarations = declarations.forCoordinates(coordinates)
-//
-//    var (mainUsages, testUsages, androidTestFixturesUsages, androidTestUsages, customJvmUsage) = usages.mutPartitionOf(
-//      { it.sourceKind.kind == SourceKind.MAIN_KIND },
-//      { it.sourceKind.kind == SourceKind.TEST_KIND },
-//      { it.sourceKind.kind == SourceKind.ANDROID_TEST_FIXTURES_KIND },
-//      { it.sourceKind.kind == SourceKind.ANDROID_TEST_KIND },
-//      { it.sourceKind.kind == SourceKind.CUSTOM_JVM_KIND },
-//    )
-//
-//    val hasCustomSourceSets = hasCustomSourceSets(usages)
-//    val (mainDeclarations, testDeclarations, androidTestFixturesDeclarations, androidTestDeclarations, customJvmDeclarations) =
-//      declarations.mutPartitionOf(
-//        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.MAIN_KIND },
-//        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.TEST_KIND },
-//        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.ANDROID_TEST_FIXTURES_KIND },
-//        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.ANDROID_TEST_KIND },
-//        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.CUSTOM_JVM_KIND },
-//      )
-//
-//    // Notes on "visibility":
-//    // 1. We care about _usage_ because usage is what matters for final state of dependency declarations.
-//    // 2. Unfortunately, usage isn't good enough. Something might have a bucket=IMPL usage but declaration=compileOnly,
-//    //    and because we don't change compileOnly declarations, the dependency won't be visible on downstream runtime
-//    //    classpaths.
-//    // 3. I know all the classpaths something is CURRENTLY visible on via `dependenciesToClasspaths`, but that's based
-//    //    on current declarations that may change. We need to know USAGE, DECLARATION (because of special handling)
-//    // 4. Declarations aren't good enough, because I know something _will be_ declared on runtimeOnly, even if it isn't
-//    //    currently. I suppose I can say that the runtime classpath has special handling. Our advice specifically trims
-//    //    the compile classpath based on detected usage in the bytecode. We also already suggest moving things to
-//    //    runtimeOnly if there's no detected compile-time usage, but the thing has runtime capabilities. Now we want to
-//    //    say, _add_ this thing to runtimeOnly, if it has runtime capabilities.
-//    // nb: deliberately *not* calling `isOnlyThroughCompileOnly()`. Would never return true.
-//    val visibility = Bucket.determineVisibilityForTests(mainUsages, mainDeclarations, configurationNames)
-//
-//    /*
-//     * Main usages.
-//     */
-//
-//    val singleVariant = mainUsages.size == 1
-//    mainUsages = reduceUsages(mainUsages)
-//    computeAdvice(advice, mainUsages, mainDeclarations, singleVariant)
-//
-//    /*
-//     * Test usages.
-//     */
-//
-//    // If main usages are visible downstream, then we don't need a test declaration
-//    testUsages = testUsages.simplify(visibility, SourceKind.TEST_NAME)
-//    computeAdvice(advice, testUsages, testDeclarations, testUsages.size == 1)
-//
-//    /*
-//     * Android test fixtures usages.
-//     */
-//    androidTestFixturesUsages = reduceUsages(androidTestFixturesUsages)
-//    computeAdvice(
-//      advice,
-//      androidTestFixturesUsages,
-//      androidTestFixturesDeclarations,
-//      androidTestFixturesUsages.size == 1
-//    )
-//
-//    /*
-//     * Android test usages.
-//     */
-//
-//    androidTestUsages = androidTestUsages.simplify(visibility, SourceKind.ANDROID_TEST_NAME)
-//    computeAdvice(advice, androidTestUsages, androidTestDeclarations, androidTestUsages.size == 1)
-//
-//    /*
-//     * Custom JVM source sets like 'testFixtures', 'integrationTest' or other custom source sets and feature variants
-//     */
-//
-//    customJvmUsage = reduceUsages(customJvmUsage)
-//    computeAdvice(advice, customJvmUsage, customJvmDeclarations, customJvmUsage.size == 1, true)
-//
-//    return simplify(advice)
-//  }
+//  override
+  fun reduce2(usages: Set<Usage>): Set<Advice> {
+    val advice = mutableSetOf<Advice>()
+
+    val declarations = declarations.forCoordinates(coordinates)
+
+    var (mainUsages, testUsages, androidTestFixturesUsages, androidTestUsages, customJvmUsage) = usages.mutPartitionOf(
+      { it.sourceKind.kind == SourceKind.MAIN_KIND },
+      { it.sourceKind.kind == SourceKind.TEST_KIND },
+      { it.sourceKind.kind == SourceKind.ANDROID_TEST_FIXTURES_KIND },
+      { it.sourceKind.kind == SourceKind.ANDROID_TEST_KIND },
+      { it.sourceKind.kind == SourceKind.CUSTOM_JVM_KIND },
+    )
+
+    val hasCustomSourceSets = hasCustomSourceSets(usages)
+    val (mainDeclarations, testDeclarations, androidTestFixturesDeclarations, androidTestDeclarations, customJvmDeclarations) =
+      declarations.mutPartitionOf(
+        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.MAIN_KIND },
+        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.TEST_KIND },
+        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.ANDROID_TEST_FIXTURES_KIND },
+        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.ANDROID_TEST_KIND },
+        { it.findSourceKind(hasCustomSourceSets)?.kind == SourceKind.CUSTOM_JVM_KIND },
+      )
+
+    // Notes on "visibility":
+    // 1. We care about _usage_ because usage is what matters for final state of dependency declarations.
+    // 2. Unfortunately, usage isn't good enough. Something might have a bucket=IMPL usage but declaration=compileOnly,
+    //    and because we don't change compileOnly declarations, the dependency won't be visible on downstream runtime
+    //    classpaths.
+    // 3. I know all the classpaths something is CURRENTLY visible on via `dependenciesToClasspaths`, but that's based
+    //    on current declarations that may change. We need to know USAGE, DECLARATION (because of special handling)
+    // 4. Declarations aren't good enough, because I know something _will be_ declared on runtimeOnly, even if it isn't
+    //    currently. I suppose I can say that the runtime classpath has special handling. Our advice specifically trims
+    //    the compile classpath based on detected usage in the bytecode. We also already suggest moving things to
+    //    runtimeOnly if there's no detected compile-time usage, but the thing has runtime capabilities. Now we want to
+    //    say, _add_ this thing to runtimeOnly, if it has runtime capabilities.
+    // nb: deliberately *not* calling `isOnlyThroughCompileOnly()`. Would never return true.
+    val visibility = Bucket.determineVisibilityForTests(mainUsages, mainDeclarations, configurationNames)
+
+    /*
+     * Main usages.
+     */
+
+    val singleVariant = mainUsages.size == 1
+    mainUsages = reduceUsages(mainUsages)
+    computeAdvice(advice, mainUsages, mainDeclarations, singleVariant)
+
+    /*
+     * Test usages.
+     */
+
+    // If main usages are visible downstream, then we don't need a test declaration
+    testUsages = testUsages.simplify(visibility, SourceKind.TEST_NAME)
+    computeAdvice(advice, testUsages, testDeclarations, testUsages.size == 1)
+
+    /*
+     * Android test fixtures usages.
+     */
+    androidTestFixturesUsages = reduceUsages(androidTestFixturesUsages)
+    computeAdvice(
+      advice,
+      androidTestFixturesUsages,
+      androidTestFixturesDeclarations,
+      androidTestFixturesUsages.size == 1
+    )
+
+    /*
+     * Android test usages.
+     */
+
+    androidTestUsages = androidTestUsages.simplify(visibility, SourceKind.ANDROID_TEST_NAME)
+    computeAdvice(advice, androidTestUsages, androidTestDeclarations, androidTestUsages.size == 1)
+
+    /*
+     * Custom JVM source sets like 'testFixtures', 'integrationTest' or other custom source sets and feature variants
+     */
+
+    customJvmUsage = reduceUsages(customJvmUsage)
+    computeAdvice(advice, customJvmUsage, customJvmDeclarations, customJvmUsage.size == 1, true)
+
+    return simplify(advice)
+  }
 
   /** Reduce usages to fewest possible (1+). */
   private fun reduceUsages(usages: MutableSet<Usage>): MutableSet<Usage> {

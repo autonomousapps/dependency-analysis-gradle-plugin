@@ -17,10 +17,10 @@ internal object KmpCommonDependencies {
 
     val fromConfiguration = advice.fromConfiguration!!
     val toConfiguration = advice.toConfiguration!!
-    val fromCommon =
-      fromConfiguration.startsWith(COMMON_TEST_NAME) || fromConfiguration.startsWith(COMMON_MAIN_NAME)
-    val toCommon =
-      toConfiguration.startsWith(COMMON_TEST_NAME) || toConfiguration.startsWith(COMMON_MAIN_NAME)
+    val fromCommon = fromConfiguration.startsWith(COMMON_TEST_NAME)
+      || fromConfiguration.startsWith(COMMON_MAIN_NAME)
+    val toCommon = toConfiguration.startsWith(COMMON_TEST_NAME)
+      || toConfiguration.startsWith(COMMON_MAIN_NAME)
 
     return if (fromCommon && !toCommon) {
       if (fromConfiguration.endsWith("Implementation") && toConfiguration.endsWith("Api")) {

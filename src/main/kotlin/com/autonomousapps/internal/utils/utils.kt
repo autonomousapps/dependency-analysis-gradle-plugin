@@ -49,9 +49,7 @@ internal fun Provider<RegularFile>.getAndDelete(): File {
 /** Buffer reads of the nullable RegularFileProperty from disk to the set. */
 internal inline fun <reified T> RegularFileProperty.fromNullableJsonSet(
   compressed: Boolean = false,
-): Set<T> {
-  return orNull?.fromJsonSet(compressed) ?: emptySet()
-}
+): Set<T> = orNull?.fromJsonSet(compressed) ?: emptySet()
 
 /** Buffers reads of the RegularFileProperty from disk to the set. */
 internal inline fun <reified T> RegularFileProperty.fromJsonSet(
