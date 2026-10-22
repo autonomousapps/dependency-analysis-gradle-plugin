@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates
 
+import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.mapToSet
+import com.autonomousapps.model.Advice
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.source.SourceKind
@@ -15,14 +17,30 @@ internal data class DependencyTraceReport(
   val sourceKind: SourceKind,
   val dependencies: Set<Trace>,
   val annotationProcessors: Set<Trace>,
-) {
+) : Comparable<DependencyTraceReport> {
+
+  override fun compareTo(other: DependencyTraceReport): Int {
+    return compareBy(DependencyTraceReport::sourceKind)
+      .thenBy(LexicographicIterableComparator()) { it.dependencies }
+      .thenBy(LexicographicIterableComparator()) { it.annotationProcessors }
+      .thenComparing(compareBy<DependencyTraceReport, String?>(nullsFirst()) { it.buildType })
+      .thenComparing(compareBy<DependencyTraceReport, String?>(nullsFirst()) { it.flavor })
+      .compare(this, other)
+  }
 
   @JsonClass(generateAdapter = false)
   data class Trace(
     val coordinates: Coordinates,
     val bucket: Bucket,
     val reasons: Set<Reason> = emptySet(),
-  )
+  ) : Comparable<Trace> {
+    override fun compareTo(other: Trace): Int {
+      return compareBy(Trace::coordinates)
+        .thenBy(Trace::bucket)
+        .thenBy(LexicographicIterableComparator()) { trace -> trace.reasons.map { it.reason } }
+        .compare(this, other)
+    }
+  }
 
   @JsonClass(generateAdapter = false)
   enum class Kind {
