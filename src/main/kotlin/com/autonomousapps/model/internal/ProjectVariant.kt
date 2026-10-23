@@ -7,13 +7,24 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.internal.CodeSource.Kind
+import com.autonomousapps.model.internal.intermediates.ClassReference
 import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
 import org.gradle.api.file.Directory
 
-/** Represents a variant-specific view of the project under analysis. */
+/**
+ * Represents a source-set/variant/compilation-specific view of the project under analysis.
+ * - For **Android** projects, an instance of this class is for a single "variant," such as `flavorDebug`, etc.
+ * - For **JVM** projects, an instance of this class is for a single source set, such as main, test, functionalTest,
+ *   etc.
+ * - For **KMP** projects, an instance of this class is for a single `KotlinCompilation`. A Kotlin compilation will
+ *   include sources from multiple source sets, such as `commonMain` and `jvmMain`, or `commonMain`, `appleMain`, and
+ *   `<X>Arm64`.
+ *
+ * @see <a href="https://kotlinlang.org/docs/multiplatform/multiplatform-discover-project.html#intermediate-source-sets">KMP intermediate source sets</a>
+ */
 @Suppress("MemberVisibilityCanBePrivate") // deliberate API
 @JsonClass(generateAdapter = false)
 internal data class ProjectVariant(
