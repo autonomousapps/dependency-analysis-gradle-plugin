@@ -33,8 +33,8 @@ internal class DependencyTraceReports(
   }
 
   fun put(coordinates: Coordinates, kind: DependencyTraceReport.Kind, bucket: Bucket) {
-    val key = coordinatesMap[coordinates] ?: error("impossible!")
-    val builder = map[key] ?: error("impossible!")
+    val key = coordinatesMap[coordinates] ?: error("No mapping for $coordinates") // TODO
+    val builder = map[key] ?: error("No builder for $coordinates") // TODO
     builder[coordinates, kind] = bucket
   }
 }

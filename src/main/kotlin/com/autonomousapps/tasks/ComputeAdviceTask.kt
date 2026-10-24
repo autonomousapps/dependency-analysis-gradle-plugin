@@ -185,7 +185,7 @@ public abstract class ComputeAdviceTask @Inject constructor(
         .run { AndroidScore.ofVariants(this) }
         .toSetOrEmpty()
       val bundleRules = parameters.bundles.get()
-      val traces = parameters.dependencyUsageReports.get().mapToSet { it.fromJson<DependencyTraceReport>() }
+      val traces = parameters.dependencyUsageReports.get().flatMapToOrderedSet { it.fromJsonSet<DependencyTraceReport>() }
       val usageBuilder = UsageBuilder(
         traces = traces,
         // TODO(tsr): it would be clearer to get this from a SyntheticProject

@@ -15,7 +15,7 @@ import com.google.common.graph.Graph
 
 internal interface GraphViewVisitor {
   fun visit(dependency: Dependency, context: Context)
-  fun visit(excludedIdentifier: ExcludedIdentifier)
+  fun visit(excludedIdentifier: ExcludedIdentifier, context: Context)
 
   interface Context {
     val project: ProjectVariant

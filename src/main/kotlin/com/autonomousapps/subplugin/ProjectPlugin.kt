@@ -778,7 +778,7 @@ internal class ProjectPlugin(private val project: Project) {
     kotlin
       .targets
       .configureEach { target ->
-//        println("CONFIGURING KOTLIN TARGET ${target.name} (${target.javaClass.simpleName})")
+        println("CONFIGURING KOTLIN TARGET ${target.name} (${target.javaClass.simpleName})")
         target.compilations
           // TODO(tsr): requiring the `runtimeDependencyConfigurationName` to be non-null seems to be equivalent to only
           //  configuring the JVM and Android targets.
@@ -787,7 +787,7 @@ internal class ProjectPlugin(private val project: Project) {
           //      collections.
           .matching { compilation -> compilation.runtimeDependencyConfigurationName != null }
           .configureEach { compilation ->
-//            println(" COMPILATION ${compilation.name} (${compilation.javaClass.simpleName})")
+            println(" COMPILATION ${compilation.name} (${compilation.javaClass.simpleName})")
             try {
               val hasAbi = hasAbi(compilation)
               val kmpSourceSet = KmpSourceSet(compilation)
