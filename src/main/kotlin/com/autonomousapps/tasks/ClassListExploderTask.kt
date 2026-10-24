@@ -5,11 +5,15 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.ClassFilesParser
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.filterToClassFiles
+import com.autonomousapps.internal.utils.fromJsonSet
+import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.model.internal.kmp.SourceSetFiles
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -30,6 +34,12 @@ public abstract class ClassListExploderTask @Inject constructor(
   @get:Classpath
   public abstract val classes: ConfigurableFileCollection
 
+  /** Only available in KMP projects. */
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFile
+  public abstract val kmpCommonSources: RegularFileProperty
+
   @get:OutputFile
   public abstract val output: RegularFileProperty
 
@@ -39,6 +49,8 @@ public abstract class ClassListExploderTask @Inject constructor(
       it.classFiles.setFrom(classes.asFileTree.filterToClassFiles().files)
       // Android projects
       it.classFiles.from(androidClassFiles())
+      // KMP projects
+      it.kmpCommonSources.set(kmpCommonSources)
 
       it.buildDir.set(layout.buildDirectory)
       it.output.set(output)
@@ -47,6 +59,7 @@ public abstract class ClassListExploderTask @Inject constructor(
 
   public interface ClassListExploderParameters : WorkParameters {
     public val classFiles: ConfigurableFileCollection
+    public val kmpCommonSources: RegularFileProperty
     public val buildDir: DirectoryProperty
     public val output: RegularFileProperty
   }
@@ -56,8 +69,12 @@ public abstract class ClassListExploderTask @Inject constructor(
     override fun execute() {
       val output = parameters.output.getAndDelete()
 
+      // may be empty
+      val kmpCommonSources = parameters.kmpCommonSources.fromNullableJsonSet<SourceSetFiles>()
+
       val usedClasses = ClassFilesParser(
         classes = parameters.classFiles.asFileTree.files,
+        kmpCommonSources = kmpCommonSources,
         buildDir = parameters.buildDir.get().asFile,
       ).analyze()
 

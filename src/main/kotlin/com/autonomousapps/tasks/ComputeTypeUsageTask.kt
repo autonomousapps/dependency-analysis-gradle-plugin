@@ -92,6 +92,7 @@ public abstract class ComputeTypeUsageTask @Inject constructor(
       val output = parameters.output.getAndDelete()
 
       // 1. Load data
+      // TODO: use the kmpSourceSetName if available (or maybe it doesn't matter for this task)
       val project = parameters.syntheticProject.fromJson<ProjectVariant>(compressed = true)
       val dependencies = project.dependencies(parameters.dependencies.get())
       val classToCoords = buildClassIndex()
@@ -171,7 +172,7 @@ private class TypeUsageAnalyzer(
           // Determine coordinates: check project classes first, then external
           val coords = classToCoords[typeName]
 
-          if (coords != null || projectClasses.contains(typeName)) {
+          if (coords != null || typeName in projectClasses.mapToSet { it.name }) {
             usageMap
               .getOrPut(coords ?: project.coordinates) { mutableMapOf() }
               .merge(typeName, 1, Int::plus)

@@ -97,9 +97,11 @@ public abstract class DiscoverClasspathDuplicationTask : DefaultTask() {
         // R classes are duplicated by design; ignore them on Android.
         .filterKeys { !isAndroid || !isAndroidRClass(it) }
         // only warn about duplicates if it's about a class that's actually used.
-        .filterKeys {
-          val fqcn = it.replace('/', '.').removeSuffix(".class")
-          fqcn in project.usedClasses || fqcn in project.usedAnnotationClassesBySrc || fqcn.substringBeforeLast('.') in project.candidateInlineImports
+        .filterKeys { key ->
+          val fqcn = key.replace('/', '.').removeSuffix(".class")
+          fqcn in project.usedClasses.mapToSet { it.name }
+            || fqcn in project.usedAnnotationClassesBySrc.mapToSet { it.name }
+            || fqcn.substringBeforeLast('.') in project.candidateInlineImports
         }
         // filter out "duplicates" where the GAV is identical. This can be an issue with, say, Kotlin, which adds
         // variants of the same dependency with different capabilities. Not user-actionable.

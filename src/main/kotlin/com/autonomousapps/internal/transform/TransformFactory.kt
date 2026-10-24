@@ -15,8 +15,8 @@ internal class TransformFactory(
   private val dependencyGraph: Map<String, DependencyGraphView>,
   private val buildPath: String,
   private val configurationNames: ConfigurationNames,
-  private val explicitSourceSets: Set<String> = emptySet(),
-  private val isKaptApplied: Boolean = false,
+  private val explicitSourceSets: Set<String>,
+  private val isKaptApplied: Boolean,
 ) {
 
   fun of(projectType: ProjectType): Usage.Transform = when (projectType) {

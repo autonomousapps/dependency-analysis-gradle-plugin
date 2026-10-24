@@ -7,13 +7,25 @@ import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.ProjectCoordinates
 import com.autonomousapps.model.internal.CodeSource.Kind
+import com.autonomousapps.model.internal.intermediates.ClassReference
 import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.source.KmpSourceKind
 import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
 import org.gradle.api.file.Directory
 
-/** Represents a variant-specific view of the project under analysis. */
+/**
+ * Represents a source-set/variant/compilation-specific view of the project under analysis.
+ * - For **Android** projects, an instance of this class is for a single "variant," such as `flavorDebug`, etc.
+ * - For **JVM** projects, an instance of this class is for a single source set, such as main, test, functionalTest,
+ *   etc.
+ * - For **KMP** projects, an instance of this class is for a single `KotlinCompilation`. A Kotlin compilation will
+ *   include sources from multiple source sets, such as `commonMain` and `jvmMain`, or `commonMain`, `appleMain`, and
+ *   `<X>Arm64`.
+ *
+ * @see <a href="https://kotlinlang.org/docs/multiplatform/multiplatform-discover-project.html#intermediate-source-sets">KMP intermediate source sets</a>
+ */
 @Suppress("MemberVisibilityCanBePrivate") // deliberate API
 @JsonClass(generateAdapter = false)
 internal data class ProjectVariant(
@@ -29,72 +41,139 @@ internal data class ProjectVariant(
   val excludedIdentifiers: Set<ExcludedIdentifier>,
 ) {
 
+  fun getPrimarySourceKind(): SourceKind {
+    if (sourceKind !is KmpSourceKind) return sourceKind
+
+    // TODO cleanup hard-coded string literals
+    val common = codeSource.find { it.kmpCommonSourceSetName == "commonMain" } ?: codeSource.find { it.kmpCommonSourceSetName == "commonTest" }
+    val kmpCommonSourceSetName = common?.kmpCommonSourceSetName
+
+    return if (kmpCommonSourceSetName != null) {
+      sourceKind.copy(name = kmpCommonSourceSetName)
+    } else {
+      sourceKind
+    }
+  }
+
   val codeSource: List<CodeSource> by unsafeLazy {
     sources.filterIsInstance<CodeSource>()
   }
 
-  val classNames: Set<String> by unsafeLazy {
-    codeSource.mapToOrderedSet { src -> src.className }
-  }
-
-  val usedNonAnnotationClassesBySrc: Set<String> by unsafeLazy {
-    codeSource.flatMapToSet {
-      it.usedNonAnnotationClasses
+  val classNames: Set<ClassReference> by unsafeLazy {
+    codeSource.mapToOrderedSet { source ->
+      ClassReference(
+        name = source.className,
+        kmpCommonSourceSetName = source.kmpCommonSourceSetName,
+      )
     }
   }
 
-  val usedNonAnnotationClassesWithinVisibleAnnotationBySrc: Map<String, String> by unsafeLazy {
-    codeSource.flatMapToSet {
-      it.usedNonAnnotationClassesWithinVisibleAnnotation.entries
-    }.associate { it.toPair() }
-  }
-
-  val usedAnnotationClassesBySrc: Set<String> by unsafeLazy {
-    codeSource.flatMapToSet {
-      it.usedAnnotationClasses
+  val usedNonAnnotationClassesBySrc: Set<ClassReference> by unsafeLazy {
+    codeSource.flatMapToOrderedSet { source ->
+      source.usedNonAnnotationClasses.map { usedNonAnnotationClass ->
+        ClassReference(
+          name = usedNonAnnotationClass,
+          kmpCommonSourceSetName = source.kmpCommonSourceSetName,
+        )
+      }
     }
   }
 
-  val usedClassesByRes: Set<String> by unsafeLazy {
-    androidResSource.flatMapToSet {
-      it.usedClasses
+  // TODO double check this and improve documentation
+  val usedNonAnnotationClassesWithinVisibleAnnotationBySrc: Map<ClassReference, ClassReference> by unsafeLazy {
+    //codeSource.flatMapToOrderedSet { source ->
+    //  source.usedNonAnnotationClassesWithinVisibleAnnotation.entries
+    //}.associate { it.toPair() }
+    codeSource
+      .flatMapToSet { source ->
+        source.usedNonAnnotationClassesWithinVisibleAnnotation.entries
+          .map { (key, value) ->
+            val k = ClassReference(name = key, kmpCommonSourceSetName = source.kmpCommonSourceSetName)
+            val v = ClassReference(name = value, kmpCommonSourceSetName = source.kmpCommonSourceSetName)
+            k to v
+          }
+      }
+      .toMap()
+  }
+
+  val usedAnnotationClassesBySrc: Set<ClassReference> by unsafeLazy {
+    codeSource.flatMapToOrderedSet { source ->
+      source.usedAnnotationClasses.map { usedAnnotationClass ->
+        ClassReference(
+          name = usedAnnotationClass,
+          kmpCommonSourceSetName = source.kmpCommonSourceSetName,
+        )
+      }
+    }
+  }
+
+  val usedClassesByRes: Set<ClassReference> by unsafeLazy {
+    androidResSource.flatMapToOrderedSet { source ->
+      source.usedClasses.map { usedClass ->
+        ClassReference(
+          name = usedClass,
+          kmpCommonSourceSetName = null,
+        )
+      }
     }
   }
 
   /** All class references from any context. */
-  val usedClasses: Set<String> by unsafeLazy {
+  val usedClasses: Set<ClassReference> by unsafeLazy {
     usedClassesByRes + usedNonAnnotationClassesBySrc + usedNonAnnotationClassesWithinVisibleAnnotationBySrc.map { it.key }
   }
 
-  val usedNonAnnotationClasses: Set<String> by unsafeLazy {
+  val usedNonAnnotationClasses: Set<ClassReference> by unsafeLazy {
     usedClassesByRes + usedNonAnnotationClassesBySrc
   }
 
-  val exposedClasses: Set<String> by unsafeLazy {
-    codeSource.flatMapToSet {
-      it.exposedClasses
+  val exposedClasses: Set<ClassReference> by unsafeLazy {
+    codeSource.flatMapToOrderedSet { source ->
+      source.exposedClasses.map { exposedClass ->
+        ClassReference(
+          name = exposedClass,
+          kmpCommonSourceSetName = source.kmpCommonSourceSetName,
+        )
+      }
     }
   }
 
   val inferredConstants: Set<LdcConstant> by unsafeLazy {
-    codeSource.flatMapToSet {
+    codeSource.flatMapToOrderedSet {
       it.inferredConstants
     }
   }
 
-  val implementationClasses: Set<String> by unsafeLazy {
+  val implementationClasses: Set<ClassReference> by unsafeLazy {
     usedNonAnnotationClasses - exposedClasses
   }
 
   /**
    * The set of super classes and interfaces not available from [codeSource] (therefore "external" to "this" module).
    */
-  val externalSupers: Set<String> by unsafeLazy {
+  val externalSupers: Set<ClassReference> by unsafeLazy {
     val supers = codeSource
-      .mapNotNull { src -> src.superClass }
-      .filterNotToOrderedSet { it == "java.lang.Object" }
+      .mapNotNull { source ->
+        val superClass = source.superClass
+        if (superClass != null) {
+          ClassReference(
+            name = superClass,
+            kmpCommonSourceSetName = source.kmpCommonSourceSetName,
+          )
+        } else {
+          null
+        }
+      }
+      .filterNotToOrderedSet { it.name == "java.lang.Object" }
 
-    val interfaces = codeSource.flatMapToOrderedSet { src -> src.interfaces }
+    val interfaces = codeSource.flatMapToOrderedSet { source ->
+      source.interfaces.map { i ->
+        ClassReference(
+          name = i,
+          kmpCommonSourceSetName = source.kmpCommonSourceSetName,
+        )
+      }
+    }
     // These super classes and interfaces are not available from "this" module, so must come from dependencies.
     val externalSupers = supers - classNames
     val externalInterfaces = interfaces - classNames
@@ -115,38 +194,79 @@ internal data class ProjectVariant(
     sources.filterIsInstance<AndroidAssetSource>()
   }
 
-  val imports: Set<String> by unsafeLazy {
-    codeSource.flatMapToOrderedSet { it.imports }
+  val imports: Set<ClassReference> by unsafeLazy {
+    codeSource.flatMapToOrderedSet { source ->
+      source.imports.map { imp ->
+        ClassReference(
+          name = imp,
+          kmpCommonSourceSetName = source.kmpCommonSourceSetName,
+        )
+      }
+    }
   }
 
   /**
    * Every member access from this project to classes in another module. cf [usedClasses], which is a flat set of
    * referenced class names.
+   *
+   * TODO: MemberAccess has no reference to kmpSourceSet. Do we care?
    */
   val memberAccesses: Set<MemberAccess> by unsafeLazy {
-    codeSource.flatMapToOrderedSet { src ->
-      src.binaryClassAccesses.entries.flatMap { entry -> entry.value }
+    codeSource.flatMapToOrderedSet { source ->
+      source.binaryClassAccesses.entries.flatMap { entry -> entry.value }
     }
   }
 
-  val javaImports: Set<String> by unsafeLazy {
-    codeSource.filter { it.kind == Kind.JAVA }
-      .flatMapToOrderedSet { it.imports }
+  val javaImports: Set<ClassReference> by unsafeLazy {
+    codeSource
+      .filter { it.kind == Kind.JAVA }
+      .flatMapToOrderedSet { source ->
+        source.imports.map { imp ->
+          ClassReference(
+            name = imp,
+            kmpCommonSourceSetName = source.kmpCommonSourceSetName,
+          )
+        }
+      }
   }
 
-  val kotlinImports: Set<String> by unsafeLazy {
-    codeSource.filter { it.kind == Kind.KOTLIN }
-      .flatMapToOrderedSet { it.imports }
+  val kotlinImports: Set<ClassReference> by unsafeLazy {
+    codeSource
+      .filter { it.kind == Kind.KOTLIN }
+      .flatMapToOrderedSet { source ->
+        source.imports.map { imp ->
+          ClassReference(
+            name = imp,
+            kmpCommonSourceSetName = source.kmpCommonSourceSetName,
+          )
+        }
+      }
   }
 
-  val groovyImports: Set<String> by unsafeLazy {
-    codeSource.filter { it.kind == Kind.GROOVY }
-      .flatMapToOrderedSet { it.imports }
+  val groovyImports: Set<ClassReference> by unsafeLazy {
+    codeSource
+      .filter { it.kind == Kind.GROOVY }
+      .flatMapToOrderedSet { source ->
+        source.imports.map { imp ->
+          ClassReference(
+            name = imp,
+            kmpCommonSourceSetName = source.kmpCommonSourceSetName,
+          )
+        }
+      }
   }
 
-  val scalaImports: Set<String> by unsafeLazy {
-    codeSource.filter { it.kind == Kind.SCALA }
-      .flatMapToOrderedSet { it.imports }
+  val scalaImports: Set<ClassReference> by unsafeLazy {
+    codeSource
+      .filter { it.kind == Kind.SCALA }
+      .flatMapToOrderedSet { source ->
+        source.imports.map { imp ->
+          ClassReference(
+            name = imp,
+            kmpCommonSourceSetName = source.kmpCommonSourceSetName,
+          )
+        }
+      }
   }
 
   /**
@@ -156,7 +276,7 @@ internal data class ProjectVariant(
   val candidateInlineImports: Set<String> by unsafeLazy {
     // e.g., `androidx.core.net.toUri` -> `androidx.core.net`
     kotlinImports
-      .map { it.substringBeforeLast('.') }
+      .map { it.name.substringBeforeLast('.') }
       .filterToOrderedSet { it.isNotEmpty() }
   }
 

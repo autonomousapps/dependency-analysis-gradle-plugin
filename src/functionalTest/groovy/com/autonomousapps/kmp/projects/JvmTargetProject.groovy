@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kmp.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
@@ -13,9 +12,7 @@ import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.Dependency.api
 import static com.autonomousapps.kit.gradle.Dependency.implementation
 
-final class JvmTargetProject extends AbstractProject {
-
-  private static final String KOTLIN_VERSION = '2.2.21'
+final class JvmTargetProject extends AbstractKmpProject {
 
   static final String CAFFEINE = 'com.github.ben-manes.caffeine:caffeine:3.2.3'
   static final String OKIO = 'com.squareup.okio:okio:3.16.4'
