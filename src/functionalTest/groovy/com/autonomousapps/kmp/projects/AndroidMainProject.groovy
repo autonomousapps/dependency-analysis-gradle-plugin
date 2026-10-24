@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kmp.projects
 
-import com.autonomousapps.AbstractProject
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.model.ProjectAdvice
@@ -19,9 +18,7 @@ import static com.autonomousapps.kit.gradle.Dependency.implementation
  *
  * @see <a href="https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1649">Issue 1649</a>
  */
-final class AndroidMainProject extends AbstractProject {
-
-  private static final String KOTLIN_VERSION = '2.2.21'
+final class AndroidMainProject extends AbstractKmpProject {
 
   static final String CAFFEINE = 'com.github.ben-manes.caffeine:caffeine:3.2.3'
 
