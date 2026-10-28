@@ -1,7 +1,17 @@
 Dependency Analysis Plugin Changelog
 
-# Version 3.20.0 (unreleased)
+# Version 3.20.0
 * [breaking]: KMP project analysis requires Kotlin 2.3.0+ and Gradle 9.4.0+.
+* [fix]: improve association of advice to KMP source sets.
+* [fix]: do not trust project equality. Compare paths.
+* [fix]: properly track use of build service InMemoryCache by tasks.
+* [fix]: Revert fix(deps): update moshix to v0.37.0.
+* [chore]: build and test with Gradle 9.8.2.
+* [chore]: update KGP and kotlin-metadata from 2.4.0 -> 2.4.21.
+* [chore]: update dependency com.google.guava:guava to v33.7.2-jre.
+* [chore]: update dependency com.android.tools:common to v32.4.1.
+* [chore]: update dependency com.github.ben-manes.caffeine:caffeine to v3.3.1.
+* [refactor]: use lazy configurations exclusively.
 
 # Version 3.19.2
 * [fix]: Updated asm to 9.10.1 (and use latest asm-relocated).
