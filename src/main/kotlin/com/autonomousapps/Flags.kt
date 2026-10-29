@@ -36,6 +36,9 @@ public object Flags {
 
   private const val DISABLE_COMPATIBILITY = "dependency.analysis.compatibility"
 
+  private const val TRANSITIVE_EXPOSURE = "dependency.analysis.transitive.exposure"
+  private const val TRANSITIVE_EXPOSURE_DEPTH = "dependency.analysis.transitive.exposure.depth"
+
   internal fun Project.shouldAnalyzeTests() = getGradleOrSysProp(TEST_ANALYSIS, true)
 
   /**
@@ -51,6 +54,38 @@ public object Flags {
 
   internal fun Project.projectPathRegex(): Regex =
     getGradlePropForConfiguration(PROJECT_INCLUDES, ".*").toRegex()
+
+  /**
+   * Whether to suppress "remove" advice for project dependencies that downstream consumers reach transitively.
+   *
+   * Opt-in, and off by default: enabling it makes `buildHealth` report strictly less advice.
+   *
+   * ```
+   * # gradle.properties
+   * dependency.analysis.transitive.exposure=true
+   * ```
+   */
+  internal fun Project.filterTransitiveExposure(): Boolean =
+    getGradlePropForConfiguration(TRANSITIVE_EXPOSURE, false) || getSysPropForConfiguration(TRANSITIVE_EXPOSURE, false)
+
+  /**
+   * How many hops down the consumer graph [filterTransitiveExposure] searches. Defaults to 1, meaning direct
+   * consumers only.
+   */
+  internal fun Project.transitiveExposureDepth(): Int {
+    val value = providers.gradleProperty(TRANSITIVE_EXPOSURE_DEPTH)
+      .orElse(providers.systemProperty(TRANSITIVE_EXPOSURE_DEPTH))
+      .getOrElse("1")
+
+    val depth = value.toIntOrNull()
+      ?: throw GradleException("$value is not a valid transitive-exposure depth. Provide an int value")
+
+    if (depth < 1) {
+      throw GradleException("Transitive-exposure depth must be at least 1. Was $depth")
+    }
+
+    return depth
+  }
 
   internal fun Project.cacheSize(default: Long): Long {
     return providers.systemProperty(MAX_CACHE_SIZE)

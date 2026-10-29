@@ -5,7 +5,9 @@ package com.autonomousapps.subplugin
 import com.autonomousapps.BuildHealthPlugin
 import com.autonomousapps.DependencyAnalysisExtension
 import com.autonomousapps.Flags.AUTO_APPLY
+import com.autonomousapps.Flags.filterTransitiveExposure
 import com.autonomousapps.Flags.printBuildHealth
+import com.autonomousapps.Flags.transitiveExposureDepth
 import com.autonomousapps.artifacts.Publisher.Companion.interProjectPublisher
 import com.autonomousapps.artifacts.Resolver.Companion.interProjectResolver
 import com.autonomousapps.internal.RootOutputPaths
@@ -119,8 +121,30 @@ internal class RootPlugin(private val project: Project) {
       t.output.set(paths.allLibsVersionsTomlPath)
     }
 
+    // Opt-in. When disabled, `generateBuildHealth` consumes the per-project advice artifacts directly, exactly as it
+    // does without this feature.
+    val projectHealthReports = if (filterTransitiveExposure()) {
+      val filterTransitiveExposureTask =
+        tasks.register("filterTransitiveExposure", FilterTransitiveExposureTask::class.java) { t ->
+          t.projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
+          t.typeUsageReports.setFrom(typeUsagesResolver.internal.map { it.artifactsFor("json").artifactFiles })
+          t.publicClassesReports.setFrom(publicClassesResolver.internal.map { it.artifactsFor("json").artifactFiles })
+          t.projectMetadataReports.setFrom(projectMetadataResolver.internal.map { it.artifactsFor("json").artifactFiles })
+          t.transitiveDepth.set(transitiveExposureDepth())
+          t.outputDir.set(paths.filteredAdviceDir)
+        }
+
+      // `GenerateBuildHealthTask` reads each entry as a JSON file, so hand it the directory's contents rather than the
+      // directory itself.
+      files(filterTransitiveExposureTask.map { task ->
+        fileTree(task.outputDir) { it.include("**/*.json") }
+      })
+    } else {
+      files(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
+    }
+
     val generateBuildHealthTask = tasks.register("generateBuildHealth", GenerateBuildHealthTask::class.java) { t ->
-      t.projectHealthReports.setFrom(adviceResolver.internal.map { it.artifactsFor("json").artifactFiles })
+      t.projectHealthReports.setFrom(projectHealthReports)
       t.projectMetadataReports.setFrom(projectMetadataResolver.internal.map { it.artifactsFor("json").artifactFiles })
       t.reportingConfig.set(dagpExtension.reportingHandler.config())
       t.projectCount.set(allprojects.size)
