@@ -84,7 +84,8 @@ internal class NoVariantOutputPaths(private val project: Project) {
   private fun dir(path: String): Provider<Directory> = project.layout.buildDirectory.dir(path)
 
   val locationsPath = file("$ROOT_DIR/declarations.json")
-  val findKmpSourcesPath = file("$ROOT_DIR/kmp-sources.json")
+  val kmpSourcesPath = file("$ROOT_DIR/kmp-sources.json")
+  val kmpSourceGraphPath = file("$ROOT_DIR/kmp-source-graph.json")
   val resolvedDepsPath = file("$ROOT_DIR/resolved-dependencies-report.txt")
   val resolvedAllLibsVersionsTomlPath = file("$ROOT_DIR/resolvedAllLibs.versions.toml")
   val mergedProjectGraphPath = file("$ROOT_DIR/merged-project-graph.json")

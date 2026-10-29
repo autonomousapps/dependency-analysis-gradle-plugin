@@ -10,6 +10,7 @@ import com.autonomousapps.model.internal.CodeSource.Kind
 import com.autonomousapps.model.internal.intermediates.ClassReference
 import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.internal.kmp.SourceGraph
 import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
 import org.gradle.api.file.Directory
@@ -38,6 +39,7 @@ internal data class ProjectVariant(
   val annotationProcessors: Set<Coordinates>,
   val testInstrumentationRunner: String?,
   val excludedIdentifiers: Set<ExcludedIdentifier>,
+  val kmpSourceGraph: SourceGraph?,
 ) {
 
   val codeSource: List<CodeSource> by unsafeLazy {

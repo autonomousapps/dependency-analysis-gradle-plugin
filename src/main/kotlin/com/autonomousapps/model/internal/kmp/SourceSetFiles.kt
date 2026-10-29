@@ -3,8 +3,10 @@
 package com.autonomousapps.model.internal.kmp
 
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
+import com.squareup.moshi.JsonClass
 
 /** Only public because it's a task input. */
+@JsonClass(generateAdapter = false)
 public data class SourceSetFiles(
   /** e.g., "commonMain", "commonTest". */
   val sourceSetName: String,

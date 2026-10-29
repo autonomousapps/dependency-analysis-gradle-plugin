@@ -21,6 +21,7 @@ import org.gradle.api.tasks.TaskProvider
 
 internal abstract class AbstractDependencyAnalyzer(
   protected val project: Project,
+  private val findKmpSourcesTask: TaskProvider<FindKmpSourcesTask>? = null,
 ) : DependencyAnalyzer {
 
   // Always null for JVM projects. May be null for Android projects.
@@ -389,6 +390,9 @@ internal abstract class AbstractDependencyAnalyzer(
       explodeAssetSourceTask?.let { t2 -> t.androidAssetsSource.set(t2.flatMap { it.output }) }
       // Optional: only exists for Android projects.
       t.testInstrumentationRunner.set(testInstrumentationRunner)
+      // Optional: only exists for KMP projects.
+      findKmpSourcesTask?.let { t2 -> t.kmpSourceGraph.set(t2.flatMap { it.outputGraph }) }
+
       t.output.set(outputPaths.syntheticProjectPath)
     }
   }

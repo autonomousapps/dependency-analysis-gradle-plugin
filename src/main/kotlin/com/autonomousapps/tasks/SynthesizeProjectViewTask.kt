@@ -14,6 +14,7 @@ import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecod
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingSourceCode
 import com.autonomousapps.model.internal.intermediates.consumer.LdcConstant
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.internal.kmp.SourceGraph
 import com.autonomousapps.model.source.SourceKind
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
@@ -115,6 +116,12 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
   @get:Input
   public abstract val testInstrumentationRunner: Property<String>
 
+  /** Only available in KMP projects. */
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFile
+  public abstract val kmpSourceGraph: RegularFileProperty
+
   @get:OutputFile
   public abstract val output: RegularFileProperty
 
@@ -135,6 +142,7 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
       it.androidResSourceRuntime.set(androidResSourceRuntime)
       it.androidAssetsSource.set(androidAssetsSource)
       it.testInstrumentationRunner.set(testInstrumentationRunner)
+      it.kmpSourceGraph.set(kmpSourceGraph)
       it.output.set(output)
     }
   }
@@ -161,6 +169,7 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
     public val androidResSourceRuntime: RegularFileProperty
     public val androidAssetsSource: RegularFileProperty
     public val testInstrumentationRunner: Property<String>
+    public val kmpSourceGraph: RegularFileProperty
 
     public val output: RegularFileProperty
   }
@@ -169,7 +178,6 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
 
     private val builders = sortedMapOf<String, CodeSourceBuilder>()
 
-    @Suppress("UnstableApiUsage") // Guava Graph
     override fun execute() {
       val output = parameters.output.getAndDelete()
 
@@ -181,6 +189,7 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
       val androidResSourceRuntime = parameters.androidResSourceRuntime.fromNullableJsonSet<AndroidResSource>()
       val androidAssetsSource = parameters.androidAssetsSource.fromNullableJsonSet<AndroidAssetSource>()
       val testInstrumentationRunner = parameters.testInstrumentationRunner.orNull
+      val kmpSourceGraph = parameters.kmpSourceGraph.orNull?.fromJson<SourceGraph>()
       val excludedIdentifiers = parameters.excludedIdentifiers.fromJsonSet<ExcludedIdentifier>()
 
       explodedBytecode.forEach { bytecode ->
@@ -263,6 +272,7 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
         annotationProcessors = annotationProcessors.efficient(),
         testInstrumentationRunner = testInstrumentationRunner?.intern(),
         excludedIdentifiers = excludedIdentifiers,
+        kmpSourceGraph = kmpSourceGraph,
       )
 
       output.bufferWriteJson(projectVariant, compress = true)
