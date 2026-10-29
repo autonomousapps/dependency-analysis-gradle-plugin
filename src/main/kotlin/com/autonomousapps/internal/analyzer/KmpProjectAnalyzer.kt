@@ -20,7 +20,7 @@ internal class KmpProjectAnalyzer(
   private val sourceSet: KmpSourceSet,
   private val findKmpSourcesTask: TaskProvider<FindKmpSourcesTask>,
   private val hasAbi: Boolean,
-) : AbstractDependencyAnalyzer(project) {
+) : AbstractDependencyAnalyzer(project, findKmpSourcesTask) {
 
   override val flavorName: String? = null
   override val buildType: String? = null

@@ -7,6 +7,9 @@ import com.autonomousapps.internal.kotlin.multiplatform.FileCollectionMap
 import com.autonomousapps.internal.kotlin.multiplatform.KotlinSources
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.internal.utils.mapToOrderedSet
+import com.autonomousapps.internal.utils.toJson
+import com.autonomousapps.model.internal.kmp.SourceGraph
 import com.autonomousapps.model.internal.kmp.SourceSetFiles
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
@@ -14,6 +17,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import java.io.File
@@ -33,12 +37,22 @@ public abstract class FindKmpSourcesTask : DefaultTask() {
       return project.tasks.register("findKmpSources", FindKmpSourcesTask::class.java) { t ->
         t.projectDir.set(project.layout.projectDirectory)
 
+        t.sourceSetHierarchy.putAll(
+          project.provider {
+            kotlin.sourceSets.associate { sourceSet ->
+              sourceSet.name to sourceSet.dependsOn.mapToOrderedSet { it.name }
+            }
+          }
+        )
+
         val sources = KotlinSources.all(kotlin)
         t.names.set(project.provider(sources.names()))
         t.sourceDirectories.set(project.provider(sources.sourceDirectories()))
-        // TODO(tsr): support for generated source dirs requires at least KGP 2.3 I think
         t.generatedSourceDirectories.set(project.provider(sources.generatedSourceDirectories()))
-        t.output.set(NoVariantOutputPaths(project).findKmpSourcesPath)
+
+        val outputPaths = NoVariantOutputPaths(project)
+        t.output.set(outputPaths.kmpSourcesPath)
+        t.outputGraph.set(outputPaths.kmpSourceGraphPath)
       }
     }
   }
@@ -50,6 +64,9 @@ public abstract class FindKmpSourcesTask : DefaultTask() {
 
   @get:Internal
   public abstract val projectDir: DirectoryProperty
+
+  @get:Input
+  public abstract val sourceSetHierarchy: MapProperty<String, Set<String>>
 
   @get:Input
   public abstract val names: ListProperty<String>
@@ -65,13 +82,18 @@ public abstract class FindKmpSourcesTask : DefaultTask() {
   @get:OutputFile
   public abstract val output: RegularFileProperty
 
+  @get:OutputFile
+  public abstract val outputGraph: RegularFileProperty
+
   @TaskAction public fun action() {
     val output = output.getAndDelete()
+    val outputGraph = outputGraph.getAndDelete()
 
     val base = projectDir.get().asFile
     val sources = buildSourceSetFiles(base)
 
     output.bufferWriteJsonSet(sources)
+    outputGraph.writeText(SourceGraph(sourceSetHierarchy.get()).toJson())
   }
 
   private fun buildSourceSetFiles(base: File): Set<SourceSetFiles> {
