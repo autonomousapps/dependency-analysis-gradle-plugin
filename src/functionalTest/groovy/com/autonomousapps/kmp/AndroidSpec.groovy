@@ -7,7 +7,7 @@ import com.autonomousapps.kmp.projects.AndroidMainProject
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-final class AndroidKmpSpec extends AbstractKmpSpec {
+final class AndroidSpec extends AbstractKmpSpec {
 
   def "androidMain is special (#gradleVersion AGP #agpVersion)"() {
     given:

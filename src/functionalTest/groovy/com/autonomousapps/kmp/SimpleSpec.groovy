@@ -9,7 +9,7 @@ import com.autonomousapps.kmp.projects.JvmTargetProject
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-final class SimpleKmpSpec extends AbstractKmpSpec {
+final class SimpleSpec extends AbstractKmpSpec {
 
   def "can analyze a kmp project with jvm targets (#gradleVersion)"() {
     given:
