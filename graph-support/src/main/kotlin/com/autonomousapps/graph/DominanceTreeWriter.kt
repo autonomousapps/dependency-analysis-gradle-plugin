@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.graph
 
-@Suppress("UnstableApiUsage") // Guava
 public class DominanceTreeWriter<N : Any>(
   private val root: N,
   private val tree: DominanceTree<N>,
   private val nodeWriter: NodeWriter<N>,
 ) {
+
+  public constructor(tree: DominanceTree<N>, nodeWriter: NodeWriter<N>) : this(tree.root, tree, nodeWriter)
 
   private val builder = StringBuilder()
   public val string: String get() = builder.toString()
@@ -69,6 +70,13 @@ public class DominanceTreeWriter<N : Any>(
 
     /** The size of the node itself */
     public fun getSize(node: N): Long?
+  }
+
+  public class SimpleNodeWriter<N : Any> : NodeWriter<N> {
+    override fun comparator(): Comparator<N>? = null
+    override fun toString(node: N): String = node.toString()
+    override fun getTreeSize(node: N): Long? = null
+    override fun getSize(node: N): Long? = null
   }
 
   private companion object {
