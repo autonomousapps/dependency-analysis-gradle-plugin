@@ -14,13 +14,18 @@ import com.google.common.graph.GraphBuilder
  *
  * @see <a href="http://www.hipersoft.rice.edu/grads/publications/dom14.pdf">A Simple, Fast Dominance Algorithm.</a>
  */
-@Suppress("UnstableApiUsage") // Guava graphs
 public class DominanceTree<N : Any>(
   public val backingGraph: Graph<N>,
   public val root: N,
 ) {
 
   public constructor(backingGraph: Graph<N>) : this(backingGraph, backingGraph.root())
+
+  @JvmOverloads
+  public fun writer(
+    root: N = this.root,
+    nodeWriter: DominanceTreeWriter.NodeWriter<N> = DominanceTreeWriter.SimpleNodeWriter(),
+  ): DominanceTreeWriter<N> = DominanceTreeWriter(root, this, nodeWriter)
 
   private val undefined: N? = null
 
