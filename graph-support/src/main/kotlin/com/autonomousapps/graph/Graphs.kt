@@ -10,6 +10,26 @@ import com.google.common.graph.Graphs as GuavaGraphs
 public object Graphs {
 
   /**
+   * Find the [lowest common ancestor](https://en.wikipedia.org/wiki/Lowest_common_ancestor) of [nodes] in
+   * [this graph][this] with [root].
+   *
+   * nb: the direction of the graph obviously makes a big difference in the results of this function. The way this is
+   * used currently, the graph starts out reversed (with edges following depends-on relationships, rather than
+   * dependency relationships).
+   */
+  public fun <N : Any> Graph<N>.lowestCommonAncestor(root: N, nodes: Iterable<N>): N {
+    val ancestors = nodes
+      .map { node -> reachableNodes(node, false) }
+      .reduce { acc, nodes -> acc.intersect(nodes) }
+
+    return if (ancestors.size == 1) {
+      ancestors.first()
+    } else {
+      reversed().topological(root).intersect(ancestors).last()
+    }
+  }
+
+  /**
    * Returns all nodes in this graph that are reachable from [node], optionally including `node` if [excludeSelf] is
    * `false` (it is `true`, or excluded, by default).
    */
@@ -54,6 +74,7 @@ public object Graphs {
 
   /** Returns a reversed version of [this][Graph] graph. */
   public fun <N : Any> Graph<N>.reversed(): Graph<N> {
+    // TODO(tsr): try replacing with `GuavaGraphs.transpose(this)` in a follow-up.
     val builder = GraphBuilder.directed()
       .allowsSelfLoops(false)
       .incidentEdgeOrder(ElementOrder.stable<N>())
