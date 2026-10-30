@@ -282,7 +282,7 @@ final class AdviceFilterProject extends AbstractAndroidProject {
     def advice = [
       removeLibAndroid, removeCoreKtx, removeCommonsIo,
       addAppCompat, addCommonsCollections,
-      changeRxlint
+      changeAndroidxAnnotations, changeRxlint,
     ]
 
     // AGP 9 has different dependency resolution behavior (not entirely sure why)
@@ -327,6 +327,9 @@ final class AdviceFilterProject extends AbstractAndroidProject {
   final addKotlinxCoroutinesAndroidAgp9 = Advice.ofAdd(moduleCoordinates('org.jetbrains.kotlinx:kotlinx-coroutines-android', '1.6.4'), 'runtimeOnly')
   final addCommonsCollections = Advice.ofAdd(
     moduleCoordinates('org.apache.commons:commons-collections4', '4.4'), 'implementation'
+  )
+  final changeAndroidxAnnotations = Advice.ofChange(
+    moduleCoordinates('androidx.annotation:annotation', '1.9.1'), 'api', 'implementation'
   )
   final changeRxlint = Advice.ofChange(
     moduleCoordinates('nl.littlerobots.rxlint:rxlint', '1.7.6'), 'implementation', 'runtimeOnly'

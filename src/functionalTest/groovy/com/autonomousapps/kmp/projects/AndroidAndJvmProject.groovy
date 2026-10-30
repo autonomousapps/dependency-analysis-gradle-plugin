@@ -261,22 +261,16 @@ final class AndroidAndJvmProject extends AbstractKmpProject {
   }
 
   private final Set<Advice> androidAdvice = [
-    // androidMainApi("com.github.ben-manes.caffeine:caffeine:3.2.3")
     Advice.ofRemove(moduleCoordinates(CAFFEINE), 'androidMainApi'),
-    // commonMainApi("com.squareup.okio:okio:3.16.4") (was commonMainImplementation)
+    Advice.ofChange(moduleCoordinates(KOTLINX_COROUTINES_CORE), 'commonMainApi', 'androidMainImplementation'),
     Advice.ofChange(moduleCoordinates(OKIO), 'commonMainImplementation', 'commonMainApi'),
   ]
 
-  //  Advice(com.squareup.okio:okio:3.16.4), fromConfiguration=commonMainImplementation, toConfiguration=commonMainApi),
-  //  Advice(org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2), fromConfiguration=commonMainApi, toConfiguration=null)
   private final Set<Advice> jvmAdvice = [
     Advice.ofRemove(moduleCoordinates(KOTLINX_COROUTINES_CORE), 'commonMainApi'),
     Advice.ofChange(moduleCoordinates(OKIO), 'commonMainImplementation', 'commonMainApi'),
   ]
 
-  //  Advice(com.github.ben-manes.caffeine:caffeine:3.2.3), fromConfiguration=androidMainApi, toConfiguration=null),
-  //  Advice(org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2), fromConfiguration=commonMainApi, toConfiguration=null)
-  //  Advice(com.squareup.okio:okio:3.16.4), fromConfiguration=commonMainImplementation, toConfiguration=commonMainApi),
   private final Set<Advice> multipleAdvice = [
     Advice.ofRemove(moduleCoordinates(CAFFEINE), 'androidMainApi'),
     Advice.ofRemove(moduleCoordinates(KOTLINX_COROUTINES_CORE), 'commonMainApi'),
@@ -298,6 +292,9 @@ final class AndroidAndJvmProject extends AbstractKmpProject {
         }
               
       Existing dependencies which should be modified to be as indicated:
+        androidMain.dependencies {
+          implementation("$KOTLINX_COROUTINES_CORE") (was commonMainApi)
+        }
         commonMain.dependencies {
           api("$OKIO") (was commonMainImplementation)
         }

@@ -23,7 +23,6 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
-@Suppress("UnstableApiUsage")
 class BundlesTest {
 
   private class RealDependenciesHandler(objects: ObjectFactory) : DependenciesHandler(objects)
@@ -91,62 +90,6 @@ class BundlesTest {
 
       assertThat(bundles.hasParent(stdlib)).isTrue()
       assertThat(bundles.hasUsedChild(stdlibJdk8)).isTrue()
-    }
-
-    /**
-     * Because of implicit KMP bundles, will transform:
-     * ```
-     * add okio-jvm to jvmMainApi
-     * ```
-     * to
-     * ```
-     * change okio from commonMainImplementation to commonMainApi
-     * ```
-     * because okio is the implicit parent of okio-jvm, and in this case okio is declared on commonMainImplementation.
-     */
-    @Test fun `transforms add (jvmMainApi) to change (commonMainImplementation to commonMainApi) for kmp`() {
-      // Given a project that has a dependency graph with three nodes (itself, okio, and okio-jvm)
-      val consumer = ProjectCoordinates(":consumer", gvi)
-      val okio = ModuleCoordinates("com.squareup.okio:okio", "3.16.4", gvi)
-      val okioJvm = ModuleCoordinates("com.squareup.okio:okio-jvm", "3.16.4", gvi)
-      val graph = newGraphFrom(
-        // :consumer -> okio -> okioJvm
-        listOf(consumer to okio, okio to okioJvm),
-        sourceKind = KmpSourceKind.JVM_MAIN,
-        configurationName = "jvmCompileClasspath",
-        graphKey = "jvmMain,CUSTOM_JVM,jvmCompileClasspath",
-      )
-
-      // ...a single declaration: commonMainImplementation(libs.okio)
-      val declarations = Declaration(
-        identifier = "com.squareup.okio:okio",
-        version = "3.16.4",
-        configurationName = "commonMainImplementation",
-        gradleVariantIdentification = gvi,
-      ).intoSet()
-
-      // ...usages of project :consumer
-      val unused = Reason.Unused.intoSet()
-      val abi = Reason.Abi("Uses 1 class: okio.Buffer").intoSet()
-      val okioUsages = okio to usage(Bucket.NONE, KmpSourceKind.JVM_MAIN, reasons = unused).intoSet()
-      val okioJvmUsages = okioJvm to usage(Bucket.API, KmpSourceKind.JVM_MAIN, reasons = abi).intoSet()
-      val dependencyUsages = listOf(okioUsages, okioJvmUsages).toMap<Coordinates, Set<Usage>>()
-
-      // When we build the thing under test
-      val bundles = Bundles.of(
-        projectPath = ":consumer",
-        dependencyGraph = graph,
-        bundleRules = dependenciesHandler.serializableBundles(),
-        dependencyUsages = dependencyUsages,
-        declarations = declarations,
-        configurationNames = kmpConfigurationNames,
-        ignoreKtx = false
-      )
-
-      // Then it mutates the advice as expected
-      val addAdvice = Advice.ofAdd(okioJvm, "jvmMainApi")
-      val expectedAdvice = Advice.ofChange(okio, "commonMainImplementation", "commonMainApi")
-      assertThat(bundles.maybeParent(addAdvice, okioJvm)).isEqualTo(expectedAdvice)
     }
 
     /**
@@ -260,7 +203,7 @@ class BundlesTest {
      * ```
      * to
      * ```
-     * change foo from implementation to api
+     * change foo from implementation to debugApi
      * ```
      * because foo-bar is explicitly declared the primary of foo-bar, and in this case foo is declared on
      * implementation.
@@ -310,7 +253,7 @@ class BundlesTest {
 
       // Then it mutates the advice as expected
       val addAdvice = Advice.ofAdd(fooBar, "debugApi")
-      val expectedAdvice = Advice.ofChange(foo, "implementation", "api")
+      val expectedAdvice = Advice.ofChange(foo, "implementation", "debugApi")
       assertThat(bundles.maybeParent(addAdvice, fooBar)).isEqualTo(expectedAdvice)
     }
   }

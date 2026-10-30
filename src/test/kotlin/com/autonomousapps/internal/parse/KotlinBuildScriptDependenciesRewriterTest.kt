@@ -601,15 +601,15 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
 
       sourceFile.writeText(
         """
-      dependencies {
-        if (true) {
-          testImplementation("heart:of-gold:1.+") // stay as is
+        dependencies {
+          if (true) {
+            testImplementation("heart:of-gold:1.+") // stay as is
+          }
+        
+          testImplementation("heart:of-gold:1.+")
+          devImplementation(group = "io.netty", name = "netty-transport-native-unix-common", classifier = "osx-aarch_64")
         }
-
-        testImplementation("heart:of-gold:1.+")
-        devImplementation(group = "io.netty", name = "netty-transport-native-unix-common", classifier = "osx-aarch_64")
-      }
-      """.trimIndent()
+        """.trimIndent()
       )
 
       val advice = setOf(Advice(Coordinates.of("heart:of-gold:1.+"), "testImplementation", "implementation"))
@@ -627,18 +627,18 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
       )
 
       // Then
-      assertThat(parser.rewritten().trimmedLines()).containsExactlyElementsIn(
+      assertThat(parser.rewritten().trim()).isEqualTo(
         """
-      dependencies {
-        if (true) {
-          testImplementation("heart:of-gold:1.+") // stay as is
+        dependencies {
+          if (true) {
+            testImplementation("heart:of-gold:1.+") // stay as is
+          }
+        
+          implementation("heart:of-gold:1.+")
+          devImplementation(group = "io.netty", name = "netty-transport-native-unix-common", classifier = "osx-aarch_64")
         }
-
-        implementation("heart:of-gold:1.+")
-        devImplementation(group = "io.netty", name = "netty-transport-native-unix-common", classifier = "osx-aarch_64")
-      }
-      """.trimIndent().trimmedLines()
-      ).inOrder()
+        """.trimIndent()
+      )
     }
 
     @Test fun `can parse type-safe project accessors`() {
@@ -948,6 +948,100 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
       "jvmMain", "jvmTest",
       "androidMain", "androidTest",
     )
+
+    @Test fun `can move dependencies to different source sets`() {
+      // Given
+      val sourceFile = dir.resolve("build.gradle.kts")
+      sourceFile.writeText(
+        """
+        plugins {
+          id("org.jetbrains.kotlin.multiplatform")
+          id("com.autonomousapps.dependency-analysis")
+        }
+        
+        kotlin {
+          jvm()
+          sourceSets {
+            commonMain.dependencies {
+              api(project.dependencies.platform("com.squareup.okio:okio-bom:3.16.4"))
+              api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+              implementation(project(":producer"))
+              implementation("com.squareup.okio:okio:3.16.4")
+            }
+            commonTest.dependencies {
+              implementation(kotlin("test"))
+              implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+            }
+            jvmMain.dependencies {
+              api("com.github.ben-manes.caffeine:caffeine:3.2.3")
+            }
+            jvmTest.dependencies {
+              implementation(kotlin("test-junit"))
+              implementation("org.assertj:assertj-core:3.27.7")
+              implementation("commons-io:commons-io:2.21.0")
+            }
+          }
+        }
+      """.trimIndent()
+      )
+      val advice = setOf(
+        Advice.ofRemove(Coordinates.of("com.github.ben-manes.caffeine:caffeine:3.2.3"), "jvmMainApi"),
+        Advice.ofAdd(Coordinates.of("com.squareup.okhttp3:okhttp:4.6.0"), "commonMainImplementation"),
+        Advice.ofChange(Coordinates.of("com.squareup.okio:okio:3.16.4"), "commonMainImplementation", "commonMainApi"),
+        Advice.ofChange(
+          Coordinates.of("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"),
+          "commonMainApi",
+          "jvmMainImplementation"
+        ),
+      )
+
+      // When
+      val parser = KotlinBuildScriptDependenciesRewriter.of(
+        projectType,
+        setOf("commonMain", "commonTest", "jvmMain", "jvmTest"),
+        sourceFile,
+        advice,
+        AdvicePrinter(
+          dslKind = DslKind.KOTLIN,
+          projectType = projectType,
+          useTypesafeProjectAccessors = false,
+        )
+      )
+
+      // Then
+      assertThat(parser.rewritten()).isEqualTo(
+        """
+        plugins {
+          id("org.jetbrains.kotlin.multiplatform")
+          id("com.autonomousapps.dependency-analysis")
+        }
+        
+        kotlin {
+          jvm()
+          sourceSets {
+            commonMain.dependencies {
+              api(project.dependencies.platform("com.squareup.okio:okio-bom:3.16.4"))
+              implementation(project(":producer"))
+              api("com.squareup.okio:okio:3.16.4")
+              implementation("com.squareup.okhttp3:okhttp:4.6.0")
+            }
+            commonTest.dependencies {
+              implementation(kotlin("test"))
+              implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+            }
+            jvmMain.dependencies {
+              implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+            }
+            jvmTest.dependencies {
+              implementation(kotlin("test-junit"))
+              implementation("org.assertj:assertj-core:3.27.7")
+              implementation("commons-io:commons-io:2.21.0")
+            }
+          }
+        }
+        """.trimIndent()
+      )
+    }
 
     @Test fun `can update dependencies`() {
       // Given

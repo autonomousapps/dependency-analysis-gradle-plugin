@@ -175,7 +175,11 @@ private class GraphVisitor(
   // TODO: anything to clean up?
   private val kmpSourceGraph = project.kmpSourceGraph?.graph
   private val kmpSourceSetNameMatcher = KmpSourceSetNameMatcher(kmpSourceGraph, primarySourceKind)
-  val reportsBuilder = DependencyTraceReports(buildType = project.buildType, flavor = project.flavor)
+  val reportsBuilder = DependencyTraceReports(
+    buildType = project.buildType,
+    flavor = project.flavor,
+    kmpSourceGraph = project.kmpSourceGraph,
+  )
 
   override fun visit(excludedIdentifier: ExcludedIdentifier, context: GraphViewVisitor.Context) {
     val coordinates = Coordinates.of(excludedIdentifier.identifier)
