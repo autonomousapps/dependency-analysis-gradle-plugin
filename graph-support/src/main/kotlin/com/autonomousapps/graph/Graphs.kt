@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.graph
 
-import com.google.common.graph.ElementOrder
 import com.google.common.graph.Graph
-import com.google.common.graph.GraphBuilder
 import com.google.common.graph.Graphs as GuavaGraphs
 
 public object Graphs {
@@ -73,19 +71,7 @@ public object Graphs {
   }
 
   /** Returns a reversed version of [this][Graph] graph. */
-  public fun <N : Any> Graph<N>.reversed(): Graph<N> {
-    // TODO(tsr): try replacing with `GuavaGraphs.transpose(this)` in a follow-up.
-    val builder = GraphBuilder.directed()
-      .allowsSelfLoops(false)
-      .incidentEdgeOrder(ElementOrder.stable<N>())
-      .immutable<N>()
-
-    // Not all nodes have an edge
-    nodes().forEach { node -> builder.addNode(node) }
-    edges().forEach { edge -> builder.putEdge(edge.target(), edge.source()) }
-
-    return builder.build()
-  }
+  public fun <N : Any> Graph<N>.reversed(): Graph<N> = GuavaGraphs.transpose(this)
 
   /**
    * Returns the first node it finds that has an in-degree of 0. This is the root node if this DAG contains only one
