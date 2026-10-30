@@ -7,7 +7,7 @@ import com.autonomousapps.kmp.projects.JvmTargetProject
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
-class SimpleKmpRewriteSpec extends AbstractKmpSpec {
+class SimpleRewriteSpec extends AbstractKmpSpec {
 
   def "can fix dependencies for a kmp project with jvm targets (#gradleVersion)"() {
     given:
