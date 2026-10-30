@@ -3,6 +3,7 @@
 package com.autonomousapps.internal.parse
 
 import com.autonomousapps.exception.BuildScriptParseException
+import com.autonomousapps.internal.DependencyScope
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.antlr.v4.runtime.CharStream
 import com.autonomousapps.internal.antlr.v4.runtime.CommonTokenStream
@@ -20,6 +21,7 @@ import com.autonomousapps.internal.parse.advice.AdviceFinder
 import com.autonomousapps.internal.squareup.cash.grammar.KotlinParser.*
 import com.autonomousapps.internal.squareup.cash.grammar.KotlinParserBaseListener
 import com.autonomousapps.internal.utils.filterToOrderedSet
+import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.internal.utils.ifNotEmpty
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.internal.ProjectType
@@ -95,7 +97,7 @@ internal class KotlinBuildScriptDependenciesRewriter(
     }
 
     if (isInKotlinSourceSetsBlock(ctx)) {
-      inKotlinSourceSetsBlock
+      inKotlinSourceSetsBlock = true
     }
 
     if (ctx.isDependencies) {
@@ -421,7 +423,7 @@ internal class KotlinBuildScriptDependenciesRewriter(
             input = input,
             tokens = tokens,
             errorListener = errorListener,
-            advice = advice,
+            advice = preprocessAdvice(projectType, advice),
             printer = advicePrinter,
             reversedDependencyMap = reversedDependencyMap,
             projectType = projectType,
@@ -429,6 +431,35 @@ internal class KotlinBuildScriptDependenciesRewriter(
           )
         }
       ).listener()
+    }
+
+    /**
+     * For KMP projects, we split change-advice into a pair of remove-advice and add-advice, if the advice is moving
+     * to a different source set. This is the simplest approach due to KMP projects having different blocks for each
+     * source set's dependencies.
+     *
+     * @see <a href="https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1937">Issue 1937</a>
+     */
+    private fun preprocessAdvice(projectType: ProjectType, advice: Set<Advice>): Set<Advice> {
+      // Leave non-KMP projects alone
+      if (projectType != ProjectType.KMP) return advice
+
+      return advice.flatMapToSet { a ->
+        if (a.isAnyChange()) {
+          val fromSourceSet = DependencyScope.sourceSetName(a.fromConfiguration!!)
+          val toSourceSet = DependencyScope.sourceSetName(a.toConfiguration!!)
+          if (fromSourceSet != toSourceSet) {
+            setOf(
+              Advice.ofRemove(a.coordinates, a.fromConfiguration),
+              Advice.ofAdd(a.coordinates, a.toConfiguration),
+            )
+          } else {
+            setOf(a)
+          }
+        } else {
+          setOf(a)
+        }
+      }
     }
   }
 }

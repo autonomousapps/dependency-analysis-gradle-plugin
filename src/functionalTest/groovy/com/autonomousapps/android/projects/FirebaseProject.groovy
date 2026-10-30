@@ -35,16 +35,14 @@ final class FirebaseProject extends AbstractAndroidProject {
         a.withBuildScript { bs ->
           bs.plugins = androidApp(false)
           bs.android = defaultAndroidAppBlock()
-          bs.dependencies = dependencies
+          bs.dependencies(
+            appcompat("implementation"),
+            firebaseAnalytics("implementation"),
+          )
         }
       }
       .write()
   }
-
-  private List<Dependency> dependencies = [
-    appcompat("implementation"),
-    firebaseAnalytics("implementation")
-  ]
 
   private sources = [
     new Source(

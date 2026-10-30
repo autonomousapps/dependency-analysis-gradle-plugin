@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates
 
+import com.autonomousapps.graph.Graphs.lowestCommonAncestor
 import com.autonomousapps.internal.utils.LexicographicIterableComparator
 import com.autonomousapps.internal.utils.mapToOrderedSet
 import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.declaration.Bucket
+import com.autonomousapps.model.internal.kmp.SourceGraph
+import com.autonomousapps.model.source.KmpSourceKind
 import com.autonomousapps.model.source.SourceKind
 import com.squareup.moshi.JsonClass
 
@@ -18,12 +21,13 @@ import com.squareup.moshi.JsonClass
  */
 internal class DependencyTraceReports(
   private val buildType: String?,
-  private val flavor: String?
+  private val flavor: String?,
+  private val kmpSourceGraph: SourceGraph?,
 ) {
 
-  // key is source set name (jvmMain, commonMain, etc.)
-  private val builders = sortedMapOf<String, DependencyTraceReport.Builder>()
-  private val sourceSets = mutableMapOf<Coordinates, String>()
+  // TODO(tsr): this results in one report per dependency, which seems weird (but works). Can we reduce this to one
+  //  report per source kind? is that worthwhile?
+  private val builders = sortedMapOf<Coordinates, DependencyTraceReport.Builder>()
 
   val reports: Set<DependencyTraceReport> get() = builders.values.mapToOrderedSet { it.build() }
 
@@ -32,13 +36,11 @@ internal class DependencyTraceReports(
    * only one bucket.
    */
   fun reason(sourceKind: SourceKind, coordinates: Coordinates, kind: DependencyTraceReport.Kind, reason: Reason) {
-    // We associate each `coordinates` with a single SourceKind (source set).
-    sourceSets[coordinates] = sourceKind.name
-
     // Get or create a new builder, mutating it as well.
-    val builder = builders[sourceKind.name] ?: DependencyTraceReport.Builder(buildType, flavor, sourceKind)
+    val builder = builders[coordinates] ?: DependencyTraceReport.Builder(buildType, flavor, kmpSourceGraph)
+    builder.withSourceKind(sourceKind)
     builder[coordinates, kind] = reason
-    builders[sourceKind.name] = builder
+    builders[coordinates] = builder
   }
 
   /**
@@ -46,8 +48,7 @@ internal class DependencyTraceReports(
    * one bucket.
    */
   fun bucket(coordinates: Coordinates, kind: DependencyTraceReport.Kind, bucket: Bucket) {
-    val key = sourceSets[coordinates] ?: error("No source set for $coordinates")
-    val builder = builders[key] ?: error("No report builder for $coordinates")
+    val builder = builders[coordinates] ?: error("No report builder for $coordinates")
     builder[coordinates, kind] = bucket
   }
 }
@@ -93,19 +94,16 @@ internal data class DependencyTraceReport(
   class Builder(
     private val buildType: String?,
     private val flavor: String?,
-    val sourceKind: SourceKind,
+    private val kmpSourceGraph: SourceGraph?,
   ) {
+    private val sourceKinds = mutableSetOf<SourceKind>()
 
     private val dependencies = mutableMapOf<Coordinates, Trace>()
     private val annotationProcessors = mutableMapOf<Coordinates, Trace>()
     private val reasons = mutableMapOf<Coordinates, MutableSet<Reason>>()
 
-    operator fun set(coordinates: Coordinates, kind: Kind, bucket: Bucket) {
-      if (kind == Kind.ANNOTATION_PROCESSOR) {
-        handleAnnotationProcessor(coordinates, bucket)
-      } else {
-        handleDependency(coordinates, bucket)
-      }
+    fun withSourceKind(sourceKind: SourceKind) {
+      sourceKinds.add(sourceKind)
     }
 
     operator fun set(coordinates: Coordinates, kind: Kind, reason: Reason) {
@@ -113,6 +111,14 @@ internal data class DependencyTraceReport(
         handleAnnotationProcessor(coordinates, reason)
       } else {
         handleDependency(coordinates, reason)
+      }
+    }
+
+    operator fun set(coordinates: Coordinates, kind: Kind, bucket: Bucket) {
+      if (kind == Kind.ANNOTATION_PROCESSOR) {
+        handleAnnotationProcessor(coordinates, bucket)
+      } else {
+        handleDependency(coordinates, bucket)
       }
     }
 
@@ -188,13 +194,25 @@ internal data class DependencyTraceReport(
       return map[coordinates]?.filterIsInstance<Reason.BinaryIncompatible>()?.isNotEmpty() == true
     }
 
-    fun build(): DependencyTraceReport = DependencyTraceReport(
-      buildType = buildType,
-      flavor = flavor,
-      sourceKind = sourceKind,
-      dependencies = dependencies.withReasons(),
-      annotationProcessors = annotationProcessors.withReasons()
-    )
+    fun build(): DependencyTraceReport {
+      val sourceKind = if (sourceKinds.size == 1) {
+        sourceKinds.first()
+      } else if (kmpSourceGraph != null) {
+        val sourceSetNames = sourceKinds.map { it.name }
+        val lca = kmpSourceGraph.graph.lowestCommonAncestor(KmpSourceKind.COMMON_MAIN_NAME, sourceSetNames)
+        sourceKinds.first { it.name == lca }
+      } else {
+        error("Could not determine sourceKind for dependency trace report. Available SourceKinds: $sourceKinds")
+      }
+
+      return DependencyTraceReport(
+        buildType = buildType,
+        flavor = flavor,
+        sourceKind = sourceKind,
+        dependencies = dependencies.withReasons(),
+        annotationProcessors = annotationProcessors.withReasons(),
+      )
+    }
 
     private fun Map<Coordinates, Trace>.withReasons(): Set<Trace> = values.mapToSet {
       val reasons = reasons[it.coordinates] ?: error("No reasons found for ${it.coordinates}")
