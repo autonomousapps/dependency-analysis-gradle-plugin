@@ -31,13 +31,17 @@ public class Source @JvmOverloads constructor(
   public companion object {
     public const val DEFAULT_SOURCE_SET: String = "main"
 
+    /** A [Character.isJavaIdentifierStart] followed by zero or more [Character.isJavaIdentifierPart] characters. */
+    private const val PKG_PART = "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*"
+
     /**
      * Match a JVM package declaration, capturing the package.
      *
+     * START-LINE "package " [PKG_PART] + zero or more ("." [PKG_PART]) + optional ";" END-LINE
+     *
      * `?:` => non-capturing group.
      */
-    private val PACKAGE_REGEX =
-      "package ((?:\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*);?".toRegex()
+    private val PACKAGE_REGEX = "^package (($PKG_PART)(?:\\.$PKG_PART)*);?$".toRegex(RegexOption.MULTILINE)
 
     /**
      * Match a JVM clas-like declaration, capturing the `class`, `interface`, `@interface`, or `object` (Kotlin) name.
@@ -45,7 +49,7 @@ public class Source @JvmOverloads constructor(
      * `?:` => non-capturing group.
      */
     private val CLASS_NAME_REGEX =
-      "(?:class|@?interface|object) (\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)".toRegex()
+      "(?:class|@?interface|object) ($PKG_PART)".toRegex()
 
     /**
      * Usage example:
