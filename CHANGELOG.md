@@ -1,5 +1,9 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.20.1
+* [fix]: resolve various issues with KMP-related advice and rewriting capabilities.
+* [fix]: find the lowest common ancestor in a KMP source set hierarchy.
+
 # Version 3.20.0
 * [breaking]: KMP project analysis requires Kotlin 2.3.0+ and Gradle 9.4.0+.
 * [fix]: improve association of advice to KMP source sets.
