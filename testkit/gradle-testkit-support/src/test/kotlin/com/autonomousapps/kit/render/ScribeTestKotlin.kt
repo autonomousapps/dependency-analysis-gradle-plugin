@@ -711,4 +711,38 @@ internal class ScribeTestKotlin {
       )
     }
   }
+
+  @Nested inner class KmpTest {
+    @Test fun `can render a custom hierarchy group`() {
+      val kotlin = with(Kotlin.Builder()) {
+        applyDefaultHierarchyTemplate { template ->
+          template.common { common ->
+            common.withAndroid()
+            common.group("foo") { foo ->
+              foo.withJvm()
+              foo.withAndroid()
+            }
+          }
+        }
+        build()
+      }
+
+      assertThat(kotlin.render(scribe)).isEqualTo(
+        """
+          kotlin {
+            @OptIn(ExperimentalKotlinGradlePluginApi::class) applyDefaultHierarchyTemplate {
+              common {
+                withAndroid()
+                group("foo") {
+                  withJvm()
+                  withAndroid()
+                }
+              }
+            }
+          }
+          
+        """.trimIndent()
+      )
+    }
+  }
 }
