@@ -3,6 +3,7 @@
 package com.autonomousapps.kit.gradle
 
 import com.autonomousapps.kit.gradle.android.AndroidLibraryTarget
+import com.autonomousapps.kit.gradle.kotlin.HierarchyTemplate
 import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
 import com.autonomousapps.kit.gradle.kotlin.KotlinSourceSets
 import com.autonomousapps.kit.render.Element
@@ -14,6 +15,7 @@ public class Kotlin @JvmOverloads constructor(
   private val jvmToolchain: JvmToolchain? = JvmToolchain.DEFAULT,
   private val androidLibraryTarget: AndroidLibraryTarget? = null,
   private val jvmTarget: KotlinJvmTarget? = null,
+  private val hierarchyTemplate: HierarchyTemplate? = null,
   private val sourceSets: KotlinSourceSets? = null,
 ) : Element.Block {
 
@@ -23,6 +25,7 @@ public class Kotlin @JvmOverloads constructor(
     jvmToolchain?.render(s)
     jvmTarget?.render(s)
     androidLibraryTarget?.render(s)
+    hierarchyTemplate?.render(s)
     sourceSets?.render(s)
   }
 
@@ -33,12 +36,26 @@ public class Kotlin @JvmOverloads constructor(
     public var jvmTarget: KotlinJvmTarget? = null
 
     private var androidLibraryTargetBuilder: AndroidLibraryTarget.Builder? = null
+    private var hierarchyTemplateBuilder: HierarchyTemplate.Builder? = null
     private var sourceSetsBuilder: KotlinSourceSets.Builder? = null
 
+    public fun android(block: (AndroidLibraryTarget.Builder) -> Unit) {
+      val androidLibraryTargetBuilder = androidLibraryTargetBuilder ?: AndroidLibraryTarget.Builder()
+      block(androidLibraryTargetBuilder)
+      this.androidLibraryTargetBuilder = androidLibraryTargetBuilder
+    }
+
+    @Deprecated("Use android", ReplaceWith("android"))
     public fun androidLibrary(block: (AndroidLibraryTarget.Builder) -> Unit) {
       val androidLibraryTargetBuilder = androidLibraryTargetBuilder ?: AndroidLibraryTarget.Builder()
       block(androidLibraryTargetBuilder)
       this.androidLibraryTargetBuilder = androidLibraryTargetBuilder
+    }
+
+    public fun applyDefaultHierarchyTemplate(block: (HierarchyTemplate.Builder) -> Unit) {
+      val hierarchyTemplateBuilder = hierarchyTemplateBuilder ?: HierarchyTemplate.Builder()
+      block(hierarchyTemplateBuilder)
+      this.hierarchyTemplateBuilder = hierarchyTemplateBuilder
     }
 
     public fun sourceSets(block: (KotlinSourceSets.Builder) -> Unit) {
@@ -52,6 +69,7 @@ public class Kotlin @JvmOverloads constructor(
         jvmToolchain = jvmToolchain,
         androidLibraryTarget = androidLibraryTargetBuilder?.build(),
         jvmTarget = jvmTarget,
+        hierarchyTemplate = hierarchyTemplateBuilder?.build(),
         sourceSets = sourceSetsBuilder?.build(),
       )
     }

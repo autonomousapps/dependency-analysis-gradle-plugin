@@ -49,6 +49,11 @@ final class ReplaceWithTransitiveSpec extends AbstractKmpSpec {
     then: 'buildHealth has expected results'
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)
 
+    // TODO(tsr): this is failing to remove unused okhttp. And when adding a transitive to this same source set, it's
+    //  adding it to `commonJvmMain.dependencies {}`, which will fail with `Unresolved reference 'commonJvmMain'.`.
+    //getByName("commonJvmMain").dependencies {
+    //  implementation("com.squareup.okhttp3:okhttp:4.6.0")
+    //}
     when: 'fixDependencies'
     build(gradleVersion, gradleProject.rootDir, ':consumer:fixDependencies')
 
