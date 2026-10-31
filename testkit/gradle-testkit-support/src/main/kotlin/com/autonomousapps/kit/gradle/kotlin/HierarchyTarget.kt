@@ -8,7 +8,6 @@ import com.autonomousapps.kit.render.Scribe
 public class HierarchyTarget(
   public val target: String
 ) : Element.Line {
-
   override fun render(scribe: Scribe): String = scribe.line { s ->
     s.append(target)
   }

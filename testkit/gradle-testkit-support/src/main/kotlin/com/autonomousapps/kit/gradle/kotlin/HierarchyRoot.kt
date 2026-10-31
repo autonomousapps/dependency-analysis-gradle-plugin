@@ -30,9 +30,8 @@ public class HierarchyRoot(
     }
 
     public fun group(group: String, block: (HierarchyGroup.Builder) -> Unit) {
-      val builder = groups[group] ?: HierarchyGroup.Builder(group)
+      val builder = groups.computeIfAbsent(group) { HierarchyGroup.Builder(group) }
       block(builder)
-      groups[group] = builder
     }
 
     public fun build(): HierarchyRoot {

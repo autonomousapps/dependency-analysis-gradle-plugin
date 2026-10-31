@@ -70,10 +70,6 @@ public class AndroidLibraryTarget(
 
     private var hostTestBuilder: AndroidLibraryHostTest.Builder? = null
 
-    public fun compileSdk() {
-
-    }
-
     public fun withJava() {
       withJava = true
     }
@@ -91,7 +87,6 @@ public class AndroidLibraryTarget(
     public fun build(): AndroidLibraryTarget {
       val namespace = requireNotNull(namespace) { "'namespace' must not be null" }
       val compileSdk = requireNotNull(compileSdk) { "'compileSdk' must not be null" }
-      //val minSdk = requireNotNull(minSdk) { "'minSdk' must not be null" }
       val jvmTarget = compileTarget?.let { CompilerJvmTarget(it) }
 
       return AndroidLibraryTarget(

@@ -25,7 +25,7 @@ public class HierarchyTemplate(
     }
 
     public fun build(): HierarchyTemplate {
-      val rootBuilder = requireNotNull(rootBuilder) { "rootBuilder was null" }
+      val rootBuilder = requireNotNull(rootBuilder) { "'rootBuilder' must not be null" }
       return HierarchyTemplate(rootBuilder.build())
     }
   }
