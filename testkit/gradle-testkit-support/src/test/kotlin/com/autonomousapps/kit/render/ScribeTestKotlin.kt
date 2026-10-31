@@ -730,7 +730,7 @@ internal class ScribeTestKotlin {
       assertThat(kotlin.render(scribe)).isEqualTo(
         """
           kotlin {
-            applyDefaultHierarchyTemplate {
+            @OptIn(ExperimentalKotlinGradlePluginApi::class) applyDefaultHierarchyTemplate {
               common {
                 withAndroid()
                 group("foo") {
