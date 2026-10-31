@@ -1,5 +1,8 @@
 Graph-Support Changelog
 
+# Version 0.14.0 (unreleased)
+* [refactor]: simplify `Graphs.reversed()`.
+
 # Version 0.13.0
 * [feat]: simplify some interactions with various graph structures.
 * [feat]: add graph.lowestCommonAncestor()
@@ -14,36 +17,36 @@ Graph-Support Changelog
 * Compiled against Kotlin 2.2 and Gradle 9.4.1.
 
 # Version 0.9.0
-* [Feat]: add `Graphs.reversed()`.
+* [feat]: add `Graphs.reversed()`.
 
 # Version 0.8.3
-* [Fix] Remove auto-applied kotlin-stdlib for Gradle 8.11 support.
+* [fix] Remove auto-applied kotlin-stdlib for Gradle 8.11 support.
 
 # Version 0.8.2
-* [Fix] Forcibly downgrade kotlin-stdlib to 2.0.21 for Gradle 8.11 support.
+* [fix] Forcibly downgrade kotlin-stdlib to 2.0.21 for Gradle 8.11 support.
 
 # Version 0.8.1
-* [Fix] Downgrade Kotlin to 2.0.21 for Gradle 8.11 support.
+* [fix] Downgrade Kotlin to 2.0.21 for Gradle 8.11 support.
 
 # Version 0.8
-* [Fix] set apiVersion and languageVersion to 2.0 for Gradle 8.11 support.
+* [fix] set apiVersion and languageVersion to 2.0 for Gradle 8.11 support.
 
 # Version 0.7
-* [Feat]: Build with Gradle 9.0.0, change API to non-nullable.
+* [feat]: Build with Gradle 9.0.0, change API to non-nullable.
 
 # Version 0.6
-* [Fix]: `DominanceTree` doesn't loop forever.
+* [fix]: `DominanceTree` doesn't loop forever.
 
 # Version 0.5
-* [New] `Graphs` has new overloads of `reachableNodes()` that accepts a predicate for node-matching.
+* [new] `Graphs` has new overloads of `reachableNodes()` that accepts a predicate for node-matching.
 
 # Version 0.4
-* [New] `Graphs` now has `Graph<N>.roots()` and `Graph<N>.shortestPaths(source)` methods.
-* [New] `ShortestPaths` now has a `distanceTo(other)` method.
-* [Chore] Bump Guava to 33.3.1-jre.
+* [new] `Graphs` now has `Graph<N>.roots()` and `Graph<N>.shortestPaths(source)` methods.
+* [new] `ShortestPaths` now has a `distanceTo(other)` method.
+* [chore] Bump Guava to 33.3.1-jre.
 
 # Version 0.3
-* [New] Output dominator tree results in JSON format including size and total size of deps. 
+* [new] Output dominator tree results in JSON format including size and total size of deps. 
 
 # Version 0.2
 Second release.
