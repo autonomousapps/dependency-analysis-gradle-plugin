@@ -4,11 +4,15 @@ package com.autonomousapps.kmp.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Imports
+import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.kit.gradle.Dependency.api
+import static com.autonomousapps.kit.gradle.Dependency.implementation
 
 /**
  * Inspired by https://github.com/slackhq/circuit/blob/b2c06c4891a114645e39c02c1fa852d7db62d827/backstack/build.gradle.kts#L53-L58.
@@ -36,125 +40,38 @@ final class HierarchyGroupsProject extends AbstractKmpProject {
       .withSubproject('consumer') { s ->
         s.sources = consumerSources()
         s.withBuildScript { bs ->
+          // TODO(tsr): would be nice if these imports were added automatically
           bs.imports = Imports.of(
             'com.android.build.api.withAndroid',
             'org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi'
           )
-
           bs.plugins = androidKmpLibrary
-
-          // TODO(tsr): model all this
-          bs.withKotlin(
-            '''
-            kotlin {
-              android {
-                namespace = "com.example"
-                compileSdk { version = release(37) }
-              }
-              jvm()
-            
-              @OptIn(ExperimentalKotlinGradlePluginApi::class)
-              applyDefaultHierarchyTemplate {
-                common {
-                  group("commonJvm") {
-                    withJvm()
-                    withAndroid()
-                  }
+          bs.kotlinKmp { k ->
+            k.jvmTarget = KotlinJvmTarget.default()
+            k.android { a ->
+              a.namespace = 'com.example'
+              a.compileSdk = 37
+            }
+            k.applyDefaultHierarchyTemplate { template ->
+              template.common { common ->
+                common.group('commonJvm') { commonJvm ->
+                  commonJvm.withJvm()
+                  commonJvm.withAndroid()
                 }
               }
-              
-              sourceSets {
-                commonMain {
-                  dependencies {
-                    api("org.apache.commons:commons-compress:1.28.0")  
-                  }
-                }
-                commonTest {
-                  dependencies {
-                    implementation("org.apache.commons:commons-configuration2:2.14.0")
-                  }
-                }
-                
-                maybeCreate("commonJvmMain").apply {
-                  dependencies {
-                    implementation("com.squareup.okhttp3:okhttp:4.6.0")
-                  }
-                }
-                
-                maybeCreate("commonJvmTest").apply {
-                  dependencies {
-                    //implementation(TODO)
-                  }
-                }
+            }
+            k.sourceSets { sourceSets ->
+              sourceSets.commonMain { commonMain ->
+                commonMain.dependencies(api('org.apache.commons:commons-compress:1.28.0'))
               }
-            }'''.stripIndent()
-          )
-
-//          bs.kotlinKmp { k ->
-//            //k.jvm()               // This is what `KotlinJvmTarget.default()` does.
-//            k.jvmTarget = KotlinJvmTarget.default()
-//            k.sourceSets { sourceSets ->
-//              sourceSets.commonMain { commonMain ->
-//                commonMain.dependencies(
-//                  // Should be `api('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0')`
-//                  implementation('androidx.compose.runtime:runtime:1.11.4'),
-//
-//                  // Unused, but provides commons-io
-//                  commonsCompress('implementation'),
-//
-//                  // Unused, but provides commons-text
-//                  commonsConfiguration2('implementation'),
-//                )
-//              }
-//              sourceSets.commonTest { commonTest ->
-//                commonTest.dependencies(
-//                  // Unused, but provides used okio
-//                  okHttp('implementation')
-//                )
-//              }
-//            }
-//          }
-
-          // To ensure our source-finding code accounts for nonstandard and generated directories
-//          bs.withKotlin(
-//            '''\
-//            val generatorTask = project.tasks.register("genSource") {
-//              val outputDirectory = project.layout.buildDirectory.dir("gen/kotlin")
-//              outputs.dir(outputDirectory)
-//              doLast {
-//                // no package
-//                outputDirectory.get().file("generated.kt").asFile.writeText(
-//                  """
-//                    import org.apache.commons.text.CaseUtils // commons-text
-//
-//                    fun printHello() {
-//                      println("hello")
-//                    }
-//
-//                    fun toCamelCase(s: String) = CaseUtils.toCamelCase(s, false)
-//                  """.trimIndent()
-//                )
-//
-//                // with package
-//                val out = outputDirectory.get().file("a/b/generated.kt").asFile
-//                out.parentFile.mkdirs()
-//                out.writeText(
-//                  """
-//                    package a.b
-//
-//                    fun printHello() {
-//                      println("hello")
-//                    }
-//                  """.trimIndent()
-//                )
-//              }
-//            }
-//
-//            kotlin.sourceSets.commonMain.configure {
-//              generatedKotlin.srcDir(generatorTask)
-//              kotlin.srcDir(project.layout.projectDirectory.dir("src/more/kotlin"))
-//            }'''.stripIndent()
-//          )
+              sourceSets.commonTest { commonTest ->
+                commonTest.dependencies(implementation('org.apache.commons:commons-configuration2:2.14.0'))
+              }
+              sourceSets.named("commonJvmMain", true) { commonJvmMain ->
+                commonJvmMain.dependencies(implementation('com.squareup.okhttp3:okhttp:4.6.0'))
+              }
+            }
+          }
         }
       }
       .write()
@@ -272,14 +189,12 @@ final class HierarchyGroupsProject extends AbstractKmpProject {
       }
       
       kotlin {
-        android {
-          namespace = "com.example"
-          compileSdk { version = release(37) }
-        }
         jvm()
-      
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
-        applyDefaultHierarchyTemplate {
+        androidLibrary {
+          namespace = "com.example"
+          compileSdk = 37
+        }
+        @OptIn(ExperimentalKotlinGradlePluginApi::class) applyDefaultHierarchyTemplate {
           common {
             group("commonJvm") {
               withJvm()
@@ -287,28 +202,14 @@ final class HierarchyGroupsProject extends AbstractKmpProject {
             }
           }
         }
-      
         sourceSets {
-          commonMain {
-            dependencies {
-            }
+          commonMain.dependencies {
           }
-          commonTest {
-            dependencies {
-              implementation("org.apache.commons:commons-text:1.15.0")
-            }
+          commonTest.dependencies {
+            implementation("org.apache.commons:commons-text:1.15.0")
           }
-      
-          maybeCreate("commonJvmMain").apply {
-            dependencies {
-              implementation("com.squareup.okhttp3:okhttp:4.6.0")
-            }
-          }
-      
-          maybeCreate("commonJvmTest").apply {
-            dependencies {
-              //implementation(TODO)
-            }
+          getByName("commonJvmMain").dependencies {
+            implementation("com.squareup.okhttp3:okhttp:4.6.0")
           }
           commonJvmMain.dependencies {
             api("com.squareup.okio:okio:2.6.0")

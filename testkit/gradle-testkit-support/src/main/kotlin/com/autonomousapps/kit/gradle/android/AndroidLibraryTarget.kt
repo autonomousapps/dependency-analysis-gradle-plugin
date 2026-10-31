@@ -41,7 +41,7 @@ import com.autonomousapps.kit.render.Scribe
 public class AndroidLibraryTarget(
   private val namespace: String,
   private val compileSdk: Int,
-  private val minSdk: Int,
+  private val minSdk: Int?,
   private val withJava: Boolean,
   private val hostTest: AndroidLibraryHostTest?,
   private val compilerJvmTarget: CompilerJvmTarget?,
@@ -53,7 +53,7 @@ public class AndroidLibraryTarget(
   override fun render(scribe: Scribe): String = scribe.block(this) { s ->
     s.line { it.append("namespace = ").appendQuoted(namespace) }
     s.line { it.append("compileSdk = ").append(compileSdk) }
-    s.line { it.append("minSdk = ").append(minSdk) }
+    minSdk?.let { sdk -> s.line { it.append("minSdk = ").append(sdk) } }
 
     if (withJava) s.line { it.append("withJava()") }
 
@@ -69,6 +69,10 @@ public class AndroidLibraryTarget(
     public var compileTarget: Int? = null
 
     private var hostTestBuilder: AndroidLibraryHostTest.Builder? = null
+
+    public fun compileSdk() {
+
+    }
 
     public fun withJava() {
       withJava = true
@@ -87,7 +91,7 @@ public class AndroidLibraryTarget(
     public fun build(): AndroidLibraryTarget {
       val namespace = requireNotNull(namespace) { "'namespace' must not be null" }
       val compileSdk = requireNotNull(compileSdk) { "'compileSdk' must not be null" }
-      val minSdk = requireNotNull(minSdk) { "'minSdk' must not be null" }
+      //val minSdk = requireNotNull(minSdk) { "'minSdk' must not be null" }
       val jvmTarget = compileTarget?.let { CompilerJvmTarget(it) }
 
       return AndroidLibraryTarget(
