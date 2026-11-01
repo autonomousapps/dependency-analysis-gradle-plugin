@@ -219,6 +219,7 @@ final class JvmTargetProject extends AbstractKmpProject {
     Advice.ofAdd(moduleCoordinates(OK_HTTP), 'commonMainImplementation'),
     Advice.ofChange(moduleCoordinates(OKIO), 'commonMainImplementation', 'commonMainApi'),
     Advice.ofChange(moduleCoordinates(KOTLINX_COROUTINES_CORE), 'commonMainApi', 'jvmMainImplementation'),
+    Advice.ofChange(moduleCoordinates('org.jetbrains.kotlin:kotlin-test-junit:2.3.21'), 'jvmTestImplementation', 'commonTestImplementation'),
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [
@@ -242,6 +243,9 @@ final class JvmTargetProject extends AbstractKmpProject {
       Existing dependencies which should be modified to be as indicated:
         commonMain.dependencies {
           api("$OKIO") (was commonMainImplementation)
+        }
+        commonTest.dependencies {
+          implementation("org.jetbrains.kotlin:kotlin-test-junit:2.3.21") (was jvmTestImplementation)
         }
         jvmMain.dependencies {
           implementation("$KOTLINX_COROUTINES_CORE") (was commonMainApi)
@@ -275,6 +279,7 @@ final class JvmTargetProject extends AbstractKmpProject {
           commonTest.dependencies {
             implementation(kotlin("test"))
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+            implementation("org.jetbrains.kotlin:kotlin-test-junit:2.3.21")
           }
           jvmMain.dependencies {
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")

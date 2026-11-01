@@ -10,7 +10,9 @@ import com.autonomousapps.internal.kotlin.computeAbi
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.filterToClassFiles
 import com.autonomousapps.internal.utils.fromJson
+import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.model.internal.kmp.SourceSetFiles
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -44,6 +46,12 @@ public abstract class AbiAnalysisTask @Inject constructor(
   @get:Classpath
   public abstract val kotlinMetadataClasspath: ConfigurableFileCollection
 
+  /** Only available in KMP projects. */
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFile
+  public abstract val kmpSources: RegularFileProperty
+
   @get:Optional
   @get:Input
   public abstract val exclusions: Property<String>
@@ -65,6 +73,8 @@ public abstract class AbiAnalysisTask @Inject constructor(
       it.classFiles.setFrom(classes.asFileTree.filterToClassFiles().files)
       // Android projects
       it.classFiles.from(androidClassFiles())
+      // KMP projects
+      it.kmpSources.set(kmpSources)
 
       it.exclusions.set(exclusions)
       it.output.set(output)
@@ -75,6 +85,7 @@ public abstract class AbiAnalysisTask @Inject constructor(
   public interface AbiAnalysisParameters : WorkParameters {
     public val sourceFiles: ConfigurableFileCollection
     public val classFiles: ConfigurableFileCollection
+    public val kmpSources: RegularFileProperty
     public val exclusions: Property<String>
     public val output: RegularFileProperty
     public val abiDump: RegularFileProperty
@@ -88,9 +99,10 @@ public abstract class AbiAnalysisTask @Inject constructor(
 
       val sourceFiles = parameters.sourceFiles.files
       val classFiles = parameters.classFiles.files
+      val kmpSources = parameters.kmpSources.fromNullableJsonSet<SourceSetFiles>()
       val exclusions = parameters.exclusions.orNull?.fromJson<AbiExclusions>() ?: AbiExclusions.NONE
 
-      val explodingAbi = computeAbi(classFiles, sourceFiles, exclusions, outputAbiDump)
+      val explodingAbi = computeAbi(classFiles, sourceFiles, kmpSources, exclusions, outputAbiDump)
 
       output.bufferWriteJsonSet(explodingAbi)
     }

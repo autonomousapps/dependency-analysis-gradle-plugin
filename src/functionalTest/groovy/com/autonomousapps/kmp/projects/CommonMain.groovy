@@ -42,11 +42,6 @@ final class CommonMain extends AbstractKmpProject {
               }
               sourceSets.commonTest { commonTest ->
                 commonTest.dependencies(
-                  implementation('kotlin("test")'),
-                )
-              }
-              sourceSets.jvmTest { jvmTest ->
-                jvmTest.dependencies(
                   implementation('kotlin("test-junit")'),
                 )
               }

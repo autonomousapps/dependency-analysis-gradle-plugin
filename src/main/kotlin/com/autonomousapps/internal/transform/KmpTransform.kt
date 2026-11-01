@@ -12,6 +12,7 @@ import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import com.autonomousapps.model.internal.declaration.Declaration
 import com.autonomousapps.model.internal.intermediates.Reason
 import com.autonomousapps.model.internal.intermediates.Usage
+import com.autonomousapps.model.source.KmpSourceKind
 import com.autonomousapps.model.source.SourceKind
 
 internal class KmpTransform(
@@ -306,7 +307,6 @@ internal class KmpTransform(
       { it.isRemove() || it.isRemoveCompileOnly() },
     )
 
-    // JVM, KMP
     add.forEach { theAdd ->
       remove
         .find { theRemove -> theRemove.coordinates == theAdd.coordinates }
@@ -323,6 +323,11 @@ internal class KmpTransform(
             toConfiguration = theAdd.toConfiguration!!
           )
         }
+    }
+
+    // reduce "add to commonMainApi and add to commonTestImplementation" to "add to commonMainApi"
+    if (add.any { it.toConfiguration!!.startsWith(KmpSourceKind.COMMON_MAIN_NAME) }) {
+      advice.removeIf { it.toConfiguration?.startsWith(KmpSourceKind.COMMON_TEST_NAME) == true }
     }
 
     // In some cases, a dependency might be non-transitive but still not be "declared" in a build script. For example, a

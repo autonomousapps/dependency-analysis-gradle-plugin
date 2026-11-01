@@ -16,6 +16,8 @@ public object Graphs {
    * dependency relationships).
    */
   public fun <N : Any> Graph<N>.lowestCommonAncestor(root: N, nodes: Iterable<N>): N {
+    require(nodes.iterator().hasNext()) { "Expected 'nodes' to contain at least one element." }
+
     val ancestors = nodes
       .map { node -> reachableNodes(node, false) }
       .reduce { acc, nodes -> acc.intersect(nodes) }

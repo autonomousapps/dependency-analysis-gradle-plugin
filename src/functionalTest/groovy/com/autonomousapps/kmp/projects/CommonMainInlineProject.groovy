@@ -34,7 +34,7 @@ final class CommonMainInlineProject extends AbstractKmpProject {
         s.withBuildScript { bs ->
           bs.plugins = androidKmpLibrary
           bs.kotlinKmp { k ->
-            k.androidLibrary { a ->
+            k.android { a ->
               a.namespace = 'dagp.consumer'
               a.compileSdk = 33
               a.minSdk = 24
@@ -55,7 +55,7 @@ final class CommonMainInlineProject extends AbstractKmpProject {
         s.withBuildScript { bs ->
           bs.plugins = androidKmpLibrary
           bs.kotlinKmp { k ->
-            k.androidLibrary { a ->
+            k.android { a ->
               a.namespace = 'dagp.producer'
               a.compileSdk = 33
               a.minSdk = 24

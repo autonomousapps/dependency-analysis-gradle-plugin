@@ -39,11 +39,17 @@ internal class KmpSourceSetNameMatcher(
       }
     }
 
-    // We allow a null `kmpSourceGraph` to be passed in so callers have an easier time. It must't be null at this point.
-    val sourceGraph = requireNotNull(kmpSourceGraph) { "KMP SourceGraph was null" }
     val kmpSourceSets = classReferences.mapNotNullToSet { it.kmpSourceSetName }
+    require(kmpSourceSets.isNotEmpty()) {
+      "No KMP source sets associated with '$classReferences'. Expected at least one."
+    }
 
-    val lca = sourceGraph.lowestCommonAncestor(KmpSourceKind.COMMON_MAIN_NAME, kmpSourceSets)
+    val lca = if (kmpSourceSets.size == 1) {
+      kmpSourceSets.first()
+    } else {
+      val sourceGraph = requireNotNull(kmpSourceGraph) { "KMP SourceGraph was null" }
+      sourceGraph.lowestCommonAncestor(KmpSourceKind.COMMON_MAIN_NAME, kmpSourceSets)
+    }
 
     // If the fallback and the LCA are the same, just return the fallback as-is. Otherwise, replace it.
     return if (lca == primarySourceKind.name) {

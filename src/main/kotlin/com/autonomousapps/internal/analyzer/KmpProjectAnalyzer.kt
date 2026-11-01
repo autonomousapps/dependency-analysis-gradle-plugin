@@ -10,13 +10,14 @@ import com.autonomousapps.internal.utils.capitalizeSafely
 import com.autonomousapps.model.source.SourceKind
 import com.autonomousapps.tasks.*
 import org.gradle.api.Project
-import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 
 internal class KmpProjectAnalyzer(
   project: Project,
+  private val compilation: KotlinCompilation<*>,
   private val sourceSet: KmpSourceSet,
   private val findKmpSourcesTask: TaskProvider<FindKmpSourcesTask>,
   private val hasAbi: Boolean,
@@ -50,10 +51,11 @@ internal class KmpProjectAnalyzer(
 
   override fun registerCodeSourceExploderTask(): TaskProvider<out CodeSourceExploderTask> {
     return project.tasks.register("explodeCodeSource$taskNameSuffix", JvmCodeSourceExploderTask::class.java) { t ->
-      t.groovySource.setFrom(getGroovySources())
-      t.javaSource.setFrom(getJavaSources())
-      t.kotlinSource.setFrom(getKotlinSources())
-      t.scalaSource.setFrom(getScalaSources())
+      t.kmpSources.set(findKmpSourcesTask.flatMap { it.output })
+
+      // TODO(tsr): fix discovery of source files in non-KMP projects
+      @OptIn(ExperimentalKotlinGradlePluginApi::class) // KGP 2.3+
+      t.kotlinSource.setFrom(compilation.allKotlinSourceSets.map { sourceSet -> sourceSet.allKotlinSources })
       t.output.set(outputPaths.explodedSourcePath)
     }
   }
@@ -63,6 +65,7 @@ internal class KmpProjectAnalyzer(
 
     return project.tasks.register("abiAnalysis$taskNameSuffix", AbiAnalysisTask::class.java) { t ->
       t.classes.setFrom(sourceSet.classesDirs)
+      t.kmpSources.set(findKmpSourcesTask.flatMap { it.output })
       t.exclusions.set(abiExclusions)
       t.kotlinMetadataClasspath.setFrom(KotlinMetadataClasspath.of(project))
       t.output.set(outputPaths.abiAnalysisPath)
@@ -77,26 +80,5 @@ internal class KmpProjectAnalyzer(
       )
       t.output.set(outputPaths.nativeDependenciesPath)
     }
-  }
-
-  private fun getGroovySources(): Provider<Iterable<File>> {
-    return project.provider { getSourceDirectories().matching(Language.filterOf(Language.GROOVY)) }
-  }
-
-  private fun getJavaSources(): Provider<Iterable<File>> {
-    return project.provider { getSourceDirectories().matching(Language.filterOf(Language.JAVA)) }
-  }
-
-  private fun getKotlinSources(): Provider<Iterable<File>> {
-    return project.provider { getSourceDirectories().matching(Language.filterOf(Language.KOTLIN)) }
-  }
-
-  private fun getScalaSources(): Provider<Iterable<File>> {
-    return project.provider { getSourceDirectories().matching(Language.filterOf(Language.SCALA)) }
-  }
-
-  private fun getSourceDirectories(): FileTree {
-    val allSource = sourceSet.sourceCode.sourceDirectories
-    return project.files(allSource).asFileTree
   }
 }
