@@ -198,8 +198,12 @@ public class ModuleInfo(
  * Given [Configuration.getDependencies], return this dependency set as a set of identifiers, per
  * [ComponentIdentifier.toIdentifier].
  */
-internal fun DependencySet.toIdentifiers(): Set<Pair<ModuleInfo, GradleVariantIdentification>> = mapNotNullToSet {
-  it.toIdentifier()
+internal fun DependencySet.toIdentifiers(): Set<Pair<ModuleInfo, GradleVariantIdentification>> = flatMapToSet { dependency ->
+  if (dependency is FileCollectionDependency && dependency.files is ConfigurableFileTree) {
+    dependency.files.map { file -> ModuleInfo(file.name.intern()) to GradleVariantIdentification.EMPTY }
+  } else {
+    listOfNotNull(dependency.toIdentifier())
+  }
 }
 
 internal fun Dependency.toCoordinates(): Coordinates? {
