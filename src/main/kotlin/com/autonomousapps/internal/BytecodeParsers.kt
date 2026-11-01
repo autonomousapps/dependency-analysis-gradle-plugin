@@ -83,6 +83,7 @@ private class BytecodeReader(
       }
     }
 
+    // TODO(tsr): might need this in multiple places
     // For KMP projects, we associate the analyzed class file with the source file on disk, to bridge the compilation-
     // source set gap. This value should always be non-null for KMP projects, and null otherwise.
     val kmpSourceSetName = kmpSources

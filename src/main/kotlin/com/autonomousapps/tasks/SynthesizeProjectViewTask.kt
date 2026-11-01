@@ -231,6 +231,7 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
             imports.addAll(source.imports)
             kind = source.kind
             relativePath = source.relativePath
+            kmpSourceSetName = source.kmpSourceSetName // TODO: repeat this everywhere!
           },
           CodeSourceBuilder::concat
         )

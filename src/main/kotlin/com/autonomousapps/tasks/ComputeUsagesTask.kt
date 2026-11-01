@@ -1019,7 +1019,7 @@ private class GraphVisitor(
     }
   }
 
-  private fun Set<ClassReference>.getRootMostSourceKind(): SourceKind = getRootMostSourceKind(kmpSourceSetNameMatcher)
+  private fun Set<ClassReference>.getRootMostSourceKind(): SourceKind = getPrimarySourceKind(kmpSourceSetNameMatcher)
 
   private fun usesAnnotationProcessor(
     coordinates: Coordinates,
@@ -1097,7 +1097,7 @@ private class AnnotationProcessorDetector(
     reportsBuilder.reason(sourceKind, coordinates, Kind.ANNOTATION_PROCESSOR, reason)
   }
 
-  private fun Set<ClassReference>.getPrimarySourceKind(): SourceKind = getRootMostSourceKind(sourceSetNameMatcher)
+  private fun Set<ClassReference>.getPrimarySourceKind(): SourceKind = getPrimarySourceKind(sourceSetNameMatcher)
 }
 
 private class ResByResAnalysisResult(
@@ -1105,6 +1105,6 @@ private class ResByResAnalysisResult(
   val usesForRuntime: Boolean,
 )
 
-private fun Set<ClassReference>.getRootMostSourceKind(sourceSetNameMatcher: KmpSourceSetNameMatcher): SourceKind {
+private fun Set<ClassReference>.getPrimarySourceKind(sourceSetNameMatcher: KmpSourceSetNameMatcher): SourceKind {
   return sourceSetNameMatcher.getLowestCommonAncestor(this)
 }

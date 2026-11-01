@@ -45,6 +45,8 @@ final class FileFacadeProject extends AbstractKmpProject {
               sourceSets.commonMain { commonMain ->
                 commonMain.dependencies(
                   implementation(':producer'),
+                  implementation(':producer2'),
+                  implementation('com.squareup.okio:okio:3.16.4'),
                 )
               }
             }
@@ -65,11 +67,26 @@ final class FileFacadeProject extends AbstractKmpProject {
           }
         }
       }
+      .withAndroidKmpLibProject('producer2') { s ->
+        s.sources = producer2Sources()
+        s.withBuildScript { bs ->
+          bs.plugins = androidKmpLibrary
+          bs.kotlinKmp { k ->
+            k.androidLibrary { a ->
+              a.namespace = 'dagp.producer2'
+              a.compileSdk = 33
+              a.minSdk = 24
+              a.withHostTest()
+            }
+          }
+        }
+      }
       .write()
   }
 
   private static List<Source> consumerSources() {
     return [
+      // Standard source file name
       Source
         .kotlin(
           '''
@@ -77,12 +94,40 @@ final class FileFacadeProject extends AbstractKmpProject {
 
             import producer.common.main.shout
 
-            fun platform(): String = shout("android")
+            class Platform {
+              fun platform(): String = shout("android")
+            }
           '''
         )
-        .withPath('consumer.android.main', 'Platform')
         .withSourceSet('androidMain')
         .build(),
+      // Top-level function in non-root package
+      Source
+        .kotlin(
+          '''
+            package consumer.android.main
+
+            import java.io.File
+            import okio.source
+
+            fun source(file: File) = file.source()
+          '''
+        )
+        .withPath('consumer.android.main', 'sources')
+        .withSourceSet('androidMain')
+        .build(),
+      // Top-level function in root package
+//      Source
+//        .kotlin(
+//          '''
+//            import producer2.common.main.whimper
+//
+//            fun platform(): String = whimper("android")
+//          '''
+//        )
+//        .withPath('', 'platform')
+//        .withSourceSet('androidMain')
+//        .build(),
     ]
   }
 
@@ -97,6 +142,22 @@ final class FileFacadeProject extends AbstractKmpProject {
           '''
         )
         .withPath('producer.common.main', 'Shout')
+        .withSourceSet('commonMain')
+        .build(),
+    ]
+  }
+
+  private static List<Source> producer2Sources() {
+    return [
+      Source
+        .kotlin(
+          '''
+            package producer2.common.main
+
+            inline fun whimper(s: String): String = s.lowercase()
+          '''
+        )
+        .withPath('producer2.common.main', 'Whimper')
         .withSourceSet('commonMain')
         .build(),
     ]

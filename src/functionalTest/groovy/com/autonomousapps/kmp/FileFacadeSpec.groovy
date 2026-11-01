@@ -15,7 +15,7 @@ final class FileFacadeSpec extends AbstractKmpSpec {
     gradleProject = project.gradleProject
 
     when:
-    build(gradleVersion, gradleProject.rootDir, ':buildHealth')
+    build(gradleVersion, gradleProject.rootDir, ':buildHealth', '--rerun-tasks')
 
     then:
     assertThat(project.actualBuildHealth()).containsExactlyElementsIn(project.expectedBuildHealth)

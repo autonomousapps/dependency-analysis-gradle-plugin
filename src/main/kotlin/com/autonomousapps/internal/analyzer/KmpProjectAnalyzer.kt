@@ -50,6 +50,7 @@ internal class KmpProjectAnalyzer(
 
   override fun registerCodeSourceExploderTask(): TaskProvider<out CodeSourceExploderTask> {
     return project.tasks.register("explodeCodeSource$taskNameSuffix", JvmCodeSourceExploderTask::class.java) { t ->
+      t.kmpSources.set(findKmpSourcesTask.flatMap { it.output })
       t.groovySource.setFrom(getGroovySources())
       t.javaSource.setFrom(getJavaSources())
       t.kotlinSource.setFrom(getKotlinSources())

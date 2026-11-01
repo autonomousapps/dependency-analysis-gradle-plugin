@@ -89,7 +89,7 @@ public class GradleProjectWriter(private val gradleProject: GradleProject) {
   private class SourceWriter(private val rootPath: Path, private val source: Source) {
     fun write() {
       if (source.path.isNotEmpty() && !source.source.contains("package")) {
-        throw IllegalStateException("Source does not contain a package declaration. Did you forget it?")
+        throw IllegalStateException("Source does not contain a package declaration. Did you forget it? Source: $source")
       }
 
       val sourceRootPath = rootPath.resolve(source.rootPath())
