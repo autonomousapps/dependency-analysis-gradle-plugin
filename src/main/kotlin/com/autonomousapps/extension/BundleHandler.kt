@@ -29,6 +29,11 @@ import javax.inject.Inject
  *   include(".*kotlin-stdlib.*")
  * }
  * ```
+ *
+ * Bundles may also pair a project path (e.g. `:facade`) with local JAR filenames (e.g. `generated.jar`).
+ * Matching flat-file artifacts on the consumer's classpath are associated with the project even though Gradle does not
+ * expose their ownership in the resolution graph. In the facade itself, matching `api` file dependencies are preserved
+ * as intentional exports. Private `implementation` and `runtimeOnly` file dependencies are not protected as exports.
  */
 public abstract class BundleHandler @Inject constructor(
   private val name: String,

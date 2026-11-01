@@ -258,6 +258,89 @@ class BundlesTest {
     }
   }
 
+  @Nested inner class FlatFiles {
+    private val consumer = ProjectCoordinates(":consumer", gvi)
+    private val facade = ProjectCoordinates(":facade", gvi)
+    private val file = FlatCoordinates("local.jar")
+
+    @Test fun `project bundles include flat artifacts outside their resolution subtree`() {
+      configureBundle()
+      val included = IncludedBuildCoordinates("example:facade", facade, gvi)
+      listOf(facade, included).forEach { parent ->
+        val bundles = buildBundles(parent, used = true)
+        assertThat(bundles.hasUsedChild(parent)).isTrue()
+        assertThat(bundles.findParent(file)).isEqualTo(parent)
+      }
+    }
+
+    @Test fun `unused flat artifacts do not keep a consumer dependency alive`() {
+      configureBundle()
+      assertThat(buildBundles(facade, used = false).hasUsedChild(facade)).isFalse()
+    }
+
+    @Test fun `module bundles do not absorb unrelated flat artifacts`() {
+      val module = ModuleCoordinates("example:facade", "1", gvi)
+      dependenciesHandler.bundle("local") {
+        it.includeDependency(module.identifier)
+        it.includeDependency(file.identifier)
+      }
+      val bundles = buildBundles(module, used = true)
+      assertThat(bundles.hasUsedChild(module)).isFalse()
+      assertThat(bundles.hasParent(file)).isFalse()
+    }
+
+    @Test fun `only api file declarations are protected by a bundle containing the current project`() {
+      configureBundle()
+      val declarations = setOf("api", "implementation", "runtimeOnly").mapTo(mutableSetOf()) { configuration ->
+        Declaration(file.identifier, configurationName = configuration, gradleVariantIdentification = gvi)
+      }
+      val bundles = Bundles.of(
+        projectPath = facade.identifier,
+        dependencyGraph = newGraphFrom(listOf(facade to file)),
+        bundleRules = dependenciesHandler.serializableBundles(),
+        dependencyUsages = emptyMap(),
+        declarations = declarations,
+        configurationNames = jvmConfigurationNames,
+        ignoreKtx = false,
+      )
+      assertThat(bundles.exportingProject(file, "api")).isEqualTo(facade)
+      assertThat(bundles.exportingProject(file, "implementation")).isNull()
+      assertThat(bundles.exportingProject(file, "runtimeOnly")).isNull()
+      assertThat(bundles.exportingProject(file, null)).isNull()
+    }
+
+    @Test fun `api file declarations without an explicit project bundle are not protected`() {
+      val bundles = Bundles.of(
+        projectPath = facade.identifier,
+        dependencyGraph = newGraphFrom(listOf(facade to file)),
+        bundleRules = dependenciesHandler.serializableBundles(),
+        dependencyUsages = emptyMap(),
+        declarations = setOf(Declaration(file.identifier, configurationName = "api", gradleVariantIdentification = gvi)),
+        configurationNames = jvmConfigurationNames,
+        ignoreKtx = false,
+      )
+      assertThat(bundles.exportingProject(file, "api")).isNull()
+    }
+
+    private fun configureBundle() {
+      dependenciesHandler.bundle("local") {
+        it.includeDependency(facade.identifier)
+        it.includeDependency(file.identifier)
+      }
+    }
+
+    private fun buildBundles(parent: Coordinates, used: Boolean): Bundles = Bundles.of(
+      projectPath = consumer.identifier,
+      // Files are siblings of the facade, and may be visited before it.
+      dependencyGraph = newGraphFrom(listOf(consumer to file, consumer to parent)),
+      bundleRules = dependenciesHandler.serializableBundles(),
+      dependencyUsages = mapOf(file to usage(if (used) Bucket.IMPL else Bucket.NONE, JvmSourceKind.MAIN, "main").intoSet()),
+      declarations = emptySet(),
+      configurationNames = jvmConfigurationNames,
+      ignoreKtx = false,
+    )
+  }
+
   @Nested inner class Primary {
     @Test fun `supports facades with a primary entry point`() {
       // Define a bundle with a primary identifier

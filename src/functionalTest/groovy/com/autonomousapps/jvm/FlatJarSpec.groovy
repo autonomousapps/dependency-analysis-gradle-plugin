@@ -58,4 +58,52 @@ final class FlatJarSpec extends AbstractJvmSpec {
     where:
     gradleVersion << gradleVersions()
   }
+
+  def "project bundles preserve exported jars and only used facades (#gradleVersion, used=#used, primary=#primary)"() {
+    given:
+    def project = new FlatJarBundleProject(true, used, 'api', primary)
+    gradleProject = project.gradleProject
+    build(gradleVersion, gradleProject.rootDir, ':first:jar', ':second:jar')
+    project.copyJars()
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    def cached = build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+    def reason = build(gradleVersion, gradleProject.rootDir, ':provider:reason', '--id', 'first.jar')
+
+    then:
+    assertThat(actualProjectAdviceForProject(gradleProject, 'provider').dependencyAdvice).isEmpty()
+    assertThat(actualProjectAdviceForProject(gradleProject, 'consumer').dependencyAdvice)
+      .containsExactlyElementsIn(used ? [] : [Advice.ofRemove(projectCoordinates(':provider'), 'implementation')])
+    assertThat(cached.output).contains('Reusing configuration cache.')
+    assertThat(reason.output).contains('as an api file dependency in an explicit')
+
+    where:
+    [gradleVersion, used, primary] << gradleVersions().collectMany { version ->
+      [true, false].collectMany { used -> [true, false].collect { primary -> [version, used, primary] } }
+    }
+  }
+
+  def "project bundle does not protect private unused jars (#gradleVersion)"() {
+    given:
+    def project = new FlatJarBundleProject(true, false, 'implementation')
+    gradleProject = project.gradleProject
+    build(gradleVersion, gradleProject.rootDir, ':first:jar', ':second:jar')
+    project.copyJars()
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(actualProjectAdviceForProject(gradleProject, 'provider').dependencyAdvice).containsExactly(
+      Advice.ofRemove(flatCoordinates('first.jar'), 'implementation'),
+      Advice.ofRemove(flatCoordinates('second.jar'), 'implementation'),
+    )
+    assertThat(actualProjectAdviceForProject(gradleProject, 'consumer').dependencyAdvice).containsExactly(
+      Advice.ofRemove(projectCoordinates(':provider'), 'implementation'),
+    )
+
+    where:
+    gradleVersion << gradleVersions()
+  }
 }
