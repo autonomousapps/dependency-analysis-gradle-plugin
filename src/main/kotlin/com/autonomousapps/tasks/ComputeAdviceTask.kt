@@ -363,6 +363,14 @@ internal class DependencyAdviceBuilder(
           // The user should not have to add a test dependency on self
           advice.isAddTestDependencyOnSelf() -> null
 
+          // A project explicitly bundled with an api file dependency intentionally exports that file.
+          (advice.isRemove() || advice.isAnyChange()) &&
+            bundles.exportingProject(originalCoordinates, advice.fromConfiguration) != null -> {
+            val exporter = bundles.exportingProject(originalCoordinates, advice.fromConfiguration)!!
+            bundledTraces.add(BundleTrace.ExportedFile(project = exporter, file = originalCoordinates))
+            null
+          }
+
           // TODO(tsr): Update bundledTraces and Reason? The current output is OK, but lacks specificity in the non-null
           //  `parentAdvice` case.
           // This can transform add-advice to change-advice. Currently only for KMP projects where the "parent" KMP dep

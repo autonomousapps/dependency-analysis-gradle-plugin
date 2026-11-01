@@ -37,6 +37,13 @@ internal class Bundles private constructor(
   // if a set of rules has a primary identifier, use this to map advice to it
   private val primaryPointers = mutableMapOf<Coordinates, Coordinates>()
 
+  // An explicit bundle may describe the current project as a facade for api file dependencies.
+  private val exportedFiles = mutableMapOf<Pair<Coordinates, String>, Coordinates>()
+
+  fun exportingProject(coordinates: Coordinates, configuration: String?): Coordinates? {
+    return exportedFiles[coordinates to configuration]
+  }
+
   operator fun set(parentNode: Coordinates, childNode: Coordinates) {
     // nb: parents point to themselves as well. This is what lets DoubleDeclarationsSpec pass.
     parentKeyedBundle.merge(parentNode, mutableSetOf(parentNode, childNode)) { acc, inc ->
@@ -195,7 +202,7 @@ internal class Bundles private constructor(
           view.graph.reachableNodes(projectNode)
             .find { child -> child.matches(primaryId) }
             ?.let { primaryNode ->
-              val subordinateNodes = view.graph.reachableNodes(primaryNode)
+              val subordinateNodes = bundleCandidates(view, primaryNode)
               subordinateNodes
                 .filter { subordinateNode ->
                   regexes.any { regex -> subordinateNode.matches(regex) }
@@ -209,12 +216,21 @@ internal class Bundles private constructor(
       dependencyGraph.values.forEach { view ->
         // Find the node that represents the current project, which always exists in the graph
         val projectNode = view.graph.nodes().find { node -> node.identifier == projectPath }!!
+        val projectRules = bundleRules.matchingBundles(projectNode)
+        view.graph.children(projectNode).filterIsInstance<FlatCoordinates>().forEach { file ->
+          if (projectRules.values.any { regexes -> regexes.any { file.matches(it) } }) {
+            declarations.filter { it.identifier == file.identifier && it.bucket(configurationNames) == Bucket.API }
+              .forEach { declaration ->
+                bundles.exportedFiles[file to declaration.configurationName] = projectNode
+              }
+          }
+        }
         view.graph.children(projectNode).forEach { parentNode ->
           val rules = bundleRules.matchingBundles(parentNode)
 
           // handle user-supplied bundles
-          if (rules.isNotEmpty()) {
-            val reachableNodes = view.graph.reachableNodes(parentNode)
+          if (rules.isNotEmpty() && parentNode !is FlatCoordinates) {
+            val reachableNodes = bundleCandidates(view, parentNode)
             rules.values
               .forEach { regexes ->
                 reachableNodes
@@ -294,6 +310,17 @@ internal class Bundles private constructor(
       }
 
       return bundles
+    }
+
+    private fun bundleCandidates(view: DependencyGraphView, parent: Coordinates): Set<Coordinates> {
+      // Gradle exposes transitive file dependencies as artifacts, without their owning project in the resolution graph.
+      // The explicit bundle supplies that relationship. Do not infer it for unrelated module dependencies.
+      val files = if (parent is ProjectCoordinates || parent is IncludedBuildCoordinates) {
+        view.graph.nodes().filterIsInstance<FlatCoordinates>()
+      } else {
+        emptyList()
+      }
+      return view.graph.reachableNodes(parent) + files
     }
   }
 }
