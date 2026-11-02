@@ -52,6 +52,7 @@ internal class KotlinSourceSet(
   override val name: String = sourceSet.name
   override val jarTaskName: String = "jar"
 
+  // TODO(tsr): follow what KMP is doing here
   override val sourceCode: SourceDirectorySet = sourceSet.allSource
 
   override val compileClasspathConfigurationName: String =

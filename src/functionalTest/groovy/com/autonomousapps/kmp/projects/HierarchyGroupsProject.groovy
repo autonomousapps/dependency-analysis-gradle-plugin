@@ -4,7 +4,6 @@ package com.autonomousapps.kmp.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.kit.gradle.Imports
 import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
 import com.autonomousapps.model.Advice

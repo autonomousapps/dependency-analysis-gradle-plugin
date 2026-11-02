@@ -11,6 +11,7 @@ import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
 import com.autonomousapps.model.internal.kmp.SourceSetFiles
+import com.autonomousapps.model.internal.kmp.SourceSetFiles.Companion.findSourceSetName
 import org.gradle.api.logging.Logger
 import java.io.File
 
@@ -85,18 +86,7 @@ private class BytecodeReader(
 
     // For KMP projects, we associate the analyzed class file with the source file on disk, to bridge the compilation-
     // source set gap. This value should always be non-null for KMP projects, and null otherwise.
-    val kmpSourceSetName = kmpSources
-      .find { sources ->
-        sources.sourceFiles.any { f ->
-          // a standard source/class file
-          f.removeSuffix(".kt") == classAnalyzer.className
-            // a class created from top-level functions in the root package
-            || f == classAnalyzer.source
-            // a class created from top-level functions in a non-root package
-            || f == classAnalyzer.className.substringBeforeLast('/') + '/' + classAnalyzer.source
-        }
-      }
-      ?.sourceSetName
+    val kmpSourceSetName = kmpSources.findSourceSetName(classAnalyzer)
 
     // TODO(tsr): use this somehow? I think these should be considered compileOnly candidates
     //  Look at `CompileOnlySpec#annotations can be compileOnly`. It detects usage of Producer because it is imported,
