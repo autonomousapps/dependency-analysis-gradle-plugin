@@ -6,6 +6,7 @@ import com.autonomousapps.internal.providers.isAvailable
 import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
 /**
@@ -47,7 +48,7 @@ public data class FileCollectionMap(
     }
 
     fun generatedSourceDirectories(kotlinSources: NamedDomainObjectSet<KotlinSourceSet>): List<FileCollection> {
-      // nb: `generatedKotlin` requires KGP 2.3+.
+      @OptIn(ExperimentalKotlinGradlePluginApi::class) // KGP 2.3+
       return kotlinSources.map { it.generatedKotlin.sourceDirectories }
     }
 

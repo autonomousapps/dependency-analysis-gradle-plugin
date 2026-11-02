@@ -52,6 +52,7 @@ internal class KotlinSourceSet(
   override val name: String = sourceSet.name
   override val jarTaskName: String = "jar"
 
+  // TODO(tsr): follow what KMP is doing here
   override val sourceCode: SourceDirectorySet = sourceSet.allSource
 
   override val compileClasspathConfigurationName: String =
@@ -73,6 +74,7 @@ internal class KmpSourceSet(
   override val jarTaskName: String = compilation.target.artifactsTaskName
   override val sourceKind: SourceKind = KmpSourceKind.of(compilation)
   override val sourceCode: SourceDirectorySet = compilation.defaultSourceSet.kotlin
+
   override val compileClasspathConfigurationName: String = compilation.compileDependencyConfigurationName
   override val runtimeClasspathConfigurationName: String = compilation.runtimeDependencyConfigurationName!!
   override val classesDirs: Provider<FileCollection> = compilation.project.provider { compilation.output.classesDirs }

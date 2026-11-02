@@ -792,6 +792,7 @@ internal class ProjectPlugin(private val project: Project) {
 
               val dependencyAnalyzer = KmpProjectAnalyzer(
                 project = this,
+                compilation = compilation,
                 sourceSet = kmpSourceSet,
                 findKmpSourcesTask = findKmpSourcesTask,
                 hasAbi = hasAbi,

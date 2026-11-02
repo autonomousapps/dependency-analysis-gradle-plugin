@@ -10,6 +10,7 @@ import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.internal.CodeSource.Kind
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingSourceCode
 import com.autonomousapps.model.internal.kmp.SourceSetFiles
+import com.autonomousapps.model.internal.kmp.SourceSetFiles.Companion.findSourceSetName
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.*
 import org.gradle.api.provider.ListProperty
@@ -192,23 +193,6 @@ private class SourceExploder(
   fun explode(): Set<ExplodingSourceCode> {
     val destination = sortedSetOf<ExplodingSourceCode>()
 
-    // TODO(tsr): might need this in multiple places
-    // For KMP projects, we associate the analyzed class file with the source file on disk, to bridge the compilation-
-    // source set gap. This value should always be non-null for KMP projects, and null otherwise.
-//    val kmpSourceSetName = kmpSources
-//      .find { sources ->
-//        sources.sourceFiles.any { f ->
-//          // a standard source/class file
-//          f.removeSuffix(".kt") == classAnalyzer.className
-//            // a class created from top-level functions in the root package
-//            || f == classAnalyzer.source
-//            // a class created from top-level functions in a non-root package
-//            || f == classAnalyzer.className.substringBeforeLast('/') + '/' + classAnalyzer.source
-//        }
-//      }
-//      ?.sourceSetName
-
-
     javaSourceFiles.mapTo(destination) { f ->
       val rel = relativize(f)
       val sourceListener = SourceListener.parseSourceFile(f)
@@ -225,19 +209,7 @@ private class SourceExploder(
       val rel = relativize(f)
       val sourceListener = SourceListener.parseSourceFile(f)
       val pkg = packageFrom(sourceListener)
-
-      // TODO(tsr): might need this in multiple places
-      val kmpSourceSetName = kmpSources
-        .find { sources ->
-          // TODO: handle other kinds of files:
-          //  1. a class created from top-level functions in the root package: `f == classAnalyzer.source`
-          //  2. a class created from top-level functions in a non-root package: `f == classAnalyzer.className.substringBeforeLast('/') + '/' + classAnalyzer.source`
-          sources.sourceFiles.any { f ->
-            // src/commonMain/kotlin + / + com/foo/Bar.kt
-            "${sources.sourceBase}/$f" == rel
-          }
-        }
-        ?.sourceSetName
+      val kmpSourceSetName = kmpSources.findSourceSetName(rel)
 
       ExplodingSourceCode(
         relativePath = rel,
