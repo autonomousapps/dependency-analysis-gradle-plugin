@@ -85,14 +85,13 @@ public data class SourceSetFiles(
      * For KMP projects, we must find the source set name associated with [relativePath] so we can produce precise
      * analysis.
      */
-    fun Set<SourceSetFiles>.findSourceSetName(relativePath: String): String {
+    fun Set<SourceSetFiles>.findSourceSetName(relativePath: String): String? {
       return this
-        // We use `first` because there must be a match
-        .first { sources ->
+        .find { sources ->
           // "src/commonMain/kotlin" + "/" + "com/foo/Bar.kt"
           sources.sourceFiles.any { f -> "${sources.sourceBase}/$f" == relativePath }
         }
-        .sourceSetName
+        ?.sourceSetName
     }
   }
 }
