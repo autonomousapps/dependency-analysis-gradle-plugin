@@ -8,6 +8,7 @@ import com.autonomousapps.kit.gradle.Dependency.Companion.implementation
 import com.autonomousapps.kit.gradle.android.AndroidBlock
 import com.autonomousapps.kit.gradle.android.CompileOptions
 import com.autonomousapps.kit.gradle.android.DefaultConfig
+import com.autonomousapps.kit.gradle.kotlin.KotlinNativeTarget
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -713,6 +714,23 @@ internal class ScribeTestKotlin {
   }
 
   @Nested inner class KmpTest {
+    @Test fun `can render iOS targets`() {
+      val kotlin = with(Kotlin.Builder()) {
+        nativeTargets = listOf(KotlinNativeTarget.iosArm64(), KotlinNativeTarget.iosSimulatorArm64())
+        build()
+      }
+
+      assertThat(kotlin.render(scribe)).isEqualTo(
+        """
+          kotlin {
+            iosArm64()
+            iosSimulatorArm64()
+          }
+          
+        """.trimIndent()
+      )
+    }
+
     @Test fun `can render a custom hierarchy group`() {
       val kotlin = with(Kotlin.Builder()) {
         applyDefaultHierarchyTemplate { template ->

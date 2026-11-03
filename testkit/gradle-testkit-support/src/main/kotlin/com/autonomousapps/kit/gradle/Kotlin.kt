@@ -5,6 +5,7 @@ package com.autonomousapps.kit.gradle
 import com.autonomousapps.kit.gradle.android.AndroidLibraryTarget
 import com.autonomousapps.kit.gradle.kotlin.HierarchyTemplate
 import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
+import com.autonomousapps.kit.gradle.kotlin.KotlinNativeTarget
 import com.autonomousapps.kit.gradle.kotlin.KotlinSourceSets
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
@@ -17,6 +18,7 @@ public class Kotlin @JvmOverloads constructor(
   private val jvmTarget: KotlinJvmTarget? = null,
   private val hierarchyTemplate: HierarchyTemplate? = null,
   private val sourceSets: KotlinSourceSets? = null,
+  private val nativeTargets: List<KotlinNativeTarget> = emptyList(),
 ) : Element.Block {
 
   override val name: String = "kotlin"
@@ -25,6 +27,7 @@ public class Kotlin @JvmOverloads constructor(
     jvmToolchain?.render(s)
     jvmTarget?.render(s)
     androidLibraryTarget?.render(s)
+    nativeTargets.forEach { it.render(s) }
     hierarchyTemplate?.render(s)
     sourceSets?.render(s)
   }
@@ -34,6 +37,7 @@ public class Kotlin @JvmOverloads constructor(
 
     public var androidLibraryTarget: AndroidLibraryTarget? = null
     public var jvmTarget: KotlinJvmTarget? = null
+    public var nativeTargets: List<KotlinNativeTarget> = emptyList()
 
     private var androidLibraryTargetBuilder: AndroidLibraryTarget.Builder? = null
     private var hierarchyTemplateBuilder: HierarchyTemplate.Builder? = null
@@ -71,6 +75,7 @@ public class Kotlin @JvmOverloads constructor(
         jvmTarget = jvmTarget,
         hierarchyTemplate = hierarchyTemplateBuilder?.build(),
         sourceSets = sourceSetsBuilder?.build(),
+        nativeTargets = nativeTargets,
       )
     }
   }
