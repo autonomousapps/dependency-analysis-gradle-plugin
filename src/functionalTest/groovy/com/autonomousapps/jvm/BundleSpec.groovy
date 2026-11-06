@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.jvm
 
+import com.autonomousapps.jvm.projects.BundleKmpMultiUsageProject
 import com.autonomousapps.jvm.projects.BundleKmpProject
 import com.autonomousapps.jvm.projects.BundleKmpProject2
 import com.autonomousapps.jvm.projects.BundleProject
@@ -75,5 +76,20 @@ final class BundleSpec extends AbstractJvmSpec {
 
     where:
     gradleVersion << [GradleVersion.current()]
+  }
+
+  def "kmp deps don't get moved to other source sets, breaking the build (#gradleVersion)"() {
+    given:
+    def project = new BundleKmpMultiUsageProject()
+    gradleProject = project.gradleProject
+
+    when:
+    build(gradleVersion, gradleProject.rootDir, 'buildHealth')
+
+    then:
+    assertThat(project.actualProjectAdvice()).containsExactlyElementsIn(project.expectedProjectAdvice)
+
+    where:
+    gradleVersion << gradleVersions()
   }
 }
