@@ -3,6 +3,7 @@
 package com.autonomousapps.internal.kotlin.multiplatform
 
 import com.autonomousapps.graph.Graphs.lowestCommonAncestor
+import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.mapNotNullToSet
 import com.autonomousapps.model.internal.intermediates.ClassReference
 import com.autonomousapps.model.source.KmpSourceKind
@@ -13,6 +14,10 @@ internal class KmpSourceSetNameMatcher(
   private val kmpSourceGraph: Graph<String>?,
   val primarySourceKind: SourceKind,
 ) {
+
+  private companion object {
+    val LOGGER = getLogger<KmpSourceSetNameMatcher>()
+  }
 
   /**
    * Finds the lowest common ancestor of all the source sets represented in [classReferences], and returns it.
@@ -40,8 +45,13 @@ internal class KmpSourceSetNameMatcher(
     }
 
     val kmpSourceSets = classReferences.mapNotNullToSet { it.kmpSourceSetName }
-    require(kmpSourceSets.isNotEmpty()) {
-      "No KMP source sets associated with '$classReferences'. Expected at least one."
+
+    // I observed this happen with the testBalloon plugin, via GeneratedClassSpec. For some reason, its generated Kotlin
+    // files aren't being discovered by `FindKmpSourcesTask`. Not sure if it's the problem, or this plugin.
+    // https://github.com/infix-de/testBalloon/blob/main/testBalloon-gradle-plugin/layer/kotlin-2-2-0/src/main/kotlin/de/infix/testBalloon/gradlePlugin/internal/layer/kotlin220/TestBalloonGradlePlugin_2_2_0.kt
+    if (kmpSourceSets.isEmpty()) {
+      LOGGER.debug("No KMP source sets associated with '{}'. Expected at least one.", classReferences)
+      return primarySourceKind
     }
 
     val lca = if (kmpSourceSets.size == 1) {
