@@ -73,7 +73,6 @@ final class DeclaredProjectDependencyProject extends AbstractKmpProject {
             class Consumer(val producer: Producer)
           '''
         )
-        .withPath('consumer.common.main', 'Consumer')
         .withSourceSet('commonMain')
         .build(),
     ]
@@ -89,7 +88,6 @@ final class DeclaredProjectDependencyProject extends AbstractKmpProject {
             class Producer
           '''
         )
-        .withPath('producer.common.main', 'Producer')
         .withSourceSet('commonMain')
         .build(),
     ]
