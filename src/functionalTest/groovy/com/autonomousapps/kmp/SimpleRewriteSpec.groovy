@@ -27,7 +27,7 @@ class SimpleRewriteSpec extends AbstractKmpSpec {
   }
 
   // TODO(tsr): fix
-  @PendingFeature(reason = "We currently refuse to move certain things from commonTest, even when it's correct")
+  @PendingFeature(reason = "We currently refuse to move certain things from commonMain, even when it's correct")
   def "can move dependency to different source set (#gradleVersion)"() {
     given:
     def project = new MainToTestProject()

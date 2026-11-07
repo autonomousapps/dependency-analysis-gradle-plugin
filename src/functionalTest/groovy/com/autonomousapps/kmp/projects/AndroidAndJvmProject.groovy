@@ -26,16 +26,7 @@ final class AndroidAndJvmProject extends AbstractKmpProject {
   }
 
   private GradleProject build() {
-    return newGradleProjectBuilder(GradleProject.DslKind.KOTLIN)
-      .withRootProject { r ->
-        r.withBuildScript { bs ->
-          bs.plugins(
-            plugins.dependencyAnalysis,
-            plugins.kotlinMultiplatformNoApply,
-            plugins.androidKmpLibNoApply,
-          )
-        }
-      }
+    return newGradleProjectBuilder()
     // just an androidLibrary target
       .withAndroidKmpLibProject('android') { s ->
         s.sources = androidSources()

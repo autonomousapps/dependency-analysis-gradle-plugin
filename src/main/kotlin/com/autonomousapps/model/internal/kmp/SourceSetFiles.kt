@@ -46,6 +46,8 @@ public data class SourceSetFiles(
               || f == classAnalyzer.source
               // a class created from top-level functions in a non-root package
               || f == classAnalyzer.className.substringBeforeLast('/') + '/' + classAnalyzer.source
+              // An inlined lambda, e.g.: "consumer/common/main/ValuesKt$values$$inlined$map$1$2$1"
+              || classAnalyzer.className.startsWith("${f.asClassSignature()}$")
           }
         }
         ?.sourceSetName

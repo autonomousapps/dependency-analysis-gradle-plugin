@@ -237,11 +237,9 @@ public abstract class ComputeAdviceTask @Inject constructor(
         annotationProcessorUsages = annotationProcessorUsages,
       )
 
-      // todo cleanup
-      val dependencyAdvice = dependencyAdviceBuilder.advice
       val projectAdvice = ProjectAdvice(
         projectPath = projectPath,
-        dependencyAdvice = dependencyAdvice,
+        dependencyAdvice = dependencyAdviceBuilder.advice,
         pluginAdvice = pluginAdviceBuilder.getPluginAdvice(),
         moduleAdvice = androidScore,
         warning = buildWarning(),

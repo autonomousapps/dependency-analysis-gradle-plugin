@@ -20,16 +20,7 @@ final class FileFacadeProject extends AbstractKmpProject {
   }
 
   private GradleProject build() {
-    return newGradleProjectBuilder(GradleProject.DslKind.KOTLIN)
-      .withRootProject { r ->
-        r.withBuildScript { bs ->
-          bs.plugins(
-            plugins.dependencyAnalysis,
-            plugins.kotlinMultiplatformNoApply,
-            plugins.androidKmpLibNoApply,
-          )
-        }
-      }
+    return newGradleProjectBuilder()
       .withAndroidKmpLibProject('consumer') { s ->
         s.sources = consumerSources()
         s.withBuildScript { bs ->

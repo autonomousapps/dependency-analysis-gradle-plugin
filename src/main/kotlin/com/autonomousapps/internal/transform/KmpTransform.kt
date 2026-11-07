@@ -43,8 +43,7 @@ internal class KmpTransform(
     val reducedUsages = reduceUsages(usages.toMutableSet())
     computeAdvice(advice, reducedUsages, declarations.toMutableSet())
 
-    val simplified = simplify(advice)
-    return simplified
+    return simplify(advice)
   }
 
   /** Reduce usages to fewest possible (1+). */
@@ -96,39 +95,6 @@ internal class KmpTransform(
       ).intoMutableSet()
     }
   }
-
-//  /**
-//   * Simplifies a set of [usages][Usage], taking into account the [visibility] of [sourceSetName] into the `main` source
-//   * set, and also whether the user has opted-into "explicit source sets." For example, if a `main` usage is visible
-//   * on the compile classpath of a downstream source set like `test`, then we filter out all non-runtime-only usages.
-//   *
-//   * Android unit (host) tests get special treatment, essentially collapsing something like "debugTest" into simply
-//   * "test," reflecting the reality of how most Android projects are configured.
-//   */
-//  private fun MutableSet<Usage>.simplify(
-//    visibility: Bucket.Visibility,
-//    sourceSetName: String,
-//  ): MutableSet<Usage> {
-//    return if (visibility.forEither && !explicitFor(sourceSetName)) {
-//      // TODO(tsr): add test for this case.
-//      //  1. a dep that should be moved from impl->api
-//      //  2. dep has runtime capabilities as well and is on test runtime classpath
-//      //  3. previously we'd see advice to both move to api and also add to testRuntimeOnly. The latter is undesirable.
-//
-//      // Yes, if something is visible forCompile and forRuntime, then we filter out all usages.
-//      var seq = asSequence()
-//      if (visibility.forCompile) {
-//        seq = seq.filterNot { usage -> usage.bucket != Bucket.RUNTIME_ONLY }
-//      }
-//      if (visibility.forRuntime) {
-//        seq = seq.filterNot { usage -> usage.bucket == Bucket.RUNTIME_ONLY }
-//      }
-//
-//      seq.toMutableSet()
-//    } else {
-//      reduceUsages(this)
-//    }
-//  }
 
   /** Turn usage information into actionable advice. */
   private fun computeAdvice(

@@ -58,10 +58,10 @@ final class VariantDeclarationProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  // TODO: this may not be the exact advice that comes back, but this it the *intent*.
   private final Set<Advice> consumerAdvice = [
-    Advice.ofChange(moduleCoordinates(KOTLINX_COROUTINES_CORE), 'debugImplementation', 'implementation'),
+    Advice.ofRemove(moduleCoordinates(KOTLINX_COROUTINES_CORE), 'debugImplementation'),
     Advice.ofRemove(moduleCoordinates(KOTLINX_COROUTINES_CORE), 'releaseImplementation'),
+    Advice.ofAdd(moduleCoordinates(KOTLINX_COROUTINES_CORE), 'implementation'),
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [
