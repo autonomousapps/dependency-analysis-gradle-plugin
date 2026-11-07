@@ -18,6 +18,8 @@ internal data class AccessFlags(val access: Int) {
   fun getModifierString(): String = getModifiers().joinToString(" ")
 
   companion object {
+    val PUBLIC = AccessFlags(Opcodes.ACC_PUBLIC)
+
     val ACCESS_NAMES = mapOf(
       Opcodes.ACC_PUBLIC to "public",
       Opcodes.ACC_PROTECTED to "protected",

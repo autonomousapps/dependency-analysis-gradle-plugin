@@ -3,6 +3,7 @@
 package com.autonomousapps.kmp.projects
 
 import com.autonomousapps.AbstractProject
+import com.autonomousapps.kit.GradleProject
 
 abstract class AbstractKmpProject extends AbstractProject {
   /**
@@ -23,5 +24,19 @@ abstract class AbstractKmpProject extends AbstractProject {
 
   AbstractKmpProject(String kotlinVersion, String agpVersion) {
     super(kotlinVersion, agpVersion)
+  }
+
+  @Override
+  protected GradleProject.Builder newGradleProjectBuilder() {
+    return super.newGradleProjectBuilder(GradleProject.DslKind.KOTLIN)
+      .withRootProject { r ->
+        r.withBuildScript { bs ->
+          bs.plugins(
+            plugins.dependencyAnalysis,
+            plugins.kotlinMultiplatformNoApply,
+            plugins.androidKmpLibNoApply,
+          )
+        }
+      }
   }
 }

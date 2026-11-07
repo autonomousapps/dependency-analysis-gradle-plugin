@@ -132,8 +132,7 @@ final class AdviceSpec extends AbstractAndroidSpec {
     then:
     def buildHealth = project.actualBuildHealth()
     def appAdvice = buildHealth.find { it.projectPath == ':app' }.dependencyAdvice
-    assertThat(appAdvice)
-      .containsExactlyElementsIn(project.expectedAppAdvice(project.changeAndroidxAnnotations))
+    assertThat(appAdvice).containsExactlyElementsIn(project.expectedAppAdvice())
 
     and: 'lib_android advice does not include excludes'
     def libAndroidAdvice = buildHealth.find { it.projectPath == ':lib_android' }.dependencyAdvice

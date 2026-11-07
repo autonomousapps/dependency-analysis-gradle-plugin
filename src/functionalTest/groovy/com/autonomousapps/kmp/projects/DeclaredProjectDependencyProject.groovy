@@ -7,59 +7,54 @@ import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.actualProjectAdvice
-import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.AdviceHelper.*
 import static com.autonomousapps.kit.gradle.Dependency.api
-import static com.autonomousapps.kit.gradle.Dependency.implementation
 
-final class CommonMain extends AbstractKmpProject {
+final class DeclaredProjectDependencyProject extends AbstractKmpProject {
 
   final GradleProject gradleProject
 
-  CommonMain() {
-    super(KOTLIN_VERSION)
+  DeclaredProjectDependencyProject(agpVersion) {
+    super(KOTLIN_VERSION, agpVersion as String)
     this.gradleProject = build()
   }
 
   private GradleProject build() {
-    return newGradleProjectBuilder(GradleProject.DslKind.KOTLIN)
-      .withRootProject { r ->
-        r.withBuildScript { bs ->
-          bs.plugins(plugins.dependencyAnalysis, plugins.kotlinMultiplatformNoApply)
-        }
-      }
-      .withSubproject('consumer') { s ->
+    return newGradleProjectBuilder()
+      .withAndroidKmpLibProject('consumer') { s ->
         s.sources = consumerSources()
         s.withBuildScript { bs ->
-          bs.plugins = kmpLibrary
+          bs.plugins = androidKmpLibrary
           bs.kotlinKmp { k ->
             k.jvmTarget = KotlinJvmTarget.default()
+            k.androidLibrary { a ->
+              a.namespace = 'dagp.consumer'
+              a.compileSdk = 33
+              a.minSdk = 24
+              a.withHostTest()
+            }
             k.sourceSets { sourceSets ->
               sourceSets.commonMain { commonMain ->
                 commonMain.dependencies(
                   api(':producer'),
                 )
               }
-              sourceSets.commonTest { commonTest ->
-                commonTest.dependencies(
-                  implementation('kotlin("test")'),
-                )
-              }
-              sourceSets.jvmTest { jvmTest ->
-                jvmTest.dependencies(
-                  implementation('kotlin("test-junit")'),
-                )
-              }
             }
           }
         }
       }
-      .withSubproject('producer') { s ->
+      .withAndroidKmpLibProject('producer') { s ->
         s.sources = producerSources()
         s.withBuildScript { bs ->
-          bs.plugins = kmpLibrary
+          bs.plugins = androidKmpLibrary
           bs.kotlinKmp { k ->
             k.jvmTarget = KotlinJvmTarget.default()
+            k.androidLibrary { a ->
+              a.namespace = 'dagp.producer'
+              a.compileSdk = 33
+              a.minSdk = 24
+              a.withHostTest()
+            }
           }
         }
       }
@@ -72,43 +67,24 @@ final class CommonMain extends AbstractKmpProject {
         .kotlin(
           '''
             package consumer.common.main
-            
+
             import producer.common.main.Producer
-            
-            class CommonMain(val producer: Producer)
+
+            class Consumer(val producer: Producer)
           '''
         )
         .withSourceSet('commonMain')
         .build(),
-      Source
-        .kotlin(
-          '''
-            package consumer.common.test
-            
-            import kotlin.test.Test
-            import kotlin.test.assertTrue
-            import producer.common.main.Producer
-            
-            class CommonTest {
-              @Test fun test() {
-                val producer = Producer()
-                assertTrue(true)
-              }
-            }
-          '''
-        )
-        .withSourceSet('commonTest')
-        .build(),
     ]
   }
 
-  protected static List<Source> producerSources() {
+  private static List<Source> producerSources() {
     return [
       Source
         .kotlin(
           '''
             package producer.common.main
-                        
+
             class Producer
           '''
         )

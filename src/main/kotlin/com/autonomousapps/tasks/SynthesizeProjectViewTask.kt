@@ -220,6 +220,7 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
           abi.className,
           CodeSourceBuilder(abi.className).apply {
             exposedClasses.addAll(abi.exposedClasses)
+            kmpSourceSetName = abi.kmpSourceSetName
           },
           CodeSourceBuilder::concat
         )
@@ -231,6 +232,7 @@ public abstract class SynthesizeProjectViewTask @Inject constructor(
             imports.addAll(source.imports)
             kind = source.kind
             relativePath = source.relativePath
+            kmpSourceSetName = source.kmpSourceSetName
           },
           CodeSourceBuilder::concat
         )

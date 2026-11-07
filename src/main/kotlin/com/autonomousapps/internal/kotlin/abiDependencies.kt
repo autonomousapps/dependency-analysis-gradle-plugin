@@ -9,17 +9,21 @@ import com.autonomousapps.internal.utils.DESC_REGEX
 import com.autonomousapps.internal.utils.allItems
 import com.autonomousapps.internal.utils.flatMapToSet
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingAbi
+import com.autonomousapps.model.internal.kmp.SourceSetFiles
+import com.autonomousapps.model.internal.kmp.SourceSetFiles.Companion.findSourceSetName
 import java.io.File
 
 internal fun computeAbi(
   classFiles: Set<File>,
   sourceFiles: Set<File>,
+  kmpSources: Set<SourceSetFiles>,
   exclusions: AbiExclusions,
   abiDumpFile: File? = null
-): Set<ExplodingAbi> = getBinaryAPI(classFiles, sourceFiles).explodedAbi(exclusions, abiDumpFile)
+): Set<ExplodingAbi> = getBinaryAPI(classFiles, sourceFiles).explodedAbi(exclusions, kmpSources, abiDumpFile)
 
 private fun List<ClassBinarySignature>.explodedAbi(
   exclusions: AbiExclusions,
+  kmpSources: Set<SourceSetFiles>,
   abiDumpFile: File? = null
 ): Set<ExplodingAbi> {
   return filterOutNonPublic(exclusions)
@@ -60,10 +64,13 @@ private fun List<ClassBinarySignature>.explodedAbi(
         }
       }
 
+      val kmpSourceSetName = kmpSources.findSourceSetName(classSignature)
+
       // return
       ExplodingAbi(
         className = classSignature.canonicalName,
         sourceFile = classSignature.sourceFile,
+        kmpSourceSetName = kmpSourceSetName,
         exposedClasses = exposedClasses.asSequence()
           // We don't report that the JDK is part of the ABI
           .filterNot(ClassNames::isCoreJava)

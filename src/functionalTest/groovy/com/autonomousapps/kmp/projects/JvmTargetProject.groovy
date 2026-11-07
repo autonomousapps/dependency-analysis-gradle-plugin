@@ -15,7 +15,6 @@ import static com.autonomousapps.kit.gradle.Dependency.implementation
 final class JvmTargetProject extends AbstractKmpProject {
 
   static final String CAFFEINE = 'com.github.ben-manes.caffeine:caffeine:3.2.3'
-  static final String KOTLINX_COROUTINES_CORE = 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'
   static final String OKIO = 'com.squareup.okio:okio:3.16.4'
   static final String OK_HTTP = 'com.squareup.okhttp3:okhttp:4.6.0'
 
@@ -218,7 +217,6 @@ final class JvmTargetProject extends AbstractKmpProject {
     Advice.ofRemove(moduleCoordinates(CAFFEINE), 'jvmMainApi'),
     Advice.ofAdd(moduleCoordinates(OK_HTTP), 'commonMainImplementation'),
     Advice.ofChange(moduleCoordinates(OKIO), 'commonMainImplementation', 'commonMainApi'),
-    Advice.ofChange(moduleCoordinates(KOTLINX_COROUTINES_CORE), 'commonMainApi', 'jvmMainImplementation'),
   ]
 
   final Set<ProjectAdvice> expectedBuildHealth = [
@@ -242,9 +240,6 @@ final class JvmTargetProject extends AbstractKmpProject {
       Existing dependencies which should be modified to be as indicated:
         commonMain.dependencies {
           api("$OKIO") (was commonMainImplementation)
-        }
-        jvmMain.dependencies {
-          implementation("$KOTLINX_COROUTINES_CORE") (was commonMainApi)
         }""".stripIndent()
   }
 
@@ -268,6 +263,7 @@ final class JvmTargetProject extends AbstractKmpProject {
         sourceSets {
           commonMain.dependencies {
             api(project.dependencies.platform("com.squareup.okio:okio-bom:3.16.4"))
+            api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
             implementation(project(":producer"))
             api("com.squareup.okio:okio:3.16.4")
             implementation("com.squareup.okhttp3:okhttp:4.6.0")
@@ -277,7 +273,6 @@ final class JvmTargetProject extends AbstractKmpProject {
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
           }
           jvmMain.dependencies {
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
           }
           jvmTest.dependencies {
             implementation(kotlin("test-junit"))
