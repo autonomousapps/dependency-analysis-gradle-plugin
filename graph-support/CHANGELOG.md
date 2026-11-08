@@ -1,7 +1,8 @@
 Graph-Support Changelog
 
-# Version 0.14.0 (unreleased)
+# Version 0.14.0
 * [refactor]: simplify `Graphs.reversed()`.
+* [refactor]: check invariant for better error message in `Graphs.lowestCommonAncestor()`.
 
 # Version 0.13.0
 * [feat]: simplify some interactions with various graph structures.
