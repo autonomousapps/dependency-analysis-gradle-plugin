@@ -1,5 +1,10 @@
 Gradle TestKit Support Changelog
 
+# Version 0.31
+* [feat]: support iOS targets in the kotlin block.
+* [feat]: support kotlin.applyDefaultHierarchyTemplate.
+* [fix]: improve package-match regex.
+
 # Version 0.30
 * [fix]: repo URLs must be quoted.
 
