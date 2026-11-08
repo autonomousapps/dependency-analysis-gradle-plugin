@@ -148,6 +148,7 @@ final class AnnotationsImplementationSpec extends AbstractJvmSpec {
         Source: main
         ------------
         * Uses 1 class: com.google.errorprone.annotations.CanIgnoreReturnValue (implies implementation).
+        * Uses (as or in an annotation) 1 class: com.google.errorprone.annotations.CanIgnoreReturnValue (implies compileOnly).
         
         Source: test
         ------------

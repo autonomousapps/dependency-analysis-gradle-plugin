@@ -5,9 +5,12 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.analyzer.Language
 import com.autonomousapps.internal.parse.SourceListener
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
+import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.model.internal.CodeSource.Kind
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingSourceCode
+import com.autonomousapps.model.internal.kmp.SourceSetFiles
+import com.autonomousapps.model.internal.kmp.SourceSetFiles.Companion.findSourceSetName
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.*
 import org.gradle.api.provider.ListProperty
@@ -109,6 +112,12 @@ public abstract class CodeSourceExploderTask @Inject constructor(
     description = "Parses Java and Kotlin source to detect source-only usages"
   }
 
+  /** Only available in KMP projects. */
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFile
+  public abstract val kmpSources: RegularFileProperty
+
   /** The Groovy source of the current project. */
   @Internal
   protected abstract fun getGroovySourceFiles(): Iterable<File>
@@ -131,6 +140,7 @@ public abstract class CodeSourceExploderTask @Inject constructor(
   @TaskAction public fun action() {
     workerExecutor.noIsolation().submit(CodeSourceExploderWorkAction::class.java) {
       it.projectDir.set(layout.projectDirectory)
+      it.kmpSources.set(kmpSources)
       it.groovySourceFiles.from(getGroovySourceFiles())
       it.javaSourceFiles.from(getJavaSourceFiles())
       it.kotlinSourceFiles.from(getKotlinSourceFiles())
@@ -141,6 +151,7 @@ public abstract class CodeSourceExploderTask @Inject constructor(
 
   public interface CodeSourceExploderParameters : WorkParameters {
     public val projectDir: DirectoryProperty
+    public val kmpSources: RegularFileProperty
     public val groovySourceFiles: ConfigurableFileCollection
     public val javaSourceFiles: ConfigurableFileCollection
     public val kotlinSourceFiles: ConfigurableFileCollection
@@ -153,8 +164,12 @@ public abstract class CodeSourceExploderTask @Inject constructor(
     override fun execute() {
       val reportFile = parameters.output.getAndDelete()
 
+      // may be empty
+      val kmpSources = parameters.kmpSources.fromNullableJsonSet<SourceSetFiles>()
+
       val explodedSource = SourceExploder(
         projectDir = parameters.projectDir.get().asFile,
+        kmpSources = kmpSources,
         groovySourceFiles = parameters.groovySourceFiles,
         javaSourceFiles = parameters.javaSourceFiles,
         kotlinSourceFiles = parameters.kotlinSourceFiles,
@@ -168,6 +183,7 @@ public abstract class CodeSourceExploderTask @Inject constructor(
 
 private class SourceExploder(
   private val projectDir: File,
+  private val kmpSources: Set<SourceSetFiles>,
   private val groovySourceFiles: ConfigurableFileCollection,
   private val javaSourceFiles: ConfigurableFileCollection,
   private val kotlinSourceFiles: ConfigurableFileCollection,
@@ -176,6 +192,7 @@ private class SourceExploder(
 
   fun explode(): Set<ExplodingSourceCode> {
     val destination = sortedSetOf<ExplodingSourceCode>()
+
     javaSourceFiles.mapTo(destination) { f ->
       val rel = relativize(f)
       val sourceListener = SourceListener.parseSourceFile(f)
@@ -185,17 +202,21 @@ private class SourceExploder(
         className = canonicalClassName(pkg, f),
         kind = Kind.JAVA,
         imports = importsFrom(sourceListener),
+        kmpSourceSetName = null,
       )
     }
     kotlinSourceFiles.mapTo(destination) { f ->
       val rel = relativize(f)
       val sourceListener = SourceListener.parseSourceFile(f)
       val pkg = packageFrom(sourceListener)
+      val kmpSourceSetName = kmpSources.findSourceSetName(rel)
+
       ExplodingSourceCode(
         relativePath = rel,
         className = canonicalClassName(pkg, f),
         kind = Kind.KOTLIN,
         imports = importsFrom(sourceListener),
+        kmpSourceSetName = kmpSourceSetName,
       )
     }
     groovySourceFiles.mapTo(destination) { f ->
@@ -207,6 +228,7 @@ private class SourceExploder(
         className = canonicalClassName(pkg, f),
         kind = Kind.GROOVY,
         imports = importsFrom(sourceListener),
+        kmpSourceSetName = null,
       )
     }
     scalaSourceFiles.mapTo(destination) { f ->
@@ -218,6 +240,7 @@ private class SourceExploder(
         className = canonicalClassName(pkg, f),
         kind = Kind.SCALA,
         imports = importsFrom(sourceListener),
+        kmpSourceSetName = null,
       )
     }
 

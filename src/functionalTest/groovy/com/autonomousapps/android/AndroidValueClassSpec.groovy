@@ -3,6 +3,7 @@
 package com.autonomousapps.android
 
 import com.autonomousapps.android.projects.AndroidValueClassProject
+import spock.lang.Issue
 
 import static com.autonomousapps.advice.truth.BuildHealthSubject.buildHealth
 import static com.autonomousapps.utils.Runner.build
@@ -10,6 +11,7 @@ import static com.google.common.truth.Truth.assertAbout
 
 final class AndroidValueClassSpec extends AbstractAndroidSpec {
 
+  @Issue("https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1636")
   def "a value class in the public API of a KMP dependency is an api dependency (#gradleVersion AGP #agpVersion)"() {
     given:
     def project = new AndroidValueClassProject(agpVersion)
