@@ -12,11 +12,11 @@ import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.gradle.Dependency.api
 import static com.autonomousapps.kit.gradle.Dependency.implementation
 
-final class CommonMain extends AbstractKmpProject {
+final class CommonMainProject extends AbstractKmpProject {
 
   final GradleProject gradleProject
 
-  CommonMain() {
+  CommonMainProject() {
     super(KOTLIN_VERSION)
     this.gradleProject = build()
   }
@@ -42,11 +42,6 @@ final class CommonMain extends AbstractKmpProject {
               }
               sourceSets.commonTest { commonTest ->
                 commonTest.dependencies(
-                  implementation('kotlin("test")'),
-                )
-              }
-              sourceSets.jvmTest { jvmTest ->
-                jvmTest.dependencies(
                   implementation('kotlin("test-junit")'),
                 )
               }

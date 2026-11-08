@@ -29,6 +29,9 @@ internal enum class Bucket(val value: String) {
   NONE("n/a"),
   ;
 
+  /** Returns the "higher" or more important bucket. Note this uses [minOf] because of how enum values work. */
+  fun highest(other: Bucket): Bucket = minOf(this, other)
+
   fun isRuntimeBucket(): Boolean = this in runtimeBuckets
 
   fun matches(declaration: Declaration, configurationNames: ConfigurationNames): Boolean {

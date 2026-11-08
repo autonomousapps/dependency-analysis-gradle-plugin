@@ -5,10 +5,10 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.SourceType
-import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
 import static com.autonomousapps.kit.gradle.dependencies.Dependencies.firebaseAnalyticsKtx
 
 final class BundleProject extends AbstractAndroidProject {
@@ -59,11 +59,7 @@ final class BundleProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
-  private final Set<Advice> libAdvice = [
-    Advice.ofChange(moduleCoordinates('com.google.firebase:firebase-analytics-ktx:21.0.0'), 'api', 'implementation')
-  ]
-
   final Set<ProjectAdvice> expectedBuildHealth = [
-    projectAdviceForDependencies(':lib', libAdvice),
+    emptyProjectAdviceFor(':lib'),
   ]
 }

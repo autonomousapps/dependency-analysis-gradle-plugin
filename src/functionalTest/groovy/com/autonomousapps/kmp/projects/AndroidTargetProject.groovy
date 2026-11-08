@@ -14,7 +14,6 @@ import static com.autonomousapps.kit.gradle.Dependency.implementation
 final class AndroidTargetProject extends AbstractKmpProject {
 
   static final String CAFFEINE = 'com.github.ben-manes.caffeine:caffeine:3.2.3'
-  static final String KOTLINX_COROUTINES_CORE = 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'
   static final String OKIO = 'com.squareup.okio:okio:3.16.4'
 
   final GradleProject gradleProject
@@ -25,16 +24,7 @@ final class AndroidTargetProject extends AbstractKmpProject {
   }
 
   private GradleProject build() {
-    return newGradleProjectBuilder(GradleProject.DslKind.KOTLIN)
-      .withRootProject { r ->
-        r.withBuildScript { bs ->
-          bs.plugins(
-            plugins.dependencyAnalysis,
-            plugins.kotlinMultiplatformNoApply,
-            plugins.androidKmpLibNoApply,
-          )
-        }
-      }
+    return newGradleProjectBuilder()
       .withAndroidKmpLibProject('consumer') { s ->
         s.sources = consumerSources()
         s.withBuildScript { bs ->
@@ -171,7 +161,6 @@ final class AndroidTargetProject extends AbstractKmpProject {
 
   private final Set<Advice> consumerAdvice = [
     Advice.ofRemove(moduleCoordinates(CAFFEINE), 'androidMainApi'),
-    Advice.ofChange(moduleCoordinates(KOTLINX_COROUTINES_CORE), 'commonMainApi', 'androidMainImplementation'),
     Advice.ofChange(moduleCoordinates(OKIO), 'commonMainImplementation', 'commonMainApi'),
   ]
 
@@ -188,9 +177,6 @@ final class AndroidTargetProject extends AbstractKmpProject {
         }
                 
       Existing dependencies which should be modified to be as indicated:
-        androidMain.dependencies {
-          implementation("$KOTLINX_COROUTINES_CORE") (was commonMainApi)
-        }
         commonMain.dependencies {
           api("$OKIO") (was commonMainImplementation)
         }""".stripIndent()

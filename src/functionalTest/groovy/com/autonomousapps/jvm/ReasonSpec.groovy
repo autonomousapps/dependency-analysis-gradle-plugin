@@ -136,6 +136,8 @@ final class ReasonSpec extends AbstractJvmSpec {
             Source: main
             ------------
             * Exposes 1 class: okio.ByteString (implies api).
+            * Uses 1 class: okio.ByteString (implies implementation).
+            * Imports 1 class: okio.ByteString (implies implementation).
             
             Source: test
             ------------
@@ -234,6 +236,7 @@ final class ReasonSpec extends AbstractJvmSpec {
             Source: main
             ------------
             * Uses 1 class: com.example.producer.Simpsons (implies implementation).
+            * Imports 1 class: com.example.producer.Simpsons (implies implementation).
             
             Source: test
             ------------

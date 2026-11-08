@@ -10,7 +10,6 @@ import com.autonomousapps.internal.utils.sequenceOfClassFiles
 import com.autonomousapps.internal.utils.toCoordinates
 import com.autonomousapps.model.Coordinates
 import com.squareup.moshi.JsonClass
-import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import java.io.File
 
 @JsonClass(generateAdapter = false)

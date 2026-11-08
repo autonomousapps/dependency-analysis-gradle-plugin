@@ -18,11 +18,8 @@ internal class KotlinSources private constructor(
 ) {
 
   fun names(): Callable<List<String>> = Callable { FileCollectionMap.names(kotlinSourceSets) }
-  fun sourceDirectories(): Callable<List<FileCollection>> =
-    Callable { FileCollectionMap.sourceDirectories(kotlinSourceSets) }
-
-  fun generatedSourceDirectories(): Callable<List<FileCollection>> =
-    Callable { FileCollectionMap.generatedSourceDirectories(kotlinSourceSets) }
+  fun sourceDirectories(): Callable<List<FileCollection>> = Callable { FileCollectionMap.sourceDirectories(kotlinSourceSets) }
+  fun generatedSourceDirectories(): Callable<List<FileCollection>> = Callable { FileCollectionMap.generatedSourceDirectories(kotlinSourceSets) }
 
   internal companion object {
     /** Provides lazy access to Kotlin sources in `commonMain` and `commonTest`, including generated sources. */

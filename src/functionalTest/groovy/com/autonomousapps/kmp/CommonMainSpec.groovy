@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kmp
 
-import com.autonomousapps.kmp.projects.CommonMain
+import com.autonomousapps.kmp.projects.CommonMainProject
 import spock.lang.Issue
 
 import static com.autonomousapps.utils.Runner.build
@@ -13,7 +13,7 @@ final class CommonMainSpec extends AbstractKmpSpec {
   @Issue("https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1746")
   def "does not erroneously suggest changing a dependency from commonMainApi to jvmMainApi (#gradleVersion)"() {
     given:
-    def project = new CommonMain()
+    def project = new CommonMainProject()
     gradleProject = project.gradleProject
 
     when:

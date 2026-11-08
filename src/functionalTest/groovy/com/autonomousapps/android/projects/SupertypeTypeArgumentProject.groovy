@@ -4,15 +4,14 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.kit.gradle.Dependency.api
 
 final class SupertypeTypeArgumentProject extends AbstractAndroidProject {
-
-  private static final String KOTLINX_COROUTINES_CORE = 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'
-
+  
   final GradleProject gradleProject
 
   SupertypeTypeArgumentProject(String agpVersion) {
@@ -27,9 +26,7 @@ final class SupertypeTypeArgumentProject extends AbstractAndroidProject {
         s.withBuildScript { bs ->
           bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock('com.example.consumer')
-          bs.dependencies(
-            Dependency.api(KOTLINX_COROUTINES_CORE),
-          )
+          bs.dependencies(api('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'))
         }
       }
       .write()
@@ -46,7 +43,6 @@ final class SupertypeTypeArgumentProject extends AbstractAndroidProject {
           interface Consumer : Comparable<Deferred<List<String>>>
         '''
       )
-      .withPath('com.example.consumer', 'Consumer')
       .build(),
   ]
 

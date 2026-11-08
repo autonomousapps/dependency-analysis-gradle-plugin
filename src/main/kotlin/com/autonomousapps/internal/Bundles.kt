@@ -9,6 +9,7 @@ import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.model.*
 import com.autonomousapps.model.Coordinates.Companion.copy
 import com.autonomousapps.model.internal.DependencyGraphView
+import com.autonomousapps.model.internal.ProjectType
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.declaration.ConfigurationNames
 import com.autonomousapps.model.internal.declaration.Declaration
@@ -124,13 +125,32 @@ internal class Bundles private constructor(
         .maxBy(declarationSelector)
     }
 
-    // We don't touch runtimeOnly or compileOnly advice.
-    return if (preferredBucket != Bucket.RUNTIME_ONLY && preferredBucket != Bucket.COMPILE_ONLY) {
-      if (parentDeclaration.configurationName != addAdvice.toConfiguration) {
+    val parentBucket = parentDeclaration.bucket(configurationNames)
+
+    // Only change the advice if it's from implementation -> api. We don't change compileOnly or runtimeOnly advice.
+    return if (preferredBucket == Bucket.API && parentBucket == Bucket.IMPL) {
+      // TODO(tsr): there's a bug that probably impacts all project types, but I've only just noticed while working on KMP.
+      val toConfiguration = if (configurationNames.projectType == ProjectType.KMP) {
+        when (parentDeclaration.configurationName) {
+          // Handle the `commonX` cases
+          "commonMainImplementation" -> "commonMainApi"
+          "commonTestImplementation" -> "commonTestApi"
+
+          // This means the parent is in the same source set
+          else -> addAdvice.toConfiguration
+        }
+      } else if (parentDeclaration.configurationName == "implementation") {
+        "api"
+      } else {
+        // TODO(tsr): handle any other cases?
+        null
+      }
+
+      if (toConfiguration != null) {
         Advice.ofChange(
           coordinates = parentCoordinates.withoutDefaultCapability(),
           fromConfiguration = parentDeclaration.configurationName,
-          toConfiguration = addAdvice.toConfiguration,
+          toConfiguration = toConfiguration,
         )
       } else {
         addAdvice
@@ -138,6 +158,24 @@ internal class Bundles private constructor(
     } else {
       addAdvice
     }
+
+    // TODO(tsr): this broke KMP-related advice.
+    //  See `BundleSpec#kmp deps don't get moved to other source sets, breaking the build`
+    //  Need to clean up this mess of a method!
+//    // We don't touch runtimeOnly or compileOnly advice.
+//    return if (preferredBucket != Bucket.RUNTIME_ONLY && preferredBucket != Bucket.COMPILE_ONLY) {
+//      if (parentDeclaration.configurationName != addAdvice.toConfiguration) {
+//        Advice.ofChange(
+//          coordinates = parentCoordinates.withoutDefaultCapability(),
+//          fromConfiguration = parentDeclaration.configurationName,
+//          toConfiguration = addAdvice.toConfiguration,
+//        )
+//      } else {
+//        addAdvice
+//      }
+//    } else {
+//      addAdvice
+//    }
   }
 
   fun hasUsedChild(coordinates: Coordinates): Boolean {

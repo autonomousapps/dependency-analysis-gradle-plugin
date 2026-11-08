@@ -172,7 +172,6 @@ private class GraphVisitor(
   }
 
   private val primarySourceKind = project.sourceKind
-  // TODO: anything to clean up?
   private val kmpSourceGraph = project.kmpSourceGraph?.graph
   private val kmpSourceSetNameMatcher = KmpSourceSetNameMatcher(kmpSourceGraph, primarySourceKind)
   val reportsBuilder = DependencyTraceReports(
@@ -251,19 +250,29 @@ private class GraphVisitor(
             usesTestInstrumentationRunner = true
           }
 
+          var hasUsage = false
           if (isAbi(dependencyCoordinates, capability, context)) {
             isApiCandidate = true
-          } else if (isImplementation(dependencyCoordinates, capability, context)) {
-            isImplCandidate = true
-          } else if (isImported(dependencyCoordinates, capability, context)) {
-            isImplByImportCandidate = true
-          } else if (isForMissingSuperclass(dependencyCoordinates, context)) {
-            isImplCandidate = true
-          } else if (usesAnnotation(dependencyCoordinates, capability, context)) {
-            isAnnotationCandidate = true
-          } else {
-            isUnusedCandidate = true
+            hasUsage = true
           }
+          if (isImplementation(dependencyCoordinates, capability, context)) {
+            isImplCandidate = true
+            hasUsage = true
+          }
+          if (isImported(dependencyCoordinates, capability, context)) {
+            isImplByImportCandidate = true
+            hasUsage = true
+          }
+          if (isForMissingSuperclass(dependencyCoordinates, context)) {
+            isImplCandidate = true
+            hasUsage = true
+          }
+          if (usesAnnotation(dependencyCoordinates, capability, context)) {
+            isAnnotationCandidate = true
+            hasUsage = true
+          }
+
+          isUnusedCandidate = isUnusedCandidate || !hasUsage
         }
 
         is ConstantCapability -> {
@@ -1019,7 +1028,7 @@ private class GraphVisitor(
     }
   }
 
-  private fun Set<ClassReference>.getRootMostSourceKind(): SourceKind = getRootMostSourceKind(kmpSourceSetNameMatcher)
+  private fun Set<ClassReference>.getRootMostSourceKind(): SourceKind = getPrimarySourceKind(kmpSourceSetNameMatcher)
 
   private fun usesAnnotationProcessor(
     coordinates: Coordinates,
@@ -1097,7 +1106,7 @@ private class AnnotationProcessorDetector(
     reportsBuilder.reason(sourceKind, coordinates, Kind.ANNOTATION_PROCESSOR, reason)
   }
 
-  private fun Set<ClassReference>.getPrimarySourceKind(): SourceKind = getRootMostSourceKind(sourceSetNameMatcher)
+  private fun Set<ClassReference>.getPrimarySourceKind(): SourceKind = getPrimarySourceKind(sourceSetNameMatcher)
 }
 
 private class ResByResAnalysisResult(
@@ -1105,6 +1114,6 @@ private class ResByResAnalysisResult(
   val usesForRuntime: Boolean,
 )
 
-private fun Set<ClassReference>.getRootMostSourceKind(sourceSetNameMatcher: KmpSourceSetNameMatcher): SourceKind {
+private fun Set<ClassReference>.getPrimarySourceKind(sourceSetNameMatcher: KmpSourceSetNameMatcher): SourceKind {
   return sourceSetNameMatcher.getLowestCommonAncestor(this)
 }

@@ -5,6 +5,7 @@ package com.autonomousapps.android.projects
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
 import com.autonomousapps.kit.gradle.Dependency
+import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
 import static com.autonomousapps.AdviceHelper.*
@@ -50,7 +51,6 @@ final class VariantDeclarationProject extends AbstractAndroidProject {
           }
         '''
       )
-      .withPath('com.example.consumer', 'Consumer')
       .build(),
   ]
 
@@ -58,7 +58,13 @@ final class VariantDeclarationProject extends AbstractAndroidProject {
     return actualProjectAdvice(gradleProject)
   }
 
+  private final Set<Advice> consumerAdvice = [
+    Advice.ofRemove(moduleCoordinates(KOTLINX_COROUTINES_CORE), 'debugImplementation'),
+    Advice.ofRemove(moduleCoordinates(KOTLINX_COROUTINES_CORE), 'releaseImplementation'),
+    Advice.ofAdd(moduleCoordinates(KOTLINX_COROUTINES_CORE), 'implementation'),
+  ]
+
   final Set<ProjectAdvice> expectedBuildHealth = [
-    emptyProjectAdviceFor(':consumer'),
+    projectAdviceForDependencies(':consumer', consumerAdvice),
   ]
 }

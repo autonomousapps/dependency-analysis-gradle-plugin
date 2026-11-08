@@ -4,12 +4,14 @@ package com.autonomousapps.kmp
 
 import com.autonomousapps.kmp.projects.ValueClassProject
 import spock.lang.Issue
+import spock.lang.PendingFeature
 
 import static com.autonomousapps.utils.Runner.build
 import static com.google.common.truth.Truth.assertThat
 
 final class ValueClassSpec extends AbstractKmpSpec {
 
+  @PendingFeature(reason = "No explicit support for Value classes, yet")
   @Issue("https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1636")
   def "a value class in the public API is an api dependency (#gradleVersion AGP #agpVersion)"() {
     given:

@@ -338,8 +338,13 @@ internal class DependencyAdviceBuilder(
     }
 
     fun Advice.isAddTestDependencyOnSelf(): Boolean {
-      return coordinates.identifier == projectPath
-        && (fromConfiguration == null && toConfiguration?.equals("testImplementation") == true)
+      // Must be this project
+      if (coordinates.identifier != projectPath) return false
+      // Must be add-advice
+      if (fromConfiguration != null || toConfiguration == null) return false
+
+      // Handle testImplementation, commonTestImplementation, jvmTestImplementation, etc.
+      return toConfiguration.endsWith("testimplementation", ignoreCase = true)
     }
 
     return dependencyUsages.asSequence()

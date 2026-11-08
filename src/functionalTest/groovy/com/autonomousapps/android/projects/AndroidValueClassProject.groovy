@@ -4,10 +4,11 @@ package com.autonomousapps.android.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.gradle.Dependency
 import com.autonomousapps.model.ProjectAdvice
 
-import static com.autonomousapps.AdviceHelper.*
+import static com.autonomousapps.AdviceHelper.actualProjectAdvice
+import static com.autonomousapps.AdviceHelper.emptyProjectAdviceFor
+import static com.autonomousapps.kit.gradle.Dependency.api
 
 final class AndroidValueClassProject extends AbstractAndroidProject {
 
@@ -27,9 +28,7 @@ final class AndroidValueClassProject extends AbstractAndroidProject {
         s.withBuildScript { bs ->
           bs.plugins(androidLib())
           bs.android = defaultAndroidLibBlock('com.example.consumer')
-          bs.dependencies(
-            Dependency.api(KOTLINX_COROUTINES_CORE),
-          )
+          bs.dependencies(api(KOTLINX_COROUTINES_CORE))
         }
       }
       .write()
