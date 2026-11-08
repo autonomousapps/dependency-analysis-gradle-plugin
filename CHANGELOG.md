@@ -1,5 +1,10 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.20.2
+* [fix]: resolve various regressions in v3.20.0 and v3.20.1.
+
+Special thanks to [Eliezer Graber](https://github.com/eygraber) for helping create many regression tests.
+
 # Version 3.20.1
 * [fix]: resolve various issues with KMP-related advice and rewriting capabilities.
 * [fix]: find the lowest common ancestor in a KMP source set hierarchy.
