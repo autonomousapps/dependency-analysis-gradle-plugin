@@ -4,6 +4,7 @@ package com.autonomousapps.kit.gradle
 
 import com.autonomousapps.kit.gradle.android.AndroidLibraryTarget
 import com.autonomousapps.kit.gradle.kotlin.HierarchyTemplate
+import com.autonomousapps.kit.gradle.kotlin.KotlinCompilations
 import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
 import com.autonomousapps.kit.gradle.kotlin.KotlinNativeTarget
 import com.autonomousapps.kit.gradle.kotlin.KotlinSourceSets
@@ -60,6 +61,26 @@ public class Kotlin @JvmOverloads constructor(
       val hierarchyTemplateBuilder = hierarchyTemplateBuilder ?: HierarchyTemplate.Builder()
       block(hierarchyTemplateBuilder)
       this.hierarchyTemplateBuilder = hierarchyTemplateBuilder
+    }
+
+    /**
+     * ```
+     * kotlin {
+     *   // 1
+     *   jvm()
+     *   // 2
+     *   jvm("foo")
+     *   // 3
+     *   jvm(/* optional artifact name */) {
+     *     compilations { ... }
+     *   }
+     * }
+     * ```
+     */
+    @JvmOverloads
+    public fun jvm(artifactName: String? = null, compilations: String? = null) {
+      val kotlinCompilations = compilations?.let { KotlinCompilations(it) }
+      jvmTarget = KotlinJvmTarget(artifactName = artifactName, compilations = kotlinCompilations)
     }
 
     public fun sourceSets(block: (KotlinSourceSets.Builder) -> Unit) {

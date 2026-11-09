@@ -5,6 +5,19 @@ package com.autonomousapps.kit.gradle.kotlin
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
+/**
+ * ```
+ * kotlin {
+ *   jvm {
+ *     compilations {
+ *       ... raw string content ...
+ *     }
+ *   }
+ * }
+ * ```
+ *
+ * @see <a href="https://kotlinlang.org/docs/multiplatform/multiplatform-configure-compilations.html#create-a-custom-compilation">Creating a custom compilation</a>
+ */
 public class KotlinCompilations(
   private val content: String,
 ) : Element.Block {
