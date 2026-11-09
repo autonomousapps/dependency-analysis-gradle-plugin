@@ -214,6 +214,12 @@ internal class Bundles private constructor(
   companion object {
     private const val GRADLE_PLUGIN_MARKER_SUFFIX = ".gradle.plugin"
 
+    private val TARGETS = listOf(
+      "android",
+      "desktop",
+      "jvm",
+    )
+
     fun of(
       projectPath: String,
       dependencyGraph: Map<String, DependencyGraphView>,
@@ -285,9 +291,8 @@ internal class Bundles private constructor(
               ?.let { child -> bundles[parentNode] = child }
           }
 
-          // Implicit KMP bundles for JVM and Android (inverse form compared to ktx)
-          implicitKmpBundleFor("jvm")
-          implicitKmpBundleFor("android")
+          // Implicit KMP bundles supported targets (inverse form compared to ktx)
+          TARGETS.forEach { target -> implicitKmpBundleFor(target) }
         }
 
         // handle Gradle plugin marker artifacts buried in the graph
@@ -326,9 +331,8 @@ internal class Bundles private constructor(
             }
         }
 
-        // Find implicit KMP JVM and Android bundles buried in the graph
-        implicitKmpPrimaryFor("jvm")
-        implicitKmpPrimaryFor("android")
+        // Find implicit bundles buried in the graph
+        TARGETS.forEach { target -> implicitKmpPrimaryFor(target) }
       }
 
       return bundles
