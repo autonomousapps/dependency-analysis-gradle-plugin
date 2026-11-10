@@ -4,6 +4,7 @@ package com.autonomousapps.kmp.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
+import com.autonomousapps.kit.gradle.Plugin
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
 
@@ -24,6 +25,19 @@ final class DuplicateSourceProject extends AbstractKmpProject {
   private GradleProject build() {
     return newGradleProjectBuilder(GradleProject.DslKind.KOTLIN)
       .withRootProject { r ->
+        // TODO: delete this block
+        r.withSettingsScript { settings ->
+          settings.plugins(Plugin.develocity)
+          settings.additions = '''\
+              develocity {
+                server = "https://community.develocity.cloud"
+                projectId = "autonomousapps"
+                buildScan {
+                  publishing.onlyIf { true }
+                }
+              }
+            '''.stripIndent()
+        }
         r.withBuildScript { bs ->
           bs.plugins(plugins.androidKmpRootPlugins)
         }

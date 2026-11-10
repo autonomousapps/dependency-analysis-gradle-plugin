@@ -200,7 +200,10 @@ internal data class DependencyTraceReport(
       } else if (kmpSourceGraph != null) {
         val sourceSetNames = sourceKinds.map { it.name }
         val lca = kmpSourceGraph.graph.lowestCommonAncestor(KmpSourceKind.COMMON_MAIN_NAME, sourceSetNames)
-        sourceKinds.firstOrNull { it.name == lca } ?: ambiguousSourceKindError()
+        sourceKinds.firstOrNull { it.name == lca }
+        // TODO(tsr): I'm not very happy about this solution. It seems to be caused by duplicate sources. See
+        //  `kmp.DuplicateSourceSpec`.
+          ?: KmpSourceKind.of(lca)
       } else {
         ambiguousSourceKindError()
       }
