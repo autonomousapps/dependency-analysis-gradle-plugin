@@ -6,10 +6,7 @@ import com.autonomousapps.internal.AbiExclusions
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.asm.Opcodes
 import com.autonomousapps.internal.asm.tree.ClassNode
-import com.autonomousapps.internal.utils.annotationTypes
-import com.autonomousapps.internal.utils.appendReproducibleNewLine
-import com.autonomousapps.internal.utils.filterNotToSet
-import com.autonomousapps.internal.utils.genericTypes
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.internal.AccessFlags
 import java.io.File
 import java.io.InputStream
@@ -30,46 +27,66 @@ internal fun main(args: Array<String>) {
   getBinaryAPI(JarFile(src)).filterOutNonPublic().dump()
 }
 
+private class ClassFile(
+  val path: String,
+  val inputStream: InputStream,
+)
+
 internal fun JarFile.classEntries() = Sequence { entries().iterator() }.filter {
   !it.isDirectory && it.name.endsWith(".class") && !it.name.startsWith("META-INF/")
 }
 
-internal fun getBinaryAPI(jar: JarFile, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> =
-  getBinaryAPI(jar.classEntries().map { entry -> jar.getInputStream(entry) }, visibilityFilter =  visibilityFilter)
+internal fun getBinaryAPI(jar: JarFile, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> {
+  return getBinaryAPI(
+    jar.classEntries().map { entry ->
+      ClassFile(
+        path = jar.name,
+        inputStream = jar.getInputStream(entry)
+      )
+    },
+    visibilityFilter = visibilityFilter
+  )
+}
 
 internal fun getBinaryAPI(
   classes: Set<File>,
   sourceFiles: Set<File>,
   visibilityFilter: (String) -> Boolean = { true }
 ): List<ClassBinarySignature> =
-  getBinaryAPI(classes.asSequence().map { it.inputStream() }, sourceFiles, visibilityFilter)
+  getBinaryAPI(classes.asSequence().map { ClassFile(it.path, it.inputStream()) }, sourceFiles, visibilityFilter)
 
-internal fun getBinaryAPI(
-  classStreams: Sequence<InputStream>,
+private fun getBinaryAPI(
+  classStreams: Sequence<ClassFile>,
   sourceFiles: Set<File> = emptySet(),
   visibilityFilter: (String) -> Boolean = { true }
 ): List<ClassBinarySignature> {
-  val classNodes = classStreams.map {
-    it.use { stream ->
-      val classNode = ClassNode()
-      ClassReader(stream).accept(classNode, ClassReader.SKIP_CODE)
-      classNode
-    }
-  }.toSet() // eagerly transform this into a Set, because it will be iterated several times
+  val classNodes = classStreams
+    .map {
+      it.inputStream.use { stream ->
+        val classNode = ClassNode()
+        ClassReader(stream).accept(classNode, ClassReader.SKIP_CODE)
 
-  val moduleInfo = classNodes.find { it.name == "module-info" }
+        it.path to classNode
+      }
+    }
+    .toSet() // eagerly transform this into a Set, because it will be iterated several times
+
+  val moduleInfo = classNodes.find { it.second.name == "module-info" }?.second
   val exportedPackages = moduleInfo?.module?.exportedPackages()
 
-  val visibilityMapNew = classNodes.readKotlinVisibilities().filterKeys(visibilityFilter)
+  val visibilityMapNew = classNodes
+    .mapToSet { it.second }
+    .readKotlinVisibilities()
+    .filterKeys(visibilityFilter)
 
   val sourceFilePackageReversedBySourceFile = sourceFiles.associateWith {
     it.parentFile.invariantSeparatorsPath.split('/').reversed()
   }
 
   return classNodes
-    .filter { it != moduleInfo }
+    .filter { it.second != moduleInfo }
     .map { clazz ->
-      with(clazz) {
+      with(clazz.second) {
         val metadata = kotlinMetadata
 
         val kmFunctions = when (metadata) {
@@ -126,8 +143,13 @@ internal fun getBinaryAPI(
               )
             }
           }
-          ).filter {
-            it.isEffectivelyPublic(classAccess, exportedPackages?.contains(clazz.packageName()) ?: true, mVisibility)
+          )
+          .filter { memberBinarySignature ->
+            memberBinarySignature.isEffectivelyPublic(
+              classAccess,
+              exportedPackages?.contains(clazz.second.packageName()) ?: true,
+              mVisibility,
+            )
           }
 
         val genericTypes = signature?.genericTypes().orEmpty()
@@ -142,8 +164,8 @@ internal fun getBinaryAPI(
           extractClassesAsDescriptors(kmFunction.returnType)
         }.toSet()
 
-        val sourceFileName = clazz.sourceFile ?: "${clazz.name.substringAfterLast('/')}."
-        val clazzPackageReversed = clazz.name.substringBeforeLast('/').split('/').reversed()
+        val sourceFileName = clazz.second.sourceFile ?: "${clazz.second.name.substringAfterLast('/')}."
+        val clazzPackageReversed = clazz.second.name.substringBeforeLast('/').split('/').reversed()
         val sourceFile = sourceFilePackageReversedBySourceFile
           .filterKeys { it.name.startsWith(sourceFileName) }
           .maxByOrNull { (_, sourceFilePackageReversed) ->
@@ -169,7 +191,8 @@ internal fun getBinaryAPI(
           isNotUsedWhenEmpty = metadata.isFileOrMultipartFacade() || isDefaultImpls(metadata),
           annotations = visibleAnnotations.annotationTypes(),
           invisibleAnnotations = invisibleAnnotations.annotationTypes(),
-          sourceFile = sourceFile
+          sourceFile = sourceFile,
+          classFilePath = clazz.first,
         )
       }
     }

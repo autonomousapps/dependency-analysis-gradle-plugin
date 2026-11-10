@@ -86,7 +86,7 @@ private class BytecodeReader(
 
     // For KMP projects, we associate the analyzed class file with the source file on disk, to bridge the compilation-
     // source set gap. This value should always be non-null for KMP projects, and null otherwise.
-    val kmpSourceSetName = kmpSources.findSourceSetName(classAnalyzer)
+    val kmpSourceSetName = kmpSources.findSourceSetName(classAnalyzer, relativePath)
 
     // TODO(tsr): use this somehow? I think these should be considered compileOnly candidates
     //  Look at `CompileOnlySpec#annotations can be compileOnly`. It detects usage of Producer because it is imported,

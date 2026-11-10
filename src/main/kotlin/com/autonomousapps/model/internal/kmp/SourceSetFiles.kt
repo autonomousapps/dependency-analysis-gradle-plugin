@@ -36,34 +36,88 @@ public data class SourceSetFiles(
      * For KMP projects, we associate the analyzed class file with the source file on disk, to bridge the compilation-
      * source set gap. This value should always be non-null for KMP projects, and null otherwise.
      */
-    fun Set<SourceSetFiles>.findSourceSetName(classAnalyzer: ClassAnalyzer): String? {
+    fun Set<SourceSetFiles>.findSourceSetName(classAnalyzer: ClassAnalyzer, relativePath: String): String? {
+      val matches = filter { sources ->
+        sources.sourceFiles.any { f ->
+          // a standard source/class file
+          f.removeSuffix(".kt") == classAnalyzer.className
+            // a class created from top-level functions in the root package
+            || f == classAnalyzer.source
+            // a class created from top-level functions in a non-root package
+            || f == classAnalyzer.className.substringBeforeLast('/') + '/' + classAnalyzer.source
+            // An inlined lambda, e.g.: "consumer/common/main/ValuesKt$values$$inlined$map$1$2$1"
+            || classAnalyzer.className.startsWith("${f.asClassSignature()}$")
+        }
+      }
+
+      val match = if (matches.size == 1) {
+        matches.first()
+      } else {
+        matches.find { sources ->
+          sources.sourceFiles.any { f -> matchesRelativePath(relativePath, sources, f) }
+        }
+      }
+
+      return match?.sourceSetName
+    }
+
+    fun Set<SourceSetFiles>.findSourceSetName(classSignature: ClassBinarySignature): String? {
+      val matches = filter { sources ->
+        sources.sourceFiles.any { f ->
+          // a standard source/class file
+          f.removeSuffix(".kt") == classSignature.name
+            // a class created from top-level functions
+            || f.asClassSignature() == classSignature.name
+        }
+      }
+
+      val match = if (matches.size == 1) {
+        matches.first()
+      } else {
+        matches.find { sources ->
+          sources.sourceFiles.any { f -> matchesRelativePath(classSignature.classFilePath, sources, f) }
+        }
+      }
+
+      return match?.sourceSetName
+    }
+
+    /**
+     * For KMP projects, we must find the source set name associated with [relativePath] so we can produce precise
+     * analysis. TODO(tsr): this function has no unit tests.
+     */
+    fun Set<SourceSetFiles>.findSourceSetName(relativePath: String): String? {
       return this
         .find { sources ->
-          sources.sourceFiles.any { f ->
-            // a standard source/class file
-            f.removeSuffix(".kt") == classAnalyzer.className
-              // a class created from top-level functions in the root package
-              || f == classAnalyzer.source
-              // a class created from top-level functions in a non-root package
-              || f == classAnalyzer.className.substringBeforeLast('/') + '/' + classAnalyzer.source
-              // An inlined lambda, e.g.: "consumer/common/main/ValuesKt$values$$inlined$map$1$2$1"
-              || classAnalyzer.className.startsWith("${f.asClassSignature()}$")
-          }
+          // "src/commonMain/kotlin" + "/" + "com/foo/Bar.kt"
+          sources.sourceFiles.any { f -> "${sources.sourceBase}/$f" == relativePath }
         }
         ?.sourceSetName
     }
 
-    fun Set<SourceSetFiles>.findSourceSetName(classSignature: ClassBinarySignature): String? {
-      return this
-        .find { sources ->
-          sources.sourceFiles.any { f ->
-            // a standard source/class file
-            f.removeSuffix(".kt") == classSignature.name
-              // a class created from top-level functions
-              || f.asClassSignature() == classSignature.name
-          }
-        }
-        ?.sourceSetName
+    // TODO(tsr): I can probably clean this up, right?
+    // This is sadly only a heuristic, required for times when there are duplicate source files on disk
+    // A relative path looks like `classes/kotlin/jvm/main/r/VKt.class`. A file looks like `r/V.kt`.
+    private fun matchesRelativePath(relativePath: String, sources: SourceSetFiles, file: String): Boolean {
+      // "r/V.kt" => "/r"
+      val packagePath = "/" + file.substringBeforeLast('/')
+      val parts = relativePath
+        // "classes/kotlin/jvm/main/r/VKt.class" => "jvm/main/r/VKt.class"
+        // "/Users/me/project/build/classes/kotlin/jvm/main/r/VKt.class" => "jvm/main/r/VKt.class"
+        .substringAfterLast("classes/kotlin/")
+        // "jvm/main/r/VKt.class" => "jvm/main/r"
+        .substringBeforeLast('/')
+        // "jvm/main/r" => "jvm/main"
+        .substringBeforeLast(packagePath)
+        // "jvm/main" => ["jvm", "main"]
+        .split('/')
+
+      require(parts.size > 1) { "Expected multiple parts. Was '$parts'." }
+
+      // ["jvm", "main"] => "jvmMain"
+      val sourceSetName = parts.first() + parts.drop(1).joinToString(separator = "") { it.capitalizeSafely() }
+
+      return sources.sourceSetName == sourceSetName
     }
 
     /**
@@ -81,19 +135,6 @@ public data class SourceSetFiles(
       // `length - 3` removes the `".kt"` suffix
       val className = substring(i, length - 3).capitalizeSafely() + "Kt"
       return "$pkg$className"
-    }
-
-    /**
-     * For KMP projects, we must find the source set name associated with [relativePath] so we can produce precise
-     * analysis.
-     */
-    fun Set<SourceSetFiles>.findSourceSetName(relativePath: String): String? {
-      return this
-        .find { sources ->
-          // "src/commonMain/kotlin" + "/" + "com/foo/Bar.kt"
-          sources.sourceFiles.any { f -> "${sources.sourceBase}/$f" == relativePath }
-        }
-        ?.sourceSetName
     }
   }
 }

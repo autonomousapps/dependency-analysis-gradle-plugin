@@ -200,9 +200,9 @@ internal data class DependencyTraceReport(
       } else if (kmpSourceGraph != null) {
         val sourceSetNames = sourceKinds.map { it.name }
         val lca = kmpSourceGraph.graph.lowestCommonAncestor(KmpSourceKind.COMMON_MAIN_NAME, sourceSetNames)
-        sourceKinds.first { it.name == lca }
+        sourceKinds.firstOrNull { it.name == lca } ?: ambiguousSourceKindError()
       } else {
-        error("Could not determine sourceKind for dependency trace report. Available SourceKinds: $sourceKinds")
+        ambiguousSourceKindError()
       }
 
       return DependencyTraceReport(
@@ -212,6 +212,10 @@ internal data class DependencyTraceReport(
         dependencies = dependencies.withReasons(),
         annotationProcessors = annotationProcessors.withReasons(),
       )
+    }
+
+    private fun ambiguousSourceKindError(): Nothing {
+      error("Could not determine sourceKind for dependency trace report. Available SourceKinds: $sourceKinds")
     }
 
     private fun Map<Coordinates, Trace>.withReasons(): Set<Trace> = values.mapToSet {
