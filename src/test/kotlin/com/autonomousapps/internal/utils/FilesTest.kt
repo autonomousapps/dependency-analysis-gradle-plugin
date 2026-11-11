@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.utils
 
-import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
 import java.io.File
 
@@ -16,7 +16,7 @@ internal class FilesTest {
     val actual = Files.relativize(original, "build/classes/kotlin/main/")
 
     // Then we get
-    Truth.assertThat(actual).isEqualTo("com/example/MyClass.class")
+    assertThat(actual).isEqualTo("com/example/MyClass.class")
   }
 
   @Test fun `can get package path`() {
@@ -27,6 +27,6 @@ internal class FilesTest {
     val actual = Files.asPackagePath(original)
 
     // Then we get
-    Truth.assertThat(actual).isEqualTo("com/example/MyClass.class")
+    assertThat(actual).isEqualTo("com/example/MyClass.class")
   }
 }

@@ -49,31 +49,31 @@ internal class SourceSetFilesTest {
       // not a typo. androidMain source set (build/classes/kotlin/android/main/) and android.main package (.../android/main/Platform.class)
       val classSignature = classSignature(
         "consumer/android/main/Platform",
-        "/Users/me/consumer/build/classes/kotlin/android/main/android/main/Platform.class"
+        "build/classes/kotlin/android/main/android/main/Platform.class"
       )
       assertThat(sourceSetFiles.findSourceSetName(classSignature)).isEqualTo("androidMain")
     }
 
     @Test fun `can find source set name in checked-in file in root package`() {
-      val classSignature = classSignature("Foo", "/Users/me/consumer/build/classes/kotlin/android/main/Foo.class")
+      val classSignature = classSignature("Foo", "build/classes/kotlin/android/main/Foo.class")
       assertThat(sourceSetFiles.findSourceSetName(classSignature)).isEqualTo("androidMain")
     }
 
     @Test fun `can find source set name in generated file in non-root package`() {
       // TODO(tsr): validate class file path for generated source code
       val classSignature =
-        classSignature("a/b/GeneratedKt", "/Users/me/consumer/build/classes/kotlin/common/main/a/b/GeneratedKt.class")
+        classSignature("a/b/GeneratedKt", "build/classes/kotlin/common/main/a/b/GeneratedKt.class")
       assertThat(sourceSetFiles.findSourceSetName(classSignature)).isEqualTo("commonMain")
     }
 
     @Test fun `can find source set name from class signature in generated file in root package`() {
       val classSignature =
-        classSignature("GeneratedKt", "/Users/me/consumer/build/classes/kotlin/common/main/GeneratedKt.class")
+        classSignature("GeneratedKt", "build/classes/kotlin/common/main/GeneratedKt.class")
       assertThat(sourceSetFiles.findSourceSetName(classSignature)).isEqualTo("commonMain")
     }
 
     @Test fun `can find source set name from class signature when there are duplicate sources`() {
-      val classSignature = classSignature("r/VKt", "/Users/me/consumer/build/classes/kotlin/android/main/VKt.class")
+      val classSignature = classSignature("r/VKt", "build/classes/kotlin/android/main/VKt.class")
       assertThat(duplicateSourceSetFiles.findSourceSetName(classSignature)).isEqualTo("androidMain")
     }
 

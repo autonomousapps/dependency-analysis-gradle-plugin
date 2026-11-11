@@ -103,7 +103,7 @@ public data class SourceSetFiles(
       val packagePath = "/" + file.substringBeforeLast('/')
       val parts = relativePath
         // "classes/kotlin/jvm/main/r/VKt.class" => "jvm/main/r/VKt.class"
-        // "/Users/me/project/build/classes/kotlin/jvm/main/r/VKt.class" => "jvm/main/r/VKt.class"
+        // "build/classes/kotlin/jvm/main/r/VKt.class" => "jvm/main/r/VKt.class"
         .substringAfterLast("classes/kotlin/")
         // "jvm/main/r/VKt.class" => "jvm/main/r"
         .substringBeforeLast('/')

@@ -202,7 +202,7 @@ internal data class DependencyTraceReport(
         val lca = kmpSourceGraph.graph.lowestCommonAncestor(KmpSourceKind.COMMON_MAIN_NAME, sourceSetNames)
         sourceKinds.firstOrNull { it.name == lca }
         // TODO(tsr): I'm not very happy about this solution. It seems to be caused by duplicate sources. See
-        //  `kmp.DuplicateSourceSpec`.
+        //  `kmp.DuplicateSourceSpec`. Note this only fails on a second try, so I think there's some build cache bug.
           ?: KmpSourceKind.of(lca)
       } else {
         ambiguousSourceKindError()
