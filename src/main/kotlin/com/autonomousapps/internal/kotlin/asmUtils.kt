@@ -24,6 +24,7 @@ internal data class ClassBinarySignature(
   val annotations: Set<String>,
   val invisibleAnnotations: Set<String>,
   val sourceFile: String?,
+  val classFilePath: String,
 ) {
   val canonicalName = name.replace('/', '.')
   val signature: String
