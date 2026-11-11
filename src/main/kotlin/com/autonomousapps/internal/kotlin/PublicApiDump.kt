@@ -11,7 +11,6 @@ import com.autonomousapps.model.internal.AccessFlags
 import java.io.File
 import java.io.InputStream
 import java.io.PrintStream
-import java.util.jar.JarFile
 import kotlin.metadata.KmClassifier
 import kotlin.metadata.KmType
 import kotlin.metadata.isSuspend
@@ -20,40 +19,23 @@ import kotlin.metadata.jvm.JvmMethodSignature
 import kotlin.metadata.jvm.KotlinClassMetadata
 import kotlin.metadata.jvm.signature
 
-internal fun main(args: Array<String>) {
-  val src = args[0]
-  println(src)
-  println("------------------\n")
-  getBinaryAPI(JarFile(src)).filterOutNonPublic().dump()
-}
-
 private class ClassFile(
   val path: String,
   val inputStream: InputStream,
 )
 
-internal fun JarFile.classEntries() = Sequence { entries().iterator() }.filter {
-  !it.isDirectory && it.name.endsWith(".class") && !it.name.startsWith("META-INF/")
-}
-
-internal fun getBinaryAPI(jar: JarFile, visibilityFilter: (String) -> Boolean = { true }): List<ClassBinarySignature> {
-  return getBinaryAPI(
-    jar.classEntries().map { entry ->
-      ClassFile(
-        path = jar.name,
-        inputStream = jar.getInputStream(entry)
-      )
-    },
-    visibilityFilter = visibilityFilter
-  )
-}
-
 internal fun getBinaryAPI(
+  projectDir: File,
   classes: Set<File>,
   sourceFiles: Set<File>,
   visibilityFilter: (String) -> Boolean = { true }
-): List<ClassBinarySignature> =
-  getBinaryAPI(classes.asSequence().map { ClassFile(it.path, it.inputStream()) }, sourceFiles, visibilityFilter)
+): List<ClassBinarySignature> {
+  val streams = classes.asSequence().map { classFile ->
+    val path = classFile.toRelativeString(projectDir)
+    ClassFile(path, classFile.inputStream())
+  }
+  return getBinaryAPI(streams, sourceFiles, visibilityFilter)
+}
 
 private fun getBinaryAPI(
   classStreams: Sequence<ClassFile>,

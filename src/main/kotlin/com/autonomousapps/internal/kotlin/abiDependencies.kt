@@ -14,12 +14,13 @@ import com.autonomousapps.model.internal.kmp.SourceSetFiles.Companion.findSource
 import java.io.File
 
 internal fun computeAbi(
+  projectDir: File,
   classFiles: Set<File>,
   sourceFiles: Set<File>,
   kmpSources: Set<SourceSetFiles>,
   exclusions: AbiExclusions,
   abiDumpFile: File? = null
-): Set<ExplodingAbi> = getBinaryAPI(classFiles, sourceFiles).explodedAbi(exclusions, kmpSources, abiDumpFile)
+): Set<ExplodingAbi> = getBinaryAPI(projectDir, classFiles, sourceFiles).explodedAbi(exclusions, kmpSources, abiDumpFile)
 
 private fun List<ClassBinarySignature>.explodedAbi(
   exclusions: AbiExclusions,
