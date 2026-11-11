@@ -51,6 +51,7 @@ internal class KmpProjectAnalyzer(
 
   override fun registerCodeSourceExploderTask(): TaskProvider<out CodeSourceExploderTask> {
     return project.tasks.register("explodeCodeSource$taskNameSuffix", JvmCodeSourceExploderTask::class.java) { t ->
+      t.kotlinCompilation.set(compilation.disambiguatedName)
       t.kmpSources.set(findKmpSourcesTask.flatMap { it.output })
 
       // TODO(tsr): fix discovery of source files in non-KMP projects
@@ -65,6 +66,7 @@ internal class KmpProjectAnalyzer(
 
     return project.tasks.register("abiAnalysis$taskNameSuffix", AbiAnalysisTask::class.java) { t ->
       t.classes.setFrom(sourceSet.classesDirs)
+      t.kotlinCompilation.set(compilation.disambiguatedName)
       t.kmpSources.set(findKmpSourcesTask.flatMap { it.output })
       t.exclusions.set(abiExclusions)
       t.kotlinMetadataClasspath.setFrom(KotlinMetadataClasspath.of(project))

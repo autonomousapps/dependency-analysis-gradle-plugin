@@ -14,6 +14,7 @@ import com.autonomousapps.model.internal.kmp.SourceSetFiles.Companion.findSource
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.*
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -111,6 +112,11 @@ public abstract class CodeSourceExploderTask @Inject constructor(
   init {
     description = "Parses Java and Kotlin source to detect source-only usages"
   }
+
+  /** Only available in KMP projects. Required for cache correctness (not fully clear why). */
+  @get:Optional
+  @get:Input
+  public abstract val kotlinCompilation: Property<String>
 
   /** Only available in KMP projects. */
   @get:Optional

@@ -42,9 +42,13 @@ public abstract class AbiAnalysisTask @Inject constructor(
   public abstract val classes: ConfigurableFileCollection
 
   /** `kotlin-metadata-jvm`, added to the isolated worker classpath. */
-  @get:PathSensitive(PathSensitivity.RELATIVE)
-  @get:InputFiles
+  @get:Classpath
   public abstract val kotlinMetadataClasspath: ConfigurableFileCollection
+
+  /** Only available in KMP projects. Required for cache correctness (not fully clear why). */
+  @get:Optional
+  @get:Input
+  public abstract val kotlinCompilation: Property<String>
 
   /** Only available in KMP projects. */
   @get:Optional
@@ -69,7 +73,7 @@ public abstract class AbiAnalysisTask @Inject constructor(
       it.classpath.from(kotlinMetadataClasspath)
     }.submit(AbiAnalysisWorkAction::class.java) {
       it.projectDir.set(layout.projectDirectory)
-      it.sourceFiles.setFrom(this@AbiAnalysisTask.sourceFiles.asFileTree)
+      it.sourceFiles.setFrom(sourceFiles.asFileTree)
       // JVM projects
       it.classFiles.setFrom(classes.asFileTree.filterToClassFiles().files)
       // Android projects
@@ -99,13 +103,14 @@ public abstract class AbiAnalysisTask @Inject constructor(
       val output = parameters.output.getAndDelete()
       val outputAbiDump = parameters.abiDump.getAndDelete()
 
+      val projectDir = parameters.projectDir.get().asFile
       val sourceFiles = parameters.sourceFiles.files
       val classFiles = parameters.classFiles.files
       val kmpSources = parameters.kmpSources.fromNullableJsonSet<SourceSetFiles>()
       val exclusions = parameters.exclusions.orNull?.fromJson<AbiExclusions>() ?: AbiExclusions.NONE
 
       val explodingAbi = computeAbi(
-        projectDir = parameters.projectDir.get().asFile,
+        projectDir = projectDir,
         classFiles = classFiles,
         sourceFiles = sourceFiles,
         kmpSources = kmpSources,

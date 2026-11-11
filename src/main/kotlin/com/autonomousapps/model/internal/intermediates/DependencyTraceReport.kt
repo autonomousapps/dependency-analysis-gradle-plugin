@@ -200,10 +200,12 @@ internal data class DependencyTraceReport(
       } else if (kmpSourceGraph != null) {
         val sourceSetNames = sourceKinds.map { it.name }
         val lca = kmpSourceGraph.graph.lowestCommonAncestor(KmpSourceKind.COMMON_MAIN_NAME, sourceSetNames)
-        sourceKinds.firstOrNull { it.name == lca }
-        // TODO(tsr): I'm not very happy about this solution. It seems to be caused by duplicate sources. See
-        //  `kmp.DuplicateSourceSpec`. Note this only fails on a second try, so I think there's some build cache bug.
-          ?: KmpSourceKind.of(lca)
+        sourceKinds.firstOrNull { it.name == lca } ?: ambiguousSourceKindError()
+
+        // TODO(tsr): Delete once confident not needed. I'm not very happy about this solution. It seems to be caused by
+        //  duplicate sources. See `kmp.DuplicateSourceSpec`. Note this only fails on a second try, so I think there's
+        //  some build cache bug.
+        //  ?: KmpSourceKind.of(lca)
       } else {
         ambiguousSourceKindError()
       }
@@ -216,7 +218,7 @@ internal data class DependencyTraceReport(
         annotationProcessors = annotationProcessors.withReasons(),
       )
     }
-
+    
     private fun ambiguousSourceKindError(): Nothing {
       error("Could not determine sourceKind for dependency trace report. Available SourceKinds: $sourceKinds")
     }
