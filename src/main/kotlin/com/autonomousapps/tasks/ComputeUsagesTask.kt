@@ -6,7 +6,6 @@ import com.autonomousapps.graph.Graphs.parents
 import com.autonomousapps.graph.Graphs.reachableNodesMatching
 import com.autonomousapps.graph.Graphs.root
 import com.autonomousapps.internal.binary.BinaryCompatibilityChecker
-import com.autonomousapps.internal.graph.supers.SuperNode
 import com.autonomousapps.internal.kotlin.multiplatform.KmpSourceSetNameMatcher
 import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
@@ -179,6 +178,8 @@ private class GraphVisitor(
     flavor = project.flavor,
     kmpSourceGraph = project.kmpSourceGraph,
   )
+
+  private var requiredExternalClasses: Map<Coordinates, Set<String>>? = null
 
   override fun visit(excludedIdentifier: ExcludedIdentifier, context: GraphViewVisitor.Context) {
     val coordinates = Coordinates.of(excludedIdentifier.identifier)
@@ -535,40 +536,37 @@ private class GraphVisitor(
   ): Boolean {
     if (!checkSuperClasses) return false
 
+    val requiredExternalClasses = requiredExternalClasses(context)[coordinates] ?: return false
+    reportsBuilder.reason(primarySourceKind, coordinates, Kind.DEPENDENCY, Reason.ImplSuper(requiredExternalClasses))
+    return true
+  }
+
+  private fun requiredExternalClasses(context: GraphViewVisitor.Context): Map<Coordinates, Set<String>> {
+    requiredExternalClasses?.let { return it }
+
     val superGraph = context.superGraph
-    val externalSupers = context.project.externalSupers
+    val externalSuperNames = context.project.externalSupers.mapToSet { it.name }
+    val graph = context.graph.graph
+    val root = graph.root()
 
     // TODO(tsr): this has no special KMP common source set support
     // collect all the dependencies associated with external supers
     // nb: we start by iterating over `supergraph.nodes()`, and then filtering, as that is _far more efficient_
     // then iterating over `externalSupers` and then calling `supergraph.nodes()` repeatedly: I have observed graphs
     // with hundreds of thousands of nodes.
-    val requiredExternalClasses = superGraph
-      .reachableNodesMatching { superNode -> superNode.className in externalSupers.mapToSet { it.name } }
-      .mapNotNull { superNode ->
-        val deps = superNode.deps.filterToOrderedSet { dep ->
-          // If dep has just one parent and it's the root, then we must retain that edge
-          val graph = context.graph.graph
-          graph.parents(dep).singleOrNull { it == graph.root() } != null
-        }
-
-        if (deps.isNotEmpty()) {
-          SuperNode(superNode.className).apply { this.deps += deps }
-        } else {
-          null
+    val result = mutableMapOf<Coordinates, MutableSet<String>>()
+    superGraph
+      .reachableNodesMatching { superNode -> superNode.className in externalSuperNames }
+      .forEach { superNode ->
+        superNode.deps.forEach { dep ->
+          // Retain the edge when root is a parent of dep, even if dep has other parents
+          if (graph.parents(dep).singleOrNull { it == root } != null) {
+            result.getOrPut(dep) { sortedSetOf() } += superNode.className
+          }
         }
       }
-      // filter for the nodes associated with _this_ dependency
-      .filter { node -> coordinates in node.deps }
-      .map { node -> node.className }
-      .toSortedSet()
 
-    return if (requiredExternalClasses.isNotEmpty()) {
-      reportsBuilder.reason(primarySourceKind, coordinates, Kind.DEPENDENCY, Reason.ImplSuper(requiredExternalClasses))
-      true
-    } else {
-      false
-    }
+    return result.also { requiredExternalClasses = it }
   }
 
   private fun usesAnnotation(
