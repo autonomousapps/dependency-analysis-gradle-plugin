@@ -48,6 +48,7 @@ final class MissingSuperclassProject extends AbstractProject {
             project('api', ':b'),
             // Shouldn't need this. Use it because ":b" has broken metadata
             project('implementation', ':c'),
+            project('implementation', ':d'),
           )
         }
       }
@@ -63,6 +64,12 @@ final class MissingSuperclassProject extends AbstractProject {
       }
       .withSubproject('c') { s ->
         s.sources = sourcesC
+        s.withBuildScript { bs ->
+          bs.plugins = javaLibrary
+        }
+      }
+      .withSubproject('d') { s ->
+        s.sources = sourcesD
         s.withBuildScript { bs ->
           bs.plugins = javaLibrary
         }
@@ -110,16 +117,31 @@ final class MissingSuperclassProject extends AbstractProject {
       .build(),
   ]
 
+  private static final List<Source> sourcesD = [
+    Source.java(
+      '''\
+        package com.example.d;
+
+        public class D {}
+      '''
+    )
+      .withPath('com.example.d', 'D')
+      .build(),
+  ]
+
   Set<ProjectAdvice> actualProjectAdvice() {
     return actualProjectAdvice(gradleProject)
   }
 
   private Set<Advice> adviceA() {
     if (checkSuperClasses) {
-      return []
+      return [
+        Advice.ofRemove(projectCoordinates(':d'), 'implementation'),
+      ]
     } else {
       return [
-        Advice.ofRemove(projectCoordinates(':c'), 'implementation')
+        Advice.ofRemove(projectCoordinates(':c'), 'implementation'),
+        Advice.ofRemove(projectCoordinates(':d'), 'implementation'),
       ]
     }
   }
@@ -133,6 +155,7 @@ final class MissingSuperclassProject extends AbstractProject {
       projectAdviceForDependencies(':a', adviceA()),
       projectAdviceForDependencies(':b', adviceB),
       emptyProjectAdviceFor(':c'),
+      emptyProjectAdviceFor(':d'),
     ]
   }
 }
