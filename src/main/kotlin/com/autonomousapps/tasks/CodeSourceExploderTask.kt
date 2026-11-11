@@ -113,7 +113,11 @@ public abstract class CodeSourceExploderTask @Inject constructor(
     description = "Parses Java and Kotlin source to detect source-only usages"
   }
 
-  /** Only available in KMP projects. Required for cache correctness (not fully clear why). */
+  /**
+   * Only available in KMP projects. Required for build cache correctness. It seems like this shouldn't be necessary,
+   * because the other inputs all use relative path sensitivity, which I think ought to be enough, but I've observed
+   * (with the `-i` flag) tasks pulling the wrong cache entry. Consider reporting bug to Gradle.
+   */
   @get:Optional
   @get:Input
   public abstract val kotlinCompilation: Property<String>

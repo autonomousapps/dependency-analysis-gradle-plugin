@@ -44,6 +44,7 @@ internal class KmpProjectAnalyzer(
   override fun registerByteCodeSourceExploderTask(): TaskProvider<ClassListExploderTask> {
     return project.tasks.register("explodeByteCodeSource$taskNameSuffix", ClassListExploderTask::class.java) { t ->
       t.classes.setFrom(sourceSet.classesDirs)
+      t.kotlinCompilation.set(compilation.disambiguatedName)
       t.kmpSources.set(findKmpSourcesTask.flatMap { it.output })
       t.output.set(outputPaths.explodingBytecodePath)
     }

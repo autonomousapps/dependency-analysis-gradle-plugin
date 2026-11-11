@@ -218,7 +218,7 @@ internal data class DependencyTraceReport(
         annotationProcessors = annotationProcessors.withReasons(),
       )
     }
-    
+
     private fun ambiguousSourceKindError(): Nothing {
       error("Could not determine sourceKind for dependency trace report. Available SourceKinds: $sourceKinds")
     }

@@ -12,6 +12,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
@@ -32,6 +33,15 @@ public abstract class ClassListExploderTask @Inject constructor(
   @get:PathSensitive(PathSensitivity.RELATIVE)
   @get:InputFiles
   public abstract val classes: ConfigurableFileCollection
+
+  /**
+   * Only available in KMP projects. Required for build cache correctness. It seems like this shouldn't be necessary,
+   * because the other inputs all use relative path sensitivity, which I think ought to be enough, but I've observed
+   * (with the `-i` flag) tasks pulling the wrong cache entry. Consider reporting bug to Gradle.
+   */
+  @get:Optional
+  @get:Input
+  public abstract val kotlinCompilation: Property<String>
 
   /** Only available in KMP projects. */
   @get:Optional
