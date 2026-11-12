@@ -263,7 +263,9 @@ private class GraphVisitor(
             isImplByImportCandidate = true
             hasUsage = true
           }
-          if (isForMissingSuperclass(dependencyCoordinates, context)) {
+          // Special-case this because `isForMissingSuperclass` is very expensive. If we already know something is an
+          // "impl" candidate, we don't need to check again.
+          if (!isImplCandidate && isForMissingSuperclass(dependencyCoordinates, context)) {
             isImplCandidate = true
             hasUsage = true
           }
