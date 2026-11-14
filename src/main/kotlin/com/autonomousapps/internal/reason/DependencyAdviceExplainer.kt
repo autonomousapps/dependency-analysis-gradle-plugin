@@ -79,6 +79,11 @@ internal class DependencyAdviceExplainer(
             "There is no advice regarding this dependency.\nIt was removed because it matched a $bundle rule for " +
               "${printableIdentifier(trace.primary).colorize(Colors.BOLD)}, which is already present in the dependency graph."
           }
+
+          is BundleTrace.ExportedFile -> {
+            "There is no advice regarding this dependency.\nIt is exported by " +
+              "${printableIdentifier(trace.project).colorize(Colors.BOLD)} as an api file dependency in an explicit $bundle."
+          }
         }
       } else if (wasFiltered) {
         val exclude = "exclude".colorize(Colors.BOLD)

@@ -51,6 +51,14 @@ internal sealed class BundleTrace(
           else -> -1
         }
       }
+
+      is ExportedFile -> {
+        when (other) {
+          is ExportedFile -> compareBy(ExportedFile::project).thenBy(ExportedFile::file).compare(this, other)
+          is PrimaryMap -> 1
+          else -> -1
+        }
+      }
     }
   }
 
@@ -74,4 +82,11 @@ internal sealed class BundleTrace(
     val primary: Coordinates,
     val subordinate: Coordinates
   ) : BundleTrace(primary, subordinate)
+
+  @TypeLabel("exported_file")
+  @JsonClass(generateAdapter = false)
+  internal data class ExportedFile(
+    val project: Coordinates,
+    val file: Coordinates,
+  ) : BundleTrace(project, file)
 }

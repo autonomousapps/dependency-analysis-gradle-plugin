@@ -3,20 +3,21 @@
 package com.autonomousapps.tasks
 
 import com.autonomousapps.internal.externalArtifactsFor
+import com.autonomousapps.internal.resolvedOpaqueComponentArtifacts
 import com.autonomousapps.internal.graph.GraphViewBuilder
 import com.autonomousapps.internal.graph.GraphWriter
 import com.autonomousapps.internal.utils.bufferWriteJson
 import com.autonomousapps.internal.utils.getAndDelete
 import com.autonomousapps.internal.utils.mapNotNullToSet
+import com.autonomousapps.internal.utils.mapToSet
 import com.autonomousapps.internal.utils.toCoordinates
-import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.CoordinatesContainer
+import com.autonomousapps.model.FlatCoordinates
 import com.autonomousapps.model.internal.DependencyGraphView
 import com.autonomousapps.model.source.SourceKind
 import org.gradle.api.DefaultTask
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.FileCollectionDependency
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.file.ConfigurableFileCollection
@@ -38,8 +39,8 @@ public abstract class GraphViewTask : DefaultTask() {
   @get:Input
   public abstract val compileClasspathResult: Property<ResolvedComponentResult>
 
-  @get:Internal
-  public abstract val compileClasspathFileCoordinates: SetProperty<Coordinates>
+  @get:Input
+  public abstract val compileClasspathFileCoordinates: SetProperty<String>
 
   @get:Internal
   public abstract val runtimeClasspathName: Property<String>
@@ -47,8 +48,8 @@ public abstract class GraphViewTask : DefaultTask() {
   @get:Input
   public abstract val runtimeClasspathResult: Property<ResolvedComponentResult>
 
-  @get:Internal
-  public abstract val runtimeClasspathFileCoordinates: SetProperty<Coordinates>
+  @get:Input
+  public abstract val runtimeClasspathFileCoordinates: SetProperty<String>
 
   @get:PathSensitive(PathSensitivity.NAME_ONLY)
   @get:InputFiles
@@ -113,20 +114,16 @@ public abstract class GraphViewTask : DefaultTask() {
     compileClasspathName.set(compileClasspath.name)
     compileClasspathResult.set(compileClasspath.flatMap { it.incoming.resolutionResult.rootComponent })
     compileClasspathFileCoordinates.set(
-      compileClasspath.map { c ->
-        c.allDependencies
-          .filterIsInstance<FileCollectionDependency>()
-          .mapNotNullToSet { it.toCoordinates() }
+      compileClasspath.resolvedOpaqueComponentArtifacts().map { artifacts ->
+        artifacts.mapNotNullToSet { (it.toCoordinates() as? FlatCoordinates)?.identifier }
       }
     )
 
     runtimeClasspathName.set(runtimeClasspath.name)
     runtimeClasspathResult.set(runtimeClasspath.flatMap { it.incoming.resolutionResult.rootComponent })
     runtimeClasspathFileCoordinates.set(
-      runtimeClasspath.map { c ->
-        c.allDependencies
-          .filterIsInstance<FileCollectionDependency>()
-          .mapNotNullToSet { it.toCoordinates() }
+      runtimeClasspath.resolvedOpaqueComponentArtifacts().map { artifacts ->
+        artifacts.mapNotNullToSet { (it.toCoordinates() as? FlatCoordinates)?.identifier }
       }
     )
 
@@ -146,14 +143,18 @@ public abstract class GraphViewTask : DefaultTask() {
 
     val sourceKind = sourceKind.get()
 
-    val compileGraph = GraphViewBuilder(compileClasspathResult.get(), compileClasspathFileCoordinates.get()).graph
+    val compileGraph = GraphViewBuilder(
+      compileClasspathResult.get(), compileClasspathFileCoordinates.get().mapToSet(::FlatCoordinates)
+    ).graph
     val compileGraphView = DependencyGraphView(
       sourceKind = sourceKind,
       configurationName = compileClasspathName.get(),
       graph = compileGraph
     )
 
-    val runtimeGraph = GraphViewBuilder(runtimeClasspathResult.get(), runtimeClasspathFileCoordinates.get()).graph
+    val runtimeGraph = GraphViewBuilder(
+      runtimeClasspathResult.get(), runtimeClasspathFileCoordinates.get().mapToSet(::FlatCoordinates)
+    ).graph
     val runtimeGraphView = DependencyGraphView(
       sourceKind = sourceKind,
       configurationName = runtimeClasspathName.get(),
