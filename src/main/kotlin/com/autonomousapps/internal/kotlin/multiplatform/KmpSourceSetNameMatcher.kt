@@ -47,7 +47,7 @@ internal class KmpSourceSetNameMatcher(
     val kmpSourceSets = classReferences.mapNotNullToSet { it.kmpSourceSetName }
 
     // I observed this happen with the testBalloon plugin, via GeneratedClassSpec. For some reason, its generated Kotlin
-    // files aren't being discovered by `FindKmpSourcesTask`. Not sure if it's the problem, or this plugin.
+    // files aren't being discovered by `FindKmpSourcesTask`. Not sure if testBalloon is the problem, or this plugin.
     // https://github.com/infix-de/testBalloon/blob/main/testBalloon-gradle-plugin/layer/kotlin-2-2-0/src/main/kotlin/de/infix/testBalloon/gradlePlugin/internal/layer/kotlin220/TestBalloonGradlePlugin_2_2_0.kt
     if (kmpSourceSets.isEmpty()) {
       LOGGER.debug("No KMP source sets associated with '{}'. Expected at least one.", classReferences)

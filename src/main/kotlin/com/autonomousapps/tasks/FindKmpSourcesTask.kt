@@ -91,9 +91,11 @@ public abstract class FindKmpSourcesTask : DefaultTask() {
 
     val base = projectDir.get().asFile
     val sources = buildSourceSetFiles(base)
+    val sourceSetHierarchy = sourceSetHierarchy.get()
+    val sourceGraph = SourceGraph(sourceSetHierarchy)
 
     output.bufferWriteJsonSet(sources)
-    outputGraph.writeText(SourceGraph(sourceSetHierarchy.get()).toJson())
+    outputGraph.writeText(sourceGraph.toJson())
   }
 
   private fun buildSourceSetFiles(base: File): Set<SourceSetFiles> {
