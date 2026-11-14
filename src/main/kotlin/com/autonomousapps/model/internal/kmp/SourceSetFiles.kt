@@ -36,13 +36,22 @@ public data class SourceSetFiles(
      * For KMP projects, we associate the analyzed class file with the source file on disk, to bridge the compilation-
      * source set gap. This value should always be non-null for KMP projects, and null otherwise.
      */
-    fun Set<SourceSetFiles>.findSourceSetName(classAnalyzer: ClassAnalyzer, relativePath: String): String? {
+    fun Set<SourceSetFiles>.findSourceSetName(
+      classAnalyzer: ClassAnalyzer,
+      relativePath: String,
+      kmpSourceGraph: SourceGraph?,
+    ): String? {
       val matches = filter { sources ->
         sources.sourceFiles.any { f ->
           // a standard source/class file
           f.removeSuffix(".kt") == classAnalyzer.className
             // a class created from top-level functions in the root package
             || f == classAnalyzer.source
+            // commonTest calls an inline function in commonMain. In this case, the `source` property in the bytecode
+            // (from asm) matches the *main* source. E.g., "a/CommonMain.kt", even though the className is
+            // "a/CommonTest". Note that for this to work, `matchesRelativePath` was also updated to associate
+            // the `android/hostTest` file path to the `commonTest` source set.
+            || f == classAnalyzer.className.substringBefore('$') + ".kt"
             // a class created from top-level functions in a non-root package
             || f == classAnalyzer.className.substringBeforeLast('/') + '/' + classAnalyzer.source
             // An inlined lambda, e.g.: "consumer/common/main/ValuesKt$values$$inlined$map$1$2$1"
@@ -54,7 +63,7 @@ public data class SourceSetFiles(
         matches.first()
       } else {
         matches.find { sources ->
-          sources.sourceFiles.any { f -> matchesRelativePath(relativePath, sources, f) }
+          sources.sourceFiles.any { f -> matchesRelativePath(relativePath, sources, f, kmpSourceGraph) }
         }
       }
 
@@ -75,7 +84,10 @@ public data class SourceSetFiles(
         matches.first()
       } else {
         matches.find { sources ->
-          sources.sourceFiles.any { f -> matchesRelativePath(classSignature.classFilePath, sources, f) }
+          // TODO(tsr): passing `sourceGraph = null` means we don't treat this (ABI analysis) the same as the
+          //  implementation-level analysis. I'm not sure it matters for the use-case under consideration.
+          //  https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues/1966.
+          sources.sourceFiles.any { f -> matchesRelativePath(classSignature.classFilePath, sources, f, null) }
         }
       }
 
@@ -98,7 +110,20 @@ public data class SourceSetFiles(
     // TODO(tsr): I can probably clean this up, right?
     // This is sadly only a heuristic, required for times when there are duplicate source files on disk
     // A relative path looks like `classes/kotlin/jvm/main/r/VKt.class`. A file looks like `r/V.kt`.
-    private fun matchesRelativePath(relativePath: String, sources: SourceSetFiles, file: String): Boolean {
+    private fun matchesRelativePath(
+      relativePath: String,
+      sources: SourceSetFiles,
+      file: String,
+      sourceGraph: SourceGraph?,
+    ): Boolean {
+      val sourceSetName = sourceSetName(relativePath, file)
+      return sources.sourceSetName == sourceSetName
+        // E.g., relativePath = "classes/kotlin/android/hostTest/a/WrapTest$wraps$$inlined$wrap$1.class"
+        // and we map `android/hostTest` to `androidHostTest`, which we associate to `commonTest` via sourceGraph.
+        || sourceGraph?.map?.get(sourceSetName)?.any { it == sources.sourceSetName } == true
+    }
+
+    private fun sourceSetName(relativePath: String, file: String): String {
       // "r/V.kt" => "/r"
       val packagePath = "/" + file.substringBeforeLast('/')
       val parts = relativePath
@@ -115,9 +140,7 @@ public data class SourceSetFiles(
       require(parts.size > 1) { "Expected multiple parts. Was '$parts'." }
 
       // ["jvm", "main"] => "jvmMain"
-      val sourceSetName = parts.first() + parts.drop(1).joinToString(separator = "") { it.capitalizeSafely() }
-
-      return sources.sourceSetName == sourceSetName
+      return parts.first() + parts.drop(1).joinToString(separator = "") { it.capitalizeSafely() }
     }
 
     /**

@@ -5,8 +5,10 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.ClassFilesParser
 import com.autonomousapps.internal.utils.bufferWriteJsonSet
 import com.autonomousapps.internal.utils.filterToClassFiles
+import com.autonomousapps.internal.utils.fromJson
 import com.autonomousapps.internal.utils.fromNullableJsonSet
 import com.autonomousapps.internal.utils.getAndDelete
+import com.autonomousapps.model.internal.kmp.SourceGraph
 import com.autonomousapps.model.internal.kmp.SourceSetFiles
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -49,6 +51,12 @@ public abstract class ClassListExploderTask @Inject constructor(
   @get:InputFile
   public abstract val kmpSources: RegularFileProperty
 
+  /** Only available in KMP projects. */
+  @get:Optional
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  @get:InputFile
+  public abstract val kmpSourceGraph: RegularFileProperty
+
   @get:OutputFile
   public abstract val output: RegularFileProperty
 
@@ -60,6 +68,7 @@ public abstract class ClassListExploderTask @Inject constructor(
       it.classFiles.from(androidClassFiles())
       // KMP projects
       it.kmpSources.set(kmpSources)
+      it.kmpSourceGraph.set(kmpSourceGraph)
 
       it.buildDir.set(layout.buildDirectory)
       it.output.set(output)
@@ -69,6 +78,7 @@ public abstract class ClassListExploderTask @Inject constructor(
   public interface ClassListExploderParameters : WorkParameters {
     public val classFiles: ConfigurableFileCollection
     public val kmpSources: RegularFileProperty
+    public val kmpSourceGraph: RegularFileProperty
     public val buildDir: DirectoryProperty
     public val output: RegularFileProperty
   }
@@ -80,10 +90,13 @@ public abstract class ClassListExploderTask @Inject constructor(
 
       // may be empty
       val kmpSources = parameters.kmpSources.fromNullableJsonSet<SourceSetFiles>()
+      // may be null
+      val kmpSourceGraph = parameters.kmpSourceGraph.orNull?.fromJson<SourceGraph>()
 
       val usedClasses = ClassFilesParser(
         classes = parameters.classFiles.asFileTree.files,
         kmpSources = kmpSources,
+        kmpSourceGraph = kmpSourceGraph,
         buildDir = parameters.buildDir.get().asFile,
       ).analyze()
 

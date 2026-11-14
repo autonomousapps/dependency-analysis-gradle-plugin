@@ -10,6 +10,7 @@ import com.autonomousapps.internal.utils.efficient
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.model.internal.intermediates.consumer.ExplodingBytecode
 import com.autonomousapps.model.internal.intermediates.consumer.MemberAccess
+import com.autonomousapps.model.internal.kmp.SourceGraph
 import com.autonomousapps.model.internal.kmp.SourceSetFiles
 import com.autonomousapps.model.internal.kmp.SourceSetFiles.Companion.findSourceSetName
 import org.gradle.api.logging.Logger
@@ -34,6 +35,7 @@ internal sealed class ClassReferenceParser(private val buildDir: File) {
 internal class ClassFilesParser(
   private val classes: Set<File>,
   private val kmpSources: Set<SourceSetFiles>,
+  private val kmpSourceGraph: SourceGraph?,
   buildDir: File
 ) : ClassReferenceParser(buildDir) {
 
@@ -46,6 +48,7 @@ internal class ClassFilesParser(
           BytecodeReader(
             bytes = it.readBytes(),
             kmpSources = kmpSources,
+            kmpSourceGraph = kmpSourceGraph,
             logger = logger,
             classFilePath = classFile.path,
             relativePath = relativize(classFile),
@@ -60,6 +63,7 @@ private class BytecodeReader(
   private val bytes: ByteArray,
   // may be empty
   private val kmpSources: Set<SourceSetFiles>,
+  private val kmpSourceGraph: SourceGraph?,
   private val logger: Logger,
   private val classFilePath: String,
   private val relativePath: String,
@@ -86,7 +90,7 @@ private class BytecodeReader(
 
     // For KMP projects, we associate the analyzed class file with the source file on disk, to bridge the compilation-
     // source set gap. This value should always be non-null for KMP projects, and null otherwise.
-    val kmpSourceSetName = kmpSources.findSourceSetName(classAnalyzer, relativePath)
+    val kmpSourceSetName = kmpSources.findSourceSetName(classAnalyzer, relativePath, kmpSourceGraph)
 
     // TODO(tsr): use this somehow? I think these should be considered compileOnly candidates
     //  Look at `CompileOnlySpec#annotations can be compileOnly`. It detects usage of Producer because it is imported,
