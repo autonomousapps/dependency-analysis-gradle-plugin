@@ -489,7 +489,7 @@ private class GraphVisitor(
 
     return if (exposedClasses.isNotEmpty()) {
       reportsBuilder.reason(
-        exposedClasses.getRootMostSourceKind(),
+        exposedClasses.getPrimarySourceKind(),
         coordinates,
         Kind.DEPENDENCY,
         Reason.Abi(exposedClasses.mapToOrderedSet { it.name })
@@ -514,7 +514,7 @@ private class GraphVisitor(
 
     return if (implClasses.isNotEmpty()) {
       reportsBuilder.reason(
-        implClasses.getRootMostSourceKind(),
+        implClasses.getPrimarySourceKind(),
         coordinates,
         Kind.DEPENDENCY,
         Reason.Impl(implClasses.mapToOrderedSet { it.name })
@@ -582,7 +582,7 @@ private class GraphVisitor(
 
     return if (annoClasses.isNotEmpty()) {
       reportsBuilder.reason(
-        annoClasses.getRootMostSourceKind(),
+        annoClasses.getPrimarySourceKind(),
         coordinates,
         Kind.DEPENDENCY,
         Reason.Annotation(annoClasses.mapToOrderedSet { it.name })
@@ -638,7 +638,7 @@ private class GraphVisitor(
 
     return if (used.isNotEmpty()) {
       reportsBuilder.reason(
-        used.getRootMostSourceKind(),
+        used.getPrimarySourceKind(),
         coordinates,
         Kind.DEPENDENCY,
         Reason.Typealias(used.mapToOrderedSet { it.name })
@@ -660,7 +660,7 @@ private class GraphVisitor(
 
     return if (imports.isNotEmpty()) {
       reportsBuilder.reason(
-        imports.getRootMostSourceKind(),
+        imports.getPrimarySourceKind(),
         coordinates,
         Kind.DEPENDENCY,
         Reason.Imported(imports.mapToOrderedSet { it.name })
@@ -734,7 +734,7 @@ private class GraphVisitor(
       // TODO(tsr): we get the primary source kind from `usedImports`, but Reason uses `usedConstants`.
       // TODO(tsr): I need to double-check if we can simplify constant detection for Kotlin
       reportsBuilder.reason(
-        usedImports.getRootMostSourceKind(),
+        usedImports.getPrimarySourceKind(),
         coordinates,
         Kind.DEPENDENCY,
         Reason.ConstantBytecode(usedConstants)
@@ -800,7 +800,7 @@ private class GraphVisitor(
 
     return if (imports.isNotEmpty()) {
       reportsBuilder.reason(
-        imports.getRootMostSourceKind(),
+        imports.getPrimarySourceKind(),
         coordinates,
         Kind.DEPENDENCY,
         Reason.ConstantImport(imports.mapToOrderedSet { it.name })
@@ -1017,7 +1017,7 @@ private class GraphVisitor(
 
     return if (imports.isNotEmpty()) {
       reportsBuilder.reason(
-        imports.getRootMostSourceKind(),
+        imports.getPrimarySourceKind(),
         coordinates,
         Kind.DEPENDENCY,
         Reason.Inline(imports.mapToOrderedSet { it.name })
@@ -1028,7 +1028,7 @@ private class GraphVisitor(
     }
   }
 
-  private fun Set<ClassReference>.getRootMostSourceKind(): SourceKind = getPrimarySourceKind(kmpSourceSetNameMatcher)
+  private fun Set<ClassReference>.getPrimarySourceKind(): SourceKind = getPrimarySourceKind(kmpSourceSetNameMatcher)
 
   private fun usesAnnotationProcessor(
     coordinates: Coordinates,
