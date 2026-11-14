@@ -1,5 +1,8 @@
 Graph-Support Changelog
 
+# Version 0.15.0
+* [feat]: add `lowestCommonAncestorOrNull()` function.
+
 # Version 0.14.0
 * [refactor]: simplify `Graphs.reversed()`.
 * [refactor]: check invariant for better error message in `Graphs.lowestCommonAncestor()`.
