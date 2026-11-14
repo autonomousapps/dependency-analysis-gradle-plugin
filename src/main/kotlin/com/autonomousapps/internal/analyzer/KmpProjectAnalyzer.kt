@@ -46,6 +46,7 @@ internal class KmpProjectAnalyzer(
       t.classes.setFrom(sourceSet.classesDirs)
       t.kotlinCompilation.set(compilation.disambiguatedName)
       t.kmpSources.set(findKmpSourcesTask.flatMap { it.output })
+      t.kmpSourceGraph.set(findKmpSourcesTask.flatMap { it.outputGraph })
       t.output.set(outputPaths.explodingBytecodePath)
     }
   }

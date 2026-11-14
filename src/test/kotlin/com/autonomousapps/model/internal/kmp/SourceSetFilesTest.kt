@@ -13,6 +13,16 @@ import org.junit.jupiter.api.Test
 
 internal class SourceSetFilesTest {
 
+  private val sourceGraph = SourceGraph(
+    mapOf(
+      "androidHostTest" to setOf("commonTest"),
+      "commonTest" to setOf("commonMain"),
+      "androidMain" to setOf("commonMain"),
+      "jvmMain" to setOf("commonMain"),
+      "jvmTest" to setOf("commonTest"),
+    )
+  )
+
   private val sourceSetFiles = setOf(
     SourceSetFiles(
       sourceSetName = "androidMain",
@@ -114,7 +124,7 @@ internal class SourceSetFilesTest {
     @Test fun `can find source set name in inlined lambda`() {
       val classAnalyzer = classAnalyzer("consumer/common/main/ValuesKt\$values$\$inlined\$map$1$2$1")
       val relativePath = "classes/kotlin/common/main/r/ValuesKt.class"
-      assertThat(sourceSetFiles.findSourceSetName(classAnalyzer, relativePath)).isEqualTo("commonMain")
+      assertThat(sourceSetFiles.findSourceSetName(classAnalyzer, relativePath, sourceGraph)).isEqualTo("commonMain")
     }
 
     /**
@@ -127,7 +137,43 @@ internal class SourceSetFilesTest {
     @Test fun `can find source set name when there are duplicate sources`() {
       val classAnalyzer = classAnalyzer(className = "r/VKt", source = "V.kt")
       val relativePath = "classes/kotlin/jvm/main/r/VKt.class"
-      assertThat(duplicateSourceSetFiles.findSourceSetName(classAnalyzer, relativePath)).isEqualTo("jvmMain")
+      assertThat(
+        duplicateSourceSetFiles.findSourceSetName(
+          classAnalyzer,
+          relativePath,
+          sourceGraph
+        )
+      ).isEqualTo("jvmMain")
+    }
+
+    /**
+     * Matches the source files:
+     *
+     * **commonMain/kotlin/a/Wrap.kt**
+     * ```
+     * package a
+     *
+     * fun interface Action { fun run(): String }
+     * inline fun wrap(crossinline f: () -> String): Action = object : Action { override fun run() = f() }
+     * ```
+     * **commonTest/kotlin/a/WrapTest.kt**
+     * ```
+     * package a
+     *
+     * class WrapTest {
+     *   fun wraps(): String = wrap { "x" }.run()
+     * }
+     * ```
+     * And Kotlin generates class files into `build/classes/kotlin/android/hostTest`.
+     */
+    @Test fun `can find source set name in commonTest calling inlined function defined in commonMain`() {
+      val sourceSetFiles = setOf(
+        SourceSetFiles("commonMain", "src/commonMain/kotlin", setOf("a/Wrap.kt")),
+        SourceSetFiles("commonTest", "src/commonTest/kotlin", setOf("a/WrapTest.kt")),
+      )
+      val classAnalyzer = classAnalyzer("a/WrapTest\$wraps$\$inlined\$wrap$1", "Wrap.kt")
+      val relativePath = "classes/kotlin/android/hostTest/a/WrapTest\$wraps$\$inlined\$wrap$1.class"
+      assertThat(sourceSetFiles.findSourceSetName(classAnalyzer, relativePath, sourceGraph)).isEqualTo("commonTest")
     }
 
     private fun classAnalyzer(className: String, source: String? = null): ClassAnalyzer {
