@@ -1,5 +1,14 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.20.3
+* [fix]: support an implicit KMP bundle for the 'desktop' target.
+* [fix]: improve source location detection.
+* [fix]: only files with the 'kt' extension are Kotlin source files.
+* [fix]: handle dependency traces to shared source dirs.
+* [fix]: associate code calling inline code in another source set with the right source set.
+* [perf]: compute the classes for missing superclasses once per visitor.
+* [chore]: build and test against Gradle 9.9.1.
+
 # Version 3.20.2
 * [fix]: resolve various regressions in v3.20.0 and v3.20.1.
 
