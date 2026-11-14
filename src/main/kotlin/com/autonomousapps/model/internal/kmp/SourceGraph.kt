@@ -39,10 +39,13 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = false)
 internal data class SourceGraph(val map: Map<String, Set<String>>) {
 
-  // TODO: add test
+  // TODO(tsr): add test
   val graph: Graph<String> by unsafeLazy {
     val builder = newGraphBuilder<String>()
     map.forEach { (source, dependsOn) ->
+      // ensure each source set is in the graph, even if there are no edges from/to it.
+      builder.addNode(source)
+
       dependsOn.forEach { target ->
         builder.putEdge(source, target)
       }

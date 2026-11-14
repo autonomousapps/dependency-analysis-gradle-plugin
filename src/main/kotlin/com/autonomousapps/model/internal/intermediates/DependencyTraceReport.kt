@@ -2,10 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.model.internal.intermediates
 
-import com.autonomousapps.graph.Graphs.lowestCommonAncestor
-import com.autonomousapps.internal.utils.LexicographicIterableComparator
-import com.autonomousapps.internal.utils.mapToOrderedSet
-import com.autonomousapps.internal.utils.mapToSet
+import com.autonomousapps.graph.Graphs.lowestCommonAncestorOrNull
+import com.autonomousapps.internal.utils.*
 import com.autonomousapps.model.Coordinates
 import com.autonomousapps.model.internal.declaration.Bucket
 import com.autonomousapps.model.internal.kmp.SourceGraph
@@ -29,7 +27,7 @@ internal class DependencyTraceReports(
   //  report per source kind? is that worthwhile?
   private val builders = sortedMapOf<Coordinates, DependencyTraceReport.Builder>()
 
-  val reports: Set<DependencyTraceReport> get() = builders.values.mapToOrderedSet { it.build() }
+  val reports: Set<DependencyTraceReport> get() = builders.values.flatMapToOrderedSet { it.build() }
 
   /**
    * This must be called for each [coordinates] *before* [bucket] is called. There can be many reasons, there can be
@@ -194,29 +192,36 @@ internal data class DependencyTraceReport(
       return map[coordinates]?.filterIsInstance<Reason.BinaryIncompatible>()?.isNotEmpty() == true
     }
 
-    fun build(): DependencyTraceReport {
-      val sourceKind = if (sourceKinds.size == 1) {
-        sourceKinds.first()
+    /**
+     * This can return more than one report if we can't find a least common ancestor between two source sets. In that
+     * case, the [dependencies] needed to be declared on all of the [sourceKinds].
+     */
+    fun build(): Set<DependencyTraceReport> {
+      val sourceKinds = if (sourceKinds.size == 1) {
+        sourceKinds.first().intoSet()
       } else if (kmpSourceGraph != null) {
         val sourceSetNames = sourceKinds.map { it.name }
-        val lca = kmpSourceGraph.graph.lowestCommonAncestor(KmpSourceKind.COMMON_MAIN_NAME, sourceSetNames)
-        sourceKinds.firstOrNull { it.name == lca } ?: ambiguousSourceKindError()
-
-        // TODO(tsr): Delete once confident not needed. I'm not very happy about this solution. It seems to be caused by
-        //  duplicate sources. See `kmp.DuplicateSourceSpec`. Note this only fails on a second try, so I think there's
-        //  some build cache bug.
-        //  ?: KmpSourceKind.of(lca)
+        // If this returns null, then there is no common ancestor. E.g., between `jvmTest` and `androidDeviceTest` (the
+        // latter depends on nothing by default).
+        val lca = kmpSourceGraph.graph.lowestCommonAncestorOrNull(KmpSourceKind.COMMON_MAIN_NAME, sourceSetNames)
+        if (lca == null) {
+          sourceKinds
+        } else {
+          sourceKinds.firstOrNull { it.name == lca }?.intoSet() ?: ambiguousSourceKindError()
+        }
       } else {
         ambiguousSourceKindError()
       }
 
-      return DependencyTraceReport(
-        buildType = buildType,
-        flavor = flavor,
-        sourceKind = sourceKind,
-        dependencies = dependencies.withReasons(),
-        annotationProcessors = annotationProcessors.withReasons(),
-      )
+      return sourceKinds.mapToOrderedSet { sourceKind ->
+        DependencyTraceReport(
+          buildType = buildType,
+          flavor = flavor,
+          sourceKind = sourceKind,
+          dependencies = dependencies.withReasons(),
+          annotationProcessors = annotationProcessors.withReasons(),
+        )
+      }
     }
 
     private fun ambiguousSourceKindError(): Nothing {
