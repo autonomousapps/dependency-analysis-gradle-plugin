@@ -11,9 +11,16 @@ public object Graphs {
    * Find the [lowest common ancestor](https://en.wikipedia.org/wiki/Lowest_common_ancestor) of [nodes] in
    * [this graph][this] with [root].
    *
+   * Throws if any of these invariants are violated:
+   * 1. [nodes] is empty.
+   * 2. No common ancestor between [nodes] can be found.
+   * 3. If any of [nodes] are not in `this` [Graph].
+   *
    * nb: the direction of the graph obviously makes a big difference in the results of this function. The way this is
    * used currently, the graph starts out reversed (with edges following depends-on relationships, rather than
    * dependency relationships).
+   *
+   * @see [lowestCommonAncestorOrNull]
    */
   public fun <N : Any> Graph<N>.lowestCommonAncestor(root: N, nodes: Iterable<N>): N {
     require(nodes.iterator().hasNext()) { "Expected 'nodes' to contain at least one element." }
@@ -22,7 +29,49 @@ public object Graphs {
       .map { node -> reachableNodes(node, false) }
       .reduce { acc, nodes -> acc.intersect(nodes) }
 
+    require(ancestors.isNotEmpty()) {
+      """
+        Found no common ancestors between nodes '$nodes' in graph '$this' with root '$root'.
+        
+        Please file an issue at https://github.com/autonomousapps/dependency-analysis-gradle-plugin/issues.
+      """.trimIndent()
+    }
+
     return if (ancestors.size == 1) {
+      ancestors.first()
+    } else {
+      reversed().topological(root).intersect(ancestors).last()
+    }
+  }
+
+
+  /**
+   * Find the [lowest common ancestor](https://en.wikipedia.org/wiki/Lowest_common_ancestor) of [nodes] in
+   * [this graph][this] with [root].
+   *
+   * Returns null if no common ancestor between [nodes] can be found.
+   *
+   * Throws if either of these invariants are violated:
+   * 1. [nodes] is empty.
+   * 2. If any of [nodes] are not in `this` [Graph].
+   *
+   * nb: the direction of the graph obviously makes a big difference in the results of this function. The way this is
+   * used currently, the graph starts out reversed (with edges following depends-on relationships, rather than
+   * dependency relationships).
+   *
+   * @see [lowestCommonAncestor]
+   */
+  public fun <N : Any> Graph<N>.lowestCommonAncestorOrNull(root: N, nodes: Iterable<N>): N? {
+    require(nodes.iterator().hasNext()) { "Expected 'nodes' to contain at least one element." }
+
+    val ancestors = nodes
+      .map { node -> reachableNodes(node, false) }
+      .reduceOrNull { acc, nodes -> acc.intersect(nodes) }
+      ?: return null
+
+    return if (ancestors.isEmpty()) {
+      null
+    } else if (ancestors.size == 1) {
       ancestors.first()
     } else {
       reversed().topological(root).intersect(ancestors).last()
