@@ -117,6 +117,8 @@ public abstract class FindKmpSourcesTask : DefaultTask() {
           val sourceFiles = dir
             .walkTopDown()
             .filter { f -> f.isFile }
+            // Exclude files like `.DS_Store`
+            .filter { f -> f.extension == "kt" }
             .map { f -> f.toRelativeString(dir) }
             .toSortedSet()
 
