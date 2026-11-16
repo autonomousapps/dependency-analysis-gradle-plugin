@@ -43,9 +43,9 @@ public class AndroidLibraryTarget(
   private val compileSdk: Int,
   private val minSdk: Int?,
   private val withJava: Boolean,
+  private val deviceTest: AndroidLibraryDeviceTest?,
   private val hostTest: AndroidLibraryHostTest?,
   private val compilerJvmTarget: CompilerJvmTarget?,
-  // TODO(tsr): withDeviceTest { ... }
 ) : Element.Block {
 
   override val name: String = "androidLibrary"
@@ -57,6 +57,7 @@ public class AndroidLibraryTarget(
 
     if (withJava) s.line { it.append("withJava()") }
 
+    deviceTest?.render(s)
     hostTest?.render(s)
     compilerJvmTarget?.render(s)
   }
@@ -68,10 +69,21 @@ public class AndroidLibraryTarget(
     public var withJava: Boolean = false
     public var compileTarget: Int? = null
 
+    private var deviceTestBuilder: AndroidLibraryDeviceTest.Builder? = null
     private var hostTestBuilder: AndroidLibraryHostTest.Builder? = null
 
     public fun withJava() {
       withJava = true
+    }
+
+    public fun withDeviceTest() {
+      deviceTestBuilder = AndroidLibraryDeviceTest.Builder()
+    }
+
+    public fun withDeviceTest(block: (AndroidLibraryDeviceTest.Builder) -> Unit) {
+      val deviceTestBuilder = deviceTestBuilder ?: AndroidLibraryDeviceTest.Builder()
+      block(deviceTestBuilder)
+      this.deviceTestBuilder = deviceTestBuilder
     }
 
     public fun withHostTest() {
@@ -94,6 +106,7 @@ public class AndroidLibraryTarget(
         compileSdk = compileSdk,
         minSdk = minSdk,
         withJava = withJava,
+        deviceTest = deviceTestBuilder?.build(),
         hostTest = hostTestBuilder?.build(),
         compilerJvmTarget = jvmTarget,
       )
