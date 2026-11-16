@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Version 3.20.4
+* [fix]: handle shared source dirs more thoroughly.
+
 # Version 3.20.3
 * [fix]: support an implicit KMP bundle for the 'desktop' target.
 * [fix]: improve source location detection.
