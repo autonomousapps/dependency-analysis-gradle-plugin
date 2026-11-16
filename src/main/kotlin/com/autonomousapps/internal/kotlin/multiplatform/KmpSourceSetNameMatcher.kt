@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.internal.kotlin.multiplatform
 
-import com.autonomousapps.graph.Graphs.lowestCommonAncestor
+import com.autonomousapps.graph.Graphs.lowestCommonAncestorOrNull
 import com.autonomousapps.internal.utils.getLogger
 import com.autonomousapps.internal.utils.mapNotNullToSet
 import com.autonomousapps.model.internal.intermediates.ClassReference
@@ -58,11 +58,11 @@ internal class KmpSourceSetNameMatcher(
       kmpSourceSets.first()
     } else {
       val sourceGraph = requireNotNull(kmpSourceGraph) { "KMP SourceGraph was null" }
-      sourceGraph.lowestCommonAncestor(KmpSourceKind.COMMON_MAIN_NAME, kmpSourceSets)
+      sourceGraph.lowestCommonAncestorOrNull(KmpSourceKind.COMMON_MAIN_NAME, kmpSourceSets)
     }
 
     // If the fallback and the LCA are the same, just return the fallback as-is. Otherwise, replace it.
-    return if (lca == primarySourceKind.name) {
+    return if (lca == null || lca == primarySourceKind.name) {
       primarySourceKind
     } else {
       primarySourceKind.copy(name = lca)
