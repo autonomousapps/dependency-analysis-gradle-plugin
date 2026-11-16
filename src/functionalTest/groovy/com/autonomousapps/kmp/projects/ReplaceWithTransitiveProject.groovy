@@ -215,13 +215,17 @@ final class ReplaceWithTransitiveProject extends AbstractKmpProject {
       kotlin {
         jvm()
         sourceSets {
-          commonMain.dependencies {
-            api("commons-io:commons-io:2.20.0")
-            implementation("org.apache.commons:commons-text:1.15.0")
-            api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+          commonMain {
+            dependencies {
+              api("commons-io:commons-io:2.20.0")
+              implementation("org.apache.commons:commons-text:1.15.0")
+              api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+            }
           }
-          commonTest.dependencies {
-            implementation("com.squareup.okio:okio:2.6.0")
+          commonTest {
+            dependencies {
+              implementation("com.squareup.okio:okio:2.6.0")
+            }
           }
         }
       }
