@@ -202,13 +202,19 @@ final class HierarchyGroupsProject extends AbstractKmpProject {
           }
         }
         sourceSets {
-          commonMain.dependencies {
+          commonMain {
+            dependencies {
+            }
           }
-          commonTest.dependencies {
-            implementation("org.apache.commons:commons-text:1.15.0")
+          commonTest {
+            dependencies {
+              implementation("org.apache.commons:commons-text:1.15.0")
+            }
           }
-          getByName("commonJvmMain").dependencies {
-            implementation("com.squareup.okhttp3:okhttp:4.6.0")
+          getByName("commonJvmMain") {
+            dependencies {
+              implementation("com.squareup.okhttp3:okhttp:4.6.0")
+            }
           }
           commonJvmMain.dependencies {
             api("com.squareup.okio:okio:2.6.0")

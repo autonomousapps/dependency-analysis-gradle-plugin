@@ -261,23 +261,31 @@ final class JvmTargetProject extends AbstractKmpProject {
       kotlin {
         jvm()
         sourceSets {
-          commonMain.dependencies {
-            api(project.dependencies.platform("com.squareup.okio:okio-bom:3.16.4"))
-            api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-            implementation(project(":producer"))
-            api("com.squareup.okio:okio:3.16.4")
-            implementation("com.squareup.okhttp3:okhttp:4.6.0")
+          commonMain {
+            dependencies {
+              api(project.dependencies.platform("com.squareup.okio:okio-bom:3.16.4"))
+              api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+              implementation(project(":producer"))
+              api("com.squareup.okio:okio:3.16.4")
+              implementation("com.squareup.okhttp3:okhttp:4.6.0")
+            }
           }
-          commonTest.dependencies {
-            implementation(kotlin("test"))
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+          commonTest {
+            dependencies {
+              implementation(kotlin("test"))
+              implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+            }
           }
-          jvmMain.dependencies {
+          jvmMain {
+            dependencies {
+            }
           }
-          jvmTest.dependencies {
-            implementation(kotlin("test-junit"))
-            implementation("org.assertj:assertj-core:3.27.7")
-            implementation("commons-io:commons-io:2.21.0")
+          jvmTest {
+            dependencies {
+              implementation(kotlin("test-junit"))
+              implementation("org.assertj:assertj-core:3.27.7")
+              implementation("commons-io:commons-io:2.21.0")
+            }
           }
         }
       }'''.stripIndent()
