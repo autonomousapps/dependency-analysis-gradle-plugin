@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  gradle:
+  core:
     permissions:
       contents: read
       pull-requests: write
@@ -37,22 +37,6 @@ jobs:
         os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
     steps:
-      # https://github.com/actions/runner-images/issues/2840
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@3f13feab2962a87273d379ebc36ea159527e6cc9 # v1.3.2
-        with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: false
-
-          # defaults are true
-          android: false
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
-
       - name: Checkout the repo
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -94,14 +78,89 @@ jobs:
       - name: Execute check (main, non-functional tests)
         run: './gradlew check -s -x :functionalTest'
 
-      - name: Execute JVM functional tests
-        run: './gradlew :functionalTest -DfuncTest.package=jvm -DfuncTest.quick'
+  functional-tests:
+    permissions:
+      contents: read
+      pull-requests: write
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        package: [ 'android', 'jvm', 'kmp' ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # https://github.com/actions/runner-images/issues/2840
+      - name: Free Disk Space (Ubuntu)
+        # Disk space is only a concern for projects that need the Android SDK
+        if: contains(fromJSON('["android", "kmp"]'), matrix.package)
+        uses: jlumbroso/free-disk-space@3f13feab2962a87273d379ebc36ea159527e6cc9 # v1.3.2
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
 
-      - name: Execute Android functional tests
-        run: './gradlew :functionalTest -DfuncTest.package=android -DfuncTest.quick'
+          # defaults are true
+          android: false
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
 
-      - name: Execute KMP functional tests
-        run: './gradlew :functionalTest -DfuncTest.package=kmp -DfuncTest.quick'
+      - name: Checkout the repo
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - name: Setup java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: 'zulu'
+          java-version: |
+            8
+            17
+            21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          add-job-summary-as-pr-comment: 'on-failure'
+          develocity-access-key: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+
+      - name: Setup TestLens
+        uses: testlens-app/setup-testlens@89edf53f781ac41833b4bc74d0e19a5315c79c67 # v1.10.0
+
+      - name: Execute functional tests
+        run: './gradlew :functionalTest -DfuncTest.package=${{ matrix.package }} -DfuncTest.quick'
+
+  post:
+    permissions:
+      contents: read
+      pull-requests: write
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+    needs: [ core, functional-tests ]
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - name: Setup java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: 'zulu'
+          java-version: |
+            8
+            17
+            21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          add-job-summary-as-pr-comment: 'on-failure'
+          develocity-access-key: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
       - name: Check API
         run: './gradlew :checkApi'
