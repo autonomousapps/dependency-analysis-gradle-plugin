@@ -9,7 +9,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
-import org.gradle.api.tasks.compile.GroovyCompile
 import org.gradle.plugin.devel.tasks.ValidatePlugins
 
 public abstract class PluginConventionPlugin : Plugin<Project> {
@@ -26,20 +25,9 @@ public abstract class PluginConventionPlugin : Plugin<Project> {
 
     versionCatalog = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
 
-    configureGroovy()
     configureKotlin()
     configurePlugins()
     configurePublishing()
-  }
-
-  private fun Project.configureGroovy() {
-    val javaTarget = versionCatalog.findVersion("javaTarget").orElseThrow().requiredVersion
-
-    tasks.withType(GroovyCompile::class.java).configureEach { t ->
-      // Groovy doesn't have a 'release' concept, so we must use source/target compatibility.
-      t.sourceCompatibility = javaTarget
-      t.targetCompatibility = javaTarget
-    }
   }
 
   private fun Project.configureKotlin() {
