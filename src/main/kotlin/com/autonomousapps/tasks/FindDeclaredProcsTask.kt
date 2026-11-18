@@ -178,11 +178,11 @@ public abstract class FindDeclaredProcsTask : DefaultTask() {
 
   private fun <T : Processor> getSupportedAnnotationTypes(procClass: Class<T>): Set<String>? = try {
     val proc = procClass.getDeclaredConstructor().newInstance()
-    logger.debug("Trying to initialize annotation processor with type '${proc.javaClass.name}'")
+    logger.debug("Trying to initialize annotation processor with type '{}'", proc.javaClass.name)
     tryInit(proc)
     proc.supportedAnnotationTypes.toSortedSet()
   } catch (_: Throwable) {
-    logger.warn("Could not reflectively access processor class '${procClass.name}'")
+    logger.warn("Could not reflectively access processor class '{}'", procClass.name)
     null
   }
 
@@ -190,7 +190,7 @@ public abstract class FindDeclaredProcsTask : DefaultTask() {
     try {
       proc.init(StubProcessingEnvironment())
     } catch (_: Throwable) {
-      logger.debug("Could not initialize '${proc.javaClass.name}'. May not be able to get supported annotation types.")
+      logger.debug("Could not initialize '{}'. May not be able to get supported annotation types.", proc.javaClass.name)
     }
   }
 }

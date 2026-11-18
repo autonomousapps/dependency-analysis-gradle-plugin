@@ -56,7 +56,7 @@ public class DependencyAnalysisPlugin : Plugin<Project> {
       return
     }
 
-    logger.debug("AgpVersion = $current")
+    logger.debug("AgpVersion = {}", current)
     val compatibility = compatibility()
     if (compatibility != Flags.Compatibility.NONE && !current.isSupported() && path == isolated.rootProject.path) {
       val message =
