@@ -178,7 +178,7 @@ internal class KotlinMagicFinder(
 
         KotlinClassMetadata.readLenient(metadata)
       } catch (_: IllegalArgumentException) {
-        logger.debug("Can't read class file '$classFile'")
+        logger.debug("Can't read class file '{}'", classFile)
         errorsReport.appendText("Can't read class file '$classFile'\n")
         didWriteErrors = true
         return null
@@ -200,9 +200,9 @@ internal class KotlinMagicFinder(
           typealiases = typealiases(kotlinClassMetadata.kmPackage)
         }
 
-        is KotlinClassMetadata.SyntheticClass -> logger.debug("Ignoring SyntheticClass $classFile")
-        is KotlinClassMetadata.MultiFileClassFacade -> logger.debug("Ignoring MultiFileClassFacade $classFile")
-        is KotlinClassMetadata.Unknown -> logger.debug("Ignoring Unknown $classFile")
+        is KotlinClassMetadata.SyntheticClass -> logger.debug("Ignoring SyntheticClass {}", classFile)
+        is KotlinClassMetadata.MultiFileClassFacade -> logger.debug("Ignoring MultiFileClassFacade {}", classFile)
+        is KotlinClassMetadata.Unknown -> logger.debug("Ignoring Unknown {}", classFile)
       }
     } ?: return null
 
