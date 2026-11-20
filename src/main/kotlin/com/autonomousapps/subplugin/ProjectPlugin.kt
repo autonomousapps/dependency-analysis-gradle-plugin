@@ -157,7 +157,7 @@ internal class ProjectPlugin(private val project: Project) {
     // Conditionally disable analysis on some projects
     val projectPathRegex = projectPathRegex()
     if (!projectPathRegex.matches(path)) {
-      logger.info("Skipping dependency analysis of project '$path'. Does not match regex '$projectPathRegex'.")
+      logger.info("Skipping dependency analysis of project '{}'. Does not match regex '{}'.", path, projectPathRegex)
       return
     }
 
@@ -648,7 +648,7 @@ internal class ProjectPlugin(private val project: Project) {
     // in `configureKotlinJvmProject()`.
     if (!pluginManager.hasPlugin(KOTLIN_JVM_PLUGIN)) {
       if (configuredForJavaProject.getAndSet(true)) {
-        logger.info("(dependency analysis) $path was already configured")
+        logger.info("(dependency analysis) {} was already configured", path)
         return
       }
 
@@ -663,7 +663,7 @@ internal class ProjectPlugin(private val project: Project) {
             )
           )
         } catch (_: UnknownTaskException) {
-          logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+          logger.warn("Skipping tasks creation for sourceSet `{}`", sourceSet.name)
         }
       }
     }
@@ -678,13 +678,13 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
-      logger.info("(dependency analysis) $path was already configured for the kotlin-jvm plugin")
+      logger.info("(dependency analysis) {} was already configured for the kotlin-jvm plugin", path)
       redundantJvmPlugin.configure()
       return
     }
 
     if (configuredForJavaProject.getAndSet(true)) {
-      logger.info("(dependency analysis) $path was already configured")
+      logger.info("(dependency analysis) {} was already configured", path)
       return
     }
 
@@ -714,7 +714,7 @@ internal class ProjectPlugin(private val project: Project) {
         }
         analyzeDependencies(dependencyAnalyzer)
       } catch (_: UnknownTaskException) {
-        logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+        logger.warn("Skipping tasks creation for sourceSet `{}`", sourceSet.name)
       }
     }
   }
@@ -732,7 +732,7 @@ internal class ProjectPlugin(private val project: Project) {
     }
 
     if (configuredForKotlinJvmOrJavaLibrary.getAndSet(true)) {
-      logger.info("(dependency analysis) $path was already configured for the java-library plugin")
+      logger.info("(dependency analysis) {} was already configured for the java-library plugin", path)
       redundantJvmPlugin.configure()
       return
     }
@@ -759,7 +759,7 @@ internal class ProjectPlugin(private val project: Project) {
 
         analyzeDependencies(dependencyAnalyzer)
       } catch (_: UnknownTaskException) {
-        logger.warn("Skipping tasks creation for sourceSet `${sourceSet.name}`")
+        logger.warn("Skipping tasks creation for sourceSet `{}`", sourceSet.name)
       }
     }
   }
@@ -770,7 +770,6 @@ internal class ProjectPlugin(private val project: Project) {
    */
   private fun Project.configureKotlinMultiplatformProject() {
     val kotlin = extensions.getByType(KotlinMultiplatformExtension::class.java)
-
     val findKmpSourcesTask = FindKmpSourcesTask.register(this, kotlin)
 
     kotlin
@@ -800,7 +799,7 @@ internal class ProjectPlugin(private val project: Project) {
 
               analyzeDependencies(dependencyAnalyzer)
             } catch (_: UnknownTaskException) {
-              logger.warn("Skipping tasks creation for KMP target `${target.name}`")
+              logger.warn("Skipping tasks creation for KMP target `{}`", target.name)
             }
           }
       }
@@ -833,14 +832,6 @@ internal class ProjectPlugin(private val project: Project) {
     // The 'main' sourceSet for an app project does not have an ABI
     val isNotMainApp = !(isAppProject() && sourceSetName == KotlinSourceSet.COMMON_MAIN_SOURCE_SET_NAME)
     return hasApiConfiguration && isNotTest && isNotMainApp
-  }
-
-  private fun ConfigurationContainer.namedOrNull(configurationName: String): NamedDomainObjectProvider<Configuration>? {
-    return try {
-      named(configurationName)
-    } catch (_: UnknownDomainObjectException) {
-      null
-    }
   }
 
   private fun Project.isAppProject(): Boolean {
