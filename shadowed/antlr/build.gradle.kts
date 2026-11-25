@@ -6,7 +6,7 @@ plugins {
   id("groovy")
 }
 
-version = "${libs.versions.antlr.base.get()}.2"
+version = "${libs.versions.antlr.base.get()}.3"
 
 // https://docs.gradle.org/current/userguide/antlr_plugin.html
 // https://discuss.gradle.org/t/using-gradle-2-10s-antlr-plugin-to-import-an-antlr-4-lexer-grammar-into-another-grammar/14970/6
@@ -72,6 +72,7 @@ sourceSets {
 
 tasks.shadowJar {
   relocate("org.antlr", "com.autonomousapps.internal.antlr")
+  relocate("com.autonomousapps.grammar", "com.autonomousapps.internal.grammar")
   relocate("org.glassfish.json", "com.autonomousapps.internal.glassfish.json")
   relocate("javax.json", "com.autonomousapps.internal.javax.json")
   relocate("org.abego.treelayout", "com.autonomousapps.internal.abego.treelayout")
