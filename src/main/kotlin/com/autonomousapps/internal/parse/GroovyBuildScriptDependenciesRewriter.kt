@@ -3,14 +3,14 @@
 package com.autonomousapps.internal.parse
 
 import com.autonomousapps.exception.BuildScriptParseException
-import com.autonomousapps.grammar.gradle.GradleScript
-import com.autonomousapps.grammar.gradle.GradleScript.*
-import com.autonomousapps.grammar.gradle.GradleScriptBaseListener
-import com.autonomousapps.grammar.gradle.GradleScriptLexer
 import com.autonomousapps.internal.advice.AdvicePrinter
 import com.autonomousapps.internal.antlr.v4.runtime.*
 import com.autonomousapps.internal.antlr.v4.runtime.tree.ParseTreeWalker
 import com.autonomousapps.internal.cash.grammar.kotlindsl.parse.Rewriter
+import com.autonomousapps.internal.grammar.gradle.GradleScript
+import com.autonomousapps.internal.grammar.gradle.GradleScript.*
+import com.autonomousapps.internal.grammar.gradle.GradleScriptBaseListener
+import com.autonomousapps.internal.grammar.gradle.GradleScriptLexer
 import com.autonomousapps.internal.parse.GroovyBuildScriptDependenciesRewriter.CtxDependency.DependencyKind
 import com.autonomousapps.internal.utils.filterToOrderedSet
 import com.autonomousapps.internal.utils.filterToSet
