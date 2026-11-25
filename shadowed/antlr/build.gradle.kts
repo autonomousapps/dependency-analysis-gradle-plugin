@@ -72,6 +72,7 @@ sourceSets {
 
 tasks.shadowJar {
   relocate("org.antlr", "com.autonomousapps.internal.antlr")
+  relocate("com.autonomousapps.grammar", "com.autonomousapps.internal.grammar")
   relocate("org.glassfish.json", "com.autonomousapps.internal.glassfish.json")
   relocate("javax.json", "com.autonomousapps.internal.javax.json")
   relocate("org.abego.treelayout", "com.autonomousapps.internal.abego.treelayout")
