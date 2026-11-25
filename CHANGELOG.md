@@ -1,5 +1,8 @@
 Dependency Analysis Plugin Changelog
 
+# Unreleased
+* fix(antlr): relocate bundled gradle-script-grammar, resolving issues when both it and DAGP are on the same classpath.
+
 # Version 3.20.4
 * [fix]: handle shared source dirs more thoroughly.
 
