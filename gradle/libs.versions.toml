@@ -29,7 +29,7 @@ kotlinGradlePlugin = "2.4.21"
 # and kotlinRuntime (bundled kotlin-stdlib*/kotlin-reflect). kotlinGradlePlugin (compiler/KGP) and kotlinMetadata
 # (isolated workers only) are exempt.
 kotlinLanguageVersion = "2.1"
-kotlinRuntime = "2.1.21"
+kotlinRuntime = "2.4.21"
 kotlinForAndroidtests = "2.2.21"
 # The kotlin-metadata-jvm version, used in isolated workers, can be the latest released unless there are breaking changes in it.
 kotlinMetadataRuntime = "2.4.21"
