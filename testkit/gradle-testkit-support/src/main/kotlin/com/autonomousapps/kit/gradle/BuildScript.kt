@@ -132,6 +132,14 @@ public class BuildScript(
     private var usesGroovy = false
     private var usesKotlin = false
 
+    public fun imports(vararg imports: String) {
+      if (this.imports == null) {
+        this.imports = Imports.of(imports.toList())
+      } else {
+        this.imports!!.add(imports.toList())
+      }
+    }
+
     public fun withGroovy(@Language("Groovy") script: String) {
       additions = script.trimIndent()
       usesGroovy = true
@@ -143,7 +151,7 @@ public class BuildScript(
     }
 
     public fun kotlinKmp(block: (Kotlin.Builder) -> Unit) {
-      val kotlinBuilder = kotlinKmpBuilder ?: Kotlin.Builder()
+      val kotlinBuilder = kotlinKmpBuilder ?: Kotlin.Builder(this)
       block(kotlinBuilder)
       this.kotlinKmpBuilder = kotlinBuilder
     }

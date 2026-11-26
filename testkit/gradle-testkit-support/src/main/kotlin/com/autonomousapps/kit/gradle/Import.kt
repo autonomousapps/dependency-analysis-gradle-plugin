@@ -13,4 +13,15 @@ public class Import(
     s.append("import ")
     s.append(import)
   }
+
+  public companion object {
+    @JvmStatic
+    public fun of(import: String): Import = Import(import)
+
+    @JvmStatic
+    public fun of(vararg imports: String): MutableList<Import> = imports.mapTo(mutableListOf()) { Import(it) }
+
+    @JvmStatic
+    public fun of(imports: Iterable<String>): MutableList<Import> = imports.mapTo(mutableListOf()) { Import(it) }
+  }
 }

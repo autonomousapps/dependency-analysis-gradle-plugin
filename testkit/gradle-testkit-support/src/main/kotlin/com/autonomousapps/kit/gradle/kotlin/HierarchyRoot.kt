@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle.kotlin
 
+import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
@@ -17,7 +18,9 @@ public class HierarchyRoot(
     groups.forEach { it.render(s) }
   }
 
-  public class Builder {
+  public class Builder(
+    private val buildScript: BuildScript.Builder,
+  ) {
     private val targets = mutableListOf<String>()
     private val groups = mutableMapOf<String, HierarchyGroup.Builder>()
 
@@ -30,7 +33,7 @@ public class HierarchyRoot(
     }
 
     public fun group(group: String, block: (HierarchyGroup.Builder) -> Unit) {
-      val builder = groups.computeIfAbsent(group) { HierarchyGroup.Builder(group) }
+      val builder = groups.computeIfAbsent(group) { HierarchyGroup.Builder(group, buildScript) }
       block(builder)
     }
 

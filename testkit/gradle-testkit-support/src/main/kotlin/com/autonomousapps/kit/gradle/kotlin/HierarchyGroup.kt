@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle.kotlin
 
+import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
@@ -16,11 +17,15 @@ public class HierarchyGroup(
     targets.forEach { it.render(s) }
   }
 
-  public class Builder(private val group: String) {
+  public class Builder(
+    private val group: String,
+    private val buildScript: BuildScript.Builder,
+  ) {
     private val targets = mutableListOf<String>()
 
     public fun withAndroid() {
       targets.add("withAndroid()")
+      buildScript.imports("com.android.build.api.withAndroid")
     }
 
     public fun withJvm() {
