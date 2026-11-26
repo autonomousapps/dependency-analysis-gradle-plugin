@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.autonomousapps.kit.gradle.kotlin
 
+import com.autonomousapps.kit.gradle.BuildScript
 import com.autonomousapps.kit.render.Element
 import com.autonomousapps.kit.render.Scribe
 
@@ -15,11 +16,13 @@ public class HierarchyTemplate(
     root.render(s)
   }
 
-  public class Builder {
+  public class Builder(
+    private val buildScript: BuildScript.Builder,
+  ) {
     private var rootBuilder: HierarchyRoot.Builder? = null
 
     public fun common(block: (HierarchyRoot.Builder) -> Unit) {
-      val rootBuilder = rootBuilder ?: HierarchyRoot.Builder()
+      val rootBuilder = rootBuilder ?: HierarchyRoot.Builder(buildScript)
       block(rootBuilder)
       this.rootBuilder = rootBuilder
     }

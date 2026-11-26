@@ -33,7 +33,9 @@ public class Kotlin @JvmOverloads constructor(
     sourceSets?.render(s)
   }
 
-  public class Builder {
+  public class Builder(
+    private val buildScript: BuildScript.Builder,
+  ) {
     public var jvmToolchain: JvmToolchain? = null
 
     public var androidLibraryTarget: AndroidLibraryTarget? = null
@@ -58,9 +60,11 @@ public class Kotlin @JvmOverloads constructor(
     }
 
     public fun applyDefaultHierarchyTemplate(block: (HierarchyTemplate.Builder) -> Unit) {
-      val hierarchyTemplateBuilder = hierarchyTemplateBuilder ?: HierarchyTemplate.Builder()
+      val hierarchyTemplateBuilder = hierarchyTemplateBuilder ?: HierarchyTemplate.Builder(buildScript)
       block(hierarchyTemplateBuilder)
       this.hierarchyTemplateBuilder = hierarchyTemplateBuilder
+
+      buildScript.imports("org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi")
     }
 
     /**

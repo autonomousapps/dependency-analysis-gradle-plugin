@@ -19,15 +19,15 @@ public class Imports(
     imports.forEach { i -> i.render(s) }
   }
 
+  public fun add(other: Iterable<String>) {
+    imports.addAll(Import.of(other))
+  }
+
   public companion object {
     @JvmStatic
-    public fun of(vararg imports: String): Imports {
-      return Imports(imports.mapTo(mutableListOf()) { Import(it) })
-    }
+    public fun of(vararg imports: String): Imports = Imports(Import.of(*imports))
 
     @JvmStatic
-    public fun of(imports: Iterable<String>): Imports {
-      return Imports(imports.mapTo(mutableListOf()) { Import(it) })
-    }
+    public fun of(imports: Iterable<String>): Imports = Imports(Import.of(imports))
   }
 }

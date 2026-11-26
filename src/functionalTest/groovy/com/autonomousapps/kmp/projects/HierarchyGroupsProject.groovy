@@ -4,7 +4,6 @@ package com.autonomousapps.kmp.projects
 
 import com.autonomousapps.kit.GradleProject
 import com.autonomousapps.kit.Source
-import com.autonomousapps.kit.gradle.Imports
 import com.autonomousapps.kit.gradle.kotlin.KotlinJvmTarget
 import com.autonomousapps.model.Advice
 import com.autonomousapps.model.ProjectAdvice
@@ -39,11 +38,6 @@ final class HierarchyGroupsProject extends AbstractKmpProject {
       .withSubproject('consumer') { consumer ->
         consumer.sources = consumerSources()
         consumer.withBuildScript { bs ->
-          // TODO(tsr): would be nice if these imports were added automatically
-          bs.imports = Imports.of(
-            'com.android.build.api.withAndroid',
-            'org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi'
-          )
           bs.plugins = androidKmpLibrary
           bs.kotlinKmp { k ->
             k.jvmTarget = KotlinJvmTarget.default()

@@ -714,8 +714,10 @@ internal class ScribeTestKotlin {
   }
 
   @Nested inner class KmpTest {
+    private val buildScript = BuildScript.Builder()
+
     @Test fun `can render iOS targets`() {
-      val kotlin = with(Kotlin.Builder()) {
+      val kotlin = with(Kotlin.Builder(buildScript)) {
         nativeTargets = listOf(KotlinNativeTarget.iosArm64(), KotlinNativeTarget.iosSimulatorArm64())
         build()
       }
@@ -732,7 +734,7 @@ internal class ScribeTestKotlin {
     }
 
     @Test fun `can render a custom hierarchy group`() {
-      val kotlin = with(Kotlin.Builder()) {
+      val kotlin = with(Kotlin.Builder(buildScript)) {
         applyDefaultHierarchyTemplate { template ->
           template.common { common ->
             common.withAndroid()
