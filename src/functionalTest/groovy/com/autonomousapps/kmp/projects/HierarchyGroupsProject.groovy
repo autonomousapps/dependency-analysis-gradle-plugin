@@ -36,9 +36,9 @@ final class HierarchyGroupsProject extends AbstractKmpProject {
           )
         }
       }
-      .withSubproject('consumer') { s ->
-        s.sources = consumerSources()
-        s.withBuildScript { bs ->
+      .withSubproject('consumer') { consumer ->
+        consumer.sources = consumerSources()
+        consumer.withBuildScript { bs ->
           // TODO(tsr): would be nice if these imports were added automatically
           bs.imports = Imports.of(
             'com.android.build.api.withAndroid',
@@ -51,23 +51,23 @@ final class HierarchyGroupsProject extends AbstractKmpProject {
               a.namespace = 'com.example'
               a.compileSdk = 37
             }
-            k.applyDefaultHierarchyTemplate { template ->
-              template.common { common ->
-                common.group('commonJvm') { commonJvm ->
-                  commonJvm.withJvm()
-                  commonJvm.withAndroid()
+            k.applyDefaultHierarchyTemplate { t ->
+              t.common { c ->
+                c.group('commonJvm') { cjm ->
+                  cjm.withJvm()
+                  cjm.withAndroid()
                 }
               }
             }
-            k.sourceSets { sourceSets ->
-              sourceSets.commonMain { commonMain ->
-                commonMain.dependencies(api('org.apache.commons:commons-compress:1.28.0'))
+            k.sourceSets { s ->
+              s.commonMain { c ->
+                c.dependencies(api('org.apache.commons:commons-compress:1.28.0'))
               }
-              sourceSets.commonTest { commonTest ->
-                commonTest.dependencies(implementation('org.apache.commons:commons-configuration2:2.14.0'))
+              s.commonTest { c ->
+                c.dependencies(implementation('org.apache.commons:commons-configuration2:2.14.0'))
               }
-              sourceSets.named("commonJvmMain", true) { commonJvmMain ->
-                commonJvmMain.dependencies(implementation('com.squareup.okhttp3:okhttp:4.6.0'))
+              s.named('commonJvmMain', true) { c ->
+                c.dependencies(implementation('com.squareup.okhttp3:okhttp:4.6.0'))
               }
             }
           }
