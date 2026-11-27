@@ -1,7 +1,10 @@
 Dependency Analysis Plugin Changelog
 
-# Unreleased
-* fix(antlr): relocate bundled gradle-script-grammar, resolving issues when both it and DAGP are on the same classpath.
+# Version 3.21.0
+* [feat]: target Java 17.
+* [fix]: `fixDependencies` handles project accessors with backticks.
+* [fix]: relocate bundled gradle-script-grammar, resolving issues when both it and DAGP are on the same classpath.
+* [refactor]: avoid unnecessary string interpolation for debug logging.
 
 # Version 3.20.4
 * [fix]: handle shared source dirs more thoroughly.
