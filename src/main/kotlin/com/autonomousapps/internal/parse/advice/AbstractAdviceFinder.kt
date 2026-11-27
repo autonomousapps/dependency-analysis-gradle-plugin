@@ -31,8 +31,11 @@ internal abstract class AbstractAdviceFinder(
     // Handle camelCase to kebab-case conversion, but also handle dots as path separators
     val projectPath = identifier.removePrefix("projects.")
 
+    // Remove backticks (for submodules like "common.`interface`" -> "common.interface")
+    val withoutBackticks = projectPath.replace("`", "")
+
     // Replace dots with colons first (for submodules like "common.viewmodels" -> "common:viewmodels")
-    val withColons = projectPath.replace(".", ":")
+    val withColons = withoutBackticks.replace(".", ":")
 
     // Then handle camelCase to kebab-case conversion for each segment
     val segments = withColons.split(":")

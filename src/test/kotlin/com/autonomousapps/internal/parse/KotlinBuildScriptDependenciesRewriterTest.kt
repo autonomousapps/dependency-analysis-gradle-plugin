@@ -150,6 +150,7 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
           testImplementation("pan-galactic:gargle-blaster:2.0-SNAPSHOT") {
               because("life's too short not to")
           }
+          implementation(projects.foo.`interface`)
         }
 
         println("hello, world!")
@@ -160,6 +161,7 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
         Advice.ofRemove(Coordinates.of("pan-galactic:gargle-blaster:2.0-SNAPSHOT"), "testImplementation"),
         Advice.ofAdd(Coordinates.of(":sad-robot"), "runtimeOnly"),
         Advice.ofAdd(Coordinates.of(":interface"), "api"),
+        Advice.ofChange(Coordinates.of(":foo:interface"), "implementation", "api"),
       )
 
       // When
@@ -203,6 +205,7 @@ internal class KotlinBuildScriptDependenciesRewriterTest {
           compileOnly(projects.marvin)
           runtimeOnly(projects.sadRobot)
           api(projects.`interface`)
+          api(projects.foo.`interface`)
         }
 
         println("hello, world!")
