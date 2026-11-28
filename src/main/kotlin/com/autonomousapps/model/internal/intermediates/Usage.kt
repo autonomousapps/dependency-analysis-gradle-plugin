@@ -16,7 +16,7 @@ internal data class Usage(
   val flavor: String?,
   val sourceKind: SourceKind,
   val bucket: Bucket,
-  val reasons: Set<Reason>
+  val reasons: Set<Reason>,
 ) {
 
   /**

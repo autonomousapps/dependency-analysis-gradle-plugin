@@ -22,7 +22,7 @@ public data class Advice(
    * The configuration on which the dependency _should_ be declared. Will be null if the dependency is unused and
    * therefore ought to be removed.
    */
-  val toConfiguration: String? = null
+  val toConfiguration: String? = null,
 ) : Comparable<Advice> {
 
   override fun compareTo(other: Advice): Int = compareBy(Advice::coordinates)
